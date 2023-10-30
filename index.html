@@ -67,6 +67,11 @@
       });
     }
 
+    function isValidEmail(email) {
+      const emailPattern = /^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
+      return emailPattern.test(email);
+    }
+
     document.getElementById('registerButton').addEventListener('click', redirectToRegister);
     document.getElementById('loginButton').addEventListener('click', redirectToLogin);
 
@@ -597,46 +602,10 @@
         }
       }
       );
-
-      function showError(inputElement, errorMessage) {
-        const errorElement = inputElement.parentElement.querySelector(".error-message");
-        errorElement.textContent = errorMessage;
-      }
-
-      function clearErrorMessages() {
-        const errorElements = document.querySelectorAll(".error-message");
-        errorElements.forEach(element => {
-          element.textContent = "";
-        });
-      }
     }
 
 
-    async function login() {
-      const email = document.getElementById('loginEmail').value;
-      const password = document.getElementById('loginPassword').value;
 
-      const response = await fetch('http://localhost:9000/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        // Başarılı giriş durumunu işle, örneğin kullanıcıyı ana sayfaya yönlendir
-        console.log('Giriş başarılı');
-      } else {
-        // Giriş hatasını işle, örneğin hata mesajı göster
-        console.error('Giriş başarısız');
-      }
-    }
-
-    function isValidEmail(email) {
-      const emailPattern = /^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,4}$/;
-      return emailPattern.test(email);
-    }
 
   </script>
 </body>
