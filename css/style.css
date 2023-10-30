@@ -167,17 +167,16 @@ input {
 
 .input-icon.error i {
   color: red;
-  top: 50%; /* Hata mesajı olduğunda ikonun hizası */
+  top: 50%; 
 }
 
 .error-message {
   color: red;
   font-size: 14px;
   margin-top: 5px;
-  position: absolute;
-  bottom: -20px; /* Hata mesajını input alanına göre ayarla */
-  left: 10px; /* Hata mesajını input alanına göre ayarla */
+  bottom: -20px;
 }
+
 
 h1 {
   margin-top: 10px;
