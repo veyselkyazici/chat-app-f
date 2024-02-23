@@ -1,0 +1,66 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Web</title>
+    <link rel="stylesheet" href="../../css/stylesheet.css">
+</head>
+
+<body>
+    <div class="chat-box">
+        <div class="message-list" id="message-list">
+
+        </div>
+        <div class="input-container">
+            <input type="text" id="message-input" placeholder="Type a message">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</body>
+<script>
+var messages = [
+  { content: "Hello! How can I help you?", time: "10:00 AM", sender: "received" },
+  { content: "Hi! I have a question about the product.", time: "10:01 AM", sender: "sent" },
+  // Diğer mesajlar buraya eklenebilir
+];
+
+// Mesajları HTML'e ekleme
+var chatBox = document.getElementById("message-list");
+messages.forEach(message => {
+  appendMessage(message.content, message.time, message.sender);
+});
+
+// Mesaj gönderme işlevi
+function sendMessage() {
+    console.log("asdfasdfasd")
+  var input = document.getElementById("message-input");
+  var messageContent = input.value.trim();
+  
+  if (messageContent !== "") {
+    var currentTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    appendMessage(messageContent, currentTime, "sent");
+    input.value = "";
+  }
+}
+
+// Yeni mesajı chat-box'e ekleyen işlev
+function appendMessage(content, time, sender) {
+  var messageDiv = document.createElement("div");
+  messageDiv.classList.add("chat-message", sender);
+  
+  var contentParagraph = document.createElement("p");
+  contentParagraph.textContent = content;
+  
+  var timeSpan = document.createElement("span");
+  timeSpan.classList.add("time");
+  timeSpan.textContent = time;
+  
+  messageDiv.appendChild(contentParagraph);
+  messageDiv.appendChild(timeSpan);
+  
+  chatBox.appendChild(messageDiv);
+}
+</script>
+
+</html>

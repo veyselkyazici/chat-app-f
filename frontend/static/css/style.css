@@ -1,0 +1,475 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: white;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  gap: 20px;
+}
+
+.nav {
+  display: flex;
+  gap: 20px;
+}
+
+.nav a {
+  text-decoration: none;
+  color: black;
+}
+
+
+
+.register-login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  flex: 1;
+}
+
+/* Footer styles */
+.footer {
+  text-align: center;
+  padding: 20px;
+  background-color: #111B21;
+}
+
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+}
+
+.logo a {
+  text-decoration: none;
+  display: inline-block;
+  background-color: white;
+}
+
+.logo-icon {
+  color: black;
+}
+
+.logo-text {
+  color: black;
+}
+
+a {
+  color: white;
+}
+
+.icon {
+  font-size: 24px;
+}
+
+body>.footer {
+  margin-top: auto;
+}
+
+
+.buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+
+.button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+input {
+  color: #007bff;
+}
+
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+
+form {
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+
+}
+
+label {
+  display: none;
+}
+
+.input-icon {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.input-icon input {
+  padding-left: 40px;
+}
+
+.input-icon i {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: #aaa;
+}
+
+input {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  background-color: #f5f5f5;
+  font-size: 16px;
+}
+
+.input-icon.error i {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  position: absolute;
+  top: -20px;
+}
+
+#generalError {
+  bottom: 0px;
+}
+
+h1 {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.profile-photo-input {
+  border-radius: 50%;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+}
+
+.profile-photo-input:hover {
+  cursor: pointer;
+}
+
+.profile-photo-div {
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#profilePhoto {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+#photoOptions {
+  display: flex;
+  position: absolute;
+  left: 55%;
+  top: 70%;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 10px;
+  z-index: 1;
+}
+
+#photoOptions li {
+  cursor: pointer;
+  font-size: 15px;
+  list-style-type: none;
+}
+
+#photoOptions li:hover {
+  background-color: rgb(120, 172, 231);
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.editButton {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+
+
+
+
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.chat-container {
+  display: flex;
+  width: 80%;
+  /* Örneğin, chat-container'ı 80% genişlet */
+  max-width: 1600px;
+  /* Bir maksimum genişlik ekleyebilirsiniz */
+  height: 80vh;
+  /* Örneğin, chat-container'ı 80 viewport yüksekliğine genişlet */
+}
+
+.left-side {
+  position: relative;
+  display: flex;
+  flex: 0 0 30%;
+  flex-direction: column;
+  width: 40%;
+  /* Chat listesinin genişliğini ayarla */
+  min-width: 300px;
+  padding: 20px;
+  background-color: rgb(98, 184, 218);
+}
+
+
+
+/* Benim yazdıklarım */
+.user-image {
+  border-radius: 50%;
+  flex-grow: 1;
+  display: block;
+  height: 40px;
+  width: 40px;
+  cursor: pointer;
+}
+
+header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+}
+
+.user-photo {
+  flex-grow: 1;
+}
+
+.friend-photo {
+  cursor: pointer;
+}
+
+.friend-detail {
+  padding-left: 5px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  justify-content: center;
+}
+
+.options-div {
+  flex: none;
+}
+
+.options {
+  display: flex;
+  align-items: center;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  width: 35px;
+  justify-content: center;
+  margin-left: 10px;
+}
+
+.search-bar {
+  display: flex;
+  margin-top: 10px;
+  align-items: center;
+  background-color: #f1f1f1;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.search-input {
+  border: none;
+  padding: 5px;
+  border-radius: 5px 0 0 5px;
+}
+
+.search-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 5px;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* Individual Chat Container */
+.chat {
+  display: flex;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+/* Friend Photo */
+.chat-friend-photo {
+  width: 50px;
+  height: 50px;
+  background-color: #ddd;
+  border-radius: 50%;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+/* Chat Data Container (Name, Date, Message) */
+.chat-data {
+  flex-grow: 1;
+}
+
+/* Name and Date Container */
+.name-and-date {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Friend Name */
+.chat-friend-name {
+  font-weight: bold;
+  font-size: 16px;
+  flex-grow: 1;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 270px;
+}
+
+/* Last Message Date */
+.chat-last-message-date {
+  color: #888;
+  font-size: 12px;
+}
+
+/* Friend Last Message */
+.chat-friend-last-message {
+  margin-top: 5px;
+  color: #333;
+}
+
+
+.chat-list {
+  overflow-y: auto;
+  max-height: 640px;
+  overflow-x: hidden;
+}
+
+.chat-box {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-grow: 1;
+  min-width: 400px;
+  min-height: 500px;
+  padding: 20px;
+  background-color: #e7a2a2;
+}
+
+.scrollbar::-webkit-scrollbar {
+  width: 12px;
+}
+
+.scrollbar::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 6px;
+}
+
+.scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+
+
+
+
+.start-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+
+
+
+
+
+
+

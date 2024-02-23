@@ -1,0 +1,23 @@
+.add-friend {
+    margin-top: 15px;
+    cursor: pointer;
+}
+.notification-badge {
+    position: relative;
+}
+
+.fa-user-plus {
+    position: relative;
+}
+.friend-request-reply-notification {
+    position: relative;
+}
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+}
