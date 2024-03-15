@@ -41,7 +41,7 @@ const fetchSearchUsers = async (searchString) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify({ emailOrFirstNameOrLastName: searchString }),
         });
@@ -91,7 +91,7 @@ function renderSearchResults(searchResults) {
         addFriendBtns.addEventListener('click', function  () {
             console.log(user.id, "----" , user.email)
             const friendRequest = {
-                token: localStorage.getItem('access_token'),
+                token: sessionStorage.getItem('access_token'),
                 email: user.email
             };
             console.log(friendRequest)
@@ -109,7 +109,7 @@ const fetchSendFriendRequest = async (id) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify({ id: id }),
         });

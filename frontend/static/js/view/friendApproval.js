@@ -25,16 +25,16 @@ async function friendApprovalView() {
 }
 
 async function fetchFriendRequests() {
-    console.log(localStorage.getItem("userId"))
+    console.log(sessionStorage.getItem("userId"))
     const requestBody = {
-        friendUserId: localStorage.getItem("userId")
+        friendUserId: sessionStorage.getItem("userId")
     };
     try {
         const response = await fetch("http://localhost:8080/api/v1/friendships/awaiting-approval", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify(requestBody)
         });
@@ -63,7 +63,7 @@ function generateFriendRequestsHTML(friendRequests) {
 
 function handleAction(action, friendRequest) {
     const requestBody = {
-        friendUserId: localStorage.getItem("userId"),
+        friendUserId: sessionStorage.getItem("userId"),
         userId: friendRequest.userId,
         accepted: action
     };

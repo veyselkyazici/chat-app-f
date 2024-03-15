@@ -1,7 +1,7 @@
 // Chat.js
 import AbstractView from "./AbstractView.js";
 import { addFriendView } from "./AddFriend2.js";
-import { friendListView } from "./FriendList.js";
+import  FriendListView  from "./FriendList.js";
 import { friendApprovalView } from "./friendApproval.js";
 import { friendRequestReplyNotificationView } from "./FriendRequestReplyNotificationView.js";
 import WebSocketManager from "../websocket.js";
@@ -9,11 +9,19 @@ export default class extends AbstractView {
     constructor(params) {
         super(params);
         this.setTitle("Chat");
-        console.log("asdfasdfasdfasdfasdf")
-        
-        this.abc=5;
-        this.Deneme();
+        this.friendList = [];
+        this.fetchFriendRequestReplyData = [];
+        this.friendListViewInstance = null;
+        this.webSocketManagerFriendships = new WebSocketManager('http://127.0.0.1:9030/ws');
+        this.webSocketManagerChat = new WebSocketManager('http://127.0.0.1:9040/ws');
+
+        this.init()
+
+        webSocketManagerFriendships = this.webSocketManagerFriendships;
+        webSocketManagerChat = this.webSocketManagerChat;
+
     }
+
     async getHtml() {
         return `
         <div class="chat-container">
@@ -51,167 +59,161 @@ export default class extends AbstractView {
     </div>
         `;
     }
-    async addEventListeners() {
-        console.log("55")
-        this.Deneme();
-        friendListData = await fetchSearchUsers();
-        fetchFriendRequestReplyData = await fetchFriendRequestReply();
-        const storedUser = localStorage.getItem('userId');
 
-        webSocketManagerFriendships = new WebSocketManager('http://127.0.0.1:9030/ws');
-        webSocketManagerChat = new WebSocketManager('http://127.0.0.1:9040/ws');
+    async init() {
+        const storedUser = sessionStorage.getItem('userId');
+        console.log(storedUser)
+        this.initFriendshipWebSocket(storedUser);
+        await this.initialData();
+    }
 
-        webSocketManagerFriendships.connectWebSocket({}, function () {
-            webSocketManagerFriendships.subscribeToFriendRequestFriendResponseChannel(storedUser, async function (friendRequest) {
+    async initFriendshipWebSocket(storedUser) {
+        this.webSocketManagerFriendships.connectWebSocket({}, () => {
+            this.webSocketManagerFriendships.subscribeToFriendRequestFriendResponseChannel(storedUser, async (friendRequest) => {
                 const friendRequestBody = JSON.parse(friendRequest.body);
                 console.log("friendRequestBody: ", friendRequestBody)
-                friendRequestNotification(true);
+                this.friendRequestNotification(true);
             });
-            webSocketManagerFriendships.subscribeToFriendRequestUserResponseChannel(storedUser, async function (friendRequest) {
+            this.webSocketManagerFriendships.subscribeToFriendRequestUserResponseChannel(storedUser, async (friendRequest) => {
                 const friendRequestBody = JSON.parse(friendRequest.body);
                 friendRequestBody.statusCode === 400 ? toastr.error(friendRequestBody.message) : toastr.success(friendRequestBody.message);
             });
-            webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationUserResponseChannel(storedUser, async function (friendRequest) {
+            this.webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationUserResponseChannel(storedUser, async (friendRequest) => {
                 const friendRequestBody = JSON.parse(friendRequest.body);
                 toastr.success(friendRequestBody + " isteğinizi onayladı")
-                friendRequestReplyNotificationBadge(true);
-                fetchFriendRequestReplyData = await fetchFriendRequestReply();
-                friendListData = await fetchSearchUsers();
+                this.friendRequestReplyNotificationBadge(true);
+                this.fetchFriendRequestReplyData = await fetchFriendRequestReply();
+                this.friendList = await fetchGetFriendList();
             });
-            webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationFriendResponseChannel(storedUser, async function (friendRequest) {
+            this.webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationFriendResponseChannel(storedUser, async (friendRequest) => {
                 const friendRequestBody = JSON.parse(friendRequest.body);
                 toastr.success(friendRequestBody + " kişisini arkadaş eklediniz")
-                friendListData = await fetchSearchUsers();
+                this.friendList = await fetchGetFriendList();
             });
         },
             function (error) {
                 console.error('WebSocket connection error: ' + error);
             });
+    }
 
-        webSocketManagerChat.connectWebSocket({}, function () {
+    // initChatWebSocket() {
+    //     this.webSocketManagerChat.connectWebSocket({}, () => {
 
-        }, function (error) {
-            console.error('WebSocket connection error: ' + error);
-        })
+    //     }, function (error) {
+    //         console.error('WebSocket connection error: ' + error);
+    //     })
+    // }
 
-        const searchButton = document.querySelector(".search-button");
-        if (searchButton) {
-            searchButton.addEventListener("click", deneme1);
+
+    async initialData() {
+        this.friendList = await fetchGetFriendList();
+    }
+
+    addEventListeners() {
+        const searchButtonElement = document.querySelector(".search-button");
+        if (searchButtonElement) {
+            searchButtonElement.addEventListener("click", deneme1);
         }
 
-        const addFriendButton = document.querySelector(".add-friendd");
-        if (addFriendButton) {
-            addFriendButton.addEventListener("click", function () {
+        const addFriendButtonElement = document.querySelector(".add-friendd");
+        if (addFriendButtonElement) {
+            addFriendButtonElement.addEventListener("click", () => {
                 addFriendView(webSocketManagerFriendships)
             });
         }
 
-        const friendList = document.querySelector(".friend-list");
-        if (friendList) {
-            friendList.addEventListener("click", () => {
-                friendListView(friendListData);
+        const friendListElement = document.querySelector(".friend-list");
+        if (friendListElement) {
+            friendListElement.addEventListener("click", () => {
+                console.log("ElementDATA",this.friendList)
+                this.handleInitialFriendList(this.friendList);
             });
         }
 
-        const friendApprovalBtn = document.querySelector(".friend-approval");
-        if (friendApprovalBtn) {
-            friendApprovalBtn.addEventListener("click",
-                function () {
-                    friendApprovalView(webSocketManagerFriendships)
-                    friendRequestNotification(false);
+        const friendApprovalButtonElement = document.querySelector(".friend-approval");
+        if (friendApprovalButtonElement) {
+            friendApprovalButtonElement.addEventListener("click",
+                () => {
+                    friendApprovalView(this.webSocketManagerFriendships)
+                    this.friendRequestNotification(false);
                 });
         }
-        const friendRequestReplyNotification = document.querySelector(".friend-request-reply-notification");
-        if (friendRequestReplyNotification) {
-            friendRequestReplyNotification.addEventListener("click", function () {
-                friendRequestReplyNotificationView(fetchFriendRequestReplyData)
-                friendRequestReplyNotificationBadge(false)
+        const friendRequestReplyNotificationElement = document.querySelector(".friend-request-reply-notification");
+        if (friendRequestReplyNotificationElement) {
+            friendRequestReplyNotificationElement.addEventListener("click", () => {
+                friendRequestReplyNotificationView(this.fetchFriendRequestReplyData)
+                this.friendRequestReplyNotificationBadge(false)
             });
         }
-
     }
-    Deneme() {
-        console.log("DENEME")
-        console.log(this.abc)
-        this.abc = 10;
-        console.log(this.abc)
-        deneme1()
-        this.Deneme2()
+
+    friendRequestNotification(showBadge) {
+        const notificationBadgeElement = document.querySelector('.friend-approval .notification-badge');
+        if (notificationBadgeElement) {
+            notificationBadgeElement.style.display = showBadge ? 'block' : 'none';
+        }
     }
-    Deneme2(){
-        console.log("deneme2")
+    friendRequestReplyNotificationBadge(showBadge) {
+        const replyNotificationBadgeElement = document.querySelector('.friend-request-reply-notification .notification-badge');
+        if (replyNotificationBadgeElement) {
+            replyNotificationBadgeElement.style.display = showBadge ? 'block' : 'none';
+        }
     }
-}
 
-let friendListData;
-let fetchFriendRequestReplyData;
-
-let webSocketManagerFriendships;
-let webSocketManagerChat;
-
-
-
-function friendRequestNotification(showBadge) {
-    const notificationBadge = document.querySelector('.friend-approval .notification-badge');
-    if (notificationBadge) {
-        notificationBadge.style.display = showBadge ? 'block' : 'none';
+    handleInitialFriendList(friendList) {
+        console.log("handledata", friendList)
+        if (!this.friendListViewInstance) {
+            this.friendListViewInstance = new FriendListView(friendList);
+            console.log("if")
+        } else {
+            this.friendListViewInstance.renderFriendList(friendList);
+            console.log("else")
+        }
+        this.friendListViewInstance.render();
     }
-}
-
-function friendRequestReplyNotificationBadge(showBadge) {
-    const replyNotificationBadge = document.querySelector('.friend-request-reply-notification .notification-badge');
-    if (replyNotificationBadge) {
-        replyNotificationBadge.style.display = showBadge ? 'block' : 'none';
+    async searchUsers() {
+        console.log("asdfasdf")
+        return await fetchGetFriendList();
     }
 }
-
 
 const getFriendList = 'http://localhost:8080/api/v1/friendships/get-friend-list';
-const fetchSearchUsers = async () => {
+const fetchGetFriendList = async () => {
     try {
         const response = await fetch(getFriendList, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
-            body: JSON.stringify({ token: localStorage.getItem('access_token') }),
+            body: JSON.stringify({ token: sessionStorage.getItem('access_token') }),
         });
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
         }
         const result = await response.json();
-        if (result) {
-            friendListData = result;
-            Deneme();
-
-        } else {
-            toastr.error('Kullanıcı arama başarısız');
-        }
+        console.log("result: ", result)
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
         throw error;
     }
 };
-function deneme1(){
-    console.log("deneme1")
-}
 
 async function fetchFriendRequestReply() {
     const requestBody = {
-        userId: localStorage.getItem("userId")
+        userId: sessionStorage.getItem("userId")
     };
     try {
         const response = await fetch("http://localhost:8080/api/v1/friendships/friend-request-reply-notification", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify(requestBody)
         });
-        const data = await response.json();
+        const data = response.json();
         return data;
     } catch (error) {
         console.log(error)
@@ -219,4 +221,5 @@ async function fetchFriendRequestReply() {
 }
 
 
-export { webSocketManagerFriendships, webSocketManagerChat}
+export let webSocketManagerFriendships;
+export let webSocketManagerChat;

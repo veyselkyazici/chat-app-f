@@ -45,7 +45,7 @@ function checkForm () {
         const requestDTO = {
             name: name,
             email: email,
-            token: localStorage.getItem('access_token')
+            token: sessionStorage.getItem('access_token')
         }
         fetchAddToFriendRequest(requestDTO)
     }
@@ -60,7 +60,7 @@ const fetchAddToFriendRequest = async (requestBody) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify(requestBody),
         });

@@ -74,7 +74,7 @@ function formatPhoneNumberOnBackspace(input) {
 
 function isUserLoggedIn() {
   console.log("token")
-  var token = localStorage.getItem('accessToken');
+  var token = sessionStorage.getItem('accessToken');
   return token != null && token !== undefined;
 }
 

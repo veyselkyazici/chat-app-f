@@ -248,7 +248,7 @@ const getUserByAuthId = async (authId) => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify({ authId: authId }),
         });
@@ -270,7 +270,7 @@ const updateName = (name) => {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('access_token'),
+            'Authorization': sessionStorage.getItem('access_token'),
         },
         body: JSON.stringify({ name: name }),
     })
@@ -302,7 +302,7 @@ const updateNamee = async (name) => {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify({ name: name }),
         });
@@ -330,7 +330,7 @@ const updateUserSurname = async (surname) => {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify({ surname: surname }),
         });
@@ -356,7 +356,7 @@ const updateUserPhone = async (phone) => {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify({ phoneNumber: phone }),
         });
@@ -383,7 +383,7 @@ const updateUserAbout = async (about) => {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
+                'Authorization': sessionStorage.getItem('access_token'),
             },
             body: JSON.stringify({ about: about }),
         });

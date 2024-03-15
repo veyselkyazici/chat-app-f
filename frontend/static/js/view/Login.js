@@ -86,14 +86,14 @@ const loginFetch = async (formElements, email, password) => {
 
     if (responseData.responsecode === 200) {
 
-      var allLocalStorageItems = {};
-      localStorage.setItem('access_token', responseData.access_token)
-      for (var i = 0; i < localStorage.length; i++) {
-        var key = localStorage.key(i);
-        var value = localStorage.getItem(key);
-        allLocalStorageItems[key] = value;
+      var allSessionStorageItems = {};
+      sessionStorage.setItem('access_token', responseData.access_token)
+      for (var i = 0; i < sessionStorage.length; i++) {
+        var key = sessionStorage.key(i);
+        var value = sessionStorage.getItem(key);
+        allSessionStorageItems[key] = value;
       }
-      console.log("allLocalStorageItems", allLocalStorageItems)
+      console.log("allSessionStorageItems", allSessionStorageItems)
       toastr.success('Giriş Başarılı')
       console.log("Login successful:", responseData);
       return responseData;
@@ -143,7 +143,7 @@ const loginForm = async () => {
     const response = await loginFetch(formElements, email, password);
     console.log("response: ", response)
     const user = await getUserByAuthId(response.id);
-    localStorage.setItem('userId', user.id);
+    sessionStorage.setItem('userId', user.id);
     console.log(user)
     console.log('user', user)
     console.log('user.update', user.updatedAt)
