@@ -17,11 +17,18 @@ class FriendListView {
 
     async render() {
         const friendListViewHTML = `
-            <div class="search-bar">
-                <input type="text" class="search-input" placeholder="Kişi arayın">
-                <button class="search-button"><i class="fas fa-search"></i></button>
+            <div id="friend-list">
+                <div class="" id="backspace">
+                    <span class="material-symbols-outlined">
+                        keyboard_backspace
+                    </span>
+                </div>
+                <div class="search-bar">
+                    <input type="text" class="search-input" placeholder="Kişi arayın">
+                    <button class="search-button"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="friend-listt"></div>
             </div>
-            <div class="friend-listt"></div>
         `;
         changeContent(friendListViewHTML);
         this.renderFriendList(this.friendList);

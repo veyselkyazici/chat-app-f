@@ -50,3 +50,13 @@
 .friend:hover {
     background-color: #ff0000; /* Örnek olarak kırmızı renk */
 }
+
+
+
+
+
+
+
+.hidden {
+  display: none;
+}

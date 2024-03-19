@@ -39,6 +39,13 @@ subscribeToFriendRequestReplyNotificationFriendResponseChannel(userId,callback) 
         this.stompClient.subscribe(userChannel, callback);
     }
 }
+
+subscribeToReceivedMessageResponseChannel (userId,callback) {
+    if (this.stompClient) {
+        const userChannel = `/user/${userId}/queue/received-message`;
+        this.stompClient.subscribe(userChannel, callback);
+    }
+}
   sendMessageToAppChannel(endpoint, message) {
       if (this.stompClient) {
           const appChannel = `/app/${endpoint}`;
