@@ -1,6 +1,5 @@
 // FriendList.js
 import ChatBox from "./ChatBox.js";
-import { changeContent } from "./util.js";
 
 let friendListViewInstance = null; 
 
@@ -17,7 +16,6 @@ class FriendListView {
 
     async render() {
         const friendListViewHTML = `
-            <div id="friend-list">
                 <div class="" id="backspace">
                     <span class="material-symbols-outlined">
                         keyboard_backspace
@@ -28,9 +26,10 @@ class FriendListView {
                     <button class="search-button"><i class="fas fa-search"></i></button>
                 </div>
                 <div class="friend-listt"></div>
-            </div>
         `;
-        changeContent(friendListViewHTML);
+        /* changeContent(friendListViewHTML); */
+        const contentElement = document.querySelector('.friend-list-content');
+        contentElement.innerHTML = friendListViewHTML;
         this.renderFriendList(this.friendList);
     }
 

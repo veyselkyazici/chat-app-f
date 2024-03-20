@@ -2,9 +2,7 @@
 import { changeContent } from "./util.js";
 
 async function friendRequestReplyNotificationView(fetchFriendRequestReplyData) {
-    let friendRequestReplyNotificationView = `
-
-    `;
+    let friendRequestReplyNotificationView;
     friendRequestReplyNotificationView = generateFriendRequestsHTML(fetchFriendRequestReplyData);
     changeContent(friendRequestReplyNotificationView);
     console.log(fetchFriendRequestReplyData)

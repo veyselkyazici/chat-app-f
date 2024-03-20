@@ -1,33 +1,32 @@
 // Chat.js
 import AbstractView from "./AbstractView.js";
 import { addFriendView } from "./AddFriend2.js";
-import FriendListView from "./FriendList.js";
-import { friendApprovalView } from "./friendApproval.js";
-import { friendRequestReplyNotificationView } from "./FriendRequestReplyNotificationView.js";
+import FriendListView from "./Friends.js";
+import { friendApprovalView } from "./IncomingFriendRequests.js";
+import { friendRequestReplyNotificationView } from "./ApprovedRequestHistory.js";
 import WebSocketManager from "../websocket.js";
+
+export let webSocketManagerFriendships;
+export let webSocketManagerChat;
+webSocketManagerFriendships = new WebSocketManager('http://127.0.0.1:9030/ws');
+webSocketManagerChat = new WebSocketManager('http://127.0.0.1:9040/ws');
+
 export default class extends AbstractView {
     constructor(params) {
         super(params);
         this.setTitle("Chat");/* 
         this.renderChat()
         this.addEventListeners() */
-        this.storedUser = sessionStorage.getItem('userId');
-        this.chatList = [];
+        this.storedUser = null;
+        this.chatList = {};
         this.friendList = [];
         this.fetchFriendRequestReplyData = [];
         this.friendListViewInstance = null;
-        this.webSocketManagerFriendships = new WebSocketManager('http://127.0.0.1:9030/ws');
-        this.webSocketManagerChat = new WebSocketManager('http://127.0.0.1:9040/ws');
-
-
+        this.webSocketManagerFriendships = webSocketManagerFriendships;
+        this.webSocketManagerChat = webSocketManagerChat;
         this.init()
-
-
-
-        webSocketManagerFriendships = this.webSocketManagerFriendships;
-        webSocketManagerChat = this.webSocketManagerChat;
-
     }
+
     /* async renderChat () {
         const chatHtml = `<div class="chat-container">
         <div class="left-side">
@@ -64,6 +63,7 @@ export default class extends AbstractView {
     </div>`
     document.querySelector("#content").innerHTML = chatHtml;
     } */
+
     async getHtml() {
         return `
         <div class="chat-container">
@@ -92,7 +92,12 @@ export default class extends AbstractView {
                 </div>
             </header>
             <div class="chat-content">
+            <div class="chat-list-content">
 
+            </div>
+            <div class="friend-list-content vky" id="friend-list-content">
+
+            </div>
             </div>
         </div>
         <div class="chat-box scrollbar" id="chatWindow">
@@ -103,8 +108,8 @@ export default class extends AbstractView {
     }
 
     async init() {
-        this.initFriendshipWebSocket();
-        this.initChatWebSocket()
+        await this.initFriendshipWebSocket();
+        await this.initChatWebSocket()
         await this.initialData();
         this.handleChatList();
     }
@@ -138,7 +143,7 @@ export default class extends AbstractView {
             });
     }
 
-    initChatWebSocket() {
+    async initChatWebSocket() {
         this.webSocketManagerChat.connectWebSocket({}, () => {
             this.webSocketManagerChat.subscribeToReceivedMessageResponseChannel(this.storedUser, async (receivesMessage) => {
                 console.log("received ", receivesMessage)
@@ -150,8 +155,9 @@ export default class extends AbstractView {
 
 
     async initialData() {
+        this.storedUser = await fetchGetUserId();
         this.friendList = await fetchGetFriendList();
-        this.chatList = await fetchGetChatList(this.storedUser);
+        this.chatList = await fetchGetChatList();
     }
 
     addEventListeners() {
@@ -172,9 +178,13 @@ export default class extends AbstractView {
         if (friendListButtonElement) {
             friendListButtonElement.addEventListener("click", () => {
                 this.handleInitialFriendList(this.friendList);
-                chatListHeaderElement.classList.add("vky");
                 const backspaceBtnElement = document.getElementById("backspace");
-                const friendListElement = document.getElementById("friend-list");
+                const friendListElement = document.getElementById("friend-list-content");
+                chatListHeaderElement.classList.add("vky");
+                if(friendListElement.classList.contains("vky")){
+                    friendListElement.classList.remove("vky");
+                }
+                
                 backspaceBtnElement.addEventListener("click", () => {
                     friendListElement.classList.add("vky")
                     chatListHeaderElement.classList.remove("vky")
@@ -221,58 +231,23 @@ export default class extends AbstractView {
     }
 
     handleInitialFriendList(friendList) {
-        console.log("handledata", friendList)
         if (!this.friendListViewInstance) {
             this.friendListViewInstance = new FriendListView(friendList);
-            console.log("if")
         } else {
             this.friendListViewInstance.renderFriendList(friendList);
-            console.log("else")
         }
         this.friendListViewInstance.render();
     }
 
     handleChatList() {
-        const chatListArray = Object.values(this.chatList);
-
-
-        const chatListElement = document.createElement("div");
-        chatListElement.className = 'chat-list';
-        chatListElement.innerHTML = '';
-
-
-
-        chatListArray.forEach(chatRoom => {
-            const chatElement = document.createElement('div');
-            chatElement.className = 'chat';
-            chatElement.innerHTML = `
-                    <div class="left-side-friend-photo">${chatRoom.senderId}</div>
-                    <div class="data">
-                        <div class="name-and-date">
-                            <div class="friend-name">${chatRoom.recipientId}</div>
-                            <div class="last-message-date"></div>
-                        </div>
-                        
-                    </div>
-                `;
-
-
-            console.log("useruseruser");
-            chatListElement.appendChild(chatElement);
-            const chatContent = document.querySelector(".chat-content")
-           // chatContent.appendChild(chatListElement)
-
-        });
+        console.log("chatLIST: ", this.chatList)
     }
-    async searchUsers() {
-        console.log("asdfasdf")
-        return await fetchGetFriendList();
-    }
+    
+
 }
 
 const getFriendList = 'http://localhost:8080/api/v1/friendships/get-friend-list';
 const fetchGetFriendList = async () => {
-    console.log("getfriendlist")
     try {
         const response = await fetch(getFriendList, {
             method: 'POST',
@@ -286,7 +261,7 @@ const fetchGetFriendList = async () => {
             throw new Error('Kullanıcı bulunamadı');
         }
         const result = await response.json();
-        console.log("result: ", result)
+        console.log("fetchFriendList: ", result)
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
@@ -296,10 +271,8 @@ const fetchGetFriendList = async () => {
 
 
 const getChatList = 'http://localhost:8080/api/v1/chat/get-chat-list';
-const fetchGetChatList = async (userId) => {
-    const chatListRequestDTO = {
-        userId: userId
-    }
+const fetchGetChatList = async () => {
+
     try {
         const response = await fetch(getChatList, {
             method: 'POST',
@@ -307,13 +280,13 @@ const fetchGetChatList = async (userId) => {
                 'Content-Type': 'application/json',
                 'Authorization': sessionStorage.getItem('access_token'),
             },
-            body: JSON.stringify(chatListRequestDTO),
+            body: JSON.stringify({ token: sessionStorage.getItem('access_token') }),
         });
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
         }
         const result = await response.json();
-        console.log("result: ", result)
+        console.log("fetchChatList: ", result)
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
@@ -321,12 +294,13 @@ const fetchGetChatList = async (userId) => {
     }
 };
 
+const getFriendRequestReplyUrl = "http://localhost:8080/api/v1/friendships/friend-request-reply-notification";
 async function fetchFriendRequestReply() {
     const requestBody = {
         userId: sessionStorage.getItem("userId")
     };
     try {
-        const response = await fetch("http://localhost:8080/api/v1/friendships/friend-request-reply-notification", {
+        const response = await fetch(getFriendRequestReplyUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -341,6 +315,28 @@ async function fetchFriendRequestReply() {
     }
 }
 
+const getUserIdUrl = 'http://localhost:8080/api/v1/user/get-userId';
+async function fetchGetUserId() {
+    try {
+        const response = await fetch(getUserIdUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': sessionStorage.getItem('access_token'),
+            },
+            body: JSON.stringify({token: sessionStorage.getItem('access_token')}), 
+        });
 
-export let webSocketManagerFriendships;
-export let webSocketManagerChat;
+        if (!response.ok) {
+            throw new Error('Unauthorized');
+        }
+
+        const data = await response.json();
+        console.log("fetchGetUserId: ", data.userId)
+        return data.userId;
+    } catch (error) {
+        console.error('Hata:', error.message);
+        throw error; 
+    }
+}
+
