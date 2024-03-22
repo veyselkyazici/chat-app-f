@@ -1,21 +1,11 @@
 // FriendList.js
-import ChatBox from "./ChatBox.js";
 
-let friendListViewInstance = null; 
 
-class FriendListView {
-    constructor(friendList) {
-        if (friendListViewInstance) {
-            return friendListViewInstance;
-        }
-        this.friendList = friendList;
-        this.chatBoxInstance = null;
-        friendListViewInstance = this;
-        this.render();
-    }
-
-    async render() {
+function createFriendListView(friendList) {
+    render();
+    function render() {
         const friendListViewHTML = `
+            <div class="friend-list-container">
                 <div class="" id="backspace">
                     <span class="material-symbols-outlined">
                         keyboard_backspace
@@ -25,46 +15,44 @@ class FriendListView {
                     <input type="text" class="search-input" placeholder="Kişi arayın">
                     <button class="search-button"><i class="fas fa-search"></i></button>
                 </div>
-                <div class="friend-listt"></div>
-        `;
-        /* changeContent(friendListViewHTML); */
-        const contentElement = document.querySelector('.friend-list-content');
-        contentElement.innerHTML = friendListViewHTML;
-        this.renderFriendList(this.friendList);
-    }
-
-    renderFriendList(friendList) {
-        console.log(friendList)
-        const friendListContainer = document.querySelector('.friend-listt');
-        friendListContainer.innerHTML = '';
-        friendList.forEach(user => {
-            const friendElement = document.createElement('div');
-            friendElement.className = 'friend';
-            friendElement.innerHTML = `
-                <div class="left-side-friend-photo">${user.imageId}</div>
-                <div class="data">
-                    <div class="name-and-date">
-                        <div class="friend-name">${user.email}</div>
-                        <div class="last-message-date"></div>
-                    </div>
-                    <div class="friend-last-message">${user.about}</div>
+                <div class="friend-listt">
+                    ${friendList.map(user => `
+                        <div class="friend">
+                            <div class="left-side-friend-photo">${user.imageId}</div>
+                            <div class="data">
+                                <div class="name-and-date">
+                                    <div class="friend-name">${user.email}</div>
+                                    <div class="last-message-date"></div>
+                                </div>
+                                <div class="friend-last-message">${user.about}</div>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
-            `;
+            </div>`;
 
-            friendElement.addEventListener('click', () => this.handleFriendClick(user));
+        const chatListHeaderElement = document.querySelector(".chat-list-header");
+        const chatListContentElement = document.querySelector(".chat-list-content");
+        const chatContentElement = document.querySelector('.chat-content');
+        chatContentElement.insertAdjacentHTML('beforeend', friendListViewHTML);
 
-            friendListContainer.appendChild(friendElement);
+        const friendListContainerElement = document.querySelector(".friend-list-container")
+        const friendListContainer = document.querySelector('.friend-listt');
+
+        friendListContainer.querySelectorAll('.friend').forEach((friendElement, index) => {
+            friendElement.addEventListener('click', () => handleFriendClick(friendList[index]));
         });
+
+        const backspaceBtnElement = document.getElementById("backspace");
+        if (backspaceBtnElement) {
+            backspaceBtnElement.addEventListener("click", () => {
+                chatListHeaderElement.classList.remove("vky")
+                chatListContentElement.classList.remove("vky")
+                friendListContainerElement.remove("vky")
+            })
+        }
     }
 
-    handleFriendClick(user) {
-        if (!this.chatBoxInstance) {
-            this.chatBoxInstance = new ChatBox(user);
-        } else {
-            this.chatBoxInstance.updateUser(user);
-        }
-        this.chatBoxInstance.render();
-    }
 }
 
-export default FriendListView;
+export default createFriendListView;

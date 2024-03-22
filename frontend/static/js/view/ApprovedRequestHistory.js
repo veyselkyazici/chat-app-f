@@ -2,9 +2,26 @@
 import { changeContent } from "./util.js";
 
 async function friendRequestReplyNotificationView(fetchFriendRequestReplyData) {
-    let friendRequestReplyNotificationView;
-    friendRequestReplyNotificationView = generateFriendRequestsHTML(fetchFriendRequestReplyData);
-    changeContent(friendRequestReplyNotificationView);
+
+    const approvedRequestHistoryHTML = `   
+    <div class="" id="backspace">
+        <span class="material-symbols-outlined">
+            keyboard_backspace
+        </span>
+    </div>
+    <ul>${fetchFriendRequestReplyData.map(request => `
+        <li>
+            <div class="reply">
+                <div class="info-email">${request.friendUserEmail} isteğinizi kabul etti.</div>
+                <div class="info-date"> </div>
+            </div>
+        </li>
+    `).join('')}
+    </ul>`
+
+    const chatContentDiv = document.querySelector('.chat-content');
+    chatContentDiv.insertAdjacentHTML('beforeend', approvedRequestHistoryHTML);
+
     console.log(fetchFriendRequestReplyData)
 }
 
@@ -29,18 +46,5 @@ async function fetchFriendRequestReply() {
     }
 }
 
-function generateFriendRequestsHTML(friendRequests) {
-    return `
-        <ul>
-            ${friendRequests.map(request => `
-                <li>
-                    <div class="reply">
-                        <div class="info-email">${request.friendUserEmail} isteğinizi kabul etti.</div>
-                        <div class="info-date"> </div>
-                    </div>
-                </li>
-            `).join('')}
-        </ul>
-    `;
-}
+
 export { friendRequestReplyNotificationView };

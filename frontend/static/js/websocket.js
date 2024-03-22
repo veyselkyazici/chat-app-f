@@ -3,6 +3,7 @@ class WebSocketManager {
   constructor(webSocketUrl) {
       this.sockJs = new SockJS(webSocketUrl);
       this.stompClient = Stomp.over(this.sockJs);
+      
   }
 
   connectWebSocket(successCallback, errorCallback) {
