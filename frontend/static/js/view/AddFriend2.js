@@ -2,6 +2,7 @@
 import { changeContent } from "./util.js";
 import { webSocketManagerFriendships } from "./Chat.js";
 async function addFriendView() {
+    console.log("add friend view websocket: ", webSocketManagerFriendships)
     const addFriendView = `
     <div class="add-friends">
     <div class="search-bar">
@@ -131,6 +132,7 @@ const fetchSendFriendRequest = async (id) => {
 const friendRequestUrl = "add-friend";
 
 function sendFriendRequest(friendRequest) {
+    console.log("friend request: ", friendRequest)
     webSocketManagerFriendships.sendMessageToAppChannel(friendRequestUrl, friendRequest)
 }
 export { addFriendView };

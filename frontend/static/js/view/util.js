@@ -90,4 +90,37 @@ function onPageLoad() {
   }
 }
 
-export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace,onPageLoad, isUserLoggedIn, redirectToIndex };
+function addBackspaceEventListener(callback) {
+  const backspaceBtnElement = document.getElementById("backspace");
+  if (backspaceBtnElement) {
+      backspaceBtnElement.addEventListener("click", callback);
+  }
+}
+
+function hideElements(...elements) {
+  elements.forEach(element => {
+      if (element) {
+          element.classList.add("vky");
+      }
+  });
+}
+
+function visibleElements(...elements) {
+  elements.forEach(element => {
+      if (element) {
+          element.classList.remove("vky");
+      }
+  });
+}
+
+function removeElements(...elements) {
+  elements.forEach(element => {
+    if (element && element.parentNode) {
+      element.parentNode.removeChild(element);
+      }
+  });
+}
+
+
+
+export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace,onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements };

@@ -1,10 +1,9 @@
 // FriendList.js
+import { createChatBox } from './ChatBox.js'
+import { addBackspaceEventListener, removeElements, hideElements, visibleElements } from './util.js'
 
-
-function createFriendListView(friendList) {
-    render();
-    function render() {
-        const friendListViewHTML = `
+function createFriendList(friendList) {
+    const friendListViewHTML = `
             <div class="friend-list-container">
                 <div class="" id="backspace">
                     <span class="material-symbols-outlined">
@@ -31,28 +30,28 @@ function createFriendListView(friendList) {
                 </div>
             </div>`;
 
-        const chatListHeaderElement = document.querySelector(".chat-list-header");
-        const chatListContentElement = document.querySelector(".chat-list-content");
-        const chatContentElement = document.querySelector('.chat-content');
-        chatContentElement.insertAdjacentHTML('beforeend', friendListViewHTML);
+    const chatListHeaderElement = document.querySelector(".chat-list-header");
+    const chatListContentElement = document.querySelector(".chat-list-content");
+    const chatContentElement = document.querySelector('.chat-content');
+    chatContentElement.insertAdjacentHTML('beforeend', friendListViewHTML);
 
-        const friendListContainerElement = document.querySelector(".friend-list-container")
-        const friendListContainer = document.querySelector('.friend-listt');
+    const friendListContainerElement = document.querySelector(".friend-list-container")
+    const friendListContainer = document.querySelector('.friend-listt');
 
-        friendListContainer.querySelectorAll('.friend').forEach((friendElement, index) => {
-            friendElement.addEventListener('click', () => handleFriendClick(friendList[index]));
-        });
+    friendListContainer.querySelectorAll('.friend').forEach((friendElement, index) => {
+        friendElement.addEventListener('click', () => handleFriendClick(friendList[index]));
+    });
 
-        const backspaceBtnElement = document.getElementById("backspace");
-        if (backspaceBtnElement) {
-            backspaceBtnElement.addEventListener("click", () => {
-                chatListHeaderElement.classList.remove("vky")
-                chatListContentElement.classList.remove("vky")
-                friendListContainerElement.remove("vky")
-            })
-        }
+    addBackspaceEventListener(() => {
+        visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement);
+        removeElements(friendListContainerElement)
+    });
+
+    function handleFriendClick(user) {
+        console.log("user: ", user)
+        createChatBox(user)
     }
-
 }
 
-export default createFriendListView;
+
+export default createFriendList;

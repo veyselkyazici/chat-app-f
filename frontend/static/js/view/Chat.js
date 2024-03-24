@@ -1,10 +1,11 @@
 // Chat.js
 import AbstractView from "./AbstractView.js";
 import { addFriendView } from "./AddFriend2.js";
-import createFriendListView from "./Friends.js";
-import { friendApprovalView } from "./IncomingFriendRequests.js";
-import { friendRequestReplyNotificationView } from "./ApprovedRequestHistory.js";
+import createFriendList from "./Friends.js";
+import { createIncomingFriendRequests } from "./IncomingFriendRequests.js";
+import { createApprovedRequestHistory } from "./ApprovedRequestHistory.js";
 import WebSocketManager from "../websocket.js";
+import { hideElements } from './util.js'
 
 export let webSocketManagerFriendships;
 export let webSocketManagerChat;
@@ -18,16 +19,15 @@ export default class extends AbstractView {
         this.setTitle("Chat");/* 
         this.renderChat()
         this.addEventListeners() */
-        this.storedUser = null;
+        this.userId = '';
+        console.log("userId ", this.userId)
         this.chatList = {};
         this.friendList = [];
         this.fetchFriendRequestReplyData = [];
         this.friendListViewInstance = null;
         this.webSocketManagerFriendships = webSocketManagerFriendships;
-        console.log("1.websocket: ", this.webSocketManagerFriendships)
         this.webSocketManagerChat = webSocketManagerChat;
         this.init()
-        console.log("2.websocket: ", this.webSocketManagerFriendships)
     }
 
     /* async renderChat () {
@@ -109,67 +109,62 @@ export default class extends AbstractView {
     }
 
     async init() {
-        this.initFriendshipWebSocket();
-        this.initChatWebSocket()
         await this.initialData();
+         this.initFriendshipWebSocket();
+        this.initChatWebSocket()
         this.handleChatList();
     }
 
     async initFriendshipWebSocket() {
-        await this.webSocketManagerFriendships.connectWebSocket(() => {
-            this.subscribeToFriendshipChannels();
-        }, error => {
-            console.error('WebSocket bağlantı hatası: ' + error);
-        });
+        this.webSocketManagerFriendships.connectWebSocket(this.subscribeToFriendshipChannels(), this.error.bind(this));
     }
-    subscribeToFriendshipChannels() {
-        const userId = this.storedUser;
-        this.webSocketManagerFriendships.subscribeToFriendRequestFriendResponseChannel(userId, async (friendRequest) => {
-            const friendRequestBody = JSON.parse(friendRequest.body);
-            console.log("Arkadaşlık isteği bilgisi: ", friendRequestBody)
+    error(error) {
+        console.error('WebSocket connection error: ', error);
+    }
+
+    subscribeToFriendshipChannels()  {
+        this.webSocketManagerFriendships.subscribeToFriendRequestFriendResponseChannel(this.userId, async (incomingFriendRequest) => {
+            const incomingFriendRequestBody = JSON.parse(incomingFriendRequest.body);
+            console.log("incomingFriendRequestBody: ", incomingFriendRequestBody)
+            console.log("Arkadaşlık isteği bilgisi: ", incomingFriendRequestBody)
             this.friendRequestNotification(true);
         });
-        this.webSocketManagerFriendships.subscribeToFriendRequestUserResponseChannel(userId, async (friendRequest) => {
+        // Arkadaş ekleme isteği başarılı olduğunda toastr mesaji geçer isteği gonderen kullaniciya
+        this.webSocketManagerFriendships.subscribeToFriendRequestUserResponseChannel(this.userId, async (friendRequest) => {
+            console.log("istek gönderildi")
             const friendRequestBody = JSON.parse(friendRequest.body);
             friendRequestBody.statusCode === 400 ? toastr.error(friendRequestBody.message) : toastr.success(friendRequestBody.message);
         });
-        this.webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationUserResponseChannel(userId, async (friendRequest) => {
+        // Eğer istek onaylanirsa isteği gönderen kişiye toastr mesaji çıkartılır. Arkadaş listesi tekrar fetch edilir.
+        this.webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationUserResponseChannel(this.userId, async (friendRequest) => {
             const friendRequestBody = JSON.parse(friendRequest.body);
             toastr.success(friendRequestBody + " isteğinizi onayladı")
             this.friendRequestReplyNotificationBadge(true);
             this.fetchFriendRequestReplyData = await fetchFriendRequestReply();
             this.friendList = await fetchGetFriendList();
         });
-        this.webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationFriendResponseChannel(userId, async (friendRequest) => {
+        // Isteği onaylayan kişiye toastre mesajo çıkartılır. Arkadaş listesi tekrar fetch edilir.
+        this.webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationFriendResponseChannel(this.userId, async (friendRequest) => {
             const friendRequestBody = JSON.parse(friendRequest.body);
             toastr.success(friendRequestBody + " kişisini arkadaş eklediniz")
             this.friendList = await fetchGetFriendList();
         });
     }
 
-    async initChatWebSocket() {
-        await this.webSocketManagerChat.connectWebSocket({}, () => {
+    initChatWebSocket() {
+        this.webSocketManagerChat.connectWebSocket({}, () => {
             this.subscribeToChatChannels
         }, function (error) {
             console.error('WebSocket connection error: ' + error);
         })
     }
-    subscribeToChatChannels() {
-        this.webSocketManagerChat.subscribeToReceivedMessageResponseChannel(this.storedUser, async (receivesMessage) => {
-            console.log("received ", receivesMessage)
-        })
-    }
+
 
     async initialData() {
-        this.storedUser = await fetchGetUserId();
+        this.userId = await fetchGetUserId();
+        console.log("InitialData userId: ", this.userId)
         this.friendList = await fetchGetFriendList();
         this.chatList = await fetchGetChatList();
-    }
-
-
-    makeChatListContentElementAndChatListHeaderElementInvisible(chatListContentElement, chatListHeaderElement) {
-        chatListHeaderElement.classList.add("vky");
-        chatListContentElement.classList.add("vky");
     }
 
 
@@ -181,7 +176,7 @@ export default class extends AbstractView {
         const friendApprovalButtonElement = document.querySelector(".friend-approval");
         const friendRequestReplyNotificationElement = document.querySelector(".friend-request-reply-notification");
         const chatsElement = document.querySelector(".chats");
-        
+
 
 
         if (addFriendButtonElement) {
@@ -192,7 +187,7 @@ export default class extends AbstractView {
 
         if (friendListButtonElement) {
             friendListButtonElement.addEventListener("click", () => {
-                this.makeChatListContentElementAndChatListHeaderElementInvisible(chatListContentElement, chatListHeaderElement)
+                hideElements(chatListHeaderElement, chatListContentElement)
                 this.handleInitialFriendList(this.friendList);
             });
         }
@@ -200,21 +195,23 @@ export default class extends AbstractView {
         if (friendApprovalButtonElement) {
             friendApprovalButtonElement.addEventListener("click",
                 () => {
-                    friendApprovalView(this.webSocketManagerFriendships)
+                    hideElements(chatListHeaderElement, chatListContentElement)
+                    createIncomingFriendRequests()
                     this.friendRequestNotification(false);
                 });
         }
 
         if (friendRequestReplyNotificationElement) {
             friendRequestReplyNotificationElement.addEventListener("click", () => {
-                friendRequestReplyNotificationView(this.fetchFriendRequestReplyData)
+                hideElements(chatListHeaderElement, chatListContentElement)
+                createApprovedRequestHistory(this.fetchFriendRequestReplyData)
                 this.friendRequestReplyNotificationBadge(false)
             });
         }
 
         if (chatsElement) {
             chatsElement.addEventListener("click", () => {
-                console.log(fetchGetChatList(this.storedUser))
+                console.log(fetchGetChatList(this.userId))
             });
         }
     }
@@ -233,10 +230,11 @@ export default class extends AbstractView {
     }
 
     handleInitialFriendList(friendList) {
-        createFriendListView(friendList);
+        createFriendList(friendList);
     }
 
     handleChatList() {
+        console.log("HANDLE USERID: ", this.userId)
         console.log("chatLIST: ", this.chatList)
     }
 
@@ -305,7 +303,7 @@ async function fetchFriendRequestReply() {
             },
             body: JSON.stringify(requestBody)
         });
-        const data = response.json();
+        const data = await response.json();
         return data;
     } catch (error) {
         console.log(error)
@@ -314,6 +312,7 @@ async function fetchFriendRequestReply() {
 
 const getUserIdUrl = 'http://localhost:8080/api/v1/user/get-userId';
 async function fetchGetUserId() {
+    const requestBody = { token: sessionStorage.getItem('access_token') };
     try {
         const response = await fetch(getUserIdUrl, {
             method: "POST",
@@ -321,7 +320,7 @@ async function fetchGetUserId() {
                 "Content-Type": "application/json",
                 'Authorization': sessionStorage.getItem('access_token'),
             },
-            body: JSON.stringify({ token: sessionStorage.getItem('access_token') }),
+            body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
@@ -329,11 +328,11 @@ async function fetchGetUserId() {
         }
 
         const data = await response.json();
-        console.log("fetchGetUserId: ", data.userId)
         return data.userId;
     } catch (error) {
         console.error('Hata:', error.message);
         throw error;
     }
 }
+
 

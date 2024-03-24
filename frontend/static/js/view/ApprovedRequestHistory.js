@@ -1,9 +1,14 @@
 // FriendRequestReplyNotificationView.js
-import { changeContent } from "./util.js";
+import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
 
-async function friendRequestReplyNotificationView(fetchFriendRequestReplyData) {
+async function createApprovedRequestHistory(fetchFriendRequestReplyData) {
+
+    const chatListHeaderElement = document.querySelector(".chat-list-header");
+    const chatListContentElement = document.querySelector(".chat-list-content");
+    const chatContentElement = document.querySelector('.chat-content');
 
     const approvedRequestHistoryHTML = `   
+    <div class="approved-request-history" id="approved-request-history">
     <div class="" id="backspace">
         <span class="material-symbols-outlined">
             keyboard_backspace
@@ -17,10 +22,15 @@ async function friendRequestReplyNotificationView(fetchFriendRequestReplyData) {
             </div>
         </li>
     `).join('')}
-    </ul>`
+    </ul></div>`
 
-    const chatContentDiv = document.querySelector('.chat-content');
-    chatContentDiv.insertAdjacentHTML('beforeend', approvedRequestHistoryHTML);
+
+    chatContentElement.insertAdjacentHTML('beforeend', approvedRequestHistoryHTML);
+    const incomingFriendRequestsElement = document.querySelector('#approved-request-history');
+    addBackspaceEventListener(() => {
+        visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement);
+        removeElements(incomingFriendRequestsElement)
+    });
 
     console.log(fetchFriendRequestReplyData)
 }
@@ -47,4 +57,4 @@ async function fetchFriendRequestReply() {
 }
 
 
-export { friendRequestReplyNotificationView };
+export { createApprovedRequestHistory };
