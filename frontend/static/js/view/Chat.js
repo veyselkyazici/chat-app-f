@@ -9,8 +9,6 @@ import { hideElements } from './util.js'
 
 export let webSocketManagerFriendships;
 export let webSocketManagerChat;
-webSocketManagerFriendships = new WebSocketManager('http://127.0.0.1:9030/ws');
-webSocketManagerChat = new WebSocketManager('http://127.0.0.1:9040/ws');
 
 
 export default class extends AbstractView {
@@ -24,6 +22,10 @@ export default class extends AbstractView {
         this.chatList = {};
         this.friendList = [];
         this.fetchFriendRequestReplyData = [];
+        webSocketManagerFriendships = new WebSocketManager('http://127.0.0.1:9030/ws');
+        webSocketManagerChat = new WebSocketManager('http://127.0.0.1:9040/ws');
+        const abc = 5;
+        console.log("ABC: ", abc)
         this.friendListViewInstance = null;
         this.webSocketManagerFriendships = webSocketManagerFriendships;
         this.webSocketManagerChat = webSocketManagerChat;
@@ -109,20 +111,22 @@ export default class extends AbstractView {
     }
 
     async init() {
-        await this.initialData();
-         this.initFriendshipWebSocket();
+        this.initialData();
+        this.initFriendshipWebSocket();
         this.initChatWebSocket()
         this.handleChatList();
     }
 
     async initFriendshipWebSocket() {
-        this.webSocketManagerFriendships.connectWebSocket(this.subscribeToFriendshipChannels(), this.error.bind(this));
-    }
-    error(error) {
-        console.error('WebSocket connection error: ', error);
+        this.webSocketManagerFriendships.connectWebSocket(() => {
+            this.subscribeToFriendshipChannels();
+        }, error => {
+            console.error('WebSocket bağlantı hatası: ' + error);
+        });
     }
 
-    subscribeToFriendshipChannels()  {
+    subscribeToFriendshipChannels() {
+        console.log("USERID: ", this.userId)
         this.webSocketManagerFriendships.subscribeToFriendRequestFriendResponseChannel(this.userId, async (incomingFriendRequest) => {
             const incomingFriendRequestBody = JSON.parse(incomingFriendRequest.body);
             console.log("incomingFriendRequestBody: ", incomingFriendRequestBody)

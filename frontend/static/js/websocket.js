@@ -7,7 +7,11 @@ class WebSocketManager {
     }
   
     connectWebSocket(successCallback, errorCallback) {
-        this.stompClient.connect({}, successCallback, errorCallback);
+        if(this.stompClient) {
+            this.stompClient.connect({}, successCallback, errorCallback);
+        }else {
+            console.log("PATLADI")
+        }
     }
   
     disconnectWebSocket() {
