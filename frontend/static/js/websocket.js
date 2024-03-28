@@ -1,62 +1,58 @@
-// WebSocketManager.js
 class WebSocketManager {
     constructor(webSocketUrl) {
-        this.sockJs = new SockJS(webSocketUrl);
-        this.stompClient = Stomp.over(this.sockJs);
-        
+        this.webSocketUrl = webSocketUrl;
+        this.stompClient = null;
+        this.subscriptions = new Map();
     }
   
     connectWebSocket(successCallback, errorCallback) {
-        if(this.stompClient) {
+        try {
+            this.sockJs = new SockJS(this.webSocketUrl);
+            this.stompClient = Stomp.over(this.sockJs);
             this.stompClient.connect({}, successCallback, errorCallback);
-        }else {
-            console.log("PATLADI")
+        } catch (error) {
+            console.error('WebSocket connection error:', error);
+            if (errorCallback) errorCallback(error);
         }
     }
   
     disconnectWebSocket() {
         if (this.stompClient) {
             this.stompClient.disconnect();
+            this.subscriptions.forEach((subscription) => {
+                subscription.unsubscribe();
+            });
+            this.subscriptions.clear();
         }
     }
   
-    subscribeToFriendRequestFriendResponseChannel(userId,callback) {
+    subscribeToChannel(channel, callback) {
         if (this.stompClient) {
-            const userChannel = `/user/${userId}/queue/friend-request-friend-response`;
-            this.stompClient.subscribe(userChannel, callback);
+            const subscription = this.stompClient.subscribe(channel, callback);
+            this.subscriptions.set(channel, subscription);
+            return subscription;
+        }
+        return null;
+    }
+  
+    unsubscribeFromChannel(channel) {
+        if (this.subscriptions.has(channel)) {
+            const subscription = this.subscriptions.get(channel);
+            subscription.unsubscribe();
+            this.subscriptions.delete(channel);
         }
     }
-    subscribeToFriendRequestUserResponseChannel(userId,callback) {
-      if (this.stompClient) {
-          const userChannel = `/user/${userId}/queue/friend-request-user-response`;
-          this.stompClient.subscribe(userChannel, callback);
-      }
-  }
-    subscribeToFriendRequestReplyNotificationUserResponseChannel(userId,callback) {
-      if (this.stompClient) {
-          const userChannel = `/user/${userId}/queue/friend-request-reply-notification-user-response`;
-          this.stompClient.subscribe(userChannel, callback);
-      }
-  }
-  subscribeToFriendRequestReplyNotificationFriendResponseChannel(userId,callback) {
-      if (this.stompClient) {
-          const userChannel = `/user/${userId}/queue/friend-request-reply-notification-friend-response`;
-          this.stompClient.subscribe(userChannel, callback);
-      }
-  }
-  
-  subscribeToReceivedMessageResponseChannel (userId,callback) {
-      if (this.stompClient) {
-          const userChannel = `/user/${userId}/queue/received-message`;
-          this.stompClient.subscribe(userChannel, callback);
-      }
-  }
+
     sendMessageToAppChannel(endpoint, message) {
         if (this.stompClient) {
-            const appChannel = `/app/${endpoint}`;
-            this.stompClient.send(appChannel, {}, JSON.stringify(message));
+            try {
+                const appChannel = `/app/${endpoint}`;
+                this.stompClient.send(appChannel, {}, JSON.stringify(message));
+            } catch (error) {
+                console.error('Error sending message to channel:', error);
+            }
         }
     }
-  }
-  
-  export default WebSocketManager;
+}
+
+export default WebSocketManager;

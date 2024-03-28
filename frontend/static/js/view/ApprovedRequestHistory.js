@@ -17,7 +17,7 @@ async function createApprovedRequestHistory(fetchFriendRequestReplyData) {
     <ul>${fetchFriendRequestReplyData.map(request => `
         <li>
             <div class="reply">
-                <div class="info-email">${request.friendUserEmail} isteğinizi kabul etti.</div>
+                <div class="info-email">${request.friendEmail} isteğinizi kabul etti.</div>
                 <div class="info-date"> </div>
             </div>
         </li>

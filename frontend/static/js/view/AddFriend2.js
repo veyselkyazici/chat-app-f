@@ -89,11 +89,16 @@ function renderSearchResults(searchResults) {
 
         // Attach click event to dynamically created Add Friend buttons
         const addFriendBtns = chatItem.querySelector('.add-btn');
+        const addFriend = document.querySelector(".add-friend")
+        addFriend.addEventListener('click', () => {
+            console.log("user: ", user)
+        });
         addFriendBtns.addEventListener('click', function  () {
             console.log(user.id, "----" , user.email)
             const friendRequest = {
                 token: sessionStorage.getItem('access_token'),
-                email: user.email
+                friendId: user.id,
+                friendEmail: user.email
             };
             console.log(friendRequest)
        sendFriendRequest(friendRequest)

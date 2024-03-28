@@ -11,6 +11,7 @@ async function createIncomingFriendRequests () {
 
     const friendRequests = await fetchFriendRequests();
     console.log("friendrequests: ", friendRequests)
+    
     const incomingFriendRequestsHTML = `
     <div class="incoming-friend-requests" id="incoming-friend-requests">
     <div class="" id="backspace">
@@ -53,31 +54,25 @@ async function createIncomingFriendRequests () {
 
     function handleAction(action, friendRequest) {
         const requestBody = {
-            friendUserId: sessionStorage.getItem("userId"),
             userId: friendRequest.userId,
+            friendId: friendRequest.friendId,
             accepted: action
         };
         webSocketManagerFriendships.sendMessageToAppChannel("friend-request-reply", requestBody);
     }
 
     async function fetchFriendRequests() {
-        const requestBody = {
-            friendUserId: sessionStorage.getItem("userId")
-        };
-
         const response = await fetch("http://localhost:8080/api/v1/friendships/awaiting-approval", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 'Authorization': sessionStorage.getItem('access_token'),
             },
-            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
             throw new Error("Arkadaşlık istekleri alınamadı.");
         }
-
         return await response.json();
     }
 }

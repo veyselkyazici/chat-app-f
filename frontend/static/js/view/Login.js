@@ -93,9 +93,7 @@ const loginFetch = async (formElements, email, password) => {
         var value = sessionStorage.getItem(key);
         allSessionStorageItems[key] = value;
       }
-      console.log("allSessionStorageItems", allSessionStorageItems)
       toastr.success('Giriş Başarılı')
-      console.log("Login successful:", responseData);
       return responseData;
     } else {
       console.error("Login failed", responseData);
@@ -143,7 +141,6 @@ const loginForm = async () => {
     const response = await loginFetch(formElements, email, password);
     console.log("response: ", response)
     const user = await getUserByAuthId(response.id);
-    sessionStorage.setItem('userId', user.id);
     console.log(user)
     console.log('user', user)
     console.log('user.update', user.updatedAt)

@@ -9,7 +9,8 @@ import { hideElements } from './util.js'
 
 export let webSocketManagerFriendships;
 export let webSocketManagerChat;
-
+webSocketManagerFriendships = new WebSocketManager('http://127.0.0.1:9030/ws');
+webSocketManagerChat = new WebSocketManager('http://127.0.0.1:9040/ws');
 
 export default class extends AbstractView {
     constructor(params) {
@@ -18,14 +19,11 @@ export default class extends AbstractView {
         this.renderChat()
         this.addEventListeners() */
         this.userId = '';
-        console.log("userId ", this.userId)
         this.chatList = {};
         this.friendList = [];
         this.fetchFriendRequestReplyData = [];
-        webSocketManagerFriendships = new WebSocketManager('http://127.0.0.1:9030/ws');
-        webSocketManagerChat = new WebSocketManager('http://127.0.0.1:9040/ws');
-        const abc = 5;
-        console.log("ABC: ", abc)
+
+
         this.friendListViewInstance = null;
         this.webSocketManagerFriendships = webSocketManagerFriendships;
         this.webSocketManagerChat = webSocketManagerChat;
@@ -111,7 +109,7 @@ export default class extends AbstractView {
     }
 
     async init() {
-        this.initialData();
+        await this.initialData();
         this.initFriendshipWebSocket();
         this.initChatWebSocket()
         this.handleChatList();
@@ -126,21 +124,27 @@ export default class extends AbstractView {
     }
 
     subscribeToFriendshipChannels() {
-        console.log("USERID: ", this.userId)
-        this.webSocketManagerFriendships.subscribeToFriendRequestFriendResponseChannel(this.userId, async (incomingFriendRequest) => {
+
+        const friendResponseChannel = `/user/${this.userId}/queue/friend-request-friend-response`;
+        const userChannel = `/user/${this.userId}/queue/friend-request-user-response`;
+        const notificationChannel = `/user/${this.userId}/queue/friend-request-reply-notification-user-response`;
+        const notificationFriendChannel = `/user/${this.userId}/queue/friend-request-reply-notification-friend-response`;
+        const sendMessageChannel = `/user/${this.userId}/queue/received-message`;
+
+        this.webSocketManagerFriendships.subscribeToChannel(friendResponseChannel, async (incomingFriendRequest) => {
             const incomingFriendRequestBody = JSON.parse(incomingFriendRequest.body);
             console.log("incomingFriendRequestBody: ", incomingFriendRequestBody)
             console.log("Arkadaşlık isteği bilgisi: ", incomingFriendRequestBody)
             this.friendRequestNotification(true);
         });
         // Arkadaş ekleme isteği başarılı olduğunda toastr mesaji geçer isteği gonderen kullaniciya
-        this.webSocketManagerFriendships.subscribeToFriendRequestUserResponseChannel(this.userId, async (friendRequest) => {
+        this.webSocketManagerFriendships.subscribeToChannel(userChannel, async (friendRequest) => {
             console.log("istek gönderildi")
             const friendRequestBody = JSON.parse(friendRequest.body);
             friendRequestBody.statusCode === 400 ? toastr.error(friendRequestBody.message) : toastr.success(friendRequestBody.message);
         });
         // Eğer istek onaylanirsa isteği gönderen kişiye toastr mesaji çıkartılır. Arkadaş listesi tekrar fetch edilir.
-        this.webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationUserResponseChannel(this.userId, async (friendRequest) => {
+        this.webSocketManagerFriendships.subscribeToChannel(notificationChannel, async (friendRequest) => {
             const friendRequestBody = JSON.parse(friendRequest.body);
             toastr.success(friendRequestBody + " isteğinizi onayladı")
             this.friendRequestReplyNotificationBadge(true);
@@ -148,11 +152,15 @@ export default class extends AbstractView {
             this.friendList = await fetchGetFriendList();
         });
         // Isteği onaylayan kişiye toastre mesajo çıkartılır. Arkadaş listesi tekrar fetch edilir.
-        this.webSocketManagerFriendships.subscribeToFriendRequestReplyNotificationFriendResponseChannel(this.userId, async (friendRequest) => {
+        this.webSocketManagerFriendships.subscribeToChannel(notificationFriendChannel, async (friendRequest) => {
             const friendRequestBody = JSON.parse(friendRequest.body);
             toastr.success(friendRequestBody + " kişisini arkadaş eklediniz")
             this.friendList = await fetchGetFriendList();
         });
+        console.log("SUBSCRIBE")
+
+        const message = { text: 'Merhaba, dünya!' };
+        this.webSocketManagerFriendships.sendMessageToAppChannel(sendMessageChannel, message);
     }
 
     initChatWebSocket() {
@@ -168,7 +176,7 @@ export default class extends AbstractView {
         this.userId = await fetchGetUserId();
         console.log("InitialData userId: ", this.userId)
         this.friendList = await fetchGetFriendList();
-        this.chatList = await fetchGetChatList();
+        // this.chatList = await fetchGetChatList();
     }
 
 
@@ -238,7 +246,6 @@ export default class extends AbstractView {
     }
 
     handleChatList() {
-        console.log("HANDLE USERID: ", this.userId)
         console.log("chatLIST: ", this.chatList)
     }
 
@@ -249,12 +256,11 @@ const getFriendList = 'http://localhost:8080/api/v1/friendships/get-friend-list'
 const fetchGetFriendList = async () => {
     try {
         const response = await fetch(getFriendList, {
-            method: 'POST',
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': sessionStorage.getItem('access_token'),
             },
-            body: JSON.stringify({ token: sessionStorage.getItem('access_token') }),
         });
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
@@ -295,9 +301,6 @@ const fetchGetChatList = async () => {
 
 const getFriendRequestReplyUrl = "http://localhost:8080/api/v1/friendships/friend-request-reply-notification";
 async function fetchFriendRequestReply() {
-    const requestBody = {
-        userId: sessionStorage.getItem("userId")
-    };
     try {
         const response = await fetch(getFriendRequestReplyUrl, {
             method: "POST",
@@ -305,7 +308,6 @@ async function fetchFriendRequestReply() {
                 "Content-Type": "application/json",
                 'Authorization': sessionStorage.getItem('access_token'),
             },
-            body: JSON.stringify(requestBody)
         });
         const data = await response.json();
         return data;
