@@ -74,8 +74,14 @@
 
 
 
-
-
+.chat-list {
+    padding-top: 5px;
+    display: flex;
+}
+.chat-list:hover {
+    background-color: #075E54;
+    cursor: pointer
+}
 
 
 .hidden {

@@ -4,13 +4,14 @@ import { addFriendView } from "./AddFriend2.js";
 import createFriendList from "./Friends.js";
 import { createIncomingFriendRequests } from "./IncomingFriendRequests.js";
 import { createApprovedRequestHistory } from "./ApprovedRequestHistory.js";
+import { createMessageBox } from "./MessageBox.js";
 import WebSocketManager from "../websocket.js";
 import { hideElements } from './util.js'
 
 export let webSocketManagerFriendships;
 export let webSocketManagerChat;
-webSocketManagerFriendships = new WebSocketManager('http://127.0.0.1:9030/ws');
-webSocketManagerChat = new WebSocketManager('http://127.0.0.1:9040/ws');
+webSocketManagerFriendships = new WebSocketManager('http://localhost:9030/ws');
+webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws');
 
 export default class extends AbstractView {
     constructor(params) {
@@ -94,6 +95,10 @@ export default class extends AbstractView {
                     </div>
                 </div>
             </header>
+            <div class="search-bar" id="chat-search-bar">
+            <input type="text" class="search-input" placeholder="Kullnıcı Arayın">
+            <button class="search-button"><i class="fas fa-search"></i></button>
+        </div>
             <div class="chat-content">
                 <div class="chat-list-content">
 
@@ -112,7 +117,7 @@ export default class extends AbstractView {
         await this.initialData();
         this.initFriendshipWebSocket();
         this.initChatWebSocket()
-        this.handleChatList();
+        this.handleMessageBox();
     }
 
     async initFriendshipWebSocket() {
@@ -176,7 +181,7 @@ export default class extends AbstractView {
         this.userId = await fetchGetUserId();
         console.log("InitialData userId: ", this.userId)
         this.friendList = await fetchGetFriendList();
-        // this.chatList = await fetchGetChatList();
+        this.chatList = await fetchGetChatList(this.userId);
     }
 
 
@@ -186,6 +191,8 @@ export default class extends AbstractView {
         const chatListHeaderElement = document.querySelector(".chat-list-header");
         const friendListButtonElement = document.querySelector(".friend-list-btn");
         const friendApprovalButtonElement = document.querySelector(".friend-approval");
+        const chatSearchBarElement = document.querySelector('#chat-search-bar');
+        const chatElement = document.querySelector(".chat-list");
         const friendRequestReplyNotificationElement = document.querySelector(".friend-request-reply-notification");
         const chatsElement = document.querySelector(".chats");
 
@@ -193,14 +200,15 @@ export default class extends AbstractView {
 
         if (addFriendButtonElement) {
             addFriendButtonElement.addEventListener("click", () => {
-                addFriendView(webSocketManagerFriendships)
+                hideElements(chatListHeaderElement, chatListContentElement)
+                addFriendView();
             });
         }
 
         if (friendListButtonElement) {
             friendListButtonElement.addEventListener("click", () => {
-                hideElements(chatListHeaderElement, chatListContentElement)
-                this.handleInitialFriendList(this.friendList);
+                hideElements(chatListHeaderElement, chatListContentElement, chatSearchBarElement)
+                this.handleInitialFriendList();
             });
         }
 
@@ -221,9 +229,16 @@ export default class extends AbstractView {
             });
         }
 
-        if (chatsElement) {
-            chatsElement.addEventListener("click", () => {
-                console.log(fetchGetChatList(this.userId))
+        if (chatElement) {
+            chatElement.addEventListener("click", (chat) => {
+                const chatMessage = {
+                    friendEmail: chat.friendEmail,
+                    friendId: this.userId == chat.senderId ? chat.recipientId : chat.renderId,
+                    userId: this.userId == chat.senderId ? chat.senderId : chat.recipientId,
+                    messages: chat.messages,
+                    chatRoomId: chat.messages[0].chatRoomId
+                }
+                createMessageBox(chatMessage);
             });
         }
     }
@@ -241,12 +256,27 @@ export default class extends AbstractView {
         }
     }
 
-    handleInitialFriendList(friendList) {
-        createFriendList(friendList);
+    handleInitialFriendList() {
+        createFriendList(this.friendList, this.userId);
     }
 
-    handleChatList() {
-        console.log("chatLIST: ", this.chatList)
+    handleMessageBox() {
+        const chatListContentElement = document.querySelector(".chat-list-content");
+        const chatElement = document.createElement("div");
+        chatElement.classList.add("chat-list");
+        this.chatList.forEach(chat => {
+
+            chatElement.innerHTML = `
+                <div class="chat-photo">
+                    <div class="left-side-friend-photo">${chat.image}</div>
+                </div>
+                <div class="chat-info">
+                    <div class="chat-name">${chat.friendEmail}</div>
+                    <div class="last-message">${chat.lastMessage}</div>
+                </div>
+            `;
+            chatListContentElement.appendChild(chatElement);
+        });
     }
 
 
@@ -265,6 +295,7 @@ const fetchGetFriendList = async () => {
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
         }
+        console.log(response)
         const result = await response.json();
         console.log("fetchFriendList: ", result)
         return result;
@@ -276,8 +307,7 @@ const fetchGetFriendList = async () => {
 
 
 const getChatList = 'http://localhost:8080/api/v1/chat/get-chat-list';
-const fetchGetChatList = async () => {
-
+const fetchGetChatList = async (userId) => {
     try {
         const response = await fetch(getChatList, {
             method: 'POST',
@@ -285,11 +315,12 @@ const fetchGetChatList = async () => {
                 'Content-Type': 'application/json',
                 'Authorization': sessionStorage.getItem('access_token'),
             },
-            body: JSON.stringify({ token: sessionStorage.getItem('access_token') }),
+            body: JSON.stringify({ userId: userId }),
         });
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
         }
+        
         const result = await response.json();
         console.log("fetchChatList: ", result)
         return result;
@@ -309,6 +340,7 @@ async function fetchFriendRequestReply() {
                 'Authorization': sessionStorage.getItem('access_token'),
             },
         });
+        
         const data = await response.json();
         return data;
     } catch (error) {

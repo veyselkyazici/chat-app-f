@@ -1,20 +1,35 @@
 // AddFriend.js
-import { changeContent } from "./util.js";
+import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
 import { webSocketManagerFriendships } from "./Chat.js";
+
 async function addFriendView() {
-    console.log("add friend view websocket: ", webSocketManagerFriendships)
-    const addFriendView = `
-    <div class="add-friends">
+    const chatListHeaderElement = document.querySelector(".chat-list-header");
+    const chatListContentElement = document.querySelector(".chat-list-content");
+    const chatContentElement = document.querySelector('.chat-content');
+
+
+    const addFriendHTML = `
+    <div class="add-friend-div" id="add-friend-div">
+    <div class="" id="backspace">
+    <span class="material-symbols-outlined">
+        keyboard_backspace
+    </span>
+</div>
     <div class="search-bar">
     <input type="text" class="search-input" placeholder="Kullnıcı Arayın">
     <button class="search-button"><i class="fas fa-search"></i></button>
 </div>
-<div class="chat-list scrollbar">
+<div class="search-result scrollbar">
 </div>
     </div>
     `;
-    changeContent(addFriendView);
 
+    chatContentElement.insertAdjacentHTML('beforeend', addFriendHTML);
+    const addFriendElement = document.querySelector('#add-friend-div');
+    addBackspaceEventListener(() => {
+        visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement);
+        removeElements(addFriendElement)
+    });
     const searchInput = document.querySelector('.search-input');
     searchInput.addEventListener('input', handleSearchInput);
 }
@@ -25,14 +40,15 @@ function handleSearchInput(event) {
     if (searchString === '') {
         clearAddFriendsList();
     } else {
+        console.log("AAAAAAAAAAA")
         fetchSearchUsers(searchString);
     }
 }
 
 
 function clearAddFriendsList() {
-    const chatList = document.querySelector('.add-friends');
-    chatList.innerHTML = '';
+    const addFriendElement = document.querySelector('.search-result');
+    addFriendElement.innerHTML = '';
 }
 
 const searchUsersUrl = 'http://localhost:8080/api/v1/user/find-by-keyword-ignore-case-users';
@@ -67,7 +83,7 @@ const fetchSearchUsers = async (searchString) => {
 
 
 function renderSearchResults(searchResults) {
-    const chatList = document.querySelector('.chat-list');
+    const chatList = document.querySelector('.search-result');
     chatList.innerHTML = '';
 
     searchResults.forEach(user => {
@@ -87,7 +103,6 @@ function renderSearchResults(searchResults) {
 
         chatList.appendChild(chatItem);
 
-        // Attach click event to dynamically created Add Friend buttons
         const addFriendBtns = chatItem.querySelector('.add-btn');
         const addFriend = document.querySelector(".add-friend")
         addFriend.addEventListener('click', () => {

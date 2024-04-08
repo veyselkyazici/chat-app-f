@@ -425,7 +425,7 @@ header {
 }
 
 
-.chat-list {
+.search-result {
   overflow-y: auto;
   max-height: 640px;
   overflow-x: hidden;

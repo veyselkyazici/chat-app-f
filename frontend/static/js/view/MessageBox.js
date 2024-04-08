@@ -1,8 +1,9 @@
 // ChatBox.js
 import { webSocketManagerChat } from "./Chat.js";
 
-function createChatBox(user) {
+function createMessageBox(chat) {
     const chatBoxElement = document.querySelector('.chat-box');
+
     chatBoxElement.innerHTML = `
         <header class="chat-window-header">
             <div class="friend-photo">
@@ -10,7 +11,7 @@ function createChatBox(user) {
                     <img class="user-image" tabindex="0" src="/static/image/default-user-profile-photo.png" alt="Varsayılan Fotoğraf" id="profilePhoto" />
                 </div>
             </div>
-            <div class="friend-detail">${user.email}</div>
+            <div class="friend-detail">${chat.friendEmail}</div>
             <div class="fa-solid fa-gear settings option" tabindex="0" role="button"></div>
         </header>   
         <div class="message-list" id="message-list"></div>
@@ -27,16 +28,16 @@ function createChatBox(user) {
 
     const sendMessage = () => {
         const messageContent = messageInput.value.trim();
-
+        var date = new Date(); // Geçerli tarih ve saat
+        var formattedDate = date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+        console.log(formattedDate); // Örnek çıktı: "7 Nisan 2024"
         if (messageContent !== "") {
             const fullDateTime = new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' });
-            const timeOnly = new Date().toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' });
             const message = {
                 messageContent: messageContent,
                 fullDateTime: fullDateTime,
-                timeOnly: timeOnly,
-                senderId: sessionStorage.getItem("userId"),
-                recipientId: user.id
+                senderId: chat.userId,
+                recipientId: chat.friendId
             };
             appendMessage(message);
             webSocketManagerChat.sendMessageToAppChannel("send-message", message);
@@ -45,7 +46,8 @@ function createChatBox(user) {
     };
     const appendMessage = (message) => {
         const messageDiv = document.createElement("div");
-        const senderClass = (message.senderId === sessionStorage.getItem("userId")) ? "sent" : "received";
+        
+        const senderClass = (message.senderId === chat.userId) ? "sent" : "received";
         messageDiv.classList.add("chat-message", senderClass);
 
         const contentParagraph = document.createElement("p");
@@ -54,7 +56,7 @@ function createChatBox(user) {
         const timeSpan = document.createElement("span");
         timeSpan.classList.add("time");
         timeSpan.textContent = message.timeOnly;
-
+        console.log("TIMEONLY: " + message.timeOnly)
         messageDiv.appendChild(contentParagraph);
         messageDiv.appendChild(timeSpan);
 
@@ -70,7 +72,19 @@ function createChatBox(user) {
         }
     });
 
+    const showMessages = (chat) => {
+        const messageList = document.querySelector("#message-list");
+        messageList.innerHTML = "";
+        if (chat.id !== null) {
+            chat.messages.forEach(message => {
+                console.log("MESAJ: " + message)
+                appendMessage(message);
+            });
+        }
+    }
+    showMessages(chat);
     return chatBoxElement;
 }
 
-export { createChatBox };
+
+export { createMessageBox };
