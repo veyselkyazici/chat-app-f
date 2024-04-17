@@ -1,8 +1,7 @@
 // FriendList.js
 import { createMessageBox } from './MessageBox.js';
 import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
-
-function createFriendList(friendList,userId) {
+function createFriendList(friendList, userId, chats) {
     const createFriendHTML = user => `
         <div class="friend">
             <div class="left-side-friend-photo">${user.imageId}</div>
@@ -31,11 +30,10 @@ function createFriendList(friendList,userId) {
                 ${friendList.map(createFriendHTML).join('')}
             </div>
         </div>`;
-
     const chatListHeaderElement = document.querySelector(".chat-list-header");
     const chatListContentElement = document.querySelector(".chat-list-content");
     const chatContentElement = document.querySelector('.chat-content');
-    const chatSearchBarElement = document.querySelector('#chat-search-bar');
+    const chatSearchBarElement = document.querySelector('#chats-search-bar');
     chatContentElement.insertAdjacentHTML('beforeend', friendListViewHTML);
 
     const friendListContainerElement = document.querySelector(".friend-list-container")
@@ -52,14 +50,30 @@ function createFriendList(friendList,userId) {
 
     
     function handleFriendClick(friend) {
-        const chatRequestDTO = {
+        // const chatRequestDTO = {
+        //     friendId: friend.id,
+        //     friendEmail: friend.email,
+        //     userId: userId
+        // }
+        // fetchGetChatMessage(chatRequestDTO).then(result => {
+        //     console.log("RESULT: " + JSON.stringify(result))
+        //     createMessageBox(result)});
+        console.log("CHAT> " + JSON.stringify(chats))
+            const chatRequestDTO = {
             friendId: friend.id,
             friendEmail: friend.email,
             userId: userId
         }
-        fetchGetChatMessage(chatRequestDTO).then(result => {
-            console.log("RESULT: " + JSON.stringify(result))
-            createMessageBox(result)});
+        if(chats){
+            console.log("IF")
+            chats.forEach(chat => {
+                chat.userId == friend.id || chat.friendId == friend.id ? createMessageBox(chat) : createMessageBox(chatRequestDTO)
+            })
+        }
+        else {
+            console.log("ELSE")
+            createMessageBox(chatRequestDTO)
+        }
     }
 }
 

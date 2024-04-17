@@ -1,4 +1,4 @@
-// ChatBox.js
+// MessageBox.js
 import { webSocketManagerChat } from "./Chat.js";
 
 function createMessageBox(chat) {
@@ -22,20 +22,16 @@ function createMessageBox(chat) {
             </div>
         </footer>
     `;
-
+    console.log("CHAT> " + JSON.stringify(chat))
     const messageList = chatBoxElement.querySelector("#message-list");
     const messageInput = chatBoxElement.querySelector("#message-input");
 
     const sendMessage = () => {
         const messageContent = messageInput.value.trim();
-        var date = new Date(); // Geçerli tarih ve saat
-        var formattedDate = date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-        console.log(formattedDate); // Örnek çıktı: "7 Nisan 2024"
         if (messageContent !== "") {
-            const fullDateTime = new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' });
             const message = {
                 messageContent: messageContent,
-                fullDateTime: fullDateTime,
+                fullDateTime: new Date().toISOString(), // Tarih ve saat bilgisini UTC'ye dönüştür
                 senderId: chat.userId,
                 recipientId: chat.friendId
             };
@@ -46,7 +42,7 @@ function createMessageBox(chat) {
     };
     const appendMessage = (message) => {
         const messageDiv = document.createElement("div");
-        
+
         const senderClass = (message.senderId === chat.userId) ? "sent" : "received";
         messageDiv.classList.add("chat-message", senderClass);
 
@@ -61,6 +57,10 @@ function createMessageBox(chat) {
         messageDiv.appendChild(timeSpan);
 
         messageList.appendChild(messageDiv);
+        messageList.scrollTo({
+            top: messageList.scrollHeight,
+            behavior: "auto"
+        });
     };
 
     const sendMessageButton = chatBoxElement.querySelector(".send-message-button");
@@ -82,7 +82,10 @@ function createMessageBox(chat) {
             });
         }
     }
-    showMessages(chat);
+    if (chat.messages) {
+        showMessages(chat);
+    }
+    
     return chatBoxElement;
 }
 

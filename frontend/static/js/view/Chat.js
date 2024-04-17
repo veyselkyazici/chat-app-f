@@ -21,9 +21,9 @@ export default class extends AbstractView {
         this.addEventListeners() */
         this.userId = '';
         this.chatList = {};
+        this.chatElements = [];
         this.friendList = [];
         this.fetchFriendRequestReplyData = [];
-
 
         this.friendListViewInstance = null;
         this.webSocketManagerFriendships = webSocketManagerFriendships;
@@ -95,7 +95,7 @@ export default class extends AbstractView {
                     </div>
                 </div>
             </header>
-            <div class="search-bar" id="chat-search-bar">
+            <div class="chats-search-bar search-bar" id="chats-search-bar">
             <input type="text" class="search-input" placeholder="Kullnıcı Arayın">
             <button class="search-button"><i class="fas fa-search"></i></button>
         </div>
@@ -117,7 +117,7 @@ export default class extends AbstractView {
         await this.initialData();
         this.initFriendshipWebSocket();
         this.initChatWebSocket()
-        this.handleMessageBox();
+        this.handleChats();
     }
 
     async initFriendshipWebSocket() {
@@ -134,7 +134,6 @@ export default class extends AbstractView {
         const userChannel = `/user/${this.userId}/queue/friend-request-user-response`;
         const notificationChannel = `/user/${this.userId}/queue/friend-request-reply-notification-user-response`;
         const notificationFriendChannel = `/user/${this.userId}/queue/friend-request-reply-notification-friend-response`;
-        const sendMessageChannel = `/user/${this.userId}/queue/received-message`;
 
         this.webSocketManagerFriendships.subscribeToChannel(friendResponseChannel, async (incomingFriendRequest) => {
             const incomingFriendRequestBody = JSON.parse(incomingFriendRequest.body);
@@ -162,15 +161,14 @@ export default class extends AbstractView {
             toastr.success(friendRequestBody + " kişisini arkadaş eklediniz")
             this.friendList = await fetchGetFriendList();
         });
-        console.log("SUBSCRIBE")
-
-        const message = { text: 'Merhaba, dünya!' };
-        this.webSocketManagerFriendships.sendMessageToAppChannel(sendMessageChannel, message);
     }
 
     initChatWebSocket() {
+        const recipientMessageChannel = `/user/${this.userId}/queue/recipient-message`
         this.webSocketManagerChat.connectWebSocket({}, () => {
-            this.subscribeToChatChannels
+            // this.subscribeToChatChannels(recipientMessageChannel, (recipientMessage) =>{
+                
+            // })
         }, function (error) {
             console.error('WebSocket connection error: ' + error);
         })
@@ -191,16 +189,15 @@ export default class extends AbstractView {
         const chatListHeaderElement = document.querySelector(".chat-list-header");
         const friendListButtonElement = document.querySelector(".friend-list-btn");
         const friendApprovalButtonElement = document.querySelector(".friend-approval");
-        const chatSearchBarElement = document.querySelector('#chat-search-bar');
+        const chatSearchBarElement = document.querySelector('#chats-search-bar');
         const chatElement = document.querySelector(".chat-list");
         const friendRequestReplyNotificationElement = document.querySelector(".friend-request-reply-notification");
-        const chatsElement = document.querySelector(".chats");
 
 
 
         if (addFriendButtonElement) {
             addFriendButtonElement.addEventListener("click", () => {
-                hideElements(chatListHeaderElement, chatListContentElement)
+                hideElements(chatListHeaderElement, chatListContentElement, chatSearchBarElement)
                 addFriendView();
             });
         }
@@ -215,7 +212,7 @@ export default class extends AbstractView {
         if (friendApprovalButtonElement) {
             friendApprovalButtonElement.addEventListener("click",
                 () => {
-                    hideElements(chatListHeaderElement, chatListContentElement)
+                    hideElements(chatListHeaderElement, chatListContentElement, chatSearchBarElement)
                     createIncomingFriendRequests()
                     this.friendRequestNotification(false);
                 });
@@ -223,25 +220,14 @@ export default class extends AbstractView {
 
         if (friendRequestReplyNotificationElement) {
             friendRequestReplyNotificationElement.addEventListener("click", () => {
-                hideElements(chatListHeaderElement, chatListContentElement)
+                hideElements(chatListHeaderElement, chatListContentElement, chatSearchBarElement)
                 createApprovedRequestHistory(this.fetchFriendRequestReplyData)
                 this.friendRequestReplyNotificationBadge(false)
             });
         }
 
-        if (chatElement) {
-            chatElement.addEventListener("click", (chat) => {
-                const chatMessage = {
-                    friendEmail: chat.friendEmail,
-                    friendId: this.userId == chat.senderId ? chat.recipientId : chat.renderId,
-                    userId: this.userId == chat.senderId ? chat.senderId : chat.recipientId,
-                    messages: chat.messages,
-                    chatRoomId: chat.messages[0].chatRoomId
-                }
-                createMessageBox(chatMessage);
-            });
-        }
     }
+
 
     friendRequestNotification(showBadge) {
         const notificationBadgeElement = document.querySelector('.friend-approval .notification-badge');
@@ -257,30 +243,47 @@ export default class extends AbstractView {
     }
 
     handleInitialFriendList() {
-        createFriendList(this.friendList, this.userId);
+        createFriendList(this.friendList, this.userId, this.chatList);
     }
 
-    handleMessageBox() {
+
+    handleChats() {
         const chatListContentElement = document.querySelector(".chat-list-content");
-        const chatElement = document.createElement("div");
-        chatElement.classList.add("chat-list");
         this.chatList.forEach(chat => {
+            const chatElement = document.createElement("div");
+            chatElement.classList.add("chat-list");
 
             chatElement.innerHTML = `
-                <div class="chat-photo">
-                    <div class="left-side-friend-photo">${chat.image}</div>
-                </div>
-                <div class="chat-info">
-                    <div class="chat-name">${chat.friendEmail}</div>
-                    <div class="last-message">${chat.lastMessage}</div>
+                <div class="chat">
+                    <div class="chat-photo"> 
+                        <div class="left-side-friend-photo">${chat.image}</div>
+                    </div>
+                    <div class="chat-info">
+                        <div class="chat-name">${chat.friendEmail}</div>
+                        <div class="last-message">${chat.messages[0].messageContent}</div>
+                    </div>
                 </div>
             `;
             chatListContentElement.appendChild(chatElement);
+            this.chatElements.push({
+                chatElementt: chatElement,
+                chatId: chat.id
+            })
+            console.log("CHAT> "+ chatElement)
+            this.chatElements.forEach(element => {
+                const chatElement = element.chatElementt;
+                const lastMessageElement = chatElement.querySelector('.last-message');
+                console.log("Last Message for Chat ID " + element.chatId + ": " + lastMessageElement.textContent);
+                lastMessageElement.textContent = "AAAAAAAA"
+            });
+            chatElement.addEventListener("click", () => {
+                createMessageBox(chat)
+            });
         });
     }
-
-
+    
 }
+
 
 const getFriendList = 'http://localhost:8080/api/v1/friendships/get-friend-list';
 const fetchGetFriendList = async () => {
@@ -305,7 +308,6 @@ const fetchGetFriendList = async () => {
     }
 };
 
-
 const getChatList = 'http://localhost:8080/api/v1/chat/get-chat-list';
 const fetchGetChatList = async (userId) => {
     try {
@@ -320,7 +322,7 @@ const fetchGetChatList = async (userId) => {
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
         }
-        
+
         const result = await response.json();
         console.log("fetchChatList: ", result)
         return result;
@@ -340,7 +342,7 @@ async function fetchFriendRequestReply() {
                 'Authorization': sessionStorage.getItem('access_token'),
             },
         });
-        
+
         const data = await response.json();
         return data;
     } catch (error) {

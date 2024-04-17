@@ -7,31 +7,35 @@ async function addFriendView() {
     const chatListContentElement = document.querySelector(".chat-list-content");
     const chatContentElement = document.querySelector('.chat-content');
 
-
     const addFriendHTML = `
     <div class="add-friend-div" id="add-friend-div">
     <div class="" id="backspace">
-    <span class="material-symbols-outlined">
-        keyboard_backspace
-    </span>
-</div>
-    <div class="search-bar">
-    <input type="text" class="search-input" placeholder="Kullnıcı Arayın">
-    <button class="search-button"><i class="fas fa-search"></i></button>
-</div>
-<div class="search-result scrollbar">
-</div>
+        <span class="material-symbols-outlined">
+            keyboard_backspace
+        </span>
     </div>
+    <div class="search-bar">
+        <input type="text" class="search-input" id="friend-add-input" placeholder="Kullanıcı Arayın">
+        <button class="search-button"><i class="fas fa-search"></i></button>
+    </div>
+    <div class="search-result scrollbar"></div>
+</div>
     `;
 
     chatContentElement.insertAdjacentHTML('beforeend', addFriendHTML);
+    const chatSearchBarElement = document.querySelector('#chats-search-bar');
     const addFriendElement = document.querySelector('#add-friend-div');
     addBackspaceEventListener(() => {
-        visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement);
+        visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement, chatSearchBarElement);
         removeElements(addFriendElement)
     });
-    const searchInput = document.querySelector('.search-input');
-    searchInput.addEventListener('input', handleSearchInput);
+
+    const friendAddInput = document.querySelector('#friend-add-input');
+    if (friendAddInput) {
+        friendAddInput.addEventListener('input', (event) => {
+            handleSearchInput(event);
+        });
+    } 
 }
 
 function handleSearchInput(event) {
@@ -40,7 +44,6 @@ function handleSearchInput(event) {
     if (searchString === '') {
         clearAddFriendsList();
     } else {
-        console.log("AAAAAAAAAAA")
         fetchSearchUsers(searchString);
     }
 }
