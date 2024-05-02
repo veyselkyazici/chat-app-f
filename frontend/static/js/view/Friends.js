@@ -1,7 +1,8 @@
 // FriendList.js
 import { createMessageBox } from './MessageBox.js';
 import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
-function createFriendList(friendList, userId, chats) {
+function createFriendList(friendList, userId, chats, chatElements) {
+    console.log("CHATELEMENTS > " + JSON.stringify(chatElements))
     const createFriendHTML = user => `
         <div class="friend">
             <div class="left-side-friend-photo">${user.imageId}</div>
@@ -14,7 +15,7 @@ function createFriendList(friendList, userId, chats) {
             </div>
         </div>
     `;
-    
+
     const friendListViewHTML = `
         <div class="friend-list-container">
             <div class="" id="backspace">
@@ -44,11 +45,11 @@ function createFriendList(friendList, userId, chats) {
     });
 
     addBackspaceEventListener(() => {
-        visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement,chatSearchBarElement);
+        visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement, chatSearchBarElement);
         removeElements(friendListContainerElement)
     });
 
-    
+
     function handleFriendClick(friend) {
         // const chatRequestDTO = {
         //     friendId: friend.id,
@@ -59,21 +60,27 @@ function createFriendList(friendList, userId, chats) {
         //     console.log("RESULT: " + JSON.stringify(result))
         //     createMessageBox(result)});
         console.log("CHAT> " + JSON.stringify(chats))
-            const chatRequestDTO = {
+        const chatRequestDTO = {
             friendId: friend.id,
             friendEmail: friend.email,
             userId: userId
         }
-        if(chats){
+        if (chats && chats.length > 0) {
             console.log("IF")
+            let chatDOM = "";
             chats.forEach(chat => {
-                chat.userId == friend.id || chat.friendId == friend.id ? createMessageBox(chat) : createMessageBox(chatRequestDTO)
+                chatDOM = chatElements.filter(chatElement => chatElement.chatId == chat.id);
+                    (chat.userId == friend.id || chat.friendId == friend.id) ? createMessageBox(chat, chatDOM, userId) : createMessageBox(chatRequestDTO, null, userId)
             })
         }
         else {
             console.log("ELSE")
-            createMessageBox(chatRequestDTO)
+            createMessageBox(chatRequestDTO, null, userId)
         }
+
+        visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement, chatSearchBarElement);
+        removeElements(friendListContainerElement)
+
     }
 }
 
@@ -90,7 +97,7 @@ const fetchGetChatMessage = async (chatRequestDTO) => {
         });
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
-        } 
+        }
         console.log(response)
         const result = await response.json();
         console.log("fetchChatMessage: ", result)

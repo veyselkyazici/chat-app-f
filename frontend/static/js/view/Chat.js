@@ -4,23 +4,25 @@ import { addFriendView } from "./AddFriend2.js";
 import createFriendList from "./Friends.js";
 import { createIncomingFriendRequests } from "./IncomingFriendRequests.js";
 import { createApprovedRequestHistory } from "./ApprovedRequestHistory.js";
-import { createMessageBox } from "./MessageBox.js";
+import { createMessageBox, appendMessage } from "./MessageBox.js";
 import WebSocketManager from "../websocket.js";
 import { hideElements } from './util.js'
 
 export let webSocketManagerFriendships;
 export let webSocketManagerChat;
+export let chatInstance;
 webSocketManagerFriendships = new WebSocketManager('http://localhost:9030/ws');
 webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws');
 
-export default class extends AbstractView {
+export default class Chat extends AbstractView {
     constructor(params) {
         super(params);
+        chatInstance = this;
         this.setTitle("Chat");/* 
         this.renderChat()
         this.addEventListeners() */
         this.userId = '';
-        this.chatList = {};
+        this.chatList = [];
         this.chatElements = [];
         this.friendList = [];
         this.fetchFriendRequestReplyData = [];
@@ -30,7 +32,6 @@ export default class extends AbstractView {
         this.webSocketManagerChat = webSocketManagerChat;
         this.init()
     }
-
     /* async renderChat () {
         const chatHtml = `<div class="chat-container">
         <div class="left-side">
@@ -124,7 +125,7 @@ export default class extends AbstractView {
         this.webSocketManagerFriendships.connectWebSocket(() => {
             this.subscribeToFriendshipChannels();
         }, error => {
-            console.error('WebSocket bağlantı hatası: ' + error);
+            console.error('Friendships WebSocket bağlantı hatası: ' + error);
         });
     }
 
@@ -164,16 +165,48 @@ export default class extends AbstractView {
     }
 
     initChatWebSocket() {
-        const recipientMessageChannel = `/user/${this.userId}/queue/recipient-message`
         this.webSocketManagerChat.connectWebSocket({}, () => {
-            // this.subscribeToChatChannels(recipientMessageChannel, (recipientMessage) =>{
-                
-            // })
+            this.subscribeToChatChannels();
         }, function (error) {
-            console.error('WebSocket connection error: ' + error);
+            console.error('Chat WebSocket connection error: ' + error);
         })
     }
 
+    subscribeToChatChannels() {
+        const recipientMessageChannel = `/user/${this.userId}/queue/received-message`
+
+        this.webSocketManagerChat.subscribeToChannel(recipientMessageChannel, (recipientMessage) => {
+            const recipientJSON = JSON.parse(recipientMessage.body);
+            this.lastMessageChange(recipientJSON.chatRoomId ,recipientJSON.messageContent)
+            this.updateMessageBox(recipientJSON)
+        })
+    }
+
+    updateMessageBox(recipientJSON) {
+        for (let i = 0; i < this.chatList.length; i++) {
+            const chat = this.chatList[i];
+            if (chat.id === recipientJSON.chatRoomId) {
+                const message = {
+                    senderId: recipientJSON.senderId,
+                    recipientId: recipientJSON.recipientId,
+                    messageContent: recipientJSON.messageContent,
+                    chatRoomId: recipientJSON.chatRoomId
+                };
+                appendMessage(message, chat, this.userId);
+                chat.messages.push(message);
+                break; 
+            }
+        }
+    }
+
+    lastMessageChange(chatRoomId ,lastMessage) {
+        this.chatElements.forEach(element => {
+            console.log("CHATID > " + element.chatId)
+            const chatElementDOM = element.chatElementDOM;
+            const lastMessageElement = chatElementDOM.querySelector('.last-message');
+            element.chatId === chatRoomId ? lastMessageElement.textContent = lastMessage : 0;
+        });
+    }
 
     async initialData() {
         this.userId = await fetchGetUserId();
@@ -243,45 +276,45 @@ export default class extends AbstractView {
     }
 
     handleInitialFriendList() {
-        createFriendList(this.friendList, this.userId, this.chatList);
+        console.log(this.chatElements)
+        createFriendList(this.friendList, this.userId, this.chatList, this.chatElements);
     }
 
 
     handleChats() {
         const chatListContentElement = document.querySelector(".chat-list-content");
         this.chatList.forEach(chat => {
-            const chatElement = document.createElement("div");
-            chatElement.classList.add("chat-list");
+            const chatElementDOM = document.createElement("div");
+            chatElementDOM.classList.add("chat-list");
 
-            chatElement.innerHTML = `
+            chatElementDOM.innerHTML = `
                 <div class="chat">
                     <div class="chat-photo"> 
                         <div class="left-side-friend-photo">${chat.image}</div>
                     </div>
                     <div class="chat-info">
                         <div class="chat-name">${chat.friendEmail}</div>
-                        <div class="last-message">${chat.messages[0].messageContent}</div>
+                        <div class="last-message">${chat.messages[chat.messages.length - 1].messageContent}</div>
                     </div>
                 </div>
             `;
-            chatListContentElement.appendChild(chatElement);
-            this.chatElements.push({
-                chatElementt: chatElement,
+            chatListContentElement.appendChild(chatElementDOM);
+            const chatElement = {
+                chatElementDOM: chatElementDOM,
                 chatId: chat.id
-            })
-            console.log("CHAT> "+ chatElement)
-            this.chatElements.forEach(element => {
-                const chatElement = element.chatElementt;
-                const lastMessageElement = chatElement.querySelector('.last-message');
-                console.log("Last Message for Chat ID " + element.chatId + ": " + lastMessageElement.textContent);
-                lastMessageElement.textContent = "AAAAAAAA"
-            });
-            chatElement.addEventListener("click", () => {
-                createMessageBox(chat)
+            }
+            this.chatElements.push(chatElement)
+            chatElementDOM.addEventListener("click", () => {
+                createMessageBox(chat, chatElement, this.userId)
             });
         });
     }
-    
+
+    // pushChatElements(messageContent) {
+    //     this.chatElements.push()
+
+    // }
+
 }
 
 
@@ -322,9 +355,8 @@ const fetchGetChatList = async (userId) => {
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
         }
-
         const result = await response.json();
-        console.log("fetchChatList: ", result)
+        console.log(result)
         return result;
     } catch (error) {
         console.error('Hata:', error.message);

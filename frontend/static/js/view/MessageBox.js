@@ -1,7 +1,7 @@
 // MessageBox.js
-import { webSocketManagerChat } from "./Chat.js";
+import { webSocketManagerChat, chatInstance } from "./Chat.js";
 
-function createMessageBox(chat) {
+function createMessageBox(chat, chatElement, userId) {
     const chatBoxElement = document.querySelector('.chat-box');
 
     chatBoxElement.innerHTML = `
@@ -22,46 +22,55 @@ function createMessageBox(chat) {
             </div>
         </footer>
     `;
-    console.log("CHAT> " + JSON.stringify(chat))
+    console.log("CHATINSTANCE CHATELEMENTS > " + chatInstance.chatElements)
+    console.log("CHAT > " + JSON.stringify(chat))
     const messageList = chatBoxElement.querySelector("#message-list");
     const messageInput = chatBoxElement.querySelector("#message-input");
-
+    console.log("USERID > " + userId)
     const sendMessage = () => {
         const messageContent = messageInput.value.trim();
         if (messageContent !== "") {
             const message = {
                 messageContent: messageContent,
-                fullDateTime: new Date().toISOString(), // Tarih ve saat bilgisini UTC'ye dönüştür
-                senderId: chat.userId,
-                recipientId: chat.friendId
+                fullDateTime: new Date().toISOString(),
+                senderId: userId,
+                recipientId: chat.friendId,
+                chatRoomId: chat.id
             };
-            appendMessage(message);
+            appendMessage(message, chat, userId);
+            if (chatElement) {
+                const chatElementDOM = chatElement.chatElementDOM;
+                const lastMessageElement = chatElementDOM.querySelector('.last-message');
+                lastMessageElement.textContent = messageContent;
+            } else { // Duzeltilecek(Friend.js chatReqyestDTO gelirseki senaryoda buranin ayarlanmasi gerekiyor)
+                const chatListContentElement = document.querySelector(".chat-list-content");
+
+                const chatElementDOM = document.createElement("div");
+                chatElementDOM.classList.add("chat-list");
+
+                chatElementDOM.innerHTML = `
+                            <div class="chat">
+                                <div class="chat-photo"> 
+                                    <div class="left-side-friend-photo">${chat.image}</div>
+                                </div>
+                                <div class="chat-info">
+                                    <div class="chat-name">${chat.friendEmail}</div>
+                                    <div class="last-message">${messageContent}</div>
+                                </div>
+                            </div>
+                        `;
+                chatListContentElement.appendChild(chatElementDOM);
+                const chatElement = {
+                    chatElementDOM: chatElementDOM,
+                    chatId: chat.id
+                }
+                chatInstance.chatElements.push(chatElement)
+            }
             webSocketManagerChat.sendMessageToAppChannel("send-message", message);
             messageInput.value = "";
         }
     };
-    const appendMessage = (message) => {
-        const messageDiv = document.createElement("div");
 
-        const senderClass = (message.senderId === chat.userId) ? "sent" : "received";
-        messageDiv.classList.add("chat-message", senderClass);
-
-        const contentParagraph = document.createElement("p");
-        contentParagraph.textContent = message.messageContent;
-
-        const timeSpan = document.createElement("span");
-        timeSpan.classList.add("time");
-        timeSpan.textContent = message.timeOnly;
-        console.log("TIMEONLY: " + message.timeOnly)
-        messageDiv.appendChild(contentParagraph);
-        messageDiv.appendChild(timeSpan);
-
-        messageList.appendChild(messageDiv);
-        messageList.scrollTo({
-            top: messageList.scrollHeight,
-            behavior: "auto"
-        });
-    };
 
     const sendMessageButton = chatBoxElement.querySelector(".send-message-button");
     sendMessageButton.addEventListener("click", sendMessage);
@@ -73,21 +82,44 @@ function createMessageBox(chat) {
     });
 
     const showMessages = (chat) => {
-        const messageList = document.querySelector("#message-list");
-        messageList.innerHTML = "";
         if (chat.id !== null) {
             chat.messages.forEach(message => {
                 console.log("MESAJ: " + message)
-                appendMessage(message);
+                appendMessage(message, chat, userId);
             });
         }
     }
     if (chat.messages) {
         showMessages(chat);
     }
-    
-    return chatBoxElement;
+
+
 }
+const appendMessage = (message, chat, userId) => {
+    
+    const messageList = document.querySelector("#message-list");
+    const messageDiv = document.createElement("div");
+    console.log("FRIEND ID > " + chat.friendId)
+    console.log("USERID > " + chat.userId)
+    const senderClass = (message.senderId === userId) ? "sent" : "received";
+    console.log("SENDERCLASS > " + senderClass)
+    messageDiv.classList.add("chat-message", senderClass);
 
+    const contentParagraph = document.createElement("p");
+    contentParagraph.textContent = message.messageContent;
 
-export { createMessageBox };
+    const timeSpan = document.createElement("span");
+    timeSpan.classList.add("time");
+    timeSpan.textContent = message.timeOnly;
+
+    messageDiv.appendChild(contentParagraph);
+    messageDiv.appendChild(timeSpan);
+
+    messageList.appendChild(messageDiv);
+    messageList.scrollTo({
+        top: messageList.scrollHeight,
+        behavior: "auto"
+    });
+};
+
+export { createMessageBox, appendMessage };
