@@ -464,10 +464,10 @@ export default class Chat extends AbstractView {
             console.log("AAAAAAAAAAAAAAAAA");
         }
 
-        this.virtualScrolling(visibleItemCount, start, end);
+        this.virtualScroll(visibleItemCount, start, end);
     }
 
-    virtualScrolling(visibleItemCount, start, end) {
+    virtualScroll(visibleItemCount, start, end) {
         const paneSideElement = document.querySelector("#pane-side");
         paneSideElement.addEventListener("scroll", () => {
             const scrollTop = paneSideElement.scrollTop;
