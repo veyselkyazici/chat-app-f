@@ -1,8 +1,8 @@
-.chat-box {
+/* .chat-box {
     display: flex;
     flex-direction: column;
     height: 100%;
-}
+} */
 
 .chat-footer {
     display: flex;
@@ -35,11 +35,7 @@
     background-color: #E5E5EA;
 }
 
-.time {
-    font-size: 0.8em;
-    color: #888;
-    margin-left: 10px;
-}
+
 
 
 .input-container {
@@ -74,14 +70,15 @@
 
 
 
-.chat-list {
+/* .chat-list {
     padding-top: 5px;
+    flex-grow: 1;
     display: flex;
-}
-.chat-list:hover {
+}*/
+/* .chat-list:hover {
     background-color: #075E54;
     cursor: pointer
-}
+}  */
 
 
 .hidden {

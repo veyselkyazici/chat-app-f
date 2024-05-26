@@ -22,70 +22,76 @@ function createMessageBox(chat, chatElement, userId) {
             </div>
         </footer>
     `;
-    console.log("CHATINSTANCE CHATELEMENTS > " + chatInstance.chatElements)
-    console.log("CHAT > " + JSON.stringify(chat))
-    const messageList = chatBoxElement.querySelector("#message-list");
     const messageInput = chatBoxElement.querySelector("#message-input");
-    console.log("USERID > " + userId)
-    const sendMessage = () => {
-        const messageContent = messageInput.value.trim();
-        if (messageContent !== "") {
-            const message = {
-                messageContent: messageContent,
-                fullDateTime: new Date().toISOString(),
-                senderId: userId,
-                recipientId: chat.friendId,
-                chatRoomId: chat.id
-            };
-            appendMessage(message, chat, userId);
-            if (chatElement) {
-                const chatElementDOM = chatElement.chatElementDOM;
-                const lastMessageElement = chatElementDOM.querySelector('.last-message');
-                lastMessageElement.textContent = messageContent;
-            } else { // Duzeltilecek(Friend.js chatReqyestDTO gelirseki senaryoda buranin ayarlanmasi gerekiyor)
-                const chatListContentElement = document.querySelector(".chat-list-content");
+    console.log(chat)
+    const sendMessage = async (messageContent) => {
 
-                const chatElementDOM = document.createElement("div");
-                chatElementDOM.classList.add("chat-list");
+        const message = {
+            messageContent: messageContent,
+            fullDateTime: new Date().toISOString(),
+            senderId: userId,
+            recipientId: chat.friendId,
+            chatRoomId: chat.id
+        };
 
-                chatElementDOM.innerHTML = `
-                            <div class="chat">
-                                <div class="chat-photo"> 
-                                    <div class="left-side-friend-photo">${chat.image}</div>
-                                </div>
-                                <div class="chat-info">
-                                    <div class="chat-name">${chat.friendEmail}</div>
-                                    <div class="last-message">${messageContent}</div>
-                                </div>
-                            </div>
-                        `;
-                chatListContentElement.appendChild(chatElementDOM);
-                const chatElement = {
-                    chatElementDOM: chatElementDOM,
-                    chatId: chat.id
-                }
-                chatInstance.chatElements.push(chatElement)
+
+
+        if (chat.id && chatElement) {
+            const chatElementDOM = chatElement.chatElementDOM;
+            const lastMessageElement = chatElementDOM.querySelector('.last-message');
+            lastMessageElement.textContent = messageContent;
+
+            const foundChat = chatInstance.chatList.find(chatItem => chatItem.id === chat.id);
+            if (foundChat) {
+                foundChat.messages.push(message);
             }
-            webSocketManagerChat.sendMessageToAppChannel("send-message", message);
-            messageInput.value = "";
         }
+
+
+        else {
+            const result = await fetchCreateChatRoomIfNotExists(userId, chat.friendId);
+            console.log("RESULT > ", result)
+            message.chatRoomId = result.id;
+            result.friendEmail = chat.friendEmail
+            const newChat = {
+                friendImage: chat.friendImage,
+                friendEmail: chat.friendEmail,
+                friendId: chat.friendId,
+                userId: userId,
+                messages: [message],
+                id: message.chatRoomId
+            }
+            chat.id = newChat.id;
+            result.messages.push(message)
+            chatElement = chatInstance.createChatElement(newChat);
+            chatInstance.chatList.push(result)
+        }
+        appendMessage(message, userId);
+        messageInput.value = "";
+        console.log(chatInstance.chatList)
+        webSocketManagerChat.sendMessageToAppChannel("send-message", message);
     };
 
 
     const sendMessageButton = chatBoxElement.querySelector(".send-message-button");
-    sendMessageButton.addEventListener("click", sendMessage);
+    sendMessageButton.addEventListener("click", () => {
+        const messageContent = input();
+        messageContent !== "null" ? sendMessage(messageContent) : 0
+    }
+    );
     messageInput.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
+        const messageContent = input();
+        if (event.key === "Enter" && messageContent !== "null") {
             event.preventDefault();
-            sendMessage();
+            sendMessage(messageContent);
         }
     });
 
     const showMessages = (chat) => {
+        console.log(chat)
         if (chat.id !== null) {
             chat.messages.forEach(message => {
-                console.log("MESAJ: " + message)
-                appendMessage(message, chat, userId);
+                appendMessage(message, userId);
             });
         }
     }
@@ -93,16 +99,17 @@ function createMessageBox(chat, chatElement, userId) {
         showMessages(chat);
     }
 
+    function input() {
+        const messageContent = messageInput.value.trim();
+        return messageContent;
+    }
 
 }
-const appendMessage = (message, chat, userId) => {
-    
+const appendMessage = (message, userId) => {
+
     const messageList = document.querySelector("#message-list");
     const messageDiv = document.createElement("div");
-    console.log("FRIEND ID > " + chat.friendId)
-    console.log("USERID > " + chat.userId)
     const senderClass = (message.senderId === userId) ? "sent" : "received";
-    console.log("SENDERCLASS > " + senderClass)
     messageDiv.classList.add("chat-message", senderClass);
 
     const contentParagraph = document.createElement("p");
@@ -110,16 +117,48 @@ const appendMessage = (message, chat, userId) => {
 
     const timeSpan = document.createElement("span");
     timeSpan.classList.add("time");
-    timeSpan.textContent = message.timeOnly;
+    timeSpan.textContent = getHourAndMinute(message.fullDateTime);
 
     messageDiv.appendChild(contentParagraph);
     messageDiv.appendChild(timeSpan);
+    if (messageList) {
+        messageList.appendChild(messageDiv);
+        messageList.scrollTo({
+            top: messageList.scrollHeight,
+            behavior: "auto"
+        });
+    }
 
-    messageList.appendChild(messageDiv);
-    messageList.scrollTo({
-        top: messageList.scrollHeight,
-        behavior: "auto"
-    });
 };
+
+function getHourAndMinute(dateTimeString) {
+    const date = new Date(dateTimeString);
+    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return formattedTime;
+}
+
+const createChatRoomIfNotExistsUrl = 'http://localhost:8080/api/v1/chat/create-chat-room-if-not-exists';
+async function fetchCreateChatRoomIfNotExists(userId, friendId) {
+    try {
+        const response = await fetch(createChatRoomIfNotExistsUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                'Authorization': sessionStorage.getItem('access_token'),
+            },
+            body: JSON.stringify({ userId: userId, friendId: friendId }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Unauthorized');
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Hata:', error.message);
+        throw error;
+    }
+}
 
 export { createMessageBox, appendMessage };

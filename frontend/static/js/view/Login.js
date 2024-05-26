@@ -148,7 +148,6 @@ const loginForm = async () => {
       userUpdateModal();
     }
     else {
-
       navigateTo("/chat");
     }
   }

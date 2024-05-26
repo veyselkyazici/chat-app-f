@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div class="tabs">
+        <button role="tab" aria-selected="true" id="tab1" aria-controls="panel1">Tab 1</button>
+        <button role="tab" aria-selected="false" id="tab2" aria-controls="panel2">Tab 2</button>
+        <button role="tab" aria-selected="false" id="tab3" aria-controls="panel3">Tab 3</button>
+    </div>
+    <div class="tab-panels">
+        <div role="tabpanel" id="panel1" aria-labelledby="tab1">Content for Tab 1</div>
+        <div role="tabpanel" id="panel2" aria-labelledby="tab2" hidden>Content for Tab 2</div>
+        <div role="tabpanel" id="panel3" aria-labelledby="tab3" hidden>Content for Tab 3</div>
+    </div>
+    <script>
+        document.querySelectorAll('[role="tab"]').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        // Tüm sekmelerin seçili durumunu false yap
+        document.querySelectorAll('[role="tab"]').forEach(function(item) {
+            item.setAttribute('aria-selected', 'false');
+        });
+
+        // Tüm panelleri gizle
+        document.querySelectorAll('[role="tabpanel"]').forEach(function(panel) {
+            panel.hidden = true;
+        });
+
+        // Tıklanan sekmeyi seçili yap ve ilgili paneli göster
+        tab.setAttribute('aria-selected', 'true');
+        const panelId = tab.getAttribute('aria-controls');
+        document.getElementById(panelId).hidden = false;
+    });
+});
+
+    </script>
+</body>
+</html>

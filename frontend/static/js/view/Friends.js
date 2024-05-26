@@ -9,7 +9,6 @@ function createFriendList(friendList, userId, chats, chatElements) {
             <div class="data">
                 <div class="name-and-date">
                     <div class="friend-name">${user.email}</div>
-                    <div class="last-message-date"></div>
                 </div>
                 <div class="friend-last-message">${user.about}</div>
             </div>
@@ -61,6 +60,7 @@ function createFriendList(friendList, userId, chats, chatElements) {
         //     createMessageBox(result)});
         console.log("CHAT> " + JSON.stringify(chats))
         const chatRequestDTO = {
+            friendImage: friend.imageId,
             friendId: friend.id,
             friendEmail: friend.email,
             userId: userId

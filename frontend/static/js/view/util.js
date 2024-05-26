@@ -68,7 +68,7 @@ function addZero(phoneNumber) {
 function formatPhoneNumberOnBackspace(input) {
   // Backspace tuşuna basıldığında sadece '-' karakterini sil
   if (input.selectionStart > 0 && input.value[input.selectionStart - 1] === '-') {
-      input.value = input.value.slice(0, input.selectionStart - 1) + input.value.slice(input.selectionStart);
+    input.value = input.value.slice(0, input.selectionStart - 1) + input.value.slice(input.selectionStart);
   }
 }
 
@@ -93,23 +93,23 @@ function onPageLoad() {
 function addBackspaceEventListener(callback) {
   const backspaceBtnElement = document.getElementById("backspace");
   if (backspaceBtnElement) {
-      backspaceBtnElement.addEventListener("click", callback);
+    backspaceBtnElement.addEventListener("click", callback);
   }
 }
 
 function hideElements(...elements) {
   elements.forEach(element => {
-      if (element) {
-          element.classList.add("vky");
-      }
+    if (element) {
+      element.classList.add("vky");
+    }
   });
 }
 
 function visibleElements(...elements) {
   elements.forEach(element => {
-      if (element) {
-          element.classList.remove("vky");
-      }
+    if (element) {
+      element.classList.remove("vky");
+    }
   });
 }
 
@@ -117,10 +117,20 @@ function removeElements(...elements) {
   elements.forEach(element => {
     if (element && element.parentNode) {
       element.parentNode.removeChild(element);
-      }
+    }
   });
+}
+
+function removeHeaderAndFooter() {
+  const header = document.querySelector('header.header');
+  const footer = document.querySelector('footer.footer');
+  if (header && footer) {
+    footer.remove();
+    header.remove();
+  }
+
 }
 
 
 
-export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace,onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements };
+export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace, onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements, removeHeaderAndFooter };

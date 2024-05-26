@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Div Yüksekliği Değişimi</title>
+<style>
+  #myDiv {
+    background-color: lightblue;
+    width: 200px;
+  }
+</style>
+</head>
+<body>
+
+<div id="myDiv">
+  Bu bir div içeriğidir.
+</div>
+
+<script>
+  const myDiv = document.getElementById('myDiv');
+
+  // Div'in yüksekliği değiştiğinde bu fonksiyon çalışacak
+  function handleHeightChange() {
+    console.log('Div yüksekliği değişti!');
+    console.log("HEIGHT > ", parseInt(myDiv.style.height))
+  }
+
+  // Yükseklik değişikliğini algılamak için bir MutationObserver kullanıyoruz
+  const observer = new MutationObserver(handleHeightChange);
+
+  // Div'deki içeriğin değişikliklerini gözlemle
+  observer.observe(myDiv, { attributes: true, childList: true, subtree: true });
+
+  // Div'in boyutunu dinamik olarak değiştirme örneği
+  setInterval(() => {
+    myDiv.style.height = Math.random() * 300 + 'px';
+  }, 2000);
+</script>
+
+</body>
+</html>

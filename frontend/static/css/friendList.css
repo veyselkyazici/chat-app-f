@@ -7,14 +7,14 @@
   }
   
   /* Friend Photo */
-  .left-side-friend-photo {
+  /* .left-side-friend-photo {
     width: 50px;
     height: 50px;
     background-color: #ddd;
     border-radius: 50%;
     margin-right: 10px;
     flex-shrink: 0;
-  }
+  } */
   
   /* Chat Data Container (Name, Date, Message) */
  .data {

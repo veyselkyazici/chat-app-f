@@ -1,4 +1,5 @@
 //index.js
+import { removeHeaderAndFooter } from './view/util.js';
 import Home from './view/Home.js';
 import Register from './view/Register.js';
 import Login from './view/Login.js';
@@ -51,6 +52,10 @@ const router = async () => {
     document.querySelector("#content").innerHTML = await view.getHtml();
     if (typeof view.addEventListeners === 'function') {
         await view.addEventListeners();
+    }
+
+    if (match.route.path === "/chat") {
+        removeHeaderAndFooter();
     }
 };
 
