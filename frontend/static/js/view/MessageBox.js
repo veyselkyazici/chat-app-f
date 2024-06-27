@@ -1,7 +1,7 @@
 // MessageBox.js
 import { webSocketManagerChat, chatInstance } from "./Chat.js";
 
-function createMessageBox(chat, chatElement, userId) {
+function createMessageBox(chat, userId) {
     const chatBoxElement = document.querySelector('.chat-box');
 
     chatBoxElement.innerHTML = `
@@ -23,9 +23,8 @@ function createMessageBox(chat, chatElement, userId) {
         </footer>
     `;
     const messageInput = chatBoxElement.querySelector("#message-input");
-    console.log(chat)
-    const sendMessage = async (messageContent) => {
 
+    const sendMessage = async (messageContent) => {
         const message = {
             messageContent: messageContent,
             fullDateTime: new Date().toISOString(),
@@ -33,26 +32,25 @@ function createMessageBox(chat, chatElement, userId) {
             recipientId: chat.friendId,
             chatRoomId: chat.id
         };
+        if (chat.id) {
 
 
-
-        if (chat.id && chatElement) {
-            const chatElementDOM = chatElement.chatElementDOM;
-            const lastMessageElement = chatElementDOM.querySelector('.last-message');
-            lastMessageElement.textContent = messageContent;
-
-            const foundChat = chatInstance.chatList.find(chatItem => chatItem.id === chat.id);
-            if (foundChat) {
-                foundChat.messages.push(message);
+            const chatDOMS = [...document.querySelectorAll(".chat1")];
+            const findChatDOM = chatDOMS.find(chatDOM => chatDOM.chatData.id === chat.id)
+            if (findChatDOM) {
+                const lastMessageElement = findChatDOM.querySelector('.last-message');
+                lastMessageElement.textContent = messageContent;
+                chat.messages.push(message);
             }
+
         }
-
-
         else {
             const result = await fetchCreateChatRoomIfNotExists(userId, chat.friendId);
-            console.log("RESULT > ", result)
             message.chatRoomId = result.id;
             result.friendEmail = chat.friendEmail
+            if (!result.messages) {
+                result.messages = [];
+            }
             const newChat = {
                 friendImage: chat.friendImage,
                 friendEmail: chat.friendEmail,
@@ -62,14 +60,14 @@ function createMessageBox(chat, chatElement, userId) {
                 id: message.chatRoomId
             }
             chat.id = newChat.id;
-            result.messages.push(message)
-            chatElement = chatInstance.createChatElement(newChat);
-            chatInstance.chatList.push(result)
+            result.messages.push(message);
+            chatInstance.chatList.push(result);
+            chatInstance.createChatElement(newChat, 0);
         }
         appendMessage(message, userId);
         messageInput.value = "";
-        console.log(chatInstance.chatList)
         webSocketManagerChat.sendMessageToAppChannel("send-message", message);
+
     };
 
 

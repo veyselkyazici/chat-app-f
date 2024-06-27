@@ -1,41 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
-    <div class="tabs">
-        <button role="tab" aria-selected="true" id="tab1" aria-controls="panel1">Tab 1</button>
-        <button role="tab" aria-selected="false" id="tab2" aria-controls="panel2">Tab 2</button>
-        <button role="tab" aria-selected="false" id="tab3" aria-controls="panel3">Tab 3</button>
-    </div>
-    <div class="tab-panels">
-        <div role="tabpanel" id="panel1" aria-labelledby="tab1">Content for Tab 1</div>
-        <div role="tabpanel" id="panel2" aria-labelledby="tab2" hidden>Content for Tab 2</div>
-        <div role="tabpanel" id="panel3" aria-labelledby="tab3" hidden>Content for Tab 3</div>
-    </div>
-    <script>
-        document.querySelectorAll('[role="tab"]').forEach(function(tab) {
-    tab.addEventListener('click', function() {
-        // Tüm sekmelerin seçili durumunu false yap
-        document.querySelectorAll('[role="tab"]').forEach(function(item) {
-            item.setAttribute('aria-selected', 'false');
-        });
+    <span class="">
+        <button class="x1rg5ohu xn6xy2s x1qx5ct2 xsgj6o6 xq22nx5 x16dsc37" aria-label="Sohbet bağlam menüsünü aç"
+            aria-hidden="true" tabindex="0" style="width: 20px; opacity: 1;">
+            <span data-icon="down" class="">
+                <svg viewBox="0 0 19 20" height="20" width="19" preserveAspectRatio="xMidYMid meet" class=""
+                    version="1.1" x="0px" y="0px">
+                    <title>down</title>
+                    <path fill="currentColor" d="M3.8,6.7l5.7,5.7l5.7-5.7l1.6,1.6l-7.3,7.2L2.2,8.3L3.8,6.7z"></path>
+                </svg>
+            </span>
+        </button>
+    </span>
 
-        // Tüm panelleri gizle
-        document.querySelectorAll('[role="tabpanel"]').forEach(function(panel) {
-            panel.hidden = true;
-        });
 
-        // Tıklanan sekmeyi seçili yap ve ilgili paneli göster
-        tab.setAttribute('aria-selected', 'true');
-        const panelId = tab.getAttribute('aria-controls');
-        document.getElementById(panelId).hidden = false;
-    });
-});
 
-    </script>
+
+
+
+
+
+
+
+
+
+    <span class="">
+        <div tabindex="-1" class="_ak4w" role="application"
+            style="transform-origin: left top; left: 863px; top: 78px; transform: scale(1); opacity: 1;">
+            <ul class="_ak5b">
+                <div>
+                    <li tabindex="0" class="_aj-r _aj-q _aj-_" data-animate-dropdown-item="true" style="opacity: 1;">
+                        <div class="_aj-z _aj-t _alxo" role="button" aria-label="Sohbeti arşivle" style="">Sohbeti
+                            arşivle</div>
+                    </li>
+                    <li tabindex="0" class="_aj-r _aj-q _aj-_" data-animate-dropdown-item="true" style="opacity: 1;">
+                        <div class="_aj-z _aj-t _alxo" role="button" aria-label="Bildirimleri sessize al" style="">
+                            Bildirimleri sessize al</div>
+                    </li>
+                    <li tabindex="0" class="_aj-r _aj-q _aj-_" data-animate-dropdown-item="true" style="opacity: 1;">
+                        <div class="_aj-z _aj-t _alxo" role="button" aria-label="Sohbeti sil" style="">Sohbeti sil</div>
+                    </li>
+                    <li tabindex="0" class="_aj-r _aj-q _aj-_" data-animate-dropdown-item="true" style="opacity: 1;">
+                        <div class="_aj-z _aj-t _alxo" role="button" aria-label="Sohbetin Sabitlemesini Kaldır"
+                            style="">Sohbetin Sabitlemesini Kaldır</div>
+                    </li>
+                    <li tabindex="0" class="_aj-r _aj-q _aj-_" data-animate-dropdown-item="true" style="opacity: 1;">
+                        <div class="_aj-z _aj-t _alxo" role="button" aria-label="Okunmadı olarak işaretle" style="">
+                            Okunmadı olarak işaretle</div>
+                    </li>
+                    <li tabindex="0" class="_aj-r _aj-q _aj-_" data-animate-dropdown-item="true" style="opacity: 1;">
+                        <div class="_aj-z _aj-t _alxo" role="button" aria-label="Engelle" style="">Engelle</div>
+                    </li>
+                </div>
+            </ul>
+        </div>
+    </span>
 </body>
+
 </html>

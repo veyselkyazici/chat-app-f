@@ -200,30 +200,21 @@ const toggleOptions = () => {
 }
 
 function viewPhoto() {
-    // Fotoğrafı görüntüle fonksiyonu
-    // Buraya işlemleri ekleyin
 }
 
 function uploadPhoto() {
-    // Dosya girişi elemanını dinamik olarak oluşturun
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.accept = 'image/*'; // Sadece resim dosyalarına izin ver
+    fileInput.accept = 'image/*';
 
-    // Dosya girişi iletişim kutusunu tetikle
     fileInput.click();
 
-    // Dosya girişi üzerindeki değişiklik olayını dinleyin
     fileInput.addEventListener('change', function () {
         const selectedFile = fileInput.files[0];
 
         if (selectedFile) {
-            // Gerçek dosya yüklemeyi sunucu tarafında ele alacak bir işleviniz olduğunu varsayıyorum
-            // Bu işlevi, sunucu gereksinimlerinize göre uygulamanız gerekebilir
-            // Örnek olarak, dosyayı sunucuya yüklemek için bir işlev kullanacağım, uploadFileToServer
             uploadFileToServer(selectedFile);
 
-            // Önizleme için profil fotoğrafını hemen güncelle
             const profilePhoto = document.getElementById('profilePhoto');
             profilePhoto.src = URL.createObjectURL(selectedFile);
         }
@@ -231,8 +222,6 @@ function uploadPhoto() {
 }
 
 function removePhoto() {
-    // Fotoğrafı kaldır fonksiyonu
-    // Buraya işlemleri ekleyin
 }
 
 function getUserProfilePhotoUrl() {

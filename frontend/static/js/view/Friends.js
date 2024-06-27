@@ -1,8 +1,8 @@
 // FriendList.js
 import { createMessageBox } from './MessageBox.js';
+import { chatInstance } from "./Chat.js";
 import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
-function createFriendList(friendList, userId, chats, chatElements) {
-    console.log("CHATELEMENTS > " + JSON.stringify(chatElements))
+function createFriendList(friendList, userId) {
     const createFriendHTML = user => `
         <div class="friend">
             <div class="left-side-friend-photo">${user.imageId}</div>
@@ -50,32 +50,19 @@ function createFriendList(friendList, userId, chats, chatElements) {
 
 
     function handleFriendClick(friend) {
-        // const chatRequestDTO = {
-        //     friendId: friend.id,
-        //     friendEmail: friend.email,
-        //     userId: userId
-        // }
-        // fetchGetChatMessage(chatRequestDTO).then(result => {
-        //     console.log("RESULT: " + JSON.stringify(result))
-        //     createMessageBox(result)});
-        console.log("CHAT> " + JSON.stringify(chats))
         const chatRequestDTO = {
             friendImage: friend.imageId,
             friendId: friend.id,
             friendEmail: friend.email,
             userId: userId
         }
-        if (chats && chats.length > 0) {
-            console.log("IF")
-            let chatDOM = "";
-            chats.forEach(chat => {
-                chatDOM = chatElements.filter(chatElement => chatElement.chatId == chat.id);
-                    (chat.userId == friend.id || chat.friendId == friend.id) ? createMessageBox(chat, chatDOM, userId) : createMessageBox(chatRequestDTO, null, userId)
-            })
+        const findChat = chatInstance.chatList.find(chatItem => chatItem.id === `${userId}_${friend.id}` || chatItem.id === `${friend.id}_${userId}`)
+        if (findChat) {
+
+            createMessageBox(findChat, userId)
         }
         else {
-            console.log("ELSE")
-            createMessageBox(chatRequestDTO, null, userId)
+            createMessageBox(chatRequestDTO, userId)
         }
 
         visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement, chatSearchBarElement);

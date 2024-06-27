@@ -1,42 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Div Yüksekliği Değişimi</title>
-<style>
-  #myDiv {
-    background-color: lightblue;
-    width: 200px;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hover Effect</title>
+    <style>
+        .hover-div {
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        .hover-content {
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
+    <div class="hover-div">
+        <span class="hover-content"></span>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const hoverDiv = document.querySelector('.hover-div');
+            const hoverContent = document.querySelector('.hover-content');
 
-<div id="myDiv">
-  Bu bir div içeriğidir.
-</div>
+            hoverDiv.addEventListener('mouseover', () => {
+                hoverContent.innerHTML = `
+                    <button class="button" aria-label="Open chat context menu" aria-hidden="true" tabindex="0" style="width: 20px; opacity: 1;">
+                        <span data-icon="down">
+                            <svg viewBox="0 0 19 20" height="20" width="19" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px">
+                                <title>down</title>
+                                <path fill="currentColor" d="M3.8,6.7l5.7,5.7l5.7-5.7l1.6,1.6l-7.3,7.2L2.2,8.3L3.8,6.7z"></path>
+                            </svg>
+                        </span>
+                    </button>
+                `;
+            });
 
-<script>
-  const myDiv = document.getElementById('myDiv');
-
-  // Div'in yüksekliği değiştiğinde bu fonksiyon çalışacak
-  function handleHeightChange() {
-    console.log('Div yüksekliği değişti!');
-    console.log("HEIGHT > ", parseInt(myDiv.style.height))
-  }
-
-  // Yükseklik değişikliğini algılamak için bir MutationObserver kullanıyoruz
-  const observer = new MutationObserver(handleHeightChange);
-
-  // Div'deki içeriğin değişikliklerini gözlemle
-  observer.observe(myDiv, { attributes: true, childList: true, subtree: true });
-
-  // Div'in boyutunu dinamik olarak değiştirme örneği
-  setInterval(() => {
-    myDiv.style.height = Math.random() * 300 + 'px';
-  }, 2000);
-</script>
-
+            hoverDiv.addEventListener('mouseout', () => {
+                hoverContent.innerHTML = '';
+            });
+        });
+    </script>
 </body>
 </html>
