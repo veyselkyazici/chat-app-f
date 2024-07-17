@@ -6,13 +6,15 @@ import { createIncomingFriendRequests } from "./IncomingFriendRequests.js";
 import { createApprovedRequestHistory } from "./ApprovedRequestHistory.js";
 import { createMessageBox, appendMessage } from "./MessageBox.js";
 import WebSocketManager from "../websocket.js";
-import { hideElements } from './util.js'
+import { hideElements } from './util.js';
+import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
+import { showModal } from './showModal.js';
 
 export let webSocketManagerFriendships;
 export let webSocketManagerChat;
 export let chatInstance;
-webSocketManagerFriendships = new WebSocketManager('http://localhost:9030/ws');
-webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws');
+// webSocketManagerFriendships = new WebSocketManager('http://localhost:9030/ws');
+// webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws');
 
 export default class Chat extends AbstractView {
     constructor(params) {
@@ -26,6 +28,8 @@ export default class Chat extends AbstractView {
             friendId: "03e49ab6-81b0-4609-84e1-5ceadc4c29b7",
             id: 0,
             image: null,
+            lastMessage: 0,
+            lastMessageTime: 0,
             messages: [
                 {
                     chatRoomId: "7c6f47eb-dad2-44b3-a036-ffbf92343ae2_03e49ab6-81b0-4609-84e1-5ceadc4c29b7",
@@ -46,14 +50,15 @@ export default class Chat extends AbstractView {
         // this.chatElements = [];
         this.friendList = [];
         this.fetchFriendRequestReplyData = [];
-
         this.handleChatClick = this.handleChatClick.bind(this);
         this.handleMouseover = this.handleMouseover.bind(this);
         this.handleMouseout = this.handleMouseout.bind(this);
+        this.handleOptionsBtnClick = this.handleOptionsBtnClick.bind(this);
+        this.closeOptionsDivOnClickOutside = this.closeOptionsDivOnClickOutside.bind(this);
 
         this.friendListViewInstance = null;
-        this.webSocketManagerFriendships = webSocketManagerFriendships;
-        this.webSocketManagerChat = webSocketManagerChat;
+        // this.handleBeforeUnload = this.handleBeforeUnload.bind(this);
+        this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
         this.init()
     }
     /* async renderChat () {
@@ -95,16 +100,27 @@ export default class Chat extends AbstractView {
 
     async getHtml() {
         return `
-        <div class="chat-container">
+            <span class></span>
+    <span class></span>
+            <div class="chat-container">
+
         <div class="box">
             <div class="xixxii4"></div>
-            <div class="left-side">
+            <div class="a1">
+                <div class="a1-1">
+                    <span class="a1-1-1"></span>
+                </div>
+                <div class="a1-2">
+                    <span class="a1-2-1"></span>
+                </div>
+            </div>
+            <div class="chats">
                 <header class="chat-list-header">
                     <div class="user-photo">
                         <div class="user-profile-photo" role="button" aria-label="profil fotoğrafı"
                             style="height: 40px; width: 40px; cursor: pointer;">
-                            <img class="user-image" tabindex="0" src="/static/image/img.jpeg"
-                                alt="Varsayılan Fotoğraf" id="profilePhoto" style="visibility: visible;" />
+                            <img class="user-image" tabindex="0" src="/static/image/img.jpeg" alt="Varsayılan Fotoğraf"
+                                id="profilePhoto" style="visibility: visible;" />
                         </div>
                     </div>
                     <div class="options-div">
@@ -238,7 +254,7 @@ export default class Chat extends AbstractView {
 
                 </div>
             </div>
-            <div class="chat-box" id="chatWindow">
+            <div class="messaging" id="chatWindow">
                 <div class="start-message">Arkadaş Seçerek Sohbet Etmeye Başlayabilirsiniz.</div>
             </div>
         </div>
@@ -248,9 +264,14 @@ export default class Chat extends AbstractView {
 
     async init() {
         await this.initialData();
+        this.webSocketManagerFriendships = new WebSocketManager('http://localhost:9030/ws', this.userId);;
+        this.webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws', this.userId);
         this.initFriendshipWebSocket();
         this.initChatWebSocket()
         this.handleChats();
+
+        // window.addEventListener('beforeunload', this.handleBeforeUnload);
+        document.addEventListener('visibilitychange', this.handleVisibilityChange);
     }
 
     async initFriendshipWebSocket() {
@@ -260,7 +281,20 @@ export default class Chat extends AbstractView {
             console.error('Friendships WebSocket bağlantı hatası: ' + error);
         });
     }
+    handleBeforeUnload(event) {
+        this.webSocketManagerChat.notifyOnlineStatus(false);
+    }
 
+    handleVisibilityChange(event) {
+        console.log("VISIBILITY CHANGE")
+        if (document.visibilityState === 'hidden') {
+            console.log("HIDDEN")
+            this.webSocketManagerChat.notifyOnlineStatus(false);
+        } else if (document.visibilityState === 'visible') {
+            console.log("VISIBLE")
+            this.webSocketManagerChat.notifyOnlineStatus(true);
+        }
+    }
     subscribeToFriendshipChannels() {
 
         const friendResponseChannel = `/user/${this.userId}/queue/friend-request-friend-response`;
@@ -297,7 +331,7 @@ export default class Chat extends AbstractView {
     }
 
     initChatWebSocket() {
-        this.webSocketManagerChat.connectWebSocket({}, () => {
+        this.webSocketManagerChat.connectWebSocket(() => {
             this.subscribeToChatChannels();
         }, function (error) {
             console.error('Chat WebSocket connection error: ' + error);
@@ -305,7 +339,9 @@ export default class Chat extends AbstractView {
     }
 
     subscribeToChatChannels() {
-        const recipientMessageChannel = `/user/${this.userId}/queue/received-message`
+        const recipientMessageChannel = `/user/${this.userId}/queue/received-message`;
+        const helloChannel = `/topic/online-status/${this.userId}`
+        
 
         this.webSocketManagerChat.subscribeToChannel(recipientMessageChannel, async (recipientMessage) => {
             const recipientJSON = JSON.parse(recipientMessage.body);
@@ -316,36 +352,38 @@ export default class Chat extends AbstractView {
                 this.updateMessageBox(recipientJSON)
                 this.lastMessageChange(recipientJSON.chatRoomId, recipientJSON.messageContent)
             }
-
         })
+        this.webSocketManagerChat.subscribeToChannel(helloChannel, async (recipientMessage) => {
+            const recipientJSON = JSON.parse(recipientMessage.body);
+            console.log("HELLO > ", recipientJSON)
+        })
+
+        
     }
 
-    moveChatToTop(chatRoomId) {
-        const chatIndex = this.chatList.findIndex(chat => chat.id === chatRoomId);
-        if (chatIndex !== -1) {
-            const chat = this.chatList.splice(chatIndex, 1)[0];
-            this.chatList.unshift(chat);
-            this.updateVisibleItems();
-        }
-    }
     async createChat(recipientJSON) {
         const user = await fetchGetUserById(recipientJSON.senderId);
+        console.log(recipientJSON)
         const chat = {
             friendImage: user.image,
             friendId: recipientJSON.senderId,
             friendEmail: user.email,
             image: user.image,
             id: recipientJSON.chatRoomId,
-            messages: [recipientJSON]
+            lastMessage: recipientJSON.messageContent,
+            lastMessageTime: recipientJSON.fullDateTime
         };
         this.chatList.unshift(chat); // Sohbeti listenin başına ekliyoruz
         this.createChatElement(chat, 0); // Sohbeti en üstte oluşturuyoruz
+        this.updateChatsTranslateY();
     }
     updateMessageBox(recipientJSON) {
         for (let i = 0; i < this.chatList.length; i++) {
             if (this.chatList[i].id === recipientJSON.chatRoomId) {
                 appendMessage(recipientJSON, this.userId);
-                this.chatList[i].messages.push(recipientJSON);
+                if (!this.chatList[i].messages) {
+                    this.chatList[i].messages = [];
+                }
                 this.moveChatToTop(recipientJSON.chatRoomId);
                 break;
             }
@@ -397,8 +435,11 @@ export default class Chat extends AbstractView {
         //     newData.messages[0].messageContent = i;
         //     newData.id = i;
         //     newData.friendEmail = i;
+        //     newData.lastMessage = i;
+        //     newData.lastMessageTime = i;
         //     this.chatList.push(newData)
         // }
+        console.log(this.chatList)
         console.log("UZUNLUK > ", this.chatList.length)
     }
 
@@ -426,7 +467,6 @@ export default class Chat extends AbstractView {
 
         if (friendListButtonElement) {
             friendListButtonElement.addEventListener("click", () => {
-                hideElements(chatListHeaderElement, chatListContentElement, chatSearchBarElement)
                 this.handleInitialFriendList();
             });
         }
@@ -500,14 +540,23 @@ export default class Chat extends AbstractView {
 
     handleChats() {
         const chatListContentElement = document.querySelector(".chat-list-content");
+        const paneSideElement = document.querySelector("#pane-side");
         const boxElement = document.querySelector(".box");
         const visibleItemCount = Math.ceil(boxElement.clientHeight / 72) + 7;
         chatListContentElement.style.height = this.chatList.length * 72 + "px";
 
         for (let i = 0; i < visibleItemCount && i < this.chatList.length; i++) {
+            console.log(i)
             this.createChatElement(this.chatList[i], i);
         }
-        this.virtualScroll(visibleItemCount);
+        const updateItemsDTO = new UpdateItemsDTO({
+            list: this.chatList,
+            itemsToUpdate: Array.from(document.querySelectorAll('.chat1')),
+            removeChatEventListeners: this.removeChatEventListeners,
+            addChatEventListeners: this.addChatEventListeners
+        });
+
+        virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount);
     }
 
     updateVisibleItems() {
@@ -613,8 +662,9 @@ export default class Chat extends AbstractView {
         chatElementDOM.style.transform = `translateY(${index * 72}px)`;
         chatElementDOM.style.zIndex = index;
         chatElementDOM.chatData = chat;
+        console.log(chat)
         chatElementDOM.innerHTML = `
-            <div class="chat2">
+            <div class="chat-box">
                 <div tabindex="-1" class aria-selected="false" role="row">
                     <div class="chat cursor">
                         <div class="chat-image">
@@ -657,15 +707,22 @@ export default class Chat extends AbstractView {
         chatListContentElement.style.height = this.chatList.length * 72 + "px";
         this.addChatEventListeners(chatElementDOM);
         chatListContentElement.insertBefore(chatElementDOM, chatListContentElement.firstChild);
-        this.updateChatsTranslateY();
     }
 
     updateChatsTranslateY() {
         const chatElements = document.querySelectorAll('.chat1');
+        console.log(chatElements)
         chatElements.forEach((chatElement, index) => {
             chatElement.style.transform = `translateY(${index * 72}px)`;
             chatElement.style.zIndex = index;
         });
+    }
+
+
+    removeChatEventListeners(chatElementDOM) {
+        chatElementDOM.removeEventListener('click', this.handleChatClick);
+        chatElementDOM.removeEventListener('mouseenter', this.handleMouseover);
+        chatElementDOM.removeEventListener('mouseleave', this.handleMouseout);
     }
 
     addChatEventListeners(chatElementDOM) {
@@ -674,28 +731,35 @@ export default class Chat extends AbstractView {
         chatElementDOM.addEventListener('mouseleave', this.handleMouseout);
     }
 
-    removeChatEventListeners(chatElementDOM) {
-        chatElementDOM.removeEventListener('click', this.handleChatClick);
-        chatElementDOM.removeEventListener('mouseenter', this.handleMouseover);
-        chatElementDOM.removeEventListener('mouseleave', this.handleMouseout);
-    }
     handleMouseover(event) {
         const chatElementDOM = event.currentTarget;
+        console.log(chatElementDOM.chatData)
         const chatOptionsSpan = chatElementDOM.querySelectorAll('.chat-options span')[2];
         if (chatOptionsSpan) {
-            const chatOptionsHTML = `<button class="chat-options-btn" aria-label="Open chat context menu" aria-hidden="true" tabindex="0" style="width: 20px; opacity: 1;">
+
+            const chatOptionsButton = document.createElement("button");
+            chatOptionsButton.className = "chat-options-btn";
+            chatOptionsButton.setAttribute("aria-label", "Open chat context menu");
+            chatOptionsButton.setAttribute("aria-hidden", "true");
+            chatOptionsButton.tabIndex = 0;
+            chatOptionsButton.style.width = "20px";
+            chatOptionsButton.style.opacity = "1";
+            chatOptionsButton.chatData = chatElementDOM.chatData;
+
+            const spanHTML = `
         <span data-icon="down">
             <svg viewBox="0 0 19 20" height="20" width="19" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px">
                 <title>down</title>
                 <path fill="currentColor" d="M3.8,6.7l5.7,5.7l5.7-5.7l1.6,1.6l-7.3,7.2L2.2,8.3L3.8,6.7z"></path>
             </svg>
-        </span>
-    </button>`
-            chatOptionsSpan.insertAdjacentHTML('beforeend', chatOptionsHTML);
+        </span>`
+            chatOptionsButton.innerHTML = spanHTML;
+            chatOptionsSpan.appendChild(chatOptionsButton);
+            chatOptionsButton.addEventListener("click", (event) => {
+                event.stopPropagation();
+                this.handleOptionsBtnClick(event);
+            });
         }
-    }
-    isChatOptionsBtnExist() {
-
     }
     handleMouseout(event) {
         const chatElementDOM = event.currentTarget;
@@ -706,16 +770,151 @@ export default class Chat extends AbstractView {
             chatOptionsSpan.removeChild(chatOptionsBtn);
         }
     }
+     handleOptionsBtnClick(event) {
+        const target = event.currentTarget;
+        const chatData = target.chatData;
+
+
+        const spans = document.querySelectorAll('.app span');
+        const showChatOptions = spans[1];
+
+        if (showChatOptions) {
+            const existingOptionsDiv = showChatOptions.querySelector('.options1');
+
+            if (existingOptionsDiv) {
+                console.log("Seçenekler kapatılıyor");
+                existingOptionsDiv.remove();
+            } else {
+                console.log("Seçenekler açılıyor");
+                const chatOptionsDiv = document.createElement("div");
+
+                const rect = target.getBoundingClientRect();
+                console.log(rect);
+                chatOptionsDiv.classList.add('options1');
+                chatOptionsDiv.setAttribute('role', 'application');
+                chatOptionsDiv.style.transformOrigin = 'left top';
+                chatOptionsDiv.style.top = (rect.top + window.scrollY) + 'px';
+                chatOptionsDiv.style.left = (rect.left + window.scrollX) + 'px';
+                chatOptionsDiv.style.transform = 'scale(1)';
+                chatOptionsDiv.style.opacity = '1';
+
+                const archiveLabel = chatData.userChatSettings.archived ? 'Sohbeti arşivden çıkar' : 'Sohbeti arşivle';
+                const blockLabel = chatData.userChatSettings.blocked ? 'Engeli kaldır' : 'Engelle';
+                const pinLabel = chatData.userChatSettings.pinned ? 'Sohbeti sabitlemeyi kaldır' : 'Sohbeti sabitle';
+
+                const chatOptionsLiItemHTML = `
+                    <ul class="ul1">
+                        <div>
+                            <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+                                <div class="list-item1-div" role="button" aria-label="${archiveLabel}">${archiveLabel}</div>
+                            </li>
+                            <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+                                <div class="list-item1-div" role="button" aria-label="${blockLabel}">${blockLabel}</div>
+                            </li>
+                            <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+                                <div class="list-item1-div" role="button" aria-label="Sohbeti sil">Sohbeti sil</div>
+                            </li>
+                            <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+                                <div class="list-item1-div" aria-label="${pinLabel}">${pinLabel}</div>
+                            </li>
+                            <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+                                <div class="list-item1-div" role="button" aria-label="Okunmadı olarak işaretle">Okunmadı olarak işaretle</div>
+                            </li>
+                        </div>
+                    </ul>
+                `;
+                chatOptionsDiv.innerHTML = chatOptionsLiItemHTML;
+                showChatOptions.appendChild(chatOptionsDiv);
+
+                const listItems = document.querySelectorAll(".list-item1");
+                listItems.forEach((li, index) => {
+                    li.addEventListener('mouseover', () => {
+                        li.classList.add('background-color');
+                    });
+                    li.addEventListener('mouseout', () => {
+                        li.classList.remove('background-color');
+                    });
+                    li.addEventListener('click', async () => {
+                        const dto = new UserSettingsDTO({
+                            friendId: chatData.friendId,
+                            userId: chatData.userId,
+                            id: chatData.id,
+                            friendEmail: chatData.friendEmail,
+                            userChatSettings: { ...chatData.userChatSettings }
+                        });
+                        switch (index) {
+                            case 0:
+                                if (chatData.archived) {
+                                    console.log('Sohbet arşivden çıkarılıyor');
+                                } else {
+                                    console.log('Sohbet arşivleniyor');
+                                }
+                                break;
+                            case 1:
+                                if (chatData.userChatSettings.blocked) {
+                                    const title = '';
+                                    const content = `${chatData.friendEmail} kişinin Engeli kaldırılsın mı ?`;
+                                    const mainCallback = async () => {
+                                        await fetchChatUnblock(dto);
+                                        const chatIndex = this.chatList.findIndex(chat => chat.id === chatData.id);
+                                        if (chatIndex !== -1) {
+                                            this.chatList[chatIndex].userChatSettings.blocked = false;
+                                        }
+                                    };
+                                    showModal(title, content, mainCallback, 'Engeli kaldır', false);
+                                } else {
+                                    const title = '';
+                                    const content = `${chatData.friendEmail} kişi Engellensin mi?`;
+                                    const mainCallback = async () => {
+                                        await fetchChatBlock(dto);
+                                        const chatIndex = this.chatList.findIndex(chat => chat.id === chatData.id);
+                                        if (chatIndex !== -1) {
+                                            this.chatList[chatIndex].userChatSettings.blocked = true;
+                                        }
+                                    };
+                                    showModal(title, content, mainCallback, 'Engelle', false);
+                                }
+                                break;
+                            case 2:
+                                console.log('Sohbet siliniyor');
+                                break;
+                            case 3:
+                                if (chatData.pinned) {
+                                    console.log('Sabitleme kaldırılıyor');
+                                } else {
+                                    console.log('Sabitleme işlemi yapılıyor');
+                                }
+                                break;
+                            case 4:
+                                console.log('Okunmadı olarak işaretleniyor');
+                                break;
+                        }
+                        showChatOptions.innerHTML = '';
+                    });
+                });
+                document.addEventListener('click', this.closeOptionsDivOnClickOutside);
+            }
+        }
+    }
+
+
+    closeOptionsDivOnClickOutside(event) {
+        const optionsDiv = document.querySelector('.options1');
+        if (optionsDiv && !optionsDiv.contains(event.target)) {
+            optionsDiv.remove();
+            document.removeEventListener('click', this.closeOptionsDivOnClickOutside);
+        }
+    }
     async handleChatClick(event) {
         const chatElementDOM = event.currentTarget;
         const chatData = chatElementDOM.chatData;
         if (this.selectedChatElement && this.selectedChatElement !== chatElementDOM) {
-            const previouslySelectedInnerDiv = this.selectedChatElement.querySelector('.chat2 > div');
+            const previouslySelectedInnerDiv = this.selectedChatElement.querySelector('.chat-box > div');
             this.selectedChatElement.querySelector(".chat").classList.remove('selected-chat');
             previouslySelectedInnerDiv.setAttribute('aria-selected', 'false');
         }
 
-        const innerDiv = chatElementDOM.querySelector('.chat2 > div');
+        const innerDiv = chatElementDOM.querySelector('.chat-box > div');
         chatElementDOM.querySelector(".chat").classList.add('selected-chat');
         innerDiv.setAttribute('aria-selected', 'true');
         this.selectedChatElement = chatElementDOM;
@@ -727,6 +926,10 @@ export default class Chat extends AbstractView {
         createMessageBox(chatData, this.userId);
 
         console.log('Chat clicked:', chatElementDOM, chatData);
+    }
+
+    destroy() {
+
     }
 
 }
@@ -882,4 +1085,85 @@ async function fetchGetUserById(userId) {
     }
 }
 
+const fetchChatBlockUrl = 'http://localhost:8080/api/v1/chat/chat-block';
+const fetchChatBlock = async (chatSummaryDTO) => {
+    try {
+        const token = sessionStorage.getItem('access_token');
+        if (!token) {
+            throw new Error('Access token not found');
+        }
 
+        const response = await fetch(fetchChatBlockUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify(chatSummaryDTO),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            toastr.error(errorData.message);
+            throw new Error(errorData.message);
+        }
+
+        const result = await response.json();
+        toastr.success(result.message);
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.error('Hata:', error.message);
+        throw error;
+    }
+};
+
+const fetchChatUnblockUrl = 'http://localhost:8080/api/v1/chat/chat-unblock';
+const fetchChatUnblock = async (chatSummaryDTO) => {
+    try {
+        const token = sessionStorage.getItem('access_token');
+        if (!token) {
+            throw new Error('Access token not found');
+        }
+
+        const response = await fetch(fetchChatUnblockUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify(chatSummaryDTO),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            toastr.error(errorData.message);
+            throw new Error(errorData.message);
+        }
+
+        const result = await response.json();
+        toastr.success(result.message);
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.error('Hata:', error.message);
+        throw error;
+    }
+};
+
+
+class UserSettingsDTO {
+    constructor({
+        friendId = '',
+        userId = '',
+        id = '',
+        userChatSettings = {},
+        friendEmail = '',
+    } = {}) {
+        this.userChatSettings = userChatSettings;
+        this.userId = userId;
+        this.id = id;
+        this.friendEmail = friendEmail;
+        this.friendId = friendId;
+    }
+}

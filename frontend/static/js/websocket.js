@@ -1,23 +1,33 @@
 class WebSocketManager {
-    constructor(webSocketUrl) {
+    constructor(webSocketUrl, userId) {
         this.webSocketUrl = webSocketUrl;
+        this.userId = userId;
         this.stompClient = null;
         this.subscriptions = new Map();
     }
-  
-    connectWebSocket(successCallback, errorCallback) {
+
+    connectWebSocket(successCallback = () => {}, errorCallback = () => {}) {
         try {
             this.sockJs = new SockJS(this.webSocketUrl);
             this.stompClient = Stomp.over(this.sockJs);
-            this.stompClient.connect({}, successCallback, errorCallback);
+            this.stompClient.connect({ userId: this.userId }, () => {
+                console.log('Connected to WebSocket');
+                successCallback();
+                this.notifyOnlineStatus(true);
+            }, (error) => {
+                console.error('WebSocket connection error:', error);
+                errorCallback(error);
+                this.notifyOnlineStatus(false);
+            });
         } catch (error) {
             console.error('WebSocket connection error:', error);
-            if (errorCallback) errorCallback(error);
+            errorCallback(error);
         }
     }
-  
+
     disconnectWebSocket() {
         if (this.stompClient) {
+            this.notifyOnlineStatus(false);
             this.stompClient.disconnect();
             this.subscriptions.forEach((subscription) => {
                 subscription.unsubscribe();
@@ -25,6 +35,7 @@ class WebSocketManager {
             this.subscriptions.clear();
         }
     }
+
   
     subscribeToChannel(channel, callback) {
         if (this.stompClient) {
@@ -53,6 +64,44 @@ class WebSocketManager {
             }
         }
     }
+
+    async notifyOnlineStatus(isOnline) {
+        if (isOnline) {
+            this.sendMessageToAppChannel('user-online', { userId: this.userId, online: true });
+            console.log("ONLINE USERID> ", this.userId)
+        } else {
+            await fetchUpdateUserLastSeen(this.userId)
+            this.sendMessageToAppChannel('user-offline', { userId: this.userId, online: false });
+        }
+    }
 }
+
+const fetchUpdateUserLastSeenUrl = 'http://localhost:8080/api/v1/user/update-user-last-seen';
+const fetchUpdateUserLastSeen = async (userId) => {
+    try {
+        const token = sessionStorage.getItem('access_token');
+        if (!token) {
+            throw new Error('Access token not found');
+        }
+
+        const response = await fetch(fetchUpdateUserLastSeenUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify({userId: userId}),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            toastr.error(errorData.message);
+            throw new Error(errorData.message);
+        }
+    } catch (error) {
+        console.error('Hata:', error.message);
+        throw error;
+    }
+};
 
 export default WebSocketManager;

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,32 +23,42 @@
         }
     </style>
 </head>
+
 <body>
-    <div class="hover-div">
-        <span class="hover-content"></span>
+    <div class="chat-box">
+        <div tabindex="-1" class aria-selected="false" role="row">
+            <div class="chat cursor">
+                <div class="chat-image">
+                    <div class="chat-left-image">
+                        <div>
+                            <div class="image" style="height: 49px; width: 49px;">
+                                <img src="static/image/img.jpeg" alt="" draggable="false" class="user-image"
+                                    tabindex="-1" style="visibility: visible;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-info">
+                    <div class="chat-name-and-last-message-time">
+                        <div class="chat-name">
+                            <div class="name">
+                                <span dir="auto" title="${chat.friendEmail}" aria-label="" class="name-span"
+                                    style="min-height: 0px;">${chat.friendEmail}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="last-message">
+                        <div class="message">
+                            <span class="message-span" title="">
+                                <span dir="ltr" aria-label class="message-span-span"
+                                    style="min-height: 0px;">${chat.lastMessage}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const hoverDiv = document.querySelector('.hover-div');
-            const hoverContent = document.querySelector('.hover-content');
-
-            hoverDiv.addEventListener('mouseover', () => {
-                hoverContent.innerHTML = `
-                    <button class="button" aria-label="Open chat context menu" aria-hidden="true" tabindex="0" style="width: 20px; opacity: 1;">
-                        <span data-icon="down">
-                            <svg viewBox="0 0 19 20" height="20" width="19" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px">
-                                <title>down</title>
-                                <path fill="currentColor" d="M3.8,6.7l5.7,5.7l5.7-5.7l1.6,1.6l-7.3,7.2L2.2,8.3L3.8,6.7z"></path>
-                            </svg>
-                        </span>
-                    </button>
-                `;
-            });
-
-            hoverDiv.addEventListener('mouseout', () => {
-                hoverContent.innerHTML = '';
-            });
-        });
-    </script>
 </body>
+
 </html>
