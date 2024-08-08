@@ -38,12 +38,10 @@ class WebSocketManager {
 
   
     subscribeToChannel(channel, callback) {
-        if (this.stompClient) {
+        if (this.stompClient && !this.subscriptions.has(channel)) {
             const subscription = this.stompClient.subscribe(channel, callback);
             this.subscriptions.set(channel, subscription);
-            return subscription;
         }
-        return null;
     }
   
     unsubscribeFromChannel(channel) {
