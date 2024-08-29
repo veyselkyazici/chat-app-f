@@ -1,6 +1,6 @@
 //Register.js
 import AbstractView from "./AbstractView.js";
-import { clearErrorMessages, isValidEmail } from "./util.js";
+import { clearErrorMessages, isValidEmail, showError } from "./util.js";
 import { navigateTo } from '../index.js';
 
 export default class extends AbstractView {
@@ -74,7 +74,6 @@ function getRegisterFormInputValues() {
 async function register() {
   const { formElements, email, password, confirmPassword } = getRegisterFormInputValues();
   clearErrorMessages();
-
   let hasError = false;
   if (!email) {
     toastr.error('Email boş olamaz');
@@ -85,6 +84,11 @@ async function register() {
   if (!isValidEmail(email)) {
     toastr.error('Geçerli bir e-posta adresi girin');
     showError(formElements.emailDOM, "Geçerli bir e-posta adresi girin");
+    hasError = true;
+  }
+  if (email.length < 6 || email.length > 254) {
+    toastr.error('Geçerli bir e-posta adresi girin');
+    showError(formElements.emailDOM, 'Geçerli bir e-posta adresi girin');
     hasError = true;
   }
 

@@ -1,12 +1,12 @@
 // AddFriend.js
 import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
-import { webSocketManagerFriendships } from "./Chat.js";
+import { chatInstance, webSocketManagerFriendships } from "./Chat.js";
 
 async function addFriendView() {
     const chatListHeaderElement = document.querySelector(".chat-list-header");
     const chatListContentElement = document.querySelector(".chat-list-content");
     const chatContentElement = document.querySelector('.chat-content');
-
+    
     const addFriendHTML = `
     <div class="add-friend-div" id="add-friend-div">
     <div class="" id="backspace">
@@ -107,10 +107,7 @@ function renderSearchResults(searchResults) {
         chatList.appendChild(chatItem);
 
         const addFriendBtns = chatItem.querySelector('.add-btn');
-        const addFriend = document.querySelector(".add-friend")
-        addFriend.addEventListener('click', () => {
-            console.log("user: ", user)
-        });
+
         addFriendBtns.addEventListener('click', function  () {
             console.log(user.id, "----" , user.email)
             const friendRequest = {
@@ -156,6 +153,8 @@ const friendRequestUrl = "add-friend";
 
 function sendFriendRequest(friendRequest) {
     console.log("friend request: ", friendRequest)
-    webSocketManagerFriendships.sendMessageToAppChannel(friendRequestUrl, friendRequest)
+    console.log(friendRequestUrl)
+    console.log(chatInstance.webSocketManagerFriendships)
+    chatInstance.webSocketManagerFriendships.sendMessageToAppChannel(friendRequestUrl, friendRequest);
 }
 export { addFriendView };

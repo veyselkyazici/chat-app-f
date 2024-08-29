@@ -8,7 +8,7 @@ let caretPosition = 0;
 let caretNode = null;
 let range = null;
 let selection = null;
-
+const emojiRegex = /([\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF}|\u{1F700}-\u{1F77F}|\u{1F780}-\u{1F7FF}|\u{1F800}-\u{1F8FF}|\u{1F900}-\u{1F9FF}|\u{1FA00}-\u{1FA6F}|\u{1FA70}-\u{1FAFF}])/gu;
 
 async function createMessageBox(chat) {
     const chatBoxElement = document.querySelector('.message-box');
@@ -20,11 +20,11 @@ async function createMessageBox(chat) {
     chat.image;
     chat.messages;
     const userId = chat.userId;
-    chat.userChatSettings.blocked;
-    chat.userChatSettings.blockedTime;
-    chat.userChatSettings.deletedTime;
-    chat.userChatSettings.unblockedTime;
-    chat.userChatSettings.unreadMessageCount;
+    chat.userChatSettings?.blocked;
+    chat.userChatSettings?.blockedTime;
+    chat.userChatSettings?.deletedTime;
+    chat.userChatSettings?.unblockedTime;
+    chat.userChatSettings?.unreadMessageCount;
 
     const inputBox = document.querySelector('.message-box1-7-1-1-1-2-1-1');
     const textArea = inputBox.querySelector('.message-box1-7-1-1-1-2-1-1-1');
@@ -34,16 +34,23 @@ async function createMessageBox(chat) {
     const panel = document.querySelector('.message-box1-6');
     const showEmojiDOM = document.querySelector('.message-box1-7-2-1 .x1n2onr6:nth-child(3)');
 
-
-    textArea.addEventListener('input', handleTextInput.bind(null, inputBox, textArea, sendButton));
+    textArea.addEventListener('input', (event) => handleTextInput(inputBox, textArea, sendButton, event));
     textArea.addEventListener('keydown', handleTextKeyDown);
     textArea.addEventListener('mouseup', updateCaretPosition);
+    textArea.addEventListener('paste', handlePaste);
 
     emojiButton.addEventListener('click', () => {
         showEmojiPicker(panel, showEmojiDOM);
     });
 }
+
+function handlePaste(event) {
+    event.preventDefault(); // Tarayıcının varsayılan yapıştırma işlemini engelle
+}
+
 function handleTextInput(inputBox, textArea, sendButton, event) {
+    console.log(event)
+    console.log("INPUT>>>>>>>>>>>>>>>")
     updatePlaceholder(inputBox, textArea, sendButton);
     updateCaretPosition(event);
     if (event.inputType === 'deleteContentBackward') {
@@ -275,9 +282,9 @@ const updateCaretPosition = (event) => {
     selection = window.getSelection();
     if (selection.rangeCount > 0) {
         range = selection.getRangeAt(0);
+        console.log("SELECTED TEXT > ", selection.toString());
         caretPosition = range.startOffset;
         caretNode = range.startContainer;
-
         if (caretNode.nodeType !== Node.TEXT_NODE) {
             if (caretNode.childNodes.length > 0 && caretPosition < caretNode.childNodes.length) {
                 caretNode = caretNode.childNodes[caretPosition];
@@ -289,6 +296,7 @@ const updateCaretPosition = (event) => {
     } else {
         console.error("Selection rangeCount is 0.");
     }
+    console.log("CARET NODE222 > ", caretNode)
 };
 
 const setStartRange = (startNode, startOffset) => {

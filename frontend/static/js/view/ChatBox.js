@@ -5,11 +5,18 @@ import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
 import { showModal, ModalOptionsDTO } from './showModal.js';
 
 function handleChats() {
-    const chatListContentElement = document.querySelector(".chat-list-content");
     const paneSideElement = document.querySelector("#pane-side");
     const boxElement = document.querySelector(".chat-container");
-    const visibleItemCount = Math.ceil(boxElement.clientHeight / 72) + 7;
-    chatListContentElement.style.height = chatInstance.chatList.length * 72 + "px";
+
+    const calculateVisibleItemCount = () => {
+        const boxHeight = boxElement.clientHeight;
+        return Math.ceil(boxHeight / 72) + 7;
+    };
+
+    let visibleItemCount = calculateVisibleItemCount();
+
+
+
 
     for (let i = 0; i < visibleItemCount && i < chatInstance.chatList.length; i++) {
         console.log(i)
@@ -18,11 +25,35 @@ function handleChats() {
     const updateItemsDTO = new UpdateItemsDTO({
         list: chatInstance.chatList,
         itemsToUpdate: Array.from(document.querySelectorAll('.chat1')),
-        removeChatEventListeners: removeChatEventListeners,
-        addChatEventListeners: addChatEventListeners
+        removeEventListeners: removeEventListeners,
+        addEventListeners: addEventListeners
     });
 
     virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount);
+
+    window.addEventListener('resize', () => {
+        const newVisibleItemCount = calculateVisibleItemCount();
+
+        if (newVisibleItemCount !== visibleItemCount) {
+            if (newVisibleItemCount < visibleItemCount) {
+                for (let i = visibleItemCount - 1; i >= newVisibleItemCount; i--) {
+                    const itemToRemove = document.querySelector(`.chat1[style*="z-index: ${i}"]`);
+                    if (itemToRemove) {
+                        removeEventListeners(itemToRemove);
+                        itemToRemove.remove();
+                    }
+                }
+            } else {
+                for (let i = visibleItemCount; i < newVisibleItemCount && i < chatInstance.chatList.length; i++) {
+                    createChatBox(chatInstance.chatList[i], i);
+                }
+            }
+
+            visibleItemCount = newVisibleItemCount;
+
+            virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount);
+        }
+    });
 }
 
 function createChatBox(chat, index) {
@@ -81,7 +112,7 @@ function createChatBox(chat, index) {
 
     const chatListContentElement = document.querySelector(".chat-list-content");
     chatListContentElement.style.height = chatInstance.chatList.length * 72 + "px";
-    addChatEventListeners(chatElementDOM);
+    addEventListeners(chatElementDOM);
     chatListContentElement.insertBefore(chatElementDOM, chatListContentElement.firstChild);
 }
 
@@ -164,7 +195,8 @@ function handleMouseout(event) {
 function handleOptionsBtnClick(event) {
     const target = event.currentTarget;
     const chatData = target.chatData;
-
+    console.log(target)
+    console.log(target.chatData)
 
     const spans = document.querySelectorAll('.app span');
     const showChatOptions = spans[1];
@@ -302,13 +334,17 @@ function closeOptionsDivOnClickOutside(event) {
 async function handleChatClick(event) {
     const chatElementDOM = event.currentTarget;
     const chatData = chatElementDOM.chatData;
+    const innerDiv = chatElementDOM.querySelector('.chat-box > div');
+    if (innerDiv.getAttribute('aria-selected') === 'true') {
+        return;
+    }
     if (chatInstance.selectedChatElement && chatInstance.selectedChatElement !== chatElementDOM) {
         const previouslySelectedInnerDiv = chatInstance.selectedChatElement.querySelector('.chat-box > div');
         chatInstance.selectedChatElement.querySelector(".chat").classList.remove('selected-chat');
         previouslySelectedInnerDiv.setAttribute('aria-selected', 'false');
     }
 
-    const innerDiv = chatElementDOM.querySelector('.chat-box > div');
+
     chatElementDOM.querySelector(".chat").classList.add('selected-chat');
     innerDiv.setAttribute('aria-selected', 'true');
     chatInstance.selectedChatElement = chatElementDOM;
@@ -322,13 +358,13 @@ async function handleChatClick(event) {
     console.log('Chat clicked:', chatElementDOM, chatData);
 }
 
-function removeChatEventListeners(chatElementDOM) {
+function removeEventListeners(chatElementDOM) {
     chatElementDOM.removeEventListener('click', handleChatClick);
     chatElementDOM.removeEventListener('mouseenter', handleMouseover);
     chatElementDOM.removeEventListener('mouseleave', handleMouseout);
 }
 
-function addChatEventListeners(chatElementDOM) {
+function addEventListeners(chatElementDOM) {
     chatElementDOM.addEventListener('click', handleChatClick);
     chatElementDOM.addEventListener('mouseenter', handleMouseover);
     chatElementDOM.addEventListener('mouseleave', handleMouseout);

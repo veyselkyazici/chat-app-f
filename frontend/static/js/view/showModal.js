@@ -15,9 +15,16 @@ function showModal(options) {
                   ${options.content}
               </div>
               <div class="modal-footer" style="${footerStyle}">
-                  <button type="button" class="cancel-btn" id="modalCancelButton">İptal</button>
-                  <button type="button" class="confirmation-btn" id="modalOkButton">${options.buttonText}</button>
+                <div class="modal-footer-1">
+                  <button type="button" class="cancel-btn" id="modalCancelButton">
+                  <div class="cancel-btn-1">
+                  <div class="cancel-btn-1-1">İptal</div>
+                  </div></button>
+                  <button type="button" class="confirmation-btn" id="modalOkButton"><div class="confirmation-btn-1">
+                  <div class="confirmation-btn-1-1">${options.buttonText}</div>
+                  </div></button>
                   ${secondButton}
+                  </div>
               </div>
               </div>
               </div>
@@ -38,13 +45,15 @@ function showModal(options) {
 
     document.getElementById("modalOkButton").addEventListener("click", async function () {
         if (options.mainCallback) {
-            const result = await mainCallback();
-            if (result == false || result === undefined) {
+            const result = await options.mainCallback();
+            if (result == true) {
                 closeModal();
             }
         }
     });
 }
+
+
 class ModalOptionsDTO {
     constructor({
         title = '',
@@ -52,7 +61,6 @@ class ModalOptionsDTO {
         mainCallback = null,
         buttonText = 'Tamam',
         showBorders = true,
-        secondOptionButton = false,
         secondOptionCallBack = null,
         secondOptionButtonText = ''
     } = {}) {

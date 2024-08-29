@@ -126,18 +126,7 @@ section {
   color: black;
 }
 
-@media screen and (min-width: 1441px) {
-  .content::after {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: -1;
-    width: 100%;
-    height: 127px;
-    content: "";
-    background-color: #00a884;
-  }
-}
+
 
 .chat-container::after {
   position: absolute;
@@ -336,13 +325,23 @@ button {
   justify-content: center;
 }
 
-.modal-footer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
 
+
+.modal-footer-1 {
+  min-width: 0;
+  min-height: 0;
+  align-items: flex-end;
+  flex-shrink: 1;
+  flex-wrap: nowrap;
+  flex-basis: auto;
+  display: flex;
+  column-gap: 16px;
+  flex-direction: row;
+  align-self: auto;
+  justify-content: flex-start;
+  order: 0;
+  flex-grow: 0;
+}
 
 .editButton {
   position: absolute;
@@ -375,11 +374,9 @@ button {
 }
 
 
-@media not all and (display-mode: standalone) {
-  @media screen and (min-width: 1700px) {
-    .chat-container {
-      max-width: 1700px;
-    }
+@media screen and (max-height: 512px) {
+  .chat-container {
+    min-height: 512px;
   }
 }
 
@@ -396,6 +393,13 @@ button {
   }
 }
 
+@media not all and (display-mode: standalone) {
+  @media screen and (min-width: 1700px) {
+    .chat-container {
+      max-width: 1700px;
+    }
+  }
+}
 
 body {
   line-height: 1;
@@ -1046,12 +1050,19 @@ button {
   position: relative;
 }
 
+.contact-list-item1 {
+  position: relative;
+}
+
 .confirmation-btn {
   border-bottom-width: 1px;
   padding-top: 10px;
+  border-top-color: transparent;
   border-bottom-style: solid;
   padding-bottom: 10px;
+  border-top-width: 1px;
   border-bottom-color: transparent;
+  border-top-style: solid;
   line-height: 1.1429;
   border-left-width: 1px;
   padding-right: 24px;
@@ -1059,59 +1070,111 @@ button {
   border-right-style: solid;
   border-right-color: transparent;
   border-right-width: 1px;
+  font-weight: 500;
+  border-top-right-radius: 24px;
   transition-property: all;
   color: white;
   padding-left: 24px;
   transition-timing-function: ease-out;
   transition-duration: .18s;
   border-bottom-left-radius: 24px;
-  border-top-right-radius: 24px;
   border-left-style: solid;
   border-top-left-radius: 24px;
-  border-top-color: transparent;
   display: inline-block;
   position: relative;
   border-bottom-right-radius: 24px;
   outline-offset: 2px;
   border-left-color: transparent;
   font-size: .875rem;
-  border-top-width: 1px;
   background-color: #008069;
-  border-top-style: solid;
 }
 
 .cancel-btn {
+  border-bottom-color: #e9edef;
   border-bottom-width: 1px;
+  border-top-color: #e9edef;
   padding-top: 10px;
   border-bottom-style: solid;
   padding-bottom: 10px;
-  border-bottom-color: transparent;
+  border-top-width: 1px;
+  border-top-style: solid;
   line-height: 1.1429;
   border-left-width: 1px;
   padding-right: 24px;
   white-space: nowrap;
   border-right-style: solid;
-  border-right-color: transparent;
   border-right-width: 1px;
+  background-color: white;
+  font-weight: 500;
+  border-top-right-radius: 24px;
   transition-property: all;
-  color: white;
   padding-left: 24px;
+  border-right-color: #e9edef;
   transition-timing-function: ease-out;
   transition-duration: .18s;
+  border-left-color: #e9edef;
   border-bottom-left-radius: 24px;
-  border-top-right-radius: 24px;
   border-left-style: solid;
   border-top-left-radius: 24px;
-  border-top-color: transparent;
   display: inline-block;
   position: relative;
   border-bottom-right-radius: 24px;
+  color: #008069;
   outline-offset: 2px;
-  border-left-color: transparent;
   font-size: .875rem;
-  border-top-width: 1px;
-  background-color: white;
-  border-top-style: solid;
+}
+
+.cancel-btn-1 {
+  align-items: center;
+  flex-direction: row;
+  align-items: center;
+  flex-direction: row;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cancel-btn-1-1 {
+  flex-grow: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-shrink: 1;
+  flex-wrap: nowrap;
+  justify-content: center;
+  column-gap: 8px;
+  flex-basis: auto;
+  display: flex;
+  align-items: center;
+  row-gap: 8px;
+  flex-direction: row;
+  align-self: auto;
+  order: 0;
+}
+
+.confirmation-btn-1 {
+  min-width: 0;
+  min-height: 0;
+  flex-wrap: nowrap;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+
+.confirmation-btn-1-1 {
+  flex-grow: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-shrink: 1;
+  flex-wrap: nowrap;
+  justify-content: center;
+  column-gap: 8px;
+  flex-basis: auto;
+  display: flex;
+  align-items: center;
+  row-gap: 8px;
+  flex-direction: row;
+  align-self: auto;
+  order: 0;
 }
 
 .modal1 {
@@ -1205,6 +1268,23 @@ button {
   height: 40px;
 }
 
+.contact-list-item1-div {
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding-right: 58px;
+  padding-left: 24px;
+  font-size: 14.5px;
+  line-height: 14.5px;
+  color: #3b4a54;
+  cursor: pointer;
+  height: 40px;
+}
+
 .background-color {
   background-color: #f5f6f6;
 }
@@ -1221,7 +1301,7 @@ button {
   box-shadow: 0 2px 5px 0 rgba(11, 20, 26, .26), 0 2px 10px 0 rgba(11, 20, 26, .16);
 }
 
-.friend1 {
+.contact1 {
   width: 100%;
   position: absolute;
 }
@@ -1386,7 +1466,16 @@ button {
   font-size: 12px;
   line-height: 20px;
   color: #667781;
+}
 
+.chat-options-contact {
+  flex: none;
+  max-width: 100%;
+  margin-left: 6px;
+  font-size: 12px;
+  line-height: 20px;
+  color: #667781;
+  margin-right: 15px;
 }
 
 .message {
@@ -1437,9 +1526,108 @@ button.chat-options-btn:focus {
 
 
 
+/* Invitation Button */
+.invitation-btn {}
 
+.invitation-button:not(:disabled) {
+  border-bottom-width: 1px;
+  padding-top: 10px;
+  border-top-color: transparent;
+  border-bottom-style: solid;
+  padding-bottom: 10px;
+  border-top-width: 1px;
+  border-bottom-color: transparent;
+  border-top-style: solid;
+  line-height: 1.1429;
+  border-left-width: 1px;
+  padding-right: 24px;
+  white-space: nowrap;
+  border-right-style: solid;
+  border-right-color: transparent;
+  border-right-width: 1px;
+  font-weight: 500;
+  border-top-right-radius: 24px;
+  transition-property: all;
+  color: white;
+  cursor: pointer;
+  padding-left: 24px;
+  transition-timing-function: ease-out;
+  transition-duration: .18s;
+  border-bottom-left-radius: 24px;
+  border-left-style: solid;
+  border-top-left-radius: 24px;
+  display: inline-block;
+  position: relative;
+  border-bottom-right-radius: 24px;
+  outline-offset: 2px;
+  border-left-color: transparent;
+  font-size: .875rem;
+  background-color: #008069;
+}
 
+.invitation-button:disabled {
+  border-bottom-width: 1px;
+  padding-top: 10px;
+  border-top-color: transparent;
+  border-bottom-style: solid;
+  padding-bottom: 10px;
+  border-top-width: 1px;
+  border-bottom-color: transparent;
+  border-top-style: solid;
+  line-height: 1.1429;
+  border-left-width: 1px;
+  padding-right: 24px;
+  white-space: nowrap;
+  border-right-style: solid;
+  border-right-color: transparent;
+  border-right-width: 1px;
+  font-weight: 500;
+  border-top-right-radius: 24px;
+  transition-property: all;
+  color: #54656f;
+  cursor: default;
+  padding-left: 24px;
+  transition-timing-function: ease-out;
+  transition-duration: .18s;
+  border-bottom-left-radius: 24px;
+  border-left-style: solid;
+  border-top-left-radius: 24px;
+  display: inline-block;
+  position: relative;
+  border-bottom-right-radius: 24px;
+  outline-offset: 2px;
+  border-left-color: transparent;
+  font-size: .875rem;
+  background-color: #008069;
+  opacity: 0.5;
+}
 
+.invitation-button-1 {
+  min-width: 0;
+  min-height: 0;
+  flex-wrap: nowrap;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+
+.invitation-button-1-1 {
+  flex-grow: 1;
+  min-width: 0;
+  min-height: 0;
+  flex-shrink: 1;
+  flex-wrap: nowrap;
+  justify-content: center;
+  column-gap: 8px;
+  flex-basis: auto;
+  display: flex;
+  align-items: center;
+  row-gap: 8px;
+  flex-direction: row;
+  align-self: auto;
+  order: 0;
+}
 
 /* Kişiler, Topluluklar tıklanınca gösterilecek divlerin css i*/
 .a1 {
@@ -1454,6 +1642,8 @@ button.chat-options-btn:focus {
   pointer-events: none;
 }
 
+
+
 .a1-1 {
   overflow: hidden;
   display: flex;
@@ -1462,6 +1652,13 @@ button.chat-options-btn:focus {
   position: relative;
   height: 100%;
   transform: translateZ(0);
+}
+
+@media screen and (min-width: 1024px) and (max-width: 1300px) {
+  .a1-1 {
+    flex: 0 0 40%;
+    max-width: 40%;
+  }
 }
 
 @media screen and (min-width: 1300px) {
@@ -2747,13 +2944,13 @@ button.chat-options-btn:focus {
   align-items: center;
 }
 
-button:disabled {
-  color: #cccccc;
+.message-box1-7-1-1-1-2-2-1:disabled {
+  color: #54656f;
   cursor: not-allowed;
 }
 
-button:not(:disabled) {
-  color: #54656f;
+.message-box1-7-1-1-1-2-2-1:not(:disabled) {
+  color: #cccccc;
   cursor: pointer;
 }
 
@@ -3141,12 +3338,40 @@ button:not(:disabled) {
 
 
 
+/* PROFILE-BOX */
 
+.profile-box {
+  position: relative;
+  z-index: 100;
+  height: 100%;
+  overflow: hidden;
+  transform: translateZ(0);
+}
 
+.profile-box-1 {
+  bottom: 0;
+  top: 0;
+  right: 0;
+  left: 0;
+  position: absolute;
+}
 
+@media screen and (min-width: 1300px) {
+  .profile-box {
+    flex: 0 0 30%;
+    max-width: 30%;
+  }
+}
 
-
-
+@media screen and (min-width: 1024px) and (max-width: 1300px) {
+  .profile-box {
+    position: absolute;
+    right: 0;
+    width: 60%;
+    max-width: 60%;
+    height: 100%;
+  }
+}
 
 
 
