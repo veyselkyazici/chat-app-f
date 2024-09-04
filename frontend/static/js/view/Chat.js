@@ -2,6 +2,7 @@
 import AbstractView from "./AbstractView.js";
 import { addFriendView } from "./AddFriend2.js";
 import createContactList from "./Contacts.js";
+import { createSettingsHtml } from "./Settings.js";
 import { addContactModal } from "./AddContact.js";
 import { ModalOptionsDTO } from "./showModal.js";
 import { createIncomingFriendRequests } from "./IncomingFriendRequests.js";
@@ -131,7 +132,7 @@ export default class Chat extends AbstractView {
                             role="button" title="Bildirimler" aria-label="Bildirimler">
                             <div class="notification-badge" style="display: none;"></div>
                         </div>
-                        <div class="fa-solid fa-gear settings option" tabindex="0" role="button" title="Seçenekler"
+                        <div class="fa-solid fa-gear settings-btn option" tabindex="0" role="button" title="Seçenekler"
                             aria-label="Seçenekler"></div>
                     </div>
                 </div>
@@ -294,7 +295,7 @@ export default class Chat extends AbstractView {
             console.log(newContact)
             let contactIdList = this.contactList.filter(contact => contact.userContactId);
 
-            const indexToInsert = contactIdList.findIndex(contact => { 
+            const indexToInsert = contactIdList.findIndex(contact => {
                 return contact.userContactName.localeCompare(newContact.userContactName, undefined, { sensitivity: 'base' }) > 0;
             });
             if (indexToInsert === -1) {
@@ -313,7 +314,7 @@ export default class Chat extends AbstractView {
             const newInvitation = JSON.parse(addInvitationMessage.body);
             console.log(newInvitation)
             let invitationIdList = this.contactList.filter(invitation => !invitation.userContactId);
-            const indexToInsert = invitationIdList.findIndex(invitation => { 
+            const indexToInsert = invitationIdList.findIndex(invitation => {
                 return invitation.userContactName.localeCompare(newInvitation.userContactName, undefined, { sensitivity: 'base' }) > 0;
             });
             if (indexToInsert === -1) {
@@ -328,38 +329,6 @@ export default class Chat extends AbstractView {
             console.log(this.contactList)
         });
 
-
-        // const friendResponseChannel = `/user/${this.userId}/queue/friend-request-friend-response`;
-        // const userChannel = `/user/${this.userId}/queue/friend-request-user-response`;
-        // const notificationChannel = `/user/${this.userId}/queue/friend-request-reply-notification-user-response`;
-        // const notificationFriendChannel = `/user/${this.userId}/queue/friend-request-reply-notification-friend-response`;
-
-        // this.webSocketManagerFriendships.subscribeToChannel(friendResponseChannel, async (incomingFriendRequest) => {
-        //     const incomingFriendRequestBody = JSON.parse(incomingFriendRequest.body);
-        //     console.log("incomingFriendRequestBody: ", incomingFriendRequestBody)
-        //     console.log("Arkadaşlık isteği bilgisi: ", incomingFriendRequestBody)
-        //     this.friendRequestNotification(true);
-        // });
-        // // Arkadaş ekleme isteği başarılı olduğunda toastr mesaji geçer isteği gonderen kullaniciya
-        // this.webSocketManagerFriendships.subscribeToChannel(userChannel, async (friendRequest) => {
-        //     console.log("istek gönderildi")
-        //     const friendRequestBody = JSON.parse(friendRequest.body);
-        //     friendRequestBody.statusCode === 400 ? toastr.error(friendRequestBody.message) : toastr.success(friendRequestBody.message);
-        // });
-        // // Eğer istek onaylanirsa isteği gönderen kişiye toastr mesaji çıkartılır. Arkadaş listesi tekrar fetch edilir.
-        // this.webSocketManagerFriendships.subscribeToChannel(notificationChannel, async (friendRequest) => {
-        //     const friendRequestBody = JSON.parse(friendRequest.body);
-        //     toastr.success(friendRequestBody + " isteğinizi onayladı")
-        //     this.friendRequestReplyNotificationBadge(true);
-        //     this.fetchFriendRequestReplyData = await fetchFriendRequestReply();
-        //     this.contactList = await fetchGetContactList();
-        // });
-        // // Isteği onaylayan kişiye toastre mesajo çıkartılır. Arkadaş listesi tekrar fetch edilir.
-        // this.webSocketManagerFriendships.subscribeToChannel(notificationFriendChannel, async (friendRequest) => {
-        //     const friendRequestBody = JSON.parse(friendRequest.body);
-        //     toastr.success(friendRequestBody + " kişisini arkadaş eklediniz")
-        //     this.contactList = await fetchGetContactList();
-        // });
     }
 
     initChatWebSocket() {
@@ -438,9 +407,10 @@ export default class Chat extends AbstractView {
         const friendApprovalButtonElement = document.querySelector(".friend-approval");
         const chatSearchBarElement = document.querySelector('#chats-search-bar');
         const friendRequestReplyNotificationElement = document.querySelector(".friend-request-reply-notification");
+        const settingsBtnElement = document.querySelector(".settings-btn");
         const box = document.querySelector(".box")
 
-
+        console.log("ABCDE")
 
         // window.addEventListener('resize', () => { this.handleReSize() });
 
@@ -481,6 +451,11 @@ export default class Chat extends AbstractView {
             });
         }
 
+        if (settingsBtnElement) {
+            settingsBtnElement.addEventListener("click", () => {
+                createSettingsHtml();
+            })
+        }
 
 
     }

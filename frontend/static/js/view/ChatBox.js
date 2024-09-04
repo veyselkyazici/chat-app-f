@@ -238,7 +238,7 @@ function handleOptionsBtnClick(event) {
                             <div class="list-item1-div" role="button" aria-label="Sohbeti sil">Sohbeti sil</div>
                         </li>
                         <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
-                            <div class="list-item1-div" aria-label="${pinLabel}">${pinLabel}</div>
+                            <div class="list-item1-div" role="button" aria-label="${pinLabel}">${pinLabel}</div>
                         </li>
                         <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
                             <div class="list-item1-div" role="button" aria-label="Okunmadı olarak işaretle">Okunmadı olarak işaretle</div>
@@ -251,6 +251,7 @@ function handleOptionsBtnClick(event) {
 
             const listItems = document.querySelectorAll(".list-item1");
             listItems.forEach((li, index) => {
+                // Todo :hover background
                 li.addEventListener('mouseover', () => {
                     li.classList.add('background-color');
                 });

@@ -5,73 +5,366 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Virtual Scroll Chat List</title>
-    <style>
-        #chat-container {
-            height: 1224px;
-            /* 17 items * 72px each */
-            overflow-y: scroll;
-            position: relative;
-            border: 1px solid #ccc;
-        }
-
-        .chat-item {
-            position: absolute;
-            width: 100%;
-            height: 72px;
-            box-sizing: border-box;
-            border-bottom: 1px solid #eee;
-            background-color: #f8f8f8;
-            padding: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .delete-btn {
-            background-color: red;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        #spacer {
-            position: absolute;
-            width: 100%;
-            height: calc(72px * 83);
-            /* totalItems * itemHeight */
-            top: 0;
-            left: 0;
-            pointer-events: none;
-            z-index: -1;
-        }
-    </style>
 </head>
 
 <body>
-    <div class="contact1" role="listitem" data-user="User 17" style="transition: none 0s ease 0s; height: 72px; transform: translateY(1224px); z-index: 52;"></div>
-    <div class="contact1" role="listitem" data-user="User 16" style="transition: none 0s ease 0s; height: 72px; transform: translateY(1152px); z-index: 53;"></div>
-    <div class="contact1" role="listitem" data-user="User 15" style="transition: none 0s ease 0s; height: 72px; transform: translateY(1080px); z-index: 54;"></div>
-    <div class="contact1" role="listitem" data-user="User 14" style="transition: none 0s ease 0s; height: 72px; transform: translateY(1008px); z-index: 55;"></div>
-    <div class="contact1" role="listitem" data-user="User 13" style="transition: none 0s ease 0s; height: 72px; transform: translateY(936px); z-index: 56;"></div>
-    <div class="contact1" role="listitem" data-user="User 12" style="transition: none 0s ease 0s; height: 72px; transform: translateY(864px); z-index: 57;"></div>
-    <div class="contact1" role="listitem" data-user="User 11" style="transition: none 0s ease 0s; height: 72px; transform: translateY(792px); z-index: 58;"></div>
-    <div class="contact1" role="listitem" data-user="User 10" style="transition: none 0s ease 0s; height: 72px; transform: translateY(720px); z-index: 59;"></div>
-    <div class="contact1" role="listitem" data-user="User 9" style="transition: none 0s ease 0s; height: 72px; transform: translateY(648px); z-index: 60;"></div>
-    <div class="contact1" role="listitem" data-user="User 8" style="transition: none 0s ease 0s; height: 72px; transform: translateY(576px); z-index: 61;"></div>
-    <div class="contact1" role="listitem" data-user="User 7" style="transition: none 0s ease 0s; height: 72px; transform: translateY(504px); z-index: 62;"></div>
-    <div class="contact1" role="listitem" data-user="User 6" style="transition: none 0s ease 0s; height: 72px; transform: translateY(432px); z-index: 63;"></div>
-    <div class="contact1" role="listitem" data-user="User 5" style="transition: none 0s ease 0s; height: 72px; transform: translateY(360px); z-index: 64;"></div>
-    <div class="contact1" role="listitem" data-user="User 4" style="transition: none 0s ease 0s; height: 72px; transform: translateY(288px); z-index: 65;"></div>
-    <div class="contact1" role="listitem" data-user="User 3" style="transition: none 0s ease 0s; height: 72px; transform: translateY(216px); z-index: 66;"></div>
-    <div class="contact1" role="listitem" data-user="User 2" style="transition: none 0s ease 0s; height: 72px; transform: translateY(144px); z-index: 67;"></div>
-    <div class="contact1" role="listitem" data-user="User 1" style="transition: none 0s ease 0s; height: 72px; transform: translateY(72px); z-index: 68;"></div>
-    <div class="contact1" role="listitem" data-user="User 0" style="transition: none 0s ease 0s; height: 72px; transform: translateY(0px); z-index: 69;"></div>
+    <header class="x9f619 x78zum5 x1okw0bk x6s0dn4 x7j6532 xc73u3c x9mfa4r xzwifym x150wa6m">
+        <div class="x78zum5 x1okw0bk x6s0dn4 xh8yej3 x14wi4xw xexx8yu x4uap5 x18d9i69 xkhd6sd xo1l8bm x1wm35g">
+            <div class="x1okw0bk x1fxk84t">
+                <div role="button" tabindex="0" aria-label="Geri" class="x1okw0bk x16dsc37 x1ypdohk xeq5yr9 xfect85">
+                    <span data-icon="back" class=""><svg viewBox="0 0 24 24" height="24" width="24"
+                            preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px"
+                            enable-background="new 0 0 24 24">
+                            <title>back</title>
+                            <path fill="currentColor" d="M12,4l1.4,1.4L7.8,11H20v2H7.8l5.6,5.6L12,20l-8-8L12,4z"></path>
+                        </svg></span>
+                </div>
+            </div>
+            <div title="Son görülme ve çevrimiçi"
+                class="x104kibb x1iyjqo2 x4osyxg x6ikm8r x10wlt62 x1mzt3pk xo442l1 x1ua5tub x1rdy4ex x1jchvi3 xggjnk3">
+                <h1 class="x1qlqyl8 x1pd3egz xcgk4ki" aria-label="">Son görülme ve çevrimiçi</h1>
+            </div>
+        </div>
+    </header>
+    <div class="x1n2onr6 xyw6214 x78zum5 x1r8uery x1iyjqo2 xdt5ytf x6ikm8r x1odjw0f x1hc1fzr">
+        <div class="x1bnvlk4 x1n2onr6 x1c4vz4f x2lah0s xdl72j9 xyorhqc x13x2ugz xexx8yu x6x52a7 x18d9i69 xxpdul3">
+            <div class="x1sy10c2 x11i5rnm xieb3on x1mh8g0r x1jchvi3 x1n68mz9 x1fc57z9">Son görülme bilgimi kimler
+                görebilir</div>
+            <div role="radiogroup" aria-label="Son görülme bilgimi kimler görebilir"><button
+                    class="xjb2p0i xk390pu x1heor9g x1ypdohk xjbqb8w x972fbf xcfux6l x1qhh985 xm0m39n x1lliihq x109j2v6 x4uap5 x1hhzuzn xkhd6sd xdpxx8g"
+                    tabindex="-1" type="button">
+                    <div
+                        class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 x78zum5 xozqiw3 x1oa3qoh x12fk4p8 xeuugli x2lwn1j x1nhvcw1 x1q0g3np x1cy8zhl">
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 xamitd3 x12fk4p8"><span
+                                class="x1n2onr6 x1rg5ohu xw4jnvo x1qx5ct2 xxymvpz x1ypdohk x916qxe"><button role="radio"
+                                    class="x10l6tqk x13vifvy x17qophe xh8yej3 x5yr21d" aria-checked="false"
+                                    aria-label="Herkes"><span data-icon="checkbox-round-passive" class=""><svg
+                                            viewBox="0 0 20 20" height="20" width="20"
+                                            preserveAspectRatio="xMidYMid meet"
+                                            class="xrmlzy3 x1g2r6go x18sm2im xwji4o3 x16cd2qt" version="1.1" x="0px"
+                                            y="0px" enable-background="new 0 0 20 20">
+                                            <title>checkbox-round-passive</title>
+                                            <path fill="currentColor" fill-opacity="inherit"
+                                                d="M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75 S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z">
+                                            </path>
+                                        </svg></span></button></span></div>
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 x1oa3qoh x12fk4p8 x5ib6vp"
+                            style="flex-grow: 1;"><span class="x1jchvi3 x1fc57z9 x1rg5ohu">Herkes</span>
+                            <div class="x1nxh6w3 xcgms0a x1fcty0u xhgddhk"></div>
+                        </div>
+                    </div>
+                </button><button
+                    class="xjb2p0i xk390pu x1heor9g x1ypdohk xjbqb8w x972fbf xcfux6l x1qhh985 xm0m39n x1lliihq x109j2v6 x4uap5 x1hhzuzn xkhd6sd xdpxx8g"
+                    tabindex="-1" type="button">
+                    <div
+                        class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 x78zum5 xozqiw3 x1oa3qoh x12fk4p8 xeuugli x2lwn1j x1nhvcw1 x1q0g3np x1cy8zhl">
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 xamitd3 x12fk4p8"><span
+                                class="x1n2onr6 x1rg5ohu xw4jnvo x1qx5ct2 xxymvpz x1ypdohk x916qxe"><button role="radio"
+                                    class="x10l6tqk x13vifvy x17qophe xh8yej3 x5yr21d" aria-checked="false"
+                                    aria-label="Kişilerim"><span data-icon="checkbox-round-passive" class=""><svg
+                                            viewBox="0 0 20 20" height="20" width="20"
+                                            preserveAspectRatio="xMidYMid meet"
+                                            class="xrmlzy3 x1g2r6go x18sm2im xwji4o3 x16cd2qt" version="1.1" x="0px"
+                                            y="0px" enable-background="new 0 0 20 20">
+                                            <title>checkbox-round-passive</title>
+                                            <path fill="currentColor" fill-opacity="inherit"
+                                                d="M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75 S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z">
+                                            </path>
+                                        </svg></span></button></span></div>
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 x1oa3qoh x12fk4p8 x5ib6vp"
+                            style="flex-grow: 1;"><span class="x1jchvi3 x1fc57z9 x1rg5ohu">Kişilerim</span>
+                            <div class="x1nxh6w3 xcgms0a x1fcty0u xhgddhk"></div>
+                        </div>
+                    </div>
+                </button><button
+                    class="xjb2p0i xk390pu x1heor9g x1ypdohk xjbqb8w x972fbf xcfux6l x1qhh985 xm0m39n x1lliihq x109j2v6 x4uap5 x1hhzuzn xkhd6sd xdpxx8g"
+                    tabindex="-1" type="button">
+                    <div
+                        class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 x78zum5 xozqiw3 x1oa3qoh x12fk4p8 xeuugli x2lwn1j x1nhvcw1 x1q0g3np x1cy8zhl">
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 xamitd3 x12fk4p8"><span
+                                class="x1n2onr6 x1rg5ohu xw4jnvo x1qx5ct2 xxymvpz x1ypdohk x916qxe"><button role="radio"
+                                    class="x10l6tqk x13vifvy x17qophe xh8yej3 x5yr21d" aria-checked="true"
+                                    aria-label="Hiç kimse"><span data-icon="checkbox-round-radio-checked" class=""><svg
+                                            viewBox="2 2 20 20" height="20" width="20"
+                                            preserveAspectRatio="xMidYMid meet" class="x1n68mz9" fill="none">
+                                            <title>checkbox-round-radio-checked</title>
+                                            <path
+                                                d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z"
+                                                fill="currentColor"></path>
+                                        </svg></span></button></span></div>
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 x1oa3qoh x12fk4p8 x5ib6vp"
+                            style="flex-grow: 1;"><span class="x1jchvi3 x1fc57z9 x1rg5ohu">Hiç kimse</span>
+                            <div class="x1nxh6w3 xcgms0a x1fcty0u xhgddhk"></div>
+                        </div>
+                    </div>
+                </button></div>
+            <div class="x1qx5ct2 xso031l x1q0q8m5 x1rpwac6"></div>
+            <div class="x1sy10c2 x11i5rnm xieb3on x1mh8g0r x1jchvi3 x1n68mz9 x1fc57z9">Çevrimiçi olduğumu kimler
+                görebilir</div>
+            <div role="radiogroup" aria-label="Çevrimiçi olduğumu kimler görebilir"><button
+                    class="xjb2p0i xk390pu x1heor9g x1ypdohk xjbqb8w x972fbf xcfux6l x1qhh985 xm0m39n x1lliihq x109j2v6 x4uap5 x1hhzuzn xkhd6sd xdpxx8g"
+                    tabindex="-1" type="button">
+                    <div
+                        class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 x78zum5 xozqiw3 x1oa3qoh x12fk4p8 xeuugli x2lwn1j x1nhvcw1 x1q0g3np x1cy8zhl">
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 xamitd3 x12fk4p8"><span
+                                class="x1n2onr6 x1rg5ohu xw4jnvo x1qx5ct2 xxymvpz x1ypdohk x916qxe"><button role="radio"
+                                    class="x10l6tqk x13vifvy x17qophe xh8yej3 x5yr21d" aria-checked="true"
+                                    aria-label="Herkes"><span data-icon="checkbox-round-radio-checked" class=""><svg
+                                            viewBox="2 2 20 20" height="20" width="20"
+                                            preserveAspectRatio="xMidYMid meet" class="x1n68mz9" fill="none">
+                                            <title>checkbox-round-radio-checked</title>
+                                            <path
+                                                d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z"
+                                                fill="currentColor"></path>
+                                        </svg></span></button></span></div>
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 x1oa3qoh x12fk4p8 x5ib6vp"
+                            style="flex-grow: 1;"><span class="x1jchvi3 x1fc57z9 x1rg5ohu">Herkes</span>
+                            <div class="x1nxh6w3 xcgms0a x1fcty0u xhgddhk"></div>
+                        </div>
+                    </div>
+                </button><button
+                    class="xjb2p0i xk390pu x1heor9g x1ypdohk xjbqb8w x972fbf xcfux6l x1qhh985 xm0m39n x1lliihq x109j2v6 x4uap5 x1hhzuzn xkhd6sd xdpxx8g"
+                    tabindex="-1" type="button">
+                    <div
+                        class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 x78zum5 xozqiw3 x1oa3qoh x12fk4p8 xeuugli x2lwn1j x1nhvcw1 x1q0g3np x1cy8zhl">
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 xamitd3 x12fk4p8"><span
+                                class="x1n2onr6 x1rg5ohu xw4jnvo x1qx5ct2 xxymvpz x1ypdohk x916qxe"><button role="radio"
+                                    class="x10l6tqk x13vifvy x17qophe xh8yej3 x5yr21d" aria-checked="false"
+                                    aria-label="Son görülme bilgisiyle aynı"><span data-icon="checkbox-round-passive"
+                                        class=""><svg viewBox="0 0 20 20" height="20" width="20"
+                                            preserveAspectRatio="xMidYMid meet"
+                                            class="xrmlzy3 x1g2r6go x18sm2im xwji4o3 x16cd2qt" version="1.1" x="0px"
+                                            y="0px" enable-background="new 0 0 20 20">
+                                            <title>checkbox-round-passive</title>
+                                            <path fill="currentColor" fill-opacity="inherit"
+                                                d="M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75 S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z">
+                                            </path>
+                                        </svg></span></button></span></div>
+                        <div class="x1c4vz4f xs83m0k xdl72j9 x1g77sc7 xeuugli x2lwn1j xozqiw3 x1oa3qoh x12fk4p8 x5ib6vp"
+                            style="flex-grow: 1;"><span class="x1jchvi3 x1fc57z9 x1rg5ohu">Son görülme bilgisiyle
+                                aynı</span>
+                            <div class="x1nxh6w3 xcgms0a x1fcty0u xhgddhk"></div>
+                        </div>
+                    </div>
+                </button></div>
+            <div class="x1sy10c2 x11i5rnm xieb3on x1mh8g0r x1f6kntn x16h55sf x1fcty0u xhgddhk"><strong>Son
+                    görülme</strong> ve <strong>çevrimiçi</strong> bilginizi paylaşmazsanız diğer kullanıcıların son
+                görülme ve çevrimiçi bilgisini de göremezsiniz.</div>
+        </div>
+    </div>
 
-    <script>
 
-    </script>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <span class="settigns-1">
+        <div class="settings-1-1" style="transform: translateX(0%);">
+            <header class="settings-1-1-1">
+
+                <div class="settings-1-1-1-1">
+                    <div class="settings-back-btn">
+                        <div role="button" aria-label="Geri" tabindex="0" class="settings-back-btn-1">
+                            <span data-icon="back" class="">
+                                <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet"
+                                    class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24">
+                                    <title>back</title>
+                                    <path fill="currentColor"
+                                        d="M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z">
+                                    </path>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                    <div title="Ayarlar" class="settings-1-1-1-1-1">
+                        <h1 class="settings-1-1-1-1-1-1" aria-label="">Ayarlar</h1>
+                    </div>
+                </div>
+            </header>
+            <div class="settings-1-1-2">
+                <div class="settings-1-1-2-1">
+                    <div class="settings-1-1-2-1-1">
+                        <div role="listbox" class="settings-1-1-2-1-1-1">
+                            <div class="settings-1-1-2-1-1-1-1">
+                                <div class="settings-1-1-2-1-1-1-1-1" tabindex="0" data-tab="0">
+                                    <button class="settings-1-1-2-1-1-1-1-1-1" tabindex="0" data-tab="0" type="button"
+                                        role="listitem">
+                                        <div class="settings-1-1-2-1-1-1-1-1-1-1" aria-disabled="false" role="button"
+                                            tabindex="-1" data-tab="-1">
+                                            <div class="settings-1-1-2-1-1-1-1-1-1-1-1">
+                                                <div class="settings-1-1-2-1-1-1-1-1-1-1-1-1" style="flex-shrink: 0;">
+                                                    <div class="settings-1-1-2-1-1-1-1-1-1-1-1-1-1"
+                                                        style="height: 82px; width: 82px;"><img alt="" draggable="false"
+                                                            class="settings-1-1-2-1-1-1-1-1-1-1-1-1-1-1" tabindex="-1"
+                                                            src="https://media-ist1-1.cdn.whatsapp.net/v/t61.24694-24/95075216_213302013300004_3915533723724724065_n.jpg?ccb=11-4&amp;oh=01_Q5AaIDmuzX_bRwkwWkXfTl7f9rz7YHF2k-0-xKau2lQHHQbh&amp;oe=66E2266C&amp;_nc_sid=5e03e0&amp;_nc_cat=101"
+                                                            style="visibility: visible;"></div>
+                                                </div>
+                                                <div class="settings-1-1-2-1-1-1-1-1-1-1-1-2" style="flex: 1 1 auto;">
+                                                    <div class="settings-1-1-2-1-1-1-1-1-1-1-1-2-1">
+                                                        <div class="settings-1-1-2-1-1-1-1-1-1-1-1-2-1-1"
+                                                            style="flex-grow: 1;">
+                                                            <div class="settings-1-1-2-1-1-1-1-1-1-1-1-2-1-1-1"><span
+                                                                    dir="auto" title="Veysel" aria-label=""
+                                                                    class="settings-1-1-2-1-1-1-1-1-1-1-1-2-1-1-1-1"
+                                                                    style="min-height: 0px;">Veysel</span></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="settings-1-1-2-1-1-1-1-1-1-1-1-2-2">
+                                                        <div class="settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1"
+                                                            style="flex-grow: 1;">
+                                                            <div class="settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1">
+                                                                <span dir="auto" title="Meşgul" aria-label=""
+                                                                    class="settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1"
+                                                                    style="min-height: 0px;">Meşgul</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <button class="settings-1-1-2-1-1-1-1-1-2" tabindex="0" data-tab="0" type="button"
+                                        role="listitem">
+                                        <div class="settings-1-1-2-1-1-1-1-1-2-1" aria-disabled="false" role="button"
+                                            tabindex="-1" data-tab="-1">
+                                            <div class="settings-1-1-2-1-1-1-1-1-2-1-1">
+                                                <div class="settings-1-1-2-1-1-1-1-1-2-1-1-1" style="flex-shrink: 0;">
+                                                    <span data-icon="account-circle" class=""><svg viewBox="0 0 24 24"
+                                                            height="24" width="24" preserveAspectRatio="xMidYMid meet"
+                                                            class="" fill="none">
+                                                            <title>account-circle</title>
+                                                            <path
+                                                                d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z"
+                                                                fill="currentColor"></path>
+                                                        </svg></span>
+                                                </div>
+                                                <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2" style="flex: 1 1 auto;">
+                                                    <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1">
+                                                        <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1-1"
+                                                            style="flex-grow: 1;">
+                                                            <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1-1-1">Hesap
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <button class="settings-1-1-2-1-1-1-1-1-2" tabindex="0" data-tab="0" type="button"
+                                        role="listitem">
+                                        <div class="settings-1-1-2-1-1-1-1-1-2-1" aria-disabled="false" role="button"
+                                            tabindex="-1" data-tab="-1">
+                                            <div class="settings-1-1-2-1-1-1-1-1-2-1-1">
+                                                <div class="settings-1-1-2-1-1-1-1-1-2-1-1-1" style="flex-shrink: 0;">
+                                                    <span data-icon="security-lock" class=""><svg viewBox="0 0 28 35"
+                                                            height="23" width="23" preserveAspectRatio="xMidYMid meet"
+                                                            class="" fill="none">
+                                                            <title>security-lock</title>
+                                                            <path
+                                                                d="M 14 1.10204 C 18.5689 1.10204 22.2727 4.80587 22.2727 9.37477 L 22.272 12.179 L 22.3565 12.1816 C 24.9401 12.2949 27 14.4253 27 17.0369 L 27 29.4665 C 27 32.1506 24.8241 34.3265 22.14 34.3265 L 5.86 34.3265 C 3.1759 34.3265 1 32.1506 1 29.4665 L 1 17.0369 C 1 14.3971 3.10461 12.2489 5.72743 12.1786 L 5.72727 9.37477 C 5.72727 4.80587 9.4311 1.10204 14 1.10204 Z M 14 19.5601 C 12.0419 19.5601 10.4545 21.2129 10.4545 23.2517 C 10.4545 25.2905 12.0419 26.9433 14 26.9433 C 15.9581 26.9433 17.5455 25.2905 17.5455 23.2517 C 17.5455 21.2129 15.9581 19.5601 14 19.5601 Z M 14 4.79365 C 11.4617 4.79365 9.39069 6.79417 9.27759 9.30454 L 9.27273 9.52092 L 9.272 12.176 L 18.727 12.176 L 18.7273 9.52092 C 18.7273 6.91012 16.6108 4.79365 14 4.79365 Z"
+                                                                fill="currentColor"></path>
+                                                        </svg></span>
+                                                </div>
+                                                <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2" style="flex: 1 1 auto;">
+                                                    <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1">
+                                                        <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1-1"
+                                                            style="flex-grow: 1;">
+                                                            <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1-1-1">Gizlilik
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <button class="settings-1-1-2-1-1-1-1-1-2" tabindex="0" data-tab="0" type="button"
+                                        role="listitem">
+                                        <div class="settings-1-1-2-1-1-1-1-1-2-1" aria-disabled="false" role="button"
+                                            tabindex="-1" data-tab="-1">
+                                            <div class="settings-1-1-2-1-1-1-1-1-2-1-1">
+                                                <div class="settings-1-1-2-1-1-1-1-1-2-1-1-1" style="flex-shrink: 0;">
+                                                    <span data-icon="settings-notifications" class=""><svg
+                                                            viewBox="0 0 24 24" height="27" width="27"
+                                                            preserveAspectRatio="xMidYMid meet" class="" fill="none"
+                                                            x="0px" y="0px" enable-background="new 0 0 24 24">
+                                                            <title>settings-notifications</title>
+                                                            <path
+                                                                d="M 12 21.7 c 0.9 0 1.7 -0.8 1.7 -1.7 h -3.4 C 10.3 20.9 11.1 21.7 12 21.7 Z M 17.6 16.5 v -4.7 c 0 -2.7 -1.8 -4.8 -4.3 -5.4 V 5.8 c 0 -0.7 -0.6 -1.3 -1.3 -1.3 s -1.3 0.6 -1.3 1.3 v 0.6 C 8.2 7 6.4 9.1 6.4 11.8 v 4.7 l -1.7 1.7 v 0.9 h 14.6 v -0.9 L 17.6 16.5 Z"
+                                                                fill="currentColor"></path>
+                                                        </svg></span>
+                                                </div>
+                                                <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2" style="flex: 1 1 auto;">
+                                                    <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1">
+                                                        <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1-1"
+                                                            style="flex-grow: 1;">
+                                                            <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1-1-1">
+                                                                Bildirimler
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <button class="settings-1-1-2-1-1-1-1-1-2" tabindex="0" data-tab="0" type="button"
+                                        role="listitem">
+                                        <div class="settings-1-1-2-1-1-1-1-1-2-1" aria-disabled="false" role="button"
+                                            tabindex="-1" data-tab="-1">
+                                            <div class="settings-1-1-2-1-1-1-1-1-2-1-1">
+                                                <div class="settings-1-1-2-1-1-1-1-1-2-1-1-1" style="flex-shrink: 0;">
+                                                    <span data-icon="exit" class="exit"><svg viewBox="0 0 24 24"
+                                                            height="24" width="24" preserveAspectRatio="xMidYMid meet"
+                                                            class="" fill="none" x="0px" y="0px">
+                                                            <title>exit</title>
+                                                            <path
+                                                                d="M 16.6 8.1 l 1.2 -1.2 l 5.1 5.1 l -5.1 5.1 l -1.2 -1.2 l 3 -3 H 8.7 v -1.8 h 10.9 L 16.6 8.1 Z M 3.8 19.9 h 9.1 c 1 0 1.8 -0.8 1.8 -1.8 v -1.4 h -1.8 v 1.4 H 3.8 V 5.8 h 9.1 v 1.4 h 1.8 V 5.8 c 0 -1 -0.8 -1.8 -1.8 -1.8 H 3.8 C 2.8 4 2 4.8 2 5.8 v 12.4 C 2 19.1 2.8 19.9 3.8 19.9 Z"
+                                                                fill="currentColor"></path>
+                                                        </svg></span>
+                                                </div>
+                                                <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2" style="flex: 1 1 auto;">
+                                                    <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1">
+                                                        <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1-1"
+                                                            style="flex-grow: 1;">
+                                                            <div class="settings-1-1-2-1-1-1-1-1-2-1-1-2-1-1-1 exit">
+                                                                Çıkış yap
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </span>
 </body>
 
 </html>
