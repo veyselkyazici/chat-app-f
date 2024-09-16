@@ -1,4 +1,5 @@
 
+import { createElement } from "./util.js";
 
 function createSettingsHtml() {
     const span = document.querySelector(".a1-1-1");
@@ -191,25 +192,6 @@ function createButton(iconHTML, titleText, subTitleText, imgSrc, dataIcon, click
 }
 
 
-function createElement(elementType, className, styles = {}, attributes = {}, textContent, clickHandler) {
-    const element = document.createElement(elementType);
-    element.className = className;
-    if (textContent) {
-        console.log("TEXT CONTENT > ", textContent)
-        element.textContent = textContent;
-    }
-    if (styles) {
-        Object.assign(element.style, styles);
-    }
-    for (let key in attributes) {
-        element.setAttribute(key, attributes[key]);
-    }
-    if (clickHandler) {
-        element.addEventListener("click", clickHandler)
-    }
-
-    return element;
-}
 
 const handleProfileClick = () => {
     console.log("PROFIL TIKLANDI")
@@ -227,7 +209,7 @@ const handleSettingsBackBtnClick = () => {
 const handlePrivacyClick = () => {
     console.log("GIZLILIK>>>>>>>>>")
     const divSettings1 = document.querySelector(".settings-1-1");
-    divSettings1.className = "privacy1"
+    divSettings1.classList.add('privacy-background')
     divSettings1.replaceChildren();
     const header = createElement("header", "settings-1-1-1");
     const divSettingsHeader = createElement("div", "settings-1-1-1-1");
@@ -272,7 +254,7 @@ const handlePrivacyClick = () => {
     divPrivacy2_1.appendChild(divPrivacy2_1_1);
     divPrivacy2.appendChild(divPrivacy2_1);
 
-    const divPrivacy2_1_2 = createElement('div', 'privacy-2-1-2', null, { tabIndex: '0', role: 'button' });
+    const divPrivacy2_1_2 = createElement('div', 'privacy-2-1-2', null, { tabIndex: '0', role: 'button' }, null, handleLastSeenAndOnlineClick);
     const divPrivacy2_1_2_1 = createElement('div', 'privacy-2-1-2-1');
     const divPrivacy2_1_2_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_1_2_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Son görülme ve çevrimiçi');
@@ -287,9 +269,18 @@ const handlePrivacyClick = () => {
     // Ok tuşunu ekle
     const divPrivacy2_1_2_1_2 = createElement('div', 'privacy-2-1-2-1-2');
     const spanChevronIcon = createElement('span', '', null, { 'data-icon': 'chevron' });
-    const svgChevronIcon = createElement('svg', 'privacy-2-1-2-1-2-1', null, { viewBox: '0 0 30 30', height: '30', width: '30', preserveAspectRatio: 'xMidYMid meet', x: '0px', y: '0px' });
+    const svgChevronIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgChevronIcon.setAttribute("class", "privacy-2-1-2-1-2-1");
+    svgChevronIcon.setAttribute("viewBox", "0 0 30 30");
+    svgChevronIcon.setAttribute("height", "30");
+    svgChevronIcon.setAttribute("width", "30");
+    svgChevronIcon.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svgChevronIcon.setAttribute("x", "0px");
+    svgChevronIcon.setAttribute("y", "0px");
     const titleChevron = createElement('title', '', null, null, 'chevron');
-    const pathChevron = createElement('path', '', null, { fill: 'currentColor', d: 'M 11 21.212 L 17.35 15 L 11 8.65 l 1.932 -1.932 L 21.215 15 l -8.282 8.282 L 11 21.212 Z' });
+    const pathChevron = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathChevron.setAttribute("fill", "currentColor");
+    pathChevron.setAttribute("d", "M 11 21.212 L 17.35 15 L 11 8.65 l 1.932 -1.932 L 21.215 15 l -8.282 8.282 L 11 21.212 Z");
     svgChevronIcon.appendChild(titleChevron);
     svgChevronIcon.appendChild(pathChevron);
     spanChevronIcon.appendChild(svgChevronIcon);
@@ -297,10 +288,9 @@ const handlePrivacyClick = () => {
     divPrivacy2_1_2_1.appendChild(divPrivacy2_1_2_1_2);
     divPrivacy2_1_2.appendChild(divPrivacy2_1_2_1);
     divPrivacy2_1.appendChild(divPrivacy2_1_2);
-
     // Aynı işlemi diğer div'ler için de tekrar et
     // Profil fotoğrafı
-    const divPrivacy2_1_3 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' });
+    const divPrivacy2_1_3 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, handleProfilePhotoClick);
     const divPrivacy2_1_3_1 = createElement('div', 'privacy-2-1-2-1');
     const divPrivacy2_1_3_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_1_3_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Profil fotoğrafı');
@@ -316,7 +306,7 @@ const handlePrivacyClick = () => {
     divPrivacy2_1_3.appendChild(divPrivacy2_1_3_1);
     divPrivacy2_1.appendChild(divPrivacy2_1_3);
     divPrivacy2_1_3_1.appendChild(divPrivacy2_1_3_1_2);
-    const divPrivacy2_1_4 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' });
+    const divPrivacy2_1_4 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, handleAboutMeClick);
     const divPrivacy2_1_4_1 = createElement('div', 'privacy-2-1-2-1');
     const divPrivacy2_1_4_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_1_4_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Hakkımda');
@@ -331,22 +321,7 @@ const handlePrivacyClick = () => {
     divPrivacy2_1_4.appendChild(divPrivacy2_1_4_1);
     divPrivacy2_1.appendChild(divPrivacy2_1_4);
     divPrivacy2_1_4_1.appendChild(divPrivacy2_1_4_1_2);
-    // Durum
-    const divPrivacy2_1_5 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' });
-    const divPrivacy2_1_5_1 = createElement('div', 'privacy-2-1-2-1');
-    const divPrivacy2_1_5_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
-    const divPrivacy2_1_5_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Durum');
-    const divPrivacy2_1_5_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
-    const spanPrivacy2_1_5_1_1_2 = createElement('span', '', null, null, 'Kişilerim');
-    divPrivacy2_1_5_1_1_2.appendChild(spanPrivacy2_1_5_1_1_2);
-    divPrivacy2_1_5_1_1.appendChild(divPrivacy2_1_5_1_1_1);
-    divPrivacy2_1_5_1_1.appendChild(divPrivacy2_1_5_1_1_2);
-    divPrivacy2_1_5_1.appendChild(divPrivacy2_1_5_1_1);
-    const divPrivacy2_1_5_1_2 = document.createElement('div', 'privacy-2-1-2-1-2');
-    divPrivacy2_1_5_1_2.appendChild(spanChevronIcon.cloneNode(true));
-    divPrivacy2_1_5.appendChild(divPrivacy2_1_5_1);
-    divPrivacy2_1.appendChild(divPrivacy2_1_5);
-    divPrivacy2_1_5_1.appendChild(divPrivacy2_1_5_1_2);
+
 
     // Okundu bilgisi
     const divPrivacy2_1_6 = createElement('div', 'privacy-2-1-2', null, { tabindex: '-1', role: 'button' });
@@ -377,7 +352,7 @@ const handlePrivacyClick = () => {
     divPrivacy2_1_6_1.appendChild(divPrivacy2_1_6_1_2);
     // Gruplar
     const divPrivacy2_2 = createElement('div', 'privacy-2-2');
-    const divPrivacy2_2_1 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' });
+    const divPrivacy2_2_1 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, handleGroupsClick);
     const divPrivacy2_2_1_1 = createElement('div', 'privacy-2-1-2-1');
     const divPrivacy2_2_1_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_2_1_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Gruplar');
@@ -387,14 +362,14 @@ const handlePrivacyClick = () => {
     divPrivacy2_2_1_1_1.appendChild(divPrivacy2_2_1_1_1_1);
     divPrivacy2_2_1_1_1.appendChild(divPrivacy2_2_1_1_1_2);
     divPrivacy2_2_1_1.appendChild(divPrivacy2_2_1_1_1);
-    const divPrivacy2_2_1_1_2 = document.createElement('div', 'privacy-2-1-2-1-2');
+    const divPrivacy2_2_1_1_2 = createElement('div', 'privacy-2-1-2-1-2');
     divPrivacy2_2_1_1_2.appendChild(spanChevronIcon.cloneNode(true));
     divPrivacy2_2_1_1.appendChild(divPrivacy2_2_1_1_2);
     divPrivacy2_2_1.appendChild(divPrivacy2_2_1_1);
     divPrivacy2_2.appendChild(divPrivacy2_2_1);
 
     // Engellenmiş kişiler
-    const divPrivacy2_2_2 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' });
+    const divPrivacy2_2_2 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, handleBlockedContactsClick);
     const divPrivacy2_2_2_1 = createElement('div', 'privacy-2-1-6-1');
     const divPrivacy2_2_2_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_2_2_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Engellenmiş kişiler');
@@ -404,7 +379,7 @@ const handlePrivacyClick = () => {
     divPrivacy2_2_2_1_1.appendChild(divPrivacy2_2_2_1_1_1);
     divPrivacy2_2_2_1_1.appendChild(divPrivacy2_2_2_1_1_2);
     divPrivacy2_2_2_1.appendChild(divPrivacy2_2_2_1_1);
-    const divPrivacy2_2_2_1_2 = document.createElement('div', 'privacy-2-1-2-1-2');
+    const divPrivacy2_2_2_1_2 = createElement('div', 'privacy-2-1-2-1-2');
     divPrivacy2_2_2_1_2.appendChild(spanChevronIcon.cloneNode(true));
     divPrivacy2_2_2_1.appendChild(divPrivacy2_2_2_1_2);
     divPrivacy2_2_2.appendChild(divPrivacy2_2_2_1);
@@ -428,14 +403,388 @@ function handleLogoutClick() {
     console.log("ÇIKIŞ YAP TIKLANDI")
 }
 
+const handleLastSeenAndOnlineClick = () => {
+    const divSettings1 = document.querySelector(".settings-1-1");
+    divSettings1.replaceChildren();
+    const header = createElement("header", "settings-1-1-1");
+    const divSettingsHeader = createElement("div", "settings-1-1-1-1");
+    const divBackBtn = createElement("div", "settings-back-btn");
+    const divBackBtn1 = createElement("div", "settings-back-btn-1", null, { role: "button", "aria-label": "Geri", tabIndex: "0" });
+    const spanBackIcon = document.createElement("span", "", null, { "data-icon": "back" });
+    const svgBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgBack.setAttribute("viewBox", "0 0 24 24");
+    svgBack.setAttribute("height", "24");
+    svgBack.setAttribute("width", "24");
+    svgBack.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svgBack.setAttribute("version", "1.1");
+    const titleBack = createElement("title", "back");
+    const pathBack = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathBack.setAttribute("fill", "currentColor");
+    pathBack.setAttribute("d", "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z");
+
+    svgBack.appendChild(titleBack);
+    svgBack.appendChild(pathBack);
+    spanBackIcon.appendChild(svgBack);
+    divBackBtn1.appendChild(spanBackIcon);
+    divBackBtn.appendChild(divBackBtn1);
+
+
+    const divTitle = createElement("div", "privacy123", null, { title: "Son görülme ve çevrimiçi" });
+    const h1Title = createElement("h1", "privacy12", null, { "aria-label": "Son görülme ve çevrimiçi" }, "Son görülme ve çevrimiçi");
+    divTitle.appendChild(h1Title);
+    divSettingsHeader.appendChild(divBackBtn);
+    divSettingsHeader.appendChild(divTitle);
+    header.appendChild(divSettingsHeader);
+    divSettings1.appendChild(header);
 
 
 
 
 
 
+    const lastSeenAndOnline = createElement('div', 'lastseen-and-online');
+
+    // Create child div with class 'lastseen-and-online-1'
+    const lastSeenAndOnline1 = createElement('div', 'lastseen-and-online-1');
+
+    // Create child div for 'Son görülme bilgimi kimler görebilir'
+    const lastSeenAndOnline11 = createElement('div', 'lastseen-and-online-1-1', null, null, 'Son görülme bilgimi kimler görebilir');
+
+    // Append this text div to 'lastseen-and-online-1'
+    lastSeenAndOnline1.appendChild(lastSeenAndOnline11);
+
+    // Create radiogroup div
+    const radioGroup = document.createElement('div', null, null, { role: 'radiogroup', 'aria-label': 'Son görülme bilgimi kimler görebilir' });
 
 
+
+
+    const buttonEveryone = createRadioButton('Herkes', 'Herkes');
+    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim');
+    const buttonNobody = createRadioButton('Hiç kimse', 'Hiç kimse');
+    radioGroup.appendChild(buttonEveryone);
+    radioGroup.appendChild(buttonMyContacts);
+    radioGroup.appendChild(buttonNobody);
+
+    lastSeenAndOnline1.appendChild(radioGroup);
+    const solidDiv = createElement('div', 'lastseen-and-online-solid');
+    lastSeenAndOnline1.appendChild(solidDiv);
+
+
+    const lastSeenAndOnline211 = createElement('div', 'lastseen-and-online-1-1', null, null, 'Çevrimiçi olduğumu kimler görebilir');
+
+    lastSeenAndOnline1.appendChild(lastSeenAndOnline211);
+
+
+    const radioGroup2 = createElement('div', null, null, { role: 'radiogroup', 'aria-label': 'Çevrimiçi olduğumu kimler görebilir' });
+
+    const buttonEveryone2 = createRadioButton('Herkes', 'Herkes');
+    const buttonSameLastSeen = createRadioButton('Son görülme bilgisiyle aynı', 'Son görülme bilgisiyle aynı');
+
+    radioGroup2.appendChild(buttonEveryone2);
+    radioGroup2.appendChild(buttonSameLastSeen);
+
+    lastSeenAndOnline1.appendChild(radioGroup2);
+
+    const lastSeenAndOnline1_3 = createElement('div', 'lastseen-and-online-1-3');
+
+    const strongLastSeen = createElement('strong', null, null, null, 'Son görülme');
+
+    const textAnd = document.createTextNode(' ve ');
+
+    const strongOnline = createElement('strong', null, null, null, 'çevrimiçi');
+
+    const text = document.createTextNode(' bilginizi paylaşmazsanız diğer kullanıcıların son görülme ve çevrimiçi bilgisini de göremezsiniz.');
+
+    lastSeenAndOnline1_3.appendChild(strongLastSeen);
+    lastSeenAndOnline1_3.appendChild(textAnd);
+    lastSeenAndOnline1_3.appendChild(strongOnline);
+    lastSeenAndOnline1_3.appendChild(text);
+
+    lastSeenAndOnline1.appendChild(lastSeenAndOnline1_3);
+
+
+
+    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
+    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
+    divSettings1.appendChild(lastSeenAndOnline);
+
+    const backBtnElement = document.querySelector(".settings-back-btn-1");
+    backBtnElement.addEventListener("click", () => {
+        console.log("GERİ")
+        handlePrivacyClick();
+    });
+}
+
+const handleProfilePhotoClick = () => {
+    const divSettings1 = document.querySelector(".settings-1-1");
+    divSettings1.replaceChildren();
+    const header = createElement("header", "settings-1-1-1");
+    const divSettingsHeader = createElement("div", "settings-1-1-1-1");
+    const divBackBtn = createElement("div", "settings-back-btn");
+    const divBackBtn1 = createElement("div", "settings-back-btn-1", null, { role: "button", "aria-label": "Geri", tabIndex: "0" });
+    const spanBackIcon = document.createElement("span", "", null, { "data-icon": "back" });
+    const svgBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgBack.setAttribute("viewBox", "0 0 24 24");
+    svgBack.setAttribute("height", "24");
+    svgBack.setAttribute("width", "24");
+    svgBack.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svgBack.setAttribute("version", "1.1");
+    const titleBack = createElement("title", "back");
+    const pathBack = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathBack.setAttribute("fill", "currentColor");
+    pathBack.setAttribute("d", "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z");
+
+    svgBack.appendChild(titleBack);
+    svgBack.appendChild(pathBack);
+    spanBackIcon.appendChild(svgBack);
+    divBackBtn1.appendChild(spanBackIcon);
+    divBackBtn.appendChild(divBackBtn1);
+
+
+    const divTitle = createElement("div", "privacy123", null, { title: "Profil fotoğrafı" });
+    const h1Title = createElement("h1", "privacy12", null, { "aria-label": "Profil fotoğrafı" }, "Profil fotoğrafı");
+    divTitle.appendChild(h1Title);
+    divSettingsHeader.appendChild(divBackBtn);
+    divSettingsHeader.appendChild(divTitle);
+    header.appendChild(divSettingsHeader);
+    divSettings1.appendChild(header);
+
+
+
+
+
+
+    const lastSeenAndOnline = createElement('div', 'lastseen-and-online');
+
+    // Create child div with class 'lastseen-and-online-1'
+    const lastSeenAndOnline1 = createElement('div', 'lastseen-and-online-1');
+
+    // Create child div for 'Son görülme bilgimi kimler görebilir'
+    const lastSeenAndOnline11 = createElement('div', 'lastseen-and-online-1-1', null, null, 'Profil Fotoğrafımı kimler görebilir');
+
+    // Append this text div to 'lastseen-and-online-1'
+    lastSeenAndOnline1.appendChild(lastSeenAndOnline11);
+
+    // Create radiogroup div
+    const radioGroup = document.createElement('div', null, null, { role: 'radiogroup', 'aria-label': 'Profil Fotoğrafımı kimler görebilir' });
+
+
+
+
+    const buttonEveryone = createRadioButton('Herkes', 'Herkes');
+    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim');
+    const buttonNobody = createRadioButton('Hiç kimse', 'Hiç kimse');
+    radioGroup.appendChild(buttonEveryone);
+    radioGroup.appendChild(buttonMyContacts);
+    radioGroup.appendChild(buttonNobody);
+
+    lastSeenAndOnline1.appendChild(radioGroup);
+
+    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
+    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
+    divSettings1.appendChild(lastSeenAndOnline);
+
+    const backBtnElement = document.querySelector(".settings-back-btn-1");
+    backBtnElement.addEventListener("click", () => {
+        console.log("GERİ")
+        handlePrivacyClick();
+    });
+}
+
+const handleAboutMeClick = () => {
+    const divSettings1 = document.querySelector(".settings-1-1");
+    divSettings1.replaceChildren();
+    const header = createElement("header", "settings-1-1-1");
+    const divSettingsHeader = createElement("div", "settings-1-1-1-1");
+    const divBackBtn = createElement("div", "settings-back-btn");
+    const divBackBtn1 = createElement("div", "settings-back-btn-1", null, { role: "button", "aria-label": "Geri", tabIndex: "0" });
+    const spanBackIcon = document.createElement("span", "", null, { "data-icon": "back" });
+    const svgBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgBack.setAttribute("viewBox", "0 0 24 24");
+    svgBack.setAttribute("height", "24");
+    svgBack.setAttribute("width", "24");
+    svgBack.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svgBack.setAttribute("version", "1.1");
+    const titleBack = createElement("title", "back");
+    const pathBack = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathBack.setAttribute("fill", "currentColor");
+    pathBack.setAttribute("d", "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z");
+
+    svgBack.appendChild(titleBack);
+    svgBack.appendChild(pathBack);
+    spanBackIcon.appendChild(svgBack);
+    divBackBtn1.appendChild(spanBackIcon);
+    divBackBtn.appendChild(divBackBtn1);
+
+
+    const divTitle = createElement("div", "privacy123", null, { title: "Hakkımda" });
+    const h1Title = createElement("h1", "privacy12", null, { "aria-label": "Profil fotoğrafı" }, "Hakkımda");
+    divTitle.appendChild(h1Title);
+    divSettingsHeader.appendChild(divBackBtn);
+    divSettingsHeader.appendChild(divTitle);
+    header.appendChild(divSettingsHeader);
+    divSettings1.appendChild(header);
+
+
+
+
+
+
+    const lastSeenAndOnline = createElement('div', 'lastseen-and-online');
+
+    const lastSeenAndOnline1 = createElement('div', 'lastseen-and-online-1');
+
+    const lastSeenAndOnline11 = createElement('div', 'lastseen-and-online-1-1', null, null, 'Hakkımda bilgimi kimler görebilir');
+
+    lastSeenAndOnline1.appendChild(lastSeenAndOnline11);
+
+    const radioGroup = createElement('div', null, null, { role: 'radiogroup', 'aria-label': 'Hakkımda bilgimi kimler görebilir' });
+
+
+
+
+    const buttonEveryone = createRadioButton('Herkes', 'Herkes');
+    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim');
+    const buttonNobody = createRadioButton('Hiç kimse', 'Hiç kimse');
+    radioGroup.appendChild(buttonEveryone);
+    radioGroup.appendChild(buttonMyContacts);
+    radioGroup.appendChild(buttonNobody);
+
+    lastSeenAndOnline1.appendChild(radioGroup);
+
+    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
+    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
+    divSettings1.appendChild(lastSeenAndOnline);
+
+    const backBtnElement = document.querySelector(".settings-back-btn-1");
+    backBtnElement.addEventListener("click", () => {
+        console.log("GERİ")
+        handlePrivacyClick();
+    });
+}
+
+const handleGroupsClick = () => {
+    const divSettings1 = document.querySelector(".settings-1-1");
+    divSettings1.replaceChildren();
+    const header = createElement("header", "settings-1-1-1");
+    const divSettingsHeader = createElement("div", "settings-1-1-1-1");
+    const divBackBtn = createElement("div", "settings-back-btn");
+    const divBackBtn1 = createElement("div", "settings-back-btn-1", null, { role: "button", "aria-label": "Geri", tabIndex: "0" });
+    const spanBackIcon = document.createElement("span", "", null, { "data-icon": "back" });
+    const svgBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgBack.setAttribute("viewBox", "0 0 24 24");
+    svgBack.setAttribute("height", "24");
+    svgBack.setAttribute("width", "24");
+    svgBack.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svgBack.setAttribute("version", "1.1");
+    const titleBack = createElement("title", "back");
+    const pathBack = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    pathBack.setAttribute("fill", "currentColor");
+    pathBack.setAttribute("d", "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z");
+
+    svgBack.appendChild(titleBack);
+    svgBack.appendChild(pathBack);
+    spanBackIcon.appendChild(svgBack);
+    divBackBtn1.appendChild(spanBackIcon);
+    divBackBtn.appendChild(divBackBtn1);
+
+
+    const divTitle = createElement("div", "privacy123", null, { title: "Gruplar" });
+    const h1Title = createElement("h1", "privacy12", null, { "aria-label": "Profil fotoğrafı" }, "Gruplar");
+    divTitle.appendChild(h1Title);
+    divSettingsHeader.appendChild(divBackBtn);
+    divSettingsHeader.appendChild(divTitle);
+    header.appendChild(divSettingsHeader);
+    divSettings1.appendChild(header);
+
+    const lastSeenAndOnline = createElement('div', 'lastseen-and-online');
+
+    const lastSeenAndOnline1 = createElement('div', 'lastseen-and-online-1');
+
+    const lastSeenAndOnline11 = createElement('div', 'lastseen-and-online-1-1', null, null, 'Beni gruplara kimler ekleyebilir');
+
+    lastSeenAndOnline1.appendChild(lastSeenAndOnline11);
+
+    const radioGroup = createElement('div', null, null, { role: 'radiogroup', 'aria-label': 'Beni gruplara kimler ekleyebilir' });
+
+
+
+
+    const buttonEveryone = createRadioButton('Herkes', 'Herkes');
+    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim');
+    radioGroup.appendChild(buttonEveryone);
+    radioGroup.appendChild(buttonMyContacts);
+
+    lastSeenAndOnline1.appendChild(radioGroup);
+    const groupsText = createElement('div', 'groups-text', null, null, "Sizi gruplara ekleyemeyen yöneticiler, size özel olarak davet gönderme seçeneğini kullanabilir.");
+    lastSeenAndOnline1.appendChild(groupsText);
+
+    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
+    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
+    divSettings1.appendChild(lastSeenAndOnline);
+
+    const backBtnElement = document.querySelector(".settings-back-btn-1");
+    backBtnElement.addEventListener("click", () => {
+        console.log("GERİ")
+        handlePrivacyClick();
+    });
+}
+
+const handleBlockedContactsClick = () => {
+
+    const backBtnElement = document.querySelector(".settings-back-btn-1");
+    backBtnElement.addEventListener("click", () => {
+        console.log("GERİ")
+        handlePrivacyClick();
+    });
+}
+
+function createRadioButton(ariaLabel, textContent) {
+    const button = createElement('button', 'lastseen-and-online-1-2', null, { tabIndex: '-1' });
+    button.type = 'button';
+
+    const innerDiv = createElement('div', 'lastseen-and-online-1-2-1');
+
+    const iconWrapper = createElement('div', 'lastseen-and-online-1-2-1-1');
+
+    const iconSpan = createElement('span', 'lastseen-and-online-1-2-1-1-1');
+
+    const radioButton = createElement('button', 'lastseen-and-online-1-2-1-1-1-1', null, { role: 'radio', 'aria-checked': 'false', 'aria-label': ariaLabel });
+
+    const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgIcon.setAttribute('viewBox', '0 0 20 20');
+    svgIcon.setAttribute('height', '20');
+    svgIcon.setAttribute('width', '20');
+    svgIcon.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svgIcon.classList.add('lastseen-and-online-1-2-1-1-1-1-1');
+    svgIcon.setAttribute('version', '1.1');
+    svgIcon.setAttribute('x', '0px');
+    svgIcon.setAttribute('y', '0px');
+    svgIcon.setAttribute('enable-background', 'new 0 0 20 20');
+
+    const svgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    svgPath.setAttribute('fill', 'currentColor');
+    svgPath.setAttribute('fill-opacity', 'inherit');
+    svgPath.setAttribute('d', 'M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z');
+
+    svgIcon.appendChild(svgPath);
+    radioButton.appendChild(svgIcon);
+    iconSpan.appendChild(radioButton);
+    iconWrapper.appendChild(iconSpan);
+
+    const textWrapper = createElement('div', 'lastseen-and-online-1-2-1-2', { flexGrow: '1' });
+
+    const textSpan = createElement('span', 'lastseen-and-online-1-2-1-2-1', null, null, textContent);
+
+    textWrapper.appendChild(textSpan);
+
+    innerDiv.appendChild(iconWrapper);
+    innerDiv.appendChild(textWrapper);
+    button.appendChild(innerDiv);
+
+    return button;
+}
 
 
 

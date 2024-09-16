@@ -3,6 +3,7 @@ import { appendMessage, createMessageBox } from "./MessageBox.js";
 import { chatInstance, UserSettingsDTO } from "./Chat.js";
 import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
 import { showModal, ModalOptionsDTO } from './showModal.js';
+import { ariaSelected } from "./util.js";
 
 function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
@@ -18,7 +19,7 @@ function handleChats() {
 
 
 
-    for (let i = 0; i < visibleItemCount && i < chatInstance.chatList.length; i++) {
+    for (let i = 0; i < visibleItemCount && i < chatInstance.chatList.size; i++) {
         console.log(i)
         createChatBox(chatInstance.chatList[i], i);
     }
@@ -69,7 +70,7 @@ function createChatBox(chat, index) {
     chatElementDOM.style.transform = `translateY(${index * 72}px)`;
     chatElementDOM.style.zIndex = index;
     chatElementDOM.chatData = chat;
-    console.log(chat)
+    console.log("CHAT BOX >>>>>> ", chat)
     chatElementDOM.innerHTML = `
         <div class="chat-box">
             <div tabindex="-1" class aria-selected="false" role="row">
@@ -87,7 +88,7 @@ function createChatBox(chat, index) {
                         <div class="chat-name-and-last-message-time">
                             <div class="chat-name">
                                 <div class="name">
-                                    <span dir="auto" title="${chat.friendEmail}" aria-label="" class="name-span" style="min-height: 0px;">${chat.friendEmail}</span>
+                                    <span dir="auto" title="${chat.userContactName != null ? chat.userContactName : chat.userProfileResponseDTO.email}" aria-label="" class="name-span" style="min-height: 0px;">${chat.userContactName != null ? chat.userContactName : chat.userProfileResponseDTO.email}</span>
                                 </div>
                             </div>
                             <div class="time">${formattedTime}</div>
@@ -339,22 +340,23 @@ async function handleChatClick(event) {
     if (innerDiv.getAttribute('aria-selected') === 'true') {
         return;
     }
-    if (chatInstance.selectedChatElement && chatInstance.selectedChatElement !== chatElementDOM) {
-        const previouslySelectedInnerDiv = chatInstance.selectedChatElement.querySelector('.chat-box > div');
-        chatInstance.selectedChatElement.querySelector(".chat").classList.remove('selected-chat');
-        previouslySelectedInnerDiv.setAttribute('aria-selected', 'false');
-    }
-
-
-    chatElementDOM.querySelector(".chat").classList.add('selected-chat');
-    innerDiv.setAttribute('aria-selected', 'true');
-    chatInstance.selectedChatElement = chatElementDOM;
-    console.log(chatInstance.userId)
-
+    ariaSelected(chatElementDOM, chatInstance, innerDiv);
     const latestMessages = await fetchGetLatestMessages(chatData.id);
+    const chatDTO = {
+        contact: {id: chatData.contactId,
+            userContactName: chatData.userContactName,
+            userProfileResponseDTO: chatData.userProfileResponseDTO
+        },
+        user: chatInstance.user,
+        messages: latestMessages,
+        userChatSettings: chatData.userChatSettings,
+        id: chatData.id,
+    };
     chatData.messages = latestMessages;
-    console.log(chatData)
-    createMessageBox(chatData, chatInstance.userId);
+    console.log("CHAT DATA >> ",chatData)
+    console.log("DTO >> ",chatDTO)
+    // createMessageBox(chatData);
+    createMessageBox(chatDTO);
 
     console.log('Chat clicked:', chatElementDOM, chatData);
 }

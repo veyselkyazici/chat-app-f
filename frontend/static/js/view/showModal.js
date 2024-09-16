@@ -34,7 +34,8 @@ function showModal(options) {
 
     const spans = document.querySelectorAll('.app span');
     const showChatOptions = spans[0];
-    showChatOptions.insertAdjacentHTML('beforeend', modalContent);
+    // showChatOptions.insertAdjacentHTML('beforeend', modalContent);
+    showChatOptions.appendChild(modalContent);
 
     const customModal = document.getElementById('customModal');
     const closeModal = () => {

@@ -3,7 +3,7 @@ import { createMessageBox } from './MessageBox.js';
 import { chatInstance } from "./Chat.js";
 import { showModal, ModalOptionsDTO } from './showModal.js';
 import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
-
+import { ariaSelected, ariaSelectedRemove } from './util.js';
 function createContactHTML(user, index) {
     const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
 
@@ -319,27 +319,34 @@ function createContactListViewHTML() {
 //     });
 //     showModal(options);
 // }
-
 async function handleContactClick(event) {
     const contactElementDOM = event.currentTarget;
     const contactData = contactElementDOM.contactData;
-
+    const chatBoxDivs = [...document.querySelectorAll('.chat-list-content > .chat1')];
+    const chatBoxElement = chatBoxDivs.find(chatBoxDiv => chatBoxDiv.chatData.id === `${chatInstance.user.id}_${contactData.userProfileResponseDTO.id}` || chatBoxDiv.chatData.id === `${contactData.userProfileResponseDTO.id}_${chatInstance.user.id}`)
+    const innerDiv = chatBoxElement?.querySelector('.chat-box > div');
+    if (innerDiv?.getAttribute('aria-selected') === 'true' && chatBoxElement) {
+        return;
+    }
     if (contactData.id) {
-        let findChat = chatInstance.chatList.find(chatItem => chatItem.id === `${chatInstance.userId}_${contactData.id}` || chatItem.id === `${contactData.id}_${chatInstance.userId}`);
+        let findChat = chatInstance.chatList.find(chatItem => chatItem.id === `${chatInstance.user.id}_${contactData.userProfileResponseDTO.id}` || chatItem.id === `${contactData.userProfileResponseDTO.id}_${chatInstance.user.id}`);
         if (!findChat) {
-            findChat = await fetchCheckChatRoomExists(chatInstance.userId, contactData.id);
+            findChat = await fetchCheckChatRoomExists(chatInstance.user.id, contactData.id);
         }
+        chatBoxElement != null ? ariaSelected(chatBoxElement,chatInstance,innerDiv) : ariaSelectedRemove(chatInstance);
         const messages = await fetchGetLatestMessages(findChat.id);
+        console.log("FIND CHAT > ", findChat)
         const chatRequestDTO = {
-            contactImage: contactData.imageId,
-            contactId: contactData.id,
-            contactEmail: contactData.email,
-            userId: chatInstance.userId,
+            contact: contactData,
+            user: chatInstance.user,
             messages: messages,
             userChatSettings: findChat.userChatSettings,
             id: findChat.id,
         };
-        createMessageBox(chatRequestDTO, chatInstance.userId);
+        const contactsElement = document.querySelector('.a1-1-1');
+        // ToDo removeChild ile yapılacak onun için innerHTML ile basmak yerine create ile yapılacak
+        contactsElement.innerHTML = '';
+        createMessageBox(chatRequestDTO);
     } else if (!contactData.id && !contactData.invited) {
         const options = new ModalOptionsDTO({
             content: `${contactData.userContactName} kişisini davet etmek istiyor musunuz?`,
@@ -451,7 +458,7 @@ function handleOptionsBtnClick(event) {
                 listItem.classList.remove('background-color');
             });
             listItem.addEventListener('click', async () => {
-                const contactData = contactElement.contactData; // Silinecek kişinin verisi
+                const contactData = contactElement.contactData;
                 const options = new ModalOptionsDTO({
                     content: `${contactData.userContactName} kişisini silmek istiyor musunuz?`,
                     buttonText: 'Evet',

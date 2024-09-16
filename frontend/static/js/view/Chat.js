@@ -1,6 +1,5 @@
 // Chat.js
 import AbstractView from "./AbstractView.js";
-import { addFriendView } from "./AddFriend2.js";
 import createContactList from "./Contacts.js";
 import { createSettingsHtml } from "./Settings.js";
 import { addContactModal } from "./AddContact.js";
@@ -44,7 +43,7 @@ export default class Chat extends AbstractView {
         };
         this.visibleItemCount = 0;
         this.selectedChatElement = null;
-        this.userId = '';
+        this.user = {};
         this.chatList = [];
         this.contactList = [];
         this.fetchFriendRequestReplyData = [];
@@ -247,17 +246,14 @@ export default class Chat extends AbstractView {
         <div class="message-box" id="chatWindow">
             <div class="start-message">Arkadaş Seçerek Sohbet Etmeye Başlayabilirsiniz.</div>
         </div>
-        <div class="profile-box">
-            <span class="profile-box-1"></span>
-        </div>
     </div>
         `;
     }
 
     async init() {
         await this.initialData();
-        this.webSocketManagerFriendships = new WebSocketManager('http://localhost:9030/ws', this.userId);;
-        this.webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws', this.userId);
+        this.webSocketManagerFriendships = new WebSocketManager('http://localhost:9030/ws', this.user.id);;
+        this.webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws', this.user.id);
         this.initFriendshipWebSocket();
         this.initChatWebSocket()
         handleChats();
@@ -288,12 +284,12 @@ export default class Chat extends AbstractView {
         }
     }
     subscribeToFriendshipChannels() {
-        const addContact = `/user/${this.userId}/queue/add-contact`;
-        const addInvitation = `/user/${this.userId}/queue/add-invitation`;
+        const addContact = `/user/${this.user.id}/queue/add-contact`;
+        const addInvitation = `/user/${this.user.id}/queue/add-invitation`;
         this.webSocketManagerFriendships.subscribeToChannel(addContact, async (addContactMessage) => {
             const newContact = JSON.parse(addContactMessage.body);
             console.log(newContact)
-            let contactIdList = this.contactList.filter(contact => contact.userContactId);
+            let contactIdList = this.contactList.filter(contact => contact.id);
 
             const indexToInsert = contactIdList.findIndex(contact => {
                 return contact.userContactName.localeCompare(newContact.userContactName, undefined, { sensitivity: 'base' }) > 0;
@@ -305,7 +301,7 @@ export default class Chat extends AbstractView {
             }
             this.contactList = [
                 ...contactIdList,
-                ...this.contactList.filter(contact => !contact.userContactId)
+                ...this.contactList.filter(contact => !contact.id)
             ];
             console.log(this.contactList)
         });
@@ -313,7 +309,7 @@ export default class Chat extends AbstractView {
         this.webSocketManagerFriendships.subscribeToChannel(addInvitation, async (addInvitationMessage) => {
             const newInvitation = JSON.parse(addInvitationMessage.body);
             console.log(newInvitation)
-            let invitationIdList = this.contactList.filter(invitation => !invitation.userContactId);
+            let invitationIdList = this.contactList.filter(invitation => !invitation.id);
             const indexToInsert = invitationIdList.findIndex(invitation => {
                 return invitation.userContactName.localeCompare(newInvitation.userContactName, undefined, { sensitivity: 'base' }) > 0;
             });
@@ -323,7 +319,7 @@ export default class Chat extends AbstractView {
                 invitationIdList.splice(indexToInsert, 0, newInvitation);
             }
             this.contactList = [
-                ...this.contactList.filter(invitation => invitation.userContactId),
+                ...this.contactList.filter(invitation => invitation.id),
                 ...invitationIdList
             ];
             console.log(this.contactList)
@@ -340,9 +336,9 @@ export default class Chat extends AbstractView {
     }
 
     subscribeToChatChannels() {
-        const recipientMessageChannel = `/user/${this.userId}/queue/received-message`;
-        const typingChannel = `/user/${this.userId}/queue/typing`;
-        const stopTypingChannel = `/user/${this.userId}/queue/stop-typing`;
+        const recipientMessageChannel = `/user/${this.user.id}/queue/received-message`;
+        const typingChannel = `/user/${this.user.id}/queue/typing`;
+        const stopTypingChannel = `/user/${this.user.id}/queue/stop-typing`;
 
 
         this.webSocketManagerChat.subscribeToChannel(recipientMessageChannel, async (recipientMessage) => {
@@ -381,10 +377,11 @@ export default class Chat extends AbstractView {
     }
 
     async initialData() {
-        this.userId = await fetchGetUserId();
-        console.log("InitialData userId: ", this.userId)
-        this.contactList = await fetchGetContactList(this.userId);
-        this.chatList = await fetchGetChatSummaries(this.userId);
+        this.user = await fetchGetUserWithPrivacySettingsByToken();
+        console.log("InitialData userId: ", this.user)
+
+        this.contactList = await fetchGetContactList(this.user.id);
+        this.chatList = await fetchGetChatSummaries(this.user.id);
         // for (let i = 1; i <= 81; i++) {
         //     const newData = JSON.parse(JSON.stringify(this.data)); // data nesnesinin derin bir kopyasını oluşturur
         //     newData.messages[0].messageContent = i;
@@ -614,8 +611,8 @@ async function fetchFriendRequestReply() {
     }
 }
 
-const getUserIdUrl = 'http://localhost:8080/api/v1/user/get-userId';
-async function fetchGetUserId() {
+const getUserIdUrl = 'http://localhost:8080/api/v1/user/get-user-with-privacy-settings-by-token';
+async function fetchGetUserWithPrivacySettingsByToken() {
     const requestBody = { token: sessionStorage.getItem('access_token') };
     try {
         const response = await fetch(getUserIdUrl, {
@@ -632,7 +629,7 @@ async function fetchGetUserId() {
         }
 
         const data = await response.json();
-        return data.userId;
+        return data;
     } catch (error) {
         console.error('Hata:', error.message);
         throw error;

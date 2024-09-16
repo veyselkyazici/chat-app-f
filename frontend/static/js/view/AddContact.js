@@ -70,8 +70,9 @@ const addContact = (emailDOM, nameDOM, closeModal) => {
     }
 
     if (isValid) {
+        console.log(chatInstance.user)
         const dto = new AddContactRequestDTO({
-            userId: chatInstance.userId,
+            userId: chatInstance.user.id,
             userContactName: name,
             userContactEmail: email,
         });
@@ -86,6 +87,7 @@ const addContact = (emailDOM, nameDOM, closeModal) => {
 
 const addContactURL = 'http://localhost:8080/api/v1/contacts/add-contact';
 const fetchAddContact = async (dto, closeModal) => {
+    console.log(dto)
     try {
         const response = await fetch(addContactURL, {
             method: 'POST',

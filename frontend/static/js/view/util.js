@@ -131,6 +131,49 @@ function removeHeaderAndFooter() {
 
 }
 
+const createElement = (elementType, className, styles = {}, attributes = {}, textContent, clickHandler) => {
+  const element = document.createElement(elementType);
+  element.className = className;
+  if (textContent) {
+    element.textContent = textContent;
+  }
+  if (styles) {
+    Object.assign(element.style, styles);
+  }
+  for (let key in attributes) {
+    element.setAttribute(key, attributes[key]);
+  }
+  if (clickHandler) {
+    element.addEventListener("click", clickHandler)
+  }
 
+  return element;
+}
+const createSvgElement = (elementType, attributes = {}) => {
+  const element = document.createElementNS("http://www.w3.org/2000/svg", elementType);
+  for (let key in attributes) {
+    element.setAttribute(key, attributes[key]);
+  }
+  return element;
+};
 
-export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace, onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements, removeHeaderAndFooter };
+const ariaSelected = (chatElementDOM, chatInstance, innerDiv) => {
+  
+  if (chatInstance.selectedChatElement && chatInstance.selectedChatElement !== chatElementDOM) {
+    const previouslySelectedInnerDiv = chatInstance.selectedChatElement.querySelector('.chat-box > div');
+    chatInstance.selectedChatElement.querySelector(".chat").classList.remove('selected-chat');
+    previouslySelectedInnerDiv.setAttribute('aria-selected', 'false');
+  }
+  chatElementDOM.querySelector(".chat").classList.add('selected-chat');
+  innerDiv.setAttribute('aria-selected', 'true');
+  chatInstance.selectedChatElement = chatElementDOM;
+}
+
+const ariaSelectedRemove = (chatInstance) => {
+  if (chatInstance.selectedChatElement) {
+    const previouslySelectedInnerDiv = chatInstance.selectedChatElement.querySelector('.chat-box > div');
+    chatInstance.selectedChatElement.querySelector(".chat").classList.remove('selected-chat');
+    previouslySelectedInnerDiv.setAttribute('aria-selected', 'false');
+  }
+}
+export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace, onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements, removeHeaderAndFooter, createElement, createSvgElement, ariaSelected,ariaSelectedRemove };
