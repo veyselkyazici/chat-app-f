@@ -40,7 +40,7 @@ async function createMessageBox(chat) {
     emojiButton.addEventListener('click', () => {
         showEmojiPicker(panel, showEmojiDOM);
     });
-    let friendStatus = await isOnline(chat.friendId);
+    let friendStatus = await isOnline(chat.contact.userProfileResponseDTO.id);
     chatInstance.webSocketManagerChat.subscribeToChannel(`/user/${chat.contact.userProfileResponseDTO.id}/queue/typing`, (typingMessage) => {
         const status = JSON.parse(typingMessage.body);
         if (status.userId === chat.friendId) {
@@ -485,6 +485,16 @@ const createMessageBoxHTML = (chat) => {
     searchButtonContainer.appendChild(menuDiv1_2_3_1_3_1);
     messageBoxDiv3.appendChild(searchButtonContainer);
 
+
+
+
+    if (chat) {
+        // ToDo privacy
+    }
+    const statusDiv = createElement('div', 'online-status');
+    const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, 'Online');
+    statusDiv.appendChild(statusSpan);
+    messageBoxDiv2.appendChild(statusDiv);
     header.appendChild(messageBoxDiv1);
     header.appendChild(messageBoxDiv2);
     header.appendChild(messageBoxDiv3);

@@ -2104,6 +2104,26 @@ button.chat-options-btn:focus {
 
 
 /* MESSAGE-BOX */
+.online-status {
+  min-height: 20px;
+  line-height: 1.5385;
+  display: flex;
+  font-size: .8125rem;
+  align-items: flex-start;
+  color: #667781;
+}
+
+.online-status-1 {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+  visibility: visible;
+  -webkit-user-select: text;
+}
+
+
 .message-box {
   transform-origin: left top;
   flex-grow: 1;
@@ -3204,10 +3224,18 @@ button.chat-options-btn:focus {
 }
 
 
-
-.message1-1-1-2 {
+.message-out .message1-1-1-2 {
   border-top-right-radius: 0;
   background-color: #d9fdd3;
+  box-shadow: 0 1px .5px rgba(11, 20, 26, .13);
+  position: relative;
+  z-index: 200;
+  border-radius: 7.5px;
+}
+
+.message-in .message1-1-1-2 {
+  border-top-right-radius: 0;
+  background-color: white;
   box-shadow: 0 1px .5px rgba(11, 20, 26, .13);
   position: relative;
   z-index: 200;

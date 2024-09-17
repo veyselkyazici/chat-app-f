@@ -8,7 +8,7 @@ import { ariaSelected } from "./util.js";
 function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
     const boxElement = document.querySelector(".chat-container");
-
+    console.log("CHATTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
     const calculateVisibleItemCount = () => {
         const boxHeight = boxElement.clientHeight;
         return Math.ceil(boxHeight / 72) + 7;
@@ -19,7 +19,7 @@ function handleChats() {
 
 
 
-    for (let i = 0; i < visibleItemCount && i < chatInstance.chatList.size; i++) {
+    for (let i = 0; i < visibleItemCount && i < chatInstance.chatList.length; i++) {
         console.log(i)
         createChatBox(chatInstance.chatList[i], i);
     }

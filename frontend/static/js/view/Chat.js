@@ -720,4 +720,3 @@ export class UserSettingsDTO {
         this.friendId = friendId;
     }
 }
-
