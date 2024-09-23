@@ -1,5 +1,5 @@
 // ChatBox.js
-import { appendMessage, createMessageBox } from "./MessageBox.js";
+import { appendMessage, createMessageBox, renderMessage } from "./MessageBox.js";
 import { chatInstance, UserSettingsDTO } from "./Chat.js";
 import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
 import { showModal, ModalOptionsDTO } from './showModal.js';
@@ -120,7 +120,7 @@ function createChatBox(chat, index) {
 function updateMessageBox(recipientJSON) {
     for (let i = 0; i < chatInstance.chatList.length; i++) {
         if (chatInstance.chatList[i].id === recipientJSON.chatRoomId) {
-            appendMessage(recipientJSON, chatInstance.userId);
+            renderMessage(recipientJSON, chatInstance.user.id);
             if (!chatInstance.chatList[i].messages) {
                 chatInstance.chatList[i].messages = [];
             }
@@ -376,6 +376,7 @@ function addEventListeners(chatElementDOM) {
 async function createChatBoxWithFirstMessage(recipientJSON) {
     const user = await fetchGetUserById(recipientJSON.senderId);
     console.log(recipientJSON)
+    console.log("createChatBoxWithFirstMessage", user)
     const chat = {
         friendImage: user.image,
         friendId: recipientJSON.senderId,
