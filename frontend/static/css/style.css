@@ -4375,6 +4375,10 @@ button.chat-options-btn:focus {
 
 
 /** Last Seen and Online */
+.marked {
+  color: #008069;
+}
+
 .lastseen-and-online {
   overflow-x: hidden;
   overflow-y: auto;

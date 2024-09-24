@@ -178,7 +178,7 @@ const handleAccountClick = () => {
 
 const handleSettingsBackBtnClick = () => {
     const span = document.querySelector(".a1-1-1");
-    span.remove();
+    span.removeChild(span.firstChild);
 }
 
 
@@ -420,16 +420,12 @@ const handleLastSeenAndOnlineClick = () => {
 
     const lastSeenAndOnline = createElement('div', 'lastseen-and-online');
 
-    // Create child div with class 'lastseen-and-online-1'
     const lastSeenAndOnline1 = createElement('div', 'lastseen-and-online-1');
 
-    // Create child div for 'Son görülme bilgimi kimler görebilir'
     const lastSeenAndOnline11 = createElement('div', 'lastseen-and-online-1-1', null, null, 'Son görülme bilgimi kimler görebilir');
 
-    // Append this text div to 'lastseen-and-online-1'
     lastSeenAndOnline1.appendChild(lastSeenAndOnline11);
 
-    // Create radiogroup div
     const radioGroup = createElement('div', '', null, { role: 'radiogroup', 'aria-label': 'Son görülme bilgimi kimler görebilir' });
 
 
@@ -481,8 +477,9 @@ const handleLastSeenAndOnlineClick = () => {
 
 
 
+    console.log(lastSeenAndOnline1)
     lastSeenAndOnline.appendChild(lastSeenAndOnline1);
-    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
+    console.log(lastSeenAndOnline)
     divSettings1.appendChild(lastSeenAndOnline);
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
@@ -533,16 +530,12 @@ const handleProfilePhotoClick = () => {
 
     const lastSeenAndOnline = createElement('div', 'lastseen-and-online');
 
-    // Create child div with class 'lastseen-and-online-1'
     const lastSeenAndOnline1 = createElement('div', 'lastseen-and-online-1');
 
-    // Create child div for 'Son görülme bilgimi kimler görebilir'
     const lastSeenAndOnline11 = createElement('div', 'lastseen-and-online-1-1', null, null, 'Profil Fotoğrafımı kimler görebilir');
 
-    // Append this text div to 'lastseen-and-online-1'
     lastSeenAndOnline1.appendChild(lastSeenAndOnline11);
 
-    // Create radiogroup div
     const radioGroup = document.createElement('div', null, null, { role: 'radiogroup', 'aria-label': 'Profil Fotoğrafımı kimler görebilir' });
 
 
@@ -557,7 +550,6 @@ const handleProfilePhotoClick = () => {
 
     lastSeenAndOnline1.appendChild(radioGroup);
 
-    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
     lastSeenAndOnline.appendChild(lastSeenAndOnline1);
     divSettings1.appendChild(lastSeenAndOnline);
 
@@ -630,7 +622,6 @@ const handleAboutMeClick = () => {
     lastSeenAndOnline1.appendChild(radioGroup);
 
     lastSeenAndOnline.appendChild(lastSeenAndOnline1);
-    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
     divSettings1.appendChild(lastSeenAndOnline);
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
@@ -697,7 +688,6 @@ const handleGroupsClick = () => {
     lastSeenAndOnline1.appendChild(groupsText);
 
     lastSeenAndOnline.appendChild(lastSeenAndOnline1);
-    lastSeenAndOnline.appendChild(lastSeenAndOnline1);
     divSettings1.appendChild(lastSeenAndOnline);
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
@@ -726,26 +716,8 @@ function createRadioButton(ariaLabel, textContent, optionName) {
 
     const iconSpan = createElement('span', 'lastseen-and-online-1-2-1-1-1');
 
-    const radioButton = createElement('button', 'lastseen-and-online-1-2-1-1-1-1', null, { role: 'radio', 'aria-checked': 'false', 'aria-label': ariaLabel });
-
-    const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svgIcon.setAttribute('viewBox', '0 0 20 20');
-    svgIcon.setAttribute('height', '20');
-    svgIcon.setAttribute('width', '20');
-    svgIcon.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    svgIcon.classList.add('lastseen-and-online-1-2-1-1-1-1-1');
-    svgIcon.setAttribute('version', '1.1');
-    svgIcon.setAttribute('x', '0px');
-    svgIcon.setAttribute('y', '0px');
-    svgIcon.setAttribute('enable-background', 'new 0 0 20 20');
-
-    const svgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    svgPath.setAttribute('fill', 'currentColor');
-    svgPath.setAttribute('fill-opacity', 'inherit');
-    svgPath.setAttribute('d', 'M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z');
-
-    svgIcon.appendChild(svgPath);
-    radioButton.appendChild(svgIcon);
+    const isSelected = chatInstance.user.privacySettings[optionName] === mapAriaLabelToEnum(ariaLabel);
+    const radioButton = isSelected ? markedRadioButton(ariaLabel) : unMarkedRadioButton(ariaLabel);
     iconSpan.appendChild(radioButton);
     iconWrapper.appendChild(iconSpan);
 
@@ -758,30 +730,108 @@ function createRadioButton(ariaLabel, textContent, optionName) {
     innerDiv.appendChild(iconWrapper);
     innerDiv.appendChild(textWrapper);
     button.appendChild(innerDiv);
-    button.addEventListener('click', () => handleRadioClick(button, radioButton, optionName));
+    button.addEventListener('click', () => handleRadioButtonClick(radioButton, optionName));
     return button;
 }
+const markedRadioButton = (ariaLabel) => {
 
-const handleRadioClick = async (selectedButton, radioButton, optionName) => {
-    const visibilityOption = mapAriaLabelToEnum(radioButton.getAttribute('aria-label'));
+    const radioButton = createElement('button', 'lastseen-and-online-1-2-1-1-1-1', null, { role: 'radio', 'aria-checked': 'true', 'aria-label': ariaLabel });
+
+    const spanHidden = createElement('span', '', null, { 'aria-hidden': true, 'data-icon': 'checkbox-round-radio-checked' });
+
+    const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgIcon.setAttribute('viewBox', '2 2 20 20');
+    svgIcon.setAttribute('height', '20');
+    svgIcon.setAttribute('width', '20');
+    svgIcon.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svgIcon.classList.add('marked');
+    svgIcon.setAttribute('fill', 'none');
+
+    const svgTitle = createElement('title', '', null, null, 'checkbox-round-radio-checked');
+
+    const svgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    svgPath.setAttribute('fill', 'currentColor');
+    svgPath.setAttribute('d', 'M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 Z M 12 20 C 7.58 20 4 16.42 4 12 C 4 7.58 7.58 4 12 4 C 16.42 4 20 7.58 20 12 C 20 16.42 16.42 20 12 20 Z M 17 12 C 17 14.7614 14.7614 17 12 17 C 9.23858 17 7 14.7614 7 12 C 7 9.23858 9.23858 7 12 7 C 14.7614 7 17 9.23858 17 12 Z');
+
+    svgIcon.appendChild(svgTitle);
+    svgIcon.appendChild(svgPath);
+    spanHidden.appendChild(svgIcon);
+    radioButton.appendChild(spanHidden);
+    return radioButton;
+}
+
+const unMarkedRadioButton = (ariaLabel) => {
+
+    const radioButton = createElement('button', 'lastseen-and-online-1-2-1-1-1-1', null, { role: 'radio', 'aria-checked': 'false', 'aria-label': ariaLabel });
+
+    const spanHidden = createElement('span', '', null, { 'aria-hidden': true, 'data-icon': 'checkbox-round-radio-checked' });
+
+    const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svgIcon.setAttribute('viewBox', '0 0 20 20');
+    svgIcon.setAttribute('height', '20');
+    svgIcon.setAttribute('width', '20');
+    svgIcon.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svgIcon.classList.add('lastseen-and-online-1-2-1-1-1-1-1');
+    svgIcon.setAttribute('version', '1.1');
+    svgIcon.setAttribute('x', '0px');
+    svgIcon.setAttribute('y', '0px');
+    svgIcon.setAttribute('enable-background', 'new 0 0 20 20');
+
+    const svgTitle = createElement('title', '', null, null, 'checkbox-round-passive');
+
+    const svgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    svgPath.setAttribute('fill', 'currentColor');
+    svgPath.setAttribute('fill-opacity', 'inherit');
+    svgPath.setAttribute('d', 'M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z');
+
+    svgIcon.appendChild(svgTitle);
+    svgIcon.appendChild(svgPath);
+    spanHidden.appendChild(svgIcon);
+    radioButton.appendChild(spanHidden);
+    return radioButton;
+}
+const removeMarkedRadioButton = (parentElement) => {
+    console.log(parentElement)
+    console.log(parentElement.firstElementChild)
+    parentElement.removeChild(parentElement.firstElementChild);
+    return parentElement;
+}
+const toggleRadioButton = (radioButton, isChecked) => {
+    const ariaLabel = radioButton.getAttribute('aria-label');
+    radioButton.setAttribute('aria-checked', isChecked ? 'true' : 'false');
+
+    const parentElement = removeMarkedRadioButton(radioButton.parentElement);
+    const newRadioButton = isChecked ? markedRadioButton(ariaLabel) : unMarkedRadioButton(ariaLabel);
+    console.log("NEW RADIO BUTTON > ", newRadioButton)
+    parentElement.appendChild(newRadioButton);
+};
+const handleRadioButtonClick = async (radioButton, optionName) => {
+    const ariaLabel = radioButton.getAttribute('aria-label');
+    const visibilityOption = mapAriaLabelToEnum(ariaLabel);
     const currentlyCheckedButton = document.querySelector('button[role="radio"][aria-checked="true"]');
-
-    if (selectedButton === currentlyCheckedButton) {
+    console.log(radioButton)
+    console.log(currentlyCheckedButton)
+    if (radioButton === currentlyCheckedButton) {
+        console.log("AYNI BUTON TIKLANDI")
         return;
     }
 
     if (currentlyCheckedButton) {
-        currentlyCheckedButton.setAttribute('aria-checked', 'false');
+        toggleRadioButton(currentlyCheckedButton, false);
     }
+
+    // Seçilen butonu işaretle
+    toggleRadioButton(radioButton, true);
     const privacyDTO = {
-        profilePhotoVisibility: optionName === 'profilePhotoVisibility' ? visibilityOption : chatInstance.user.privacySettings.profilePhotoVisibility,
-        lastSeenVisibility: optionName === 'lastSeenVisibility' ? visibilityOption : chatInstance.user.privacySettings.lastSeenVisibility,
-        onlineStatusVisibility: optionName === 'onlineStatusVisibility' ? visibilityOption : chatInstance.user.privacySettings.onlineStatusVisibility,
-        aboutVisibility: optionName === 'aboutVisibility' ? visibilityOption : chatInstance.user.privacySettings.aboutVisibility
-    }
-    console.log(privacyDTO)
-    radioButton.setAttribute('aria-checked', 'true');
+        ...chatInstance.user.privacySettings,
+        [optionName]: visibilityOption
+    };
+
+    const result = await fetchUpdatePrivacy(chatInstance.user.id, privacyDTO);
+    console.log("RESULT >> ", result)
 };
+
+
 const VisibilityOption = {
     EVERYONE: 'EVERYONE',
     CONTACTS: 'CONTACTS',
@@ -801,29 +851,29 @@ const mapAriaLabelToEnum = (ariaLabel) => {
 }
 
 
-const fetchUpdatePrivacy = async () => {
+const fetchUpdatePrivacy = async (userId, privacyDTO) => {
     try {
         const token = sessionStorage.getItem('access_token');
         if (!token) {
             throw new Error('Access token not found');
         }
-        const response = await fetch(url, {
+        const response = await fetch(`http://localhost:8080/api/v1/user/${userId}/privacy-settings`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': token,
+                'Authorization': token
             },
-            body: JSON.stringify(),
+            body: JSON.stringify(privacyDTO)
         });
-        if (response.ok) {
-            const data = await response.json();
-            return data;
-        } else {
-            throw new Error(`HTTP error! status: ${response.status}`);
+
+        if (!response.ok) {
+            throw new Error('Gizlilik ayarları güncellenemedi');
         }
+
+        const updatedUserProfile = await response.json();
+        return updatedUserProfile;
     } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
+        console.error('Hata:', error);
     }
 }
 
