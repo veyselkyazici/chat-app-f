@@ -1,9 +1,9 @@
 // friendReqeustNotification.js
-import { webSocketManagerFriendships } from "./Chat.js";
+import { webSocketManagerContacts } from "./Chat.js";
 import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
 
 
-async function createIncomingFriendRequests () {
+async function createIncomingFriendRequests() {
 
     const chatListHeaderElement = document.querySelector(".chat-list-header");
     const chatListContentElement = document.querySelector(".chat-list-content");
@@ -11,7 +11,7 @@ async function createIncomingFriendRequests () {
 
     const friendRequests = await fetchFriendRequests();
     console.log("friendrequests: ", friendRequests)
-    
+
     const incomingFriendRequestsHTML = `
     <div class="incoming-friend-requests" id="incoming-friend-requests">
     <div class="" id="backspace">
@@ -58,7 +58,7 @@ async function createIncomingFriendRequests () {
             friendId: friendRequest.friendId,
             accepted: action
         };
-        webSocketManagerFriendships.sendMessageToAppChannel("friend-request-reply", requestBody);
+        webSocketManagerContacts.sendMessageToAppChannel("friend-request-reply", requestBody);
     }
 
     async function fetchFriendRequests() {
@@ -78,4 +78,4 @@ async function createIncomingFriendRequests () {
 }
 
 
-export { createIncomingFriendRequests  };
+export { createIncomingFriendRequests };

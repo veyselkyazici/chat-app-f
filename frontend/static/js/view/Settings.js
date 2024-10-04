@@ -235,7 +235,9 @@ const handlePrivacyClick = () => {
     const divPrivacy2_1_2_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_1_2_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Son görülme ve çevrimiçi');
     const divPrivacy2_1_2_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
-    const spanPrivacy2_1_2_1_1_2 = createElement('span', '', null, null, 'Hiç kimse, Herkes');
+    const spanPrivacy2_1_2_1_1_2 = createElement('span', '', null, null, `${mapEnumToAriaLabel(chatInstance.user.privacySettings.lastSeenVisibility
+    )}, ${mapEnumToAriaLabel(chatInstance.user.privacySettings.onlineStatusVisibility
+    )}`);
     divPrivacy2_1_2_1_1_2.appendChild(spanPrivacy2_1_2_1_1_2);
     divPrivacy2_1_2_1_1.appendChild(divPrivacy2_1_2_1_1_1);
     divPrivacy2_1_2_1_1.appendChild(divPrivacy2_1_2_1_1_2);
@@ -271,7 +273,7 @@ const handlePrivacyClick = () => {
     const divPrivacy2_1_3_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_1_3_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Profil fotoğrafı');
     const divPrivacy2_1_3_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
-    const spanPrivacy2_1_3_1_1_2 = createElement('span', '', null, null, 'Kişilerim');
+    const spanPrivacy2_1_3_1_1_2 = createElement('span', '', null, null, mapEnumToAriaLabel(chatInstance.user.privacySettings.profilePhotoVisibility));
     divPrivacy2_1_3_1_1_2.appendChild(spanPrivacy2_1_3_1_1_2);
     divPrivacy2_1_3_1_1.appendChild(divPrivacy2_1_3_1_1_1);
     divPrivacy2_1_3_1_1.appendChild(divPrivacy2_1_3_1_1_2);
@@ -287,7 +289,7 @@ const handlePrivacyClick = () => {
     const divPrivacy2_1_4_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_1_4_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Hakkımda');
     const divPrivacy2_1_4_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
-    const spanPrivacy2_1_4_1_1_2 = createElement('span', '', null, null, 'Kişilerim');
+    const spanPrivacy2_1_4_1_1_2 = createElement('span', '', null, null, mapEnumToAriaLabel(chatInstance.user.privacySettings.aboutVisibility));
     divPrivacy2_1_4_1_1_2.appendChild(spanPrivacy2_1_4_1_1_2);
     divPrivacy2_1_4_1_1.appendChild(divPrivacy2_1_4_1_1_1);
     divPrivacy2_1_4_1_1.appendChild(divPrivacy2_1_4_1_1_2);
@@ -300,32 +302,15 @@ const handlePrivacyClick = () => {
 
 
     // Okundu bilgisi
-    const divPrivacy2_1_6 = createElement('div', 'privacy-2-1-2', null, { tabindex: '-1', role: 'button' });
-    const divPrivacy2_1_6_1 = createElement('div', 'privacy-2-1-6-1');
-    const divPrivacy2_1_6_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
-    const divPrivacy2_1_6_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Okundu bilgisi');
-    const divPrivacy2_1_6_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
-    const spanPrivacy2_1_6_1_1_2 = createElement('span', '', null, null, 'Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir.');
-    divPrivacy2_1_6_1_1_2.appendChild(spanPrivacy2_1_6_1_1_2);
-    divPrivacy2_1_6_1_1.appendChild(divPrivacy2_1_6_1_1_1);
-    divPrivacy2_1_6_1_1.appendChild(divPrivacy2_1_6_1_1_2);
-    divPrivacy2_1_6_1.appendChild(divPrivacy2_1_6_1_1);
-
-    // Checkbox ekle
-    const divPrivacy2_1_6_1_2 = createElement('div', 'privacy-2-1-6-1-2');
-    const divCheckboxWrapper = createElement('div', 'privacy-2-1-6-1-2-1');
-    const checkbox = createElement('input', 'privacy-2-1-6-1-2-1-1', null, { 'aria-label': 'Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir.', tabindex: '0', type: 'checkbox', checked: '' });
-    const divCheckboxIconWrapper = createElement('div', 'privacy-2-1-6-1-2-1-2', null, { tabindex: '-1', 'aria-hidden': 'true' });
-    const divCheckboxInner = createElement('div', 'privacy-2-1-6-1-2-1-2-1');
-    const divCheckboxInnerMost = createElement('div', 'privacy-2-1-6-1-2-1-2-1-1');
-    divCheckboxInner.appendChild(divCheckboxInnerMost);
-    divCheckboxIconWrapper.appendChild(divCheckboxInner);
-    divCheckboxWrapper.appendChild(checkbox);
-    divCheckboxWrapper.appendChild(divCheckboxIconWrapper);
-    divPrivacy2_1_6_1_2.appendChild(divCheckboxWrapper);
-    divPrivacy2_1_6.appendChild(divPrivacy2_1_6_1);
-    divPrivacy2_1.appendChild(divPrivacy2_1_6);
-    divPrivacy2_1_6_1.appendChild(divPrivacy2_1_6_1_2);
+    if (chatInstance.user.privacySettings.readReceipts) {
+        const divPrivacy2_1_6 = readReceiptsTrue();
+        console.log("AAAAAAA > ", divPrivacy2_1_6)
+        divPrivacy2_1.appendChild(divPrivacy2_1_6);
+    } else {
+        const divPrivacy2_1_6 = readReceiptsFalse();
+        console.log("BBBBBBBBBB > ", divPrivacy2_1_6)
+        divPrivacy2_1.appendChild(divPrivacy2_1_6);
+    }
     // Gruplar
     const divPrivacy2_2 = createElement('div', 'privacy-2-2');
     const divPrivacy2_2_1 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, handleGroupsClick);
@@ -378,7 +363,85 @@ const handleNotificationsClick = () => {
 function handleLogoutClick() {
     console.log("ÇIKIŞ YAP TIKLANDI")
 }
+const handleReadReceiptsClick = async () => {
+    const newReadReceiptsValue = !chatInstance.user.privacySettings.readReceipts;
+    const privacyDTO = {
+        ...chatInstance.user.privacySettings,
+        readReceipts: newReadReceiptsValue
+    };
 
+    const result = await fetchUpdatePrivacy(chatInstance.user.id, privacyDTO);
+    if (result) {
+        if (newReadReceiptsValue) {
+            const readReceiptsBox = document.querySelector('.privacy-2-1-6-1-2-1-2-1');
+            const readReceiptsBox1 = document.querySelector('.privacy-2-1-6-1-2-1-2-1-1');
+            readReceiptsBox.className = 'privacy-2-1-6-1-2-1-2-1-true';
+            readReceiptsBox1.className = 'privacy-2-1-6-1-2-1-2-1-1-true';
+        } else {
+            const readReceiptsBox = document.querySelector('.privacy-2-1-6-1-2-1-2-1-true');
+            const readReceiptsBox1 = document.querySelector('.privacy-2-1-6-1-2-1-2-1-1-true');
+            readReceiptsBox.className = 'privacy-2-1-6-1-2-1-2-1';
+            readReceiptsBox1.className = 'privacy-2-1-6-1-2-1-2-1-1';
+        }
+        chatInstance.user.privacySettings.readReceipts = newReadReceiptsValue;
+        chatInstance.webSocketManagerContacts.sendMessageToAppChannel('update-privacy', result);
+    }
+}
+const readReceiptsTrue = () => {
+    const divPrivacy2_1_6 = createElement('div', 'privacy-2-1-2', null, { tabindex: '-1', role: 'button' });
+    const divPrivacy2_1_6_1 = createElement('div', 'privacy-2-1-6-1', null, null, '', handleReadReceiptsClick);
+    const divPrivacy2_1_6_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
+    const divPrivacy2_1_6_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Okundu bilgisi');
+    const divPrivacy2_1_6_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
+    const spanPrivacy2_1_6_1_1_2 = createElement('span', '', null, null, 'Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir.');
+    divPrivacy2_1_6_1_1_2.appendChild(spanPrivacy2_1_6_1_1_2);
+    divPrivacy2_1_6_1_1.appendChild(divPrivacy2_1_6_1_1_1);
+    divPrivacy2_1_6_1_1.appendChild(divPrivacy2_1_6_1_1_2);
+    divPrivacy2_1_6_1.appendChild(divPrivacy2_1_6_1_1);
+    // Checkbox ekleprivacy-2-1-6-1-2-1-2-1
+    const divPrivacy2_1_6_1_2 = createElement('div', 'privacy-2-1-6-1-2');
+    const divCheckboxWrapper = createElement('div', 'privacy-2-1-6-1-2-1');
+    const checkbox = createElement('input', 'privacy-2-1-6-1-2-1-1', null, { 'aria-label': 'Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir.', tabindex: '0', type: 'checkbox', checked: '' });
+    const divCheckboxIconWrapper = createElement('div', 'privacy-2-1-6-1-2-1-2', null, { tabindex: '-1', 'aria-hidden': 'true' });
+    const divCheckboxInner = createElement('div', 'privacy-2-1-6-1-2-1-2-1-true');
+    const divCheckboxInnerMost = createElement('div', 'privacy-2-1-6-1-2-1-2-1-1-true');
+    divCheckboxInner.appendChild(divCheckboxInnerMost);
+    divCheckboxIconWrapper.appendChild(divCheckboxInner);
+    divCheckboxWrapper.appendChild(checkbox);
+    divCheckboxWrapper.appendChild(divCheckboxIconWrapper);
+    divPrivacy2_1_6_1_2.appendChild(divCheckboxWrapper);
+    divPrivacy2_1_6.appendChild(divPrivacy2_1_6_1);
+    divPrivacy2_1_6_1.appendChild(divPrivacy2_1_6_1_2);
+    return divPrivacy2_1_6;
+}
+const readReceiptsFalse = () => {
+    const divPrivacy2_1_6 = createElement('div', 'privacy-2-1-2', null, { tabindex: '-1', role: 'button' });
+    const divPrivacy2_1_6_1 = createElement('div', 'privacy-2-1-6-1', null, null, '', handleReadReceiptsClick);
+    const divPrivacy2_1_6_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
+    const divPrivacy2_1_6_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Okundu bilgisi');
+    const divPrivacy2_1_6_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
+    const spanPrivacy2_1_6_1_1_2 = createElement('span', '', null, null, 'Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir.');
+    divPrivacy2_1_6_1_1_2.appendChild(spanPrivacy2_1_6_1_1_2);
+    divPrivacy2_1_6_1_1.appendChild(divPrivacy2_1_6_1_1_1);
+    divPrivacy2_1_6_1_1.appendChild(divPrivacy2_1_6_1_1_2);
+    divPrivacy2_1_6_1.appendChild(divPrivacy2_1_6_1_1);
+
+    // Checkbox ekle
+    const divPrivacy2_1_6_1_2 = createElement('div', 'privacy-2-1-6-1-2');
+    const divCheckboxWrapper = createElement('div', 'privacy-2-1-6-1-2-1');
+    const checkbox = createElement('input', 'privacy-2-1-6-1-2-1-1', null, { 'aria-label': 'Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir.', tabindex: '0', type: 'checkbox', checked: '' });
+    const divCheckboxIconWrapper = createElement('div', 'privacy-2-1-6-1-2-1-2', null, { tabindex: '-1', 'aria-hidden': 'true' });
+    const divCheckboxInner = createElement('div', 'privacy-2-1-6-1-2-1-2-1');
+    const divCheckboxInnerMost = createElement('div', 'privacy-2-1-6-1-2-1-2-1-1');
+    divCheckboxInner.appendChild(divCheckboxInnerMost);
+    divCheckboxIconWrapper.appendChild(divCheckboxInner);
+    divCheckboxWrapper.appendChild(checkbox);
+    divCheckboxWrapper.appendChild(divCheckboxIconWrapper);
+    divPrivacy2_1_6_1_2.appendChild(divCheckboxWrapper);
+    divPrivacy2_1_6.appendChild(divPrivacy2_1_6_1);
+    divPrivacy2_1_6_1.appendChild(divPrivacy2_1_6_1_2);
+    return divPrivacy2_1_6;
+}
 const handleLastSeenAndOnlineClick = () => {
     const divSettings1 = document.querySelector(".settings-1-1");
     divSettings1.replaceChildren();
@@ -829,6 +892,9 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
 
     const result = await fetchUpdatePrivacy(chatInstance.user.id, privacyDTO);
     console.log("RESULT >> ", result)
+    if (result) {
+        chatInstance.webSocketManagerContacts.sendMessageToAppChannel('update-privacy', result);
+    }
 };
 
 
@@ -849,7 +915,18 @@ const mapAriaLabelToEnum = (ariaLabel) => {
             return null;
     }
 }
-
+const mapEnumToAriaLabel = (visibilityOption) => {
+    switch (visibilityOption) {
+        case VisibilityOption.EVERYONE:
+            return 'Herkes';
+        case VisibilityOption.CONTACTS:
+            return 'Kişilerim';
+        case VisibilityOption.NOBODY:
+            return 'Hiç kimse';
+        default:
+            return null;
+    }
+};
 
 const fetchUpdatePrivacy = async (userId, privacyDTO) => {
     try {

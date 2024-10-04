@@ -2,7 +2,7 @@
 import { chatInstance } from "./Chat.js";
 import { createChatBox, updateChatsTranslateY } from "./ChatBox.js";
 import { showModal, ModalOptionsDTO } from './showModal.js';
-import { createElement, createSvgElement } from "./util.js";
+import { createElement, createSvgElement, createVisibilityProfilePhoto } from "./util.js";
 
 let caretPosition = 0;
 let caretNode = null;
@@ -410,14 +410,8 @@ const createMessageBoxHTML = (chat) => {
     const messageBoxDiv1 = createElement('div', 'message-box1-2-1', {}, { title: "Profil Detayları", role: "button" });
 
     const profileImgContainer = createElement('div', 'message-box1-2-1-1', { height: '40px', width: '40px' });
-    const profileImg = createElement('img', 'message-box1-2-1-1-1', {}, {
-        alt: '',
-        draggable: 'false',
-        tabindex: '-1',
-        src: 'https://media-ist1-2.cdn.whatsapp.net/v/t61.24694-24/409146651_432562892862542_3937279413525610102_n.jpg?stp=dst-jpg_s96x96&ccb=11-4&oh=01_Q5AaIPrhJpGEevX24sU6hZcnEDK95B0-Hl1U6FUruSX6Ktva&oe=66ACC852&_nc_sid=e6ed6c&_nc_cat=105',
-        style: 'visibility: visible;'
-    });
-    profileImgContainer.appendChild(profileImg);
+    const imgElement = createVisibilityProfilePhoto(chat.contact.userProfileResponseDTO);
+    profileImgContainer.appendChild(imgElement);
     messageBoxDiv1.appendChild(profileImgContainer);
 
     const messageBoxDiv2 = createElement('div', 'message-box1-2-2', {}, { role: 'button' });

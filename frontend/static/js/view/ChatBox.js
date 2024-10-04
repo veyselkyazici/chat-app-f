@@ -3,7 +3,7 @@ import { appendMessage, createMessageBox, renderMessage } from "./MessageBox.js"
 import { chatInstance, UserSettingsDTO } from "./Chat.js";
 import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
 import { showModal, ModalOptionsDTO } from './showModal.js';
-import { ariaSelected } from "./util.js";
+import { ariaSelected, createElement, createVisibilityProfilePhoto } from "./util.js";
 
 function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
@@ -70,51 +70,81 @@ function createChatBox(chat, index) {
     chatElementDOM.style.transform = `translateY(${index * 72}px)`;
     chatElementDOM.style.zIndex = index;
     chatElementDOM.chatData = chat;
-    console.log("CHAT BOX >>>>>> ", chat)
-    chatElementDOM.innerHTML = `
-        <div class="chat-box">
-            <div tabindex="-1" class aria-selected="false" role="row">
-                <div class="chat cursor">
-                    <div class="chat-image">
-                        <div class="chat-left-image">
-                            <div>
-                                <div class="image" style="height: 49px; width: 49px;">
-                                    <img src="static/image/img.jpeg" alt="" draggable="false" class="user-image" tabindex="-1" style="visibility: visible;">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-info">
-                        <div class="chat-name-and-last-message-time">
-                            <div class="chat-name">
-                                <div class="name">
-                                    <span dir="auto" title="${chat.userContactName != null ? chat.userContactName : chat.userProfileResponseDTO.email}" aria-label="" class="name-span" style="min-height: 0px;">${chat.userContactName != null ? chat.userContactName : chat.userProfileResponseDTO.email}</span>
-                                </div>
-                            </div>
-                            <div class="time">${formattedTime}</div>
-                        </div>
-                        <div class="last-message">
-                            <div class="message">
-                                <span class="message-span" title="">
-                                    <span dir="ltr" aria-label class="message-span-span" style="min-height: 0px;">${chat.lastMessage}</span>
-                                </span>
-                            </div>
-                            <div class="chat-options">
-                                <span class=""></span>
-                                <span class=""></span>
-                                <span class=""></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
+    console.log("CHAT BOX >>>>>> ", chat);
+
+    const chatBox = createElement('div', 'chat-box');
+
+    const rowDiv = createElement('div', '', {}, { 'tabindex': '-1', 'aria-selected': 'false', 'role': 'row' });
+    chatBox.appendChild(rowDiv);
+
+    const chatDiv = createElement('div', 'chat cursor');
+    rowDiv.appendChild(chatDiv);
+
+    const chatImageDiv = createElement('div', 'chat-image');
+    chatDiv.appendChild(chatImageDiv);
+
+    const chatLeftImageDiv = createElement('div', 'chat-left-image');
+    chatImageDiv.appendChild(chatLeftImageDiv);
+
+    const innerDiv = createElement('div', '');
+    chatLeftImageDiv.appendChild(innerDiv);
+
+    const imageDiv = createElement('div', 'image', { 'height': '49px', 'width': '49px' });
+    innerDiv.appendChild(imageDiv);
+
+    const imgElement = createVisibilityProfilePhoto(chat.userProfileResponseDTO);
+
+    imageDiv.appendChild(imgElement);
+
+    const chatInfoDiv = createElement('div', 'chat-info');
+    chatDiv.appendChild(chatInfoDiv);
+
+    const chatNameAndTimeDiv = createElement('div', 'chat-name-and-last-message-time');
+    chatInfoDiv.appendChild(chatNameAndTimeDiv);
+
+    const chatNameDiv = createElement('div', 'chat-name');
+    chatNameAndTimeDiv.appendChild(chatNameDiv);
+
+    const nameDiv = createElement('div', 'name');
+    chatNameDiv.appendChild(nameDiv);
+
+    const contactName = chat.userContactName != null ? chat.userContactName : chat.userProfileResponseDTO.email;
+
+    const nameSpan = createElement('span', 'name-span', { 'min-height': '0px' }, { 'dir': 'auto', 'title': contactName, 'aria-label': '' }, contactName);
+    nameDiv.appendChild(nameSpan);
+
+    const timeDiv = createElement('div', 'time', {}, {}, formattedTime);
+    chatNameAndTimeDiv.appendChild(timeDiv);
+
+    const lastMessageDiv = createElement('div', 'last-message');
+    chatInfoDiv.appendChild(lastMessageDiv);
+
+    const messageDiv = createElement('div', 'message');
+    lastMessageDiv.appendChild(messageDiv);
+
+    const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
+    messageDiv.appendChild(messageSpan);
+
+    const innerMessageSpan = createElement('span', 'message-span-span', { 'min-height': '0px' }, { 'dir': 'ltr', 'aria-label': '' }, chat.lastMessage);
+    messageSpan.appendChild(innerMessageSpan);
+
+    const chatOptionsDiv = createElement('div', 'chat-options');
+    lastMessageDiv.appendChild(chatOptionsDiv);
+
+    const optionSpan1 = createElement('span', '');
+    const optionSpan2 = createElement('span', '');
+    const optionSpan3 = createElement('span', '');
+    chatOptionsDiv.appendChild(optionSpan1);
+    chatOptionsDiv.appendChild(optionSpan2);
+    chatOptionsDiv.appendChild(optionSpan3);
+    chatElementDOM.appendChild(chatBox);
+
+
 
     const chatListContentElement = document.querySelector(".chat-list-content");
     chatListContentElement.style.height = chatInstance.chatList.length * 72 + "px";
     addEventListeners(chatElementDOM);
-    chatListContentElement.insertBefore(chatElementDOM, chatListContentElement.firstChild);
+    chatListContentElement.appendChild(chatElementDOM);
 }
 
 function updateMessageBox(recipientJSON) {
@@ -343,7 +373,8 @@ async function handleChatClick(event) {
     ariaSelected(chatElementDOM, chatInstance, innerDiv);
     const latestMessages = await fetchGetLatestMessages(chatData.id);
     const chatDTO = {
-        contact: {id: chatData.contactId,
+        contact: {
+            id: chatData.contactId,
             userContactName: chatData.userContactName,
             userProfileResponseDTO: chatData.userProfileResponseDTO
         },
@@ -353,8 +384,8 @@ async function handleChatClick(event) {
         id: chatData.id,
     };
     chatData.messages = latestMessages;
-    console.log("CHAT DATA >> ",chatData)
-    console.log("DTO >> ",chatDTO)
+    console.log("CHAT DATA >> ", chatData)
+    console.log("DTO >> ", chatDTO)
     // createMessageBox(chatData);
     createMessageBox(chatDTO);
 

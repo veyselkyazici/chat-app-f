@@ -10,7 +10,7 @@ import WebSocketManager from "../websocket.js";
 import { hideElements } from './util.js';
 import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateMessageBox, isChatExist } from "./ChatBox.js";
 
-export let webSocketManagerFriendships;
+export let webSocketManagerContacts;
 export let webSocketManagerChat;
 export let chatInstance;
 
@@ -252,9 +252,9 @@ export default class Chat extends AbstractView {
 
     async init() {
         await this.initialData();
-        this.webSocketManagerFriendships = new WebSocketManager('http://localhost:9030/ws', this.user.id);;
+        this.webSocketManagerContacts = new WebSocketManager('http://localhost:9030/ws', this.user.id);;
         this.webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws', this.user.id);
-        this.initFriendshipWebSocket();
+        this.initContactsWebSocket();
         this.initChatWebSocket()
         handleChats();
 
@@ -262,8 +262,8 @@ export default class Chat extends AbstractView {
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
     }
 
-    async initFriendshipWebSocket() {
-        this.webSocketManagerFriendships.connectWebSocket(() => {
+    async initContactsWebSocket() {
+        this.webSocketManagerContacts.connectWebSocket(() => {
             this.subscribeToFriendshipChannels();
         }, error => {
             console.error('Friendships WebSocket bağlantı hatası: ' + error);
@@ -286,7 +286,8 @@ export default class Chat extends AbstractView {
     subscribeToFriendshipChannels() {
         const addContact = `/user/${this.user.id}/queue/add-contact`;
         const addInvitation = `/user/${this.user.id}/queue/add-invitation`;
-        this.webSocketManagerFriendships.subscribeToChannel(addContact, async (addContactMessage) => {
+        const updatePrivacy = `/user/${this.user.id}/queue/update-privacy-response`;
+        this.webSocketManagerContacts.subscribeToChannel(addContact, async (addContactMessage) => {
             const newContact = JSON.parse(addContactMessage.body);
             console.log(newContact)
             let contactIdList = this.contactList.filter(contact => contact.id);
@@ -306,7 +307,7 @@ export default class Chat extends AbstractView {
             console.log(this.contactList)
         });
 
-        this.webSocketManagerFriendships.subscribeToChannel(addInvitation, async (addInvitationMessage) => {
+        this.webSocketManagerContacts.subscribeToChannel(addInvitation, async (addInvitationMessage) => {
             const newInvitation = JSON.parse(addInvitationMessage.body);
             console.log(newInvitation)
             let invitationIdList = this.contactList.filter(invitation => !invitation.id);
@@ -324,6 +325,25 @@ export default class Chat extends AbstractView {
             ];
             console.log(this.contactList)
         });
+
+        this.webSocketManagerContacts.subscribeToChannel(updatePrivacy, async (updatePrivacyMessage) => {
+            const updatePrivacy = JSON.parse(updatePrivacyMessage.body);
+            const chats = Array.from(document.querySelectorAll('.chat1'));
+            const findChat = chats.find(chat => chat.chatData.userProfileResponseDTO.id === updatePrivacy.id);
+            const findContact = this.contactList.find(contact => contact.userProfileResponseDTO.id === updatePrivacy.id);
+            const findChatx = this.chatList.find(chat => chat.userProfileResponseDTO.id === updatePrivacy.id);
+
+            if (findContact) {
+                if (findContact.inContactList) {
+
+                } else {
+                    
+                }
+            } else {
+                console.log("AAAAAAAAAAAAAAA")
+            }
+        });
+
 
     }
 
@@ -381,6 +401,7 @@ export default class Chat extends AbstractView {
         console.log("InitialData userId: ", this.user)
 
         this.contactList = await fetchGetContactList(this.user.id);
+        console.log("CONTACT LIST > ", this.contactList)
         this.chatList = await fetchGetChatSummaries(this.user.id);
         // for (let i = 1; i <= 81; i++) {
         //     const newData = JSON.parse(JSON.stringify(this.data)); // data nesnesinin derin bir kopyasını oluşturur

@@ -3,7 +3,7 @@ import { createMessageBox } from './MessageBox.js';
 import { chatInstance } from "./Chat.js";
 import { showModal, ModalOptionsDTO } from './showModal.js';
 import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
-import { ariaSelected, ariaSelectedRemove } from './util.js';
+import { ariaSelected, ariaSelectedRemove, createElement, createSvgElement, createVisibilityProfilePhoto } from './util.js';
 function createContactHTML(user, index) {
     const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
 
@@ -20,91 +20,159 @@ function createContactHTML(user, index) {
     contactElementDOM.style.transform = `translateY(${index * 72}px)`;
     contactElementDOM.contactData = user;
     contactElementDOM.dataset.user = user.userContactName
-    if (user.contactId) {
-        contactElementDOM.innerHTML = `
-        <div class="chat-box">
-            <div tabindex="-1" class aria-selected="false" role="row">
-                <div class="chat cursor">
-                    <div class="chat-image">
-                        <div class="chat-left-image">
-                            <div>
-                                <div class="image" style="height: 49px; width: 49px;">
-                                    <img src="static/image/img.jpeg" alt="" draggable="false" class="user-image"
-                                        tabindex="-1" style="visibility: visible;">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-info">
-                        <div class="chat-name-and-last-message-time">
-                            <div class="chat-name">
-                                <div class="name">
-                                    <span dir="auto" title="${user.userContactName}" aria-label="" class="name-span"
-                                        style="min-height: 0px;">${user.userContactName}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="last-message">
-                            <div class="message">
-                                <span class="message-span" title="">
-                                    <span dir="ltr" aria-label class="message-span-span"
-                                        style="min-height: 0px;">${user.about}</span>
-                                </span>
-                            </div>
-                                                        <div class="chat-options-contact">
-                                <span class=""></span>
-                                <span class=""></span>
-                                <span class=""></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
+    console.log("USER > ", user);
+    if (user.id) {
+        const chatBox = createContactsHTML(user);
+        contactElementDOM.appendChild(chatBox);
     } else {
-        contactElementDOM.innerHTML = `
-        <div class="chat-box">
-            <div tabindex="-1" class aria-selected="false" role="row">
-                <div class="chat cursor">
-                    <div class="chat-image">
-                        <div class="chat-left-image">
-                            <div>
-                                <div class="image" style="height: 49px; width: 49px;">
-                                    <span aria-hidden="true" data-icon="default-user" class=""><svg viewBox="0 0 212 212" height="212" width="212" preserveAspectRatio="xMidYMid meet" class="xh8yej3 x5yr21d" version="1.1" x="0px" y="0px" enable-background="new 0 0 212 212"><title>default-user</title><path fill="#DFE5E7" class="background" d="M106.251,0.5C164.653,0.5,212,47.846,212,106.25S164.653,212,106.25,212C47.846,212,0.5,164.654,0.5,106.25 S47.846,0.5,106.251,0.5z"></path><g><path fill="#FFFFFF" class="primary" d="M173.561,171.615c-0.601-0.915-1.287-1.907-2.065-2.955c-0.777-1.049-1.645-2.155-2.608-3.299 c-0.964-1.144-2.024-2.326-3.184-3.527c-1.741-1.802-3.71-3.646-5.924-5.47c-2.952-2.431-6.339-4.824-10.204-7.026 c-1.877-1.07-3.873-2.092-5.98-3.055c-0.062-0.028-0.118-0.059-0.18-0.087c-9.792-4.44-22.106-7.529-37.416-7.529 s-27.624,3.089-37.416,7.529c-0.338,0.153-0.653,0.318-0.985,0.474c-1.431,0.674-2.806,1.376-4.128,2.101 c-0.716,0.393-1.417,0.792-2.101,1.197c-3.421,2.027-6.475,4.191-9.15,6.395c-2.213,1.823-4.182,3.668-5.924,5.47 c-1.161,1.201-2.22,2.384-3.184,3.527c-0.964,1.144-1.832,2.25-2.609,3.299c-0.778,1.049-1.464,2.04-2.065,2.955 c-0.557,0.848-1.033,1.622-1.447,2.324c-0.033,0.056-0.073,0.119-0.104,0.174c-0.435,0.744-0.79,1.392-1.07,1.926 c-0.559,1.068-0.818,1.678-0.818,1.678v0.398c18.285,17.927,43.322,28.985,70.945,28.985c27.678,0,52.761-11.103,71.055-29.095 v-0.289c0,0-0.619-1.45-1.992-3.778C174.594,173.238,174.117,172.463,173.561,171.615z"></path><path fill="#FFFFFF" class="primary" d="M106.002,125.5c2.645,0,5.212-0.253,7.68-0.737c1.234-0.242,2.443-0.542,3.624-0.896 c1.772-0.532,3.482-1.188,5.12-1.958c2.184-1.027,4.242-2.258,6.15-3.67c2.863-2.119,5.39-4.646,7.509-7.509 c0.706-0.954,1.367-1.945,1.98-2.971c0.919-1.539,1.729-3.155,2.422-4.84c0.462-1.123,0.872-2.277,1.226-3.458 c0.177-0.591,0.341-1.188,0.49-1.792c0.299-1.208,0.542-2.443,0.725-3.701c0.275-1.887,0.417-3.827,0.417-5.811 c0-1.984-0.142-3.925-0.417-5.811c-0.184-1.258-0.426-2.493-0.725-3.701c-0.15-0.604-0.313-1.202-0.49-1.793 c-0.354-1.181-0.764-2.335-1.226-3.458c-0.693-1.685-1.504-3.301-2.422-4.84c-0.613-1.026-1.274-2.017-1.98-2.971 c-2.119-2.863-4.646-5.39-7.509-7.509c-1.909-1.412-3.966-2.643-6.15-3.67c-1.638-0.77-3.348-1.426-5.12-1.958 c-1.181-0.355-2.39-0.655-3.624-0.896c-2.468-0.484-5.035-0.737-7.68-0.737c-21.162,0-37.345,16.183-37.345,37.345 C68.657,109.317,84.84,125.5,106.002,125.5z"></path></g></svg></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="chat-info">
-                        <div class="chat-name-and-last-message-time">
-                            <div class="chat-name">
-                                <div class="name">
-                                    <span dir="auto" title="${user.userContactName}" aria-label="" class="name-span"
-                                        style="min-height: 0px;">${user.userContactName}</span>
-                                </div>
-                            </div>
-                            <div class="chat-options-contact">
-                                <span class=""></span>
-                                <span class=""></span>
-                                <span class=""></span>
-                            </div>
-                            <div class="invitation-btn"><button class="invitation-button" ${user.invited ? 'disabled' : ''}><div class="invitation-button-1"><div class="invitation-button-1-1" style="flex-grow: 1;">Davet et</div></div></button></div>
-                        </div>
-                        
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
+        const chatBox = createInvitationsHTML(user);
+        contactElementDOM.appendChild(chatBox);
     }
     addEventListeners(contactElementDOM);
     contactListElement.appendChild(contactElementDOM);
 }
+const createContactsHTML = (user) => {
+    const chatBox = createElement('div', 'chat-box');
 
+    const chatRow = createElement('div', '', {}, { 'tabindex': '-1', 'aria-selected': 'false', 'role': 'row' });
+    chatBox.appendChild(chatRow);
+
+    const chat = createElement('div', 'chat cursor');
+    chatRow.appendChild(chat);
+
+    const chatImage = createElement('div', 'chat-image');
+    chat.appendChild(chatImage);
+    user.userProfileResponseDTO.privacySettings.inContactList
+    const chatLeftImage = createElement('div', 'chat-left-image');
+    chatImage.appendChild(chatLeftImage);
+
+    const imageContainer = createElement('div', 'image', { height: '49px', width: '49px' });
+    chatLeftImage.appendChild(imageContainer);
+
+    const photo = createVisibilityProfilePhoto(user.userProfileResponseDTO);
+
+    imageContainer.appendChild(photo);
+
+    const chatInfo = createElement('div', 'chat-info');
+    chat.appendChild(chatInfo);
+
+    const chatNameAndTime = createElement('div', 'chat-name-and-last-message-time');
+    chatInfo.appendChild(chatNameAndTime);
+
+    const chatName = createElement('div', 'chat-name');
+    chatNameAndTime.appendChild(chatName);
+
+    const nameContainer = createElement('div', 'name');
+    chatName.appendChild(nameContainer);
+
+    const nameSpan = createElement('span', 'name-span', {}, { 'dir': 'auto', 'title': user.userContactName, 'aria-label': '' }, user.userContactName);
+    nameContainer.appendChild(nameSpan);
+
+    const lastMessage = createElement('div', 'last-message');
+    chatInfo.appendChild(lastMessage);
+
+    const messageContainer = createElement('div', 'message');
+    lastMessage.appendChild(messageContainer);
+
+    const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
+    messageContainer.appendChild(messageSpan);
+
+    if (user.userProfileResponseDTO.privacySettings.aboutVisibility === 'EVERYONE' || (user.userProfileResponseDTO.privacySettings.inContactList && user.userProfileResponseDTO.privacySettings.aboutVisibility === 'CONTACTS')) {
+        const innerSpan = createElement('span', 'message-span-span', {}, { 'dir': 'ltr', 'aria-label': '' }, user.userProfileResponseDTO.about);
+        messageSpan.appendChild(innerSpan);
+    }
+
+    const chatOptions = createElement('div', 'chat-options-contact');
+    lastMessage.appendChild(chatOptions);
+
+    const span1 = createElement('span', '');
+    const span2 = createElement('span', '');
+    const span3 = createElement('span', '');
+    chatOptions.appendChild(span1);
+    chatOptions.appendChild(span2);
+    chatOptions.appendChild(span3);
+    return chatBox;
+}
+const createInvitationsHTML = (user) => {
+    const chatBox = createElement('div', 'chat-box');
+
+    const chatRow = createElement('div', '', {}, { 'tabindex': '-1', 'aria-selected': 'false', 'role': 'row' });
+    chatBox.appendChild(chatRow);
+
+    const chat = createElement('div', 'chat cursor');
+    chatRow.appendChild(chat);
+
+    const chatImage = createElement('div', 'chat-image');
+    chat.appendChild(chatImage);
+
+    const chatLeftImage = createElement('div', 'chat-left-image');
+    chatImage.appendChild(chatLeftImage);
+
+    const imageContainer = createElement('div', 'image', { height: '49px', width: '49px' });
+    chatLeftImage.appendChild(imageContainer);
+    const svgDiv = createElement('div', 'svg-div');
+
+    const svgSpan = createElement('span', '', {}, { 'aria-hidden': 'true', 'data-icon': 'default-user' });
+    const svgElement = createSvgElement('svg', { class: 'svg-element', viewBox: '0 0 212 212', height: '212', width: '212', preserveAspectRatio: 'xMidYMid meet', version: '1.1', x: '0px', y: '0px', 'enable-background': 'new 0 0 212 212' });
+    const titleElement = createSvgElement('title', {});
+    titleElement.textContent = 'default-user';
+    const pathBackground = createSvgElement('path', { fill: '#DFE5E7', class: 'background', d: 'M106.251,0.5C164.653,0.5,212,47.846,212,106.25S164.653,212,106.25,212C47.846,212,0.5,164.654,0.5,106.25 S47.846,0.5,106.251,0.5z' });
+    const groupElement = createSvgElement('g', {});
+    const pathPrimary1 = createSvgElement('path', { fill: '#FFFFFF', class: 'primary', d: 'M173.561,171.615c-0.601-0.915-1.287-1.907-2.065-2.955c-0.777-1.049-1.645-2.155-2.608-3.299 c-0.964-1.144-2.024-2.326-3.184-3.527c-1.741-1.802-3.71-3.646-5.924-5.47c-2.952-2.431-6.339-4.824-10.204-7.026 c-1.877-1.07-3.873-2.092-5.98-3.055c-0.062-0.028-0.118-0.059-0.18-0.087c-9.792-4.44-22.106-7.529-37.416-7.529 s-27.624,3.089-37.416,7.529c-0.338,0.153-0.653,0.318-0.985,0.474c-1.431,0.674-2.806,1.376-4.128,2.101 c-0.716,0.393-1.417,0.792-2.101,1.197c-3.421,2.027-6.475,4.191-9.15,6.395c-2.213,1.823-4.182,3.668-5.924,5.47 c-1.161,1.201-2.22,2.384-3.184,3.527c-0.964,1.144-1.832,2.25-2.609,3.299c-0.778,1.049-1.464,2.04-2.065,2.955 c-0.557,0.848-1.033,1.622-1.447,2.324c-0.033,0.056-0.073,0.119-0.104,0.174c-0.435,0.744-0.79,1.392-1.07,1.926 c-0.559,1.068-0.818,1.678-0.818,1.678v0.398c18.285,17.927,43.322,28.985,70.945,28.985c27.678,0,52.761-11.103,71.055-29.095 v-0.289c0,0-0.619-1.45-1.992-3.778C174.594,173.238,174.117,172.463,173.561,171.615z' });
+    const pathPrimary2 = createSvgElement('path', { fill: '#FFFFFF', class: 'primary', d: 'M106.002,125.5c2.645,0,5.212-0.253,7.68-0.737c1.234-0.242,2.443-0.542,3.624-0.896 c1.772-0.532,3.482-1.188,5.12-1.958c2.184-1.027,4.242-2.258,6.15-3.67c2.863-2.119,5.39-4.646,7.509-7.509 c0.706-0.954,1.367-1.945,1.98-2.971c0.919-1.539,1.729-3.155,2.422-4.84c0.462-1.123,0.872-2.277,1.226-3.458 c0.177-0.591,0.341-1.188,0.49-1.792c0.299-1.208,0.542-2.443,0.725-3.701c0.275-1.887,0.417-3.827,0.417-5.811 c0-1.984-0.142-3.925-0.417-5.811c-0.184-1.258-0.426-2.493-0.725-3.701c-0.15-0.604-0.313-1.202-0.49-1.793 c-0.354-1.181-0.764-2.335-1.226-3.458c-0.693-1.685-1.504-3.301-2.422-4.84c-0.613-1.026-1.274-2.017-1.98-2.971 c-2.119-2.863-4.646-5.39-7.509-7.509c-1.909-1.412-3.966-2.643-6.15-3.67c-1.638-0.77-3.348-1.426-5.12-1.958 c-1.181-0.355-2.39-0.655-3.624-0.896c-2.468-0.484-5.035-0.737-7.68-0.737c-21.162,0-37.345,16.183-37.345,37.345 C68.657,109.317,84.84,125.5,106.002,125.5z' });
+
+    svgElement.appendChild(titleElement);
+    svgElement.appendChild(pathBackground);
+    groupElement.appendChild(pathPrimary1);
+    groupElement.appendChild(pathPrimary2);
+    svgElement.appendChild(groupElement);
+    svgSpan.appendChild(svgElement);
+    svgDiv.appendChild(svgSpan);
+    imageContainer.appendChild(svgDiv);
+
+    const chatInfo = createElement('div', 'chat-info');
+    chat.appendChild(chatInfo);
+
+    const chatNameAndTime = createElement('div', 'chat-name-and-last-message-time');
+    chatInfo.appendChild(chatNameAndTime);
+
+    const chatName = createElement('div', 'chat-name');
+    chatNameAndTime.appendChild(chatName);
+
+    const nameContainer = createElement('div', 'name');
+    chatName.appendChild(nameContainer);
+
+    const nameSpan = createElement('span', 'name-span', {}, { 'dir': 'auto', 'title': user.invitationResponseDTO.contactName, 'aria-label': '' }, user.invitationResponseDTO.contactName);
+    nameContainer.appendChild(nameSpan);
+
+    const chatOptions = createElement('div', 'chat-options-contact');
+    chatNameAndTime.appendChild(chatOptions);
+
+    const span1 = createElement('span', '');
+    const span2 = createElement('span', '');
+    const span3 = createElement('span', '');
+    chatOptions.appendChild(span1);
+    chatOptions.appendChild(span2);
+    chatOptions.appendChild(span3);
+
+    const invitationBtnContainer = createElement('div', 'invitation-btn');
+    chatNameAndTime.appendChild(invitationBtnContainer);
+
+    const invitationButton = createElement('button', 'invitation-button');
+    if (user.invitationResponseDTO.invited) {
+        invitationButton.setAttribute('disabled', 'disabled');
+    }
+    const buttonDiv1 = createElement('div', 'invitation-button-1');
+    const buttonDiv2 = createElement('div', 'invitation-button-1-1', { flexGrow: '1' }, {}, 'Davet et');
+
+    buttonDiv1.appendChild(buttonDiv2);
+    invitationButton.appendChild(buttonDiv1);
+    invitationBtnContainer.appendChild(invitationButton);
+    return chatBox;
+}
 function createContactList() {
     createContactListViewHTML();
+    handleContacts();
 }
 
 function handleContacts() {
@@ -130,34 +198,6 @@ function handleContacts() {
     });
 
     virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount);
-
-    // const resizeObserver = new ResizeObserver(() => {
-    //     const newVisibleItemCount = calculateVisibleItemCount();
-
-    //     if (newVisibleItemCount !== visibleItemCount) {
-    //         if (newVisibleItemCount < visibleItemCount) {
-    //             // Görünür item sayısı azaldığında fazla item'ları kaldır
-    //             for (let i = visibleItemCount - 1; i >= newVisibleItemCount; i--) {
-    //                 const itemToRemove = document.querySelector(`.contact1[style*="z-index: ${chatInstance.contactList.length - i - 1}"]`);
-    //                 if (itemToRemove) {
-    //                     removeEventListeners(itemToRemove);
-    //                     itemToRemove.remove();
-    //                 }
-    //             }
-    //         } else {
-    //             // Görünür item sayısı arttığında yeni item'ları ekle
-    //             for (let i = visibleItemCount; i < newVisibleItemCount && i < chatInstance.contactList.length; i++) {
-    //                 createContactHTML(chatInstance.contactList[i], i);
-    //             }
-    //         }
-
-    //         visibleItemCount = newVisibleItemCount;
-
-    //         virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount);
-    //     }
-    // });
-
-    // resizeObserver.observe(boxElement);
 }
 
 
@@ -166,142 +206,191 @@ function addEventListeners(contactElement) {
     contactElement.addEventListener('click', handleContactClick);
     contactElement.addEventListener('mouseenter', handleMouseover);
     contactElement.addEventListener('mouseleave', handleMouseout);
-    // if (!contactElement.contactData.id && !contactElement.contactData.invited) {
-    //     const invitedBtnDOM = contactElement.querySelector('.invitation-button')
-    //     invitedBtnDOM.addEventListener('click', sendInvitation);
-    // }
 }
 
 function removeEventListeners(contactElement) {
     contactElement.removeEventListener('click', handleContactClick);
     contactElement.removeEventListener('mouseenter', handleMouseover);
     contactElement.removeEventListener('mouseleave', handleMouseout);
-    // if (!contactElement.contactData.id && !contactElement.contactData.invited) {
-    //     const invitedBtnDOM = contactElement.querySelector('.invitation-button')
-    //     invitedBtnDOM.removeEventListener('click', sendInvitation);
-    // }
 }
 
 
 function createContactListViewHTML() {
     const contactListHeight = `${chatInstance.contactList.length * 72}px`
-    const contactListViewHTML = `
-    <div class="a1-1-1-1" style="height: 100%; transform: translateX(0%);">
-        <span class="a1-1-1-1-1">
-            <div class="a1-1-1-1-1-1">
-                <header class="a1-1-1-1-1-1-1">
-                    <div class="a1-1-1-1-1-1-1-1">
-                        <div class="a1-1-1-1-1-1-1-1-1">
-                            <div role="button" aria-label="Geri" tabindex="0" class="a1-1-1-1-1-1-1-1-1-1">
-                                <span data-icon="back" class="">
-                                    <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet"
-                                        class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24">
-                                        <title>back</title>
-                                        <path fill="currentColor"
-                                            d="M12,4l1.4,1.4L7.8,11H20v2H7.8l5.6,5.6L12,20l-8-8L12,4z"></path>
-                                    </svg>
-                                </span>
-                            </div>
-                        </div>
-                        <div title="Yeni sohbet" class="a1-1-1-1-1-1-1-1-2">
-                            <h1 class="a1-1-1-1-1-1-1-1-2-1" aria-label="">Yeni sohbet</h1>
-                        </div>
-                    </div>
-                </header>
-                <div class="a1-1-1-1-1-1-2">
-                    <div></div>
-                    <div class="a1-1-1-1-1-1-2-1">
-                        <button class="a1-1-1-1-1-1-2-1-1 _ai0b" tabindex="-1">
-                            <div class="a1-1-1-1-1-1-2-1-1-1 _ai0a">
-                                <span data-icon="back" class="">
-                                    <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24">
-                                        <title>back</title>
-                                        <path fill="currentColor" d="M12,4l1.4,1.4L7.8,11H20v2H7.8l5.6,5.6L12,20l-8-8L12,4z"></path>
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="a1-1-1-1-1-1-2-1-1-2 _ai09">
-                                <span data-icon="search" class="">
-                                    <svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 24 24">
-                                        <title>search</title>
-                                        <path fill="currentColor" d="M15.009,13.805h-0.636l-0.22-0.219c0.781-0.911,1.256-2.092,1.256-3.386 c0-2.876-2.332-5.207-5.207-5.207c-2.876,0-5.208,2.331-5.208,5.207s2.331,5.208,5.208,5.208c1.293,0,2.474-0.474,3.385-1.255 l0.221,0.22v0.635l4.004,3.999l1.194-1.195L15.009,13.805z M10.201,13.805c-1.991,0-3.605-1.614-3.605-3.605 s1.614-3.605,3.605-3.605s3.605,1.614,3.605,3.605S12.192,13.805,10.201,13.805z"></path>
-                                    </svg>
-                                </span>
-                            </div>
-                        </button>
-                        <span></span>
-                        <div class="a1-1-1-1-1-1-2-1-2">Bir kullanıcı aratın</div>
-                        <div class="a1-1-1-1-1-1-2-1-3">
-                            <div class="a1-1-1-1-1-1-2-1-3-1">
-                                <div class="a1-1-1-1-1-1-2-1-3-1-1" contenteditable="true" role="textbox" aria-label="Arama metni giriş alanı" tabindex="3" data-tab="3" data-lexical-editor="true" style="min-height: 1.47em; user-select: text; white-space: pre-wrap; word-break: break-word;">
-                                    <p class="a1-1-1-1-1-1-2-1-3-1-1-1"><br></p>
-                                </div>
-                                <div class="a1-1-1-1-1-1-2-1-3-1-2"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="a1-1-1-1-1-1-3">
-                    <div class="a1-1-1-1-1-1-3-1">
-                        <div class="a1-1-1-1-1-1-3-1-1">
-                            <div class="a1-1-1-1-1-1-3-1-1-1">
-                                <div class="a1-1-1-1-1-1-3-1-1-1-1" style="flex-shrink: 0;">
-                                    <div class="a1-1-1-1-1-1-3-1-1-1-1-1" style="width: 48px; height: 48px;">
-                                        <span class="a1-1-1-1-1-1-3-1-1-1-1-1-1" data-icon="group-two">
-                                            <svg viewBox="0 0 135 90" height="90" width="135" preserveAspectRatio="xMidYMid meet" class="xh8yej3" fill="none">
-                                                <title>group-two</title>
-                                                <path d="M63.282 19.2856C63.282 29.957 54.8569 38.5713 44.3419 38.5713C33.827 38.5713 25.339 29.957 25.339 19.2856C25.339 8.6143 33.827 0 44.3419 0C54.8569 0 63.282 8.6143 63.282 19.2856ZM111.35 22.1427C111.35 31.9446 103.612 39.857 93.954 39.857C84.296 39.857 76.5 31.9446 76.5 22.1427C76.5 12.3409 84.296 4.4285 93.954 4.4285C103.612 4.4285 111.35 12.3409 111.35 22.1427ZM44.3402 51.428C29.5812 51.428 0 58.95 0 73.928V85.714C0 89.25 2.8504 90 6.3343 90H82.346C85.83 90 88.68 89.25 88.68 85.714V73.928C88.68 58.95 59.0991 51.428 44.3402 51.428ZM87.804 52.853C88.707 52.871 89.485 52.886 90 52.886C104.759 52.886 135 58.95 135 73.929V83.571C135 87.107 132.15 90 128.666 90H95.854C96.551 88.007 96.995 85.821 96.995 83.571L96.75 73.071C96.75 63.51 91.136 59.858 85.162 55.971C83.772 55.067 82.363 54.15 81 53.143C80.981 53.123 80.962 53.098 80.941 53.07C80.893 53.007 80.835 52.931 80.747 52.886C82.343 52.747 85.485 52.808 87.804 52.853Z" fill="currentColor"></path>
-                                            </svg>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="a1-1-1-1-1-1-3-1-1-1-2" style="flex: 1 1 auto;">
-                                    <div class="a1-1-1-1-1-1-3-1-1-1-2-1">
-                                        <div class="a1-1-1-1-1-1-3-1-1-1-2-1-1" style="flex-grow: 1;">Yeni grup</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="a1-1-1-1-1-1-3-1-2">
-                            <div class="a1-1-1-1-1-1-3-1-2-1"></div>
-                        </div>
-                    </div>
-                    <div class="a1-1-1-1-1-1-3-2" tabindex="0" data-tab="4">
-                        <div tabindex="-1">
-                            <div class="a1-1-1-1-1-1-3-2-1-1" style="height: ${contactListHeight}">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </span>
-    </div>
-    `;
-    const span = document.querySelector(".a1-1-1");
 
-    span.insertAdjacentHTML('beforeend', contactListViewHTML);
-    const searchInputDOM = document.querySelector(".a1-1-1-1-1-1-2-1-3-1-1");
-    const searchDefaultTextDOM = document.querySelector(".a1-1-1-1-1-1-2-1-2");
-    const divDOM = document.querySelector(".a1-1-1-1-1-1-2");
-    const searchIconDOM = document.querySelector(".a1-1-1-1-1-1-2-1-1-2");
-    const backButton = document.querySelector(".a1-1-1-1-1-1-1-1-1-1");
+    const contactsSideDiv = createElement('div', 'a1-1-1-1', { height: '100%', transform: 'translateX(0%)' });
 
-    searchInputDOM.addEventListener("input", function () {
-        if (searchInputDOM.innerText.trim().length > 0) {
-            searchDefaultTextDOM.textContent = "";
-            searchDefaultTextDOM.classList.add("opacity");
+    const contactsSideSpan = createElement('span', 'a1-1-1-1-1');
+    contactsSideDiv.appendChild(contactsSideSpan);
+    const contactsSideDiv_1_1 = createElement('div', 'a1-1-1-1-1-1');
+    contactsSideSpan.appendChild(contactsSideDiv_1_1);
+
+    const header = createElement('header', 'a1-1-1-1-1-1-1');
+    contactsSideDiv_1_1.appendChild(header);
+
+
+    const div1 = createElement('div', 'a1-1-1-1-1-1-1-1');
+    header.appendChild(div1);
+
+    const div2 = createElement('div', 'a1-1-1-1-1-1-1-1-1');
+    div1.appendChild(div2);
+
+    const backButton = createElement('div', 'a1-1-1-1-1-1-1-1-1-1', {}, { role: 'button', 'aria-label': 'Geri', tabindex: '0' });
+    div2.appendChild(backButton);
+
+    const span = createElement('span', '', {}, { 'data-icon': 'back' });
+    backButton.appendChild(span);
+
+    const svg = createSvgElement('svg', {
+        viewBox: '0 0 24 24',
+        height: '24',
+        width: '24',
+        'preserveAspectRatio': 'xMidYMid meet',
+        version: '1.1',
+        x: '0px',
+        y: '0px',
+        'enable-background': 'new 0 0 24 24',
+    });
+    span.appendChild(svg);
+
+    const title = createSvgElement('title');
+    title.textContent = 'back';
+    svg.appendChild(title);
+
+    const path = createSvgElement('path', {
+        fill: 'currentColor',
+        d: 'M12,4l1.4,1.4L7.8,11H20v2H7.8l5.6,5.6L12,20l-8-8L12,4z',
+    });
+    svg.appendChild(path);
+
+    const newChatDiv = createElement('div', 'a1-1-1-1-1-1-1-1-2', { title: 'Yeni sohbet' });
+    div1.appendChild(newChatDiv);
+
+    const h1 = createElement('h1', 'a1-1-1-1-1-1-1-1-2-1', {}, { 'aria-label': '' }, 'Yeni sohbet');
+    newChatDiv.appendChild(h1);
+
+    const mainDiv = createElement('div', 'a1-1-1-1-1-1-2');
+    contactsSideDiv_1_1.appendChild(mainDiv);
+    const emptyDiv = createElement('div', '');
+    mainDiv.appendChild(emptyDiv);
+
+    const secondDiv = createElement('div', 'a1-1-1-1-1-1-2-1');
+    mainDiv.appendChild(secondDiv);
+
+    const button = createElement('button', 'a1-1-1-1-1-1-2-1-1 _ai0b', {}, { 'tabindex': '-1' });
+    secondDiv.appendChild(button);
+
+    const backButtonDiv = createElement('div', 'a1-1-1-1-1-1-2-1-1-1 _ai0a');
+    button.appendChild(backButtonDiv);
+
+    const backSpan = createElement('span', '', {}, { 'data-icon': 'back' });
+    backButtonDiv.appendChild(backSpan);
+
+    const backSvg = createSvgElement('svg', {
+        viewBox: '0 0 24 24',
+        height: '24',
+        width: '24',
+        'preserveAspectRatio': 'xMidYMid meet',
+        version: '1.1',
+        x: '0px',
+        y: '0px',
+        'enable-background': 'new 0 0 24 24',
+    });
+    backSpan.appendChild(backSvg);
+
+    const backTitle = createSvgElement('title', {});
+    backTitle.textContent = 'back';
+    backSvg.appendChild(backTitle);
+
+    const backPath = createSvgElement('path', {
+        fill: 'currentColor',
+        d: 'M12,4l1.4,1.4L7.8,11H20v2H7.8l5.6,5.6L12,20l-8-8L12,4z',
+    });
+    backSvg.appendChild(backPath);
+
+    const searchButtonDiv = createElement('div', 'a1-1-1-1-1-1-2-1-1-2 _ai09');
+    button.appendChild(searchButtonDiv);
+
+    const searchSpan = createElement('span', '', {}, { 'data-icon': 'search' });
+    searchButtonDiv.appendChild(searchSpan);
+
+    const searchSvg = createSvgElement('svg', {
+        viewBox: '0 0 24 24',
+        height: '24',
+        width: '24',
+        'preserveAspectRatio': 'xMidYMid meet',
+        version: '1.1',
+        x: '0px',
+        y: '0px',
+        'enable-background': 'new 0 0 24 24',
+    });
+    searchSpan.appendChild(searchSvg);
+
+    const searchTitle = createSvgElement('title', {});
+    searchTitle.textContent = 'search';
+    searchSvg.appendChild(searchTitle);
+
+    const searchPath = createSvgElement('path', {
+        fill: 'currentColor',
+        d: 'M15.009,13.805h-0.636l-0.22-0.219c0.781-0.911,1.256-2.092,1.256-3.386 c0-2.876-2.332-5.207-5.207-5.207c-2.876,0-5.208,2.331-5.208,5.207s2.331,5.208,5.208,5.208c1.293,0,2.474-0.474,3.385-1.255 l0.221,0.22v0.635l4.004,3.999l1.194-1.195L15.009,13.805z M10.201,13.805c-1.991,0-3.605-1.614-3.605-3.605 s1.614-3.605,3.605-3.605s3.605,1.614,3.605,3.605S12.192,13.805,10.201,13.805z',
+    });
+    searchSvg.appendChild(searchPath);
+
+    const emptySpan = createElement('span', '');
+    secondDiv.appendChild(emptySpan);
+
+    const searchTextDiv = createElement('div', 'a1-1-1-1-1-1-2-1-2', {}, {}, 'Bir kullanıcı aratın');
+    secondDiv.appendChild(searchTextDiv);
+
+    const searchInputContainer = createElement('div', 'a1-1-1-1-1-1-2-1-3');
+    secondDiv.appendChild(searchInputContainer);
+
+    const searchInnerDiv1 = createElement('div', 'a1-1-1-1-1-1-2-1-3-1');
+    searchInputContainer.appendChild(searchInnerDiv1);
+
+    const editableDiv = createElement('div', 'a1-1-1-1-1-1-2-1-3-1-1',
+        { 'min-height': '1.47em', 'user-select': 'text', 'white-space': 'pre-wrap', 'word-break': 'break-word' },
+        { contenteditable: 'true', role: 'textbox', 'aria-label': 'Arama metni giriş alanı', tabindex: '3', 'data-tab': '3', 'data-lexical-editor': 'true' }
+    );
+    searchInnerDiv1.appendChild(editableDiv);
+
+    const paragraph = createElement('p', 'a1-1-1-1-1-1-2-1-3-1-1-1', {}, {}, '');
+    editableDiv.appendChild(paragraph);
+
+    const emptyDiv2 = createElement('div', 'a1-1-1-1-1-1-2-1-3-1-2');
+    searchInnerDiv1.appendChild(emptyDiv2);
+
+    const a1_1_1_1_1_1_3 = createElement('div', 'a1-1-1-1-1-1-3');
+
+    const a1_1_1_1_1_1_3_2 = createElement('div', 'a1-1-1-1-1-1-3-2', {}, { 'tabindex': '0', 'data-tab': '4' });
+    a1_1_1_1_1_1_3.appendChild(a1_1_1_1_1_1_3_2);
+
+    const innerDiv = createElement('div', '', {}, { 'tabindex': '-1' });
+    a1_1_1_1_1_1_3_2.appendChild(innerDiv);
+
+    const a1_1_1_1_1_1_3_2_1_1 = createElement('div', 'a1-1-1-1-1-1-3-2-1-1', { 'height': `${contactListHeight}` });
+    innerDiv.appendChild(a1_1_1_1_1_1_3_2_1_1);
+    contactsSideDiv_1_1.appendChild(a1_1_1_1_1_1_3);
+
+    const span_a1_1_1 = document.querySelector(".a1-1-1");
+
+    span_a1_1_1.appendChild(contactsSideDiv);
+
+    editableDiv.addEventListener("input", function () {
+        if (editableDiv.innerText.trim().length > 0) {
+            searchTextDiv.textContent = "";
+            searchTextDiv.classList.add("opacity");
         } else {
-            searchDefaultTextDOM.textContent = "Bir kullanıcı aratın";
-            searchDefaultTextDOM.classList.remove("opacity");
+            searchTextDiv.textContent = "Bir kullanıcı aratın";
+            searchTextDiv.classList.remove("opacity");
         }
     })
-    searchIconDOM.addEventListener("click", function () {
-        divDOM.classList.toggle("_ai07");
+    searchButtonDiv.addEventListener("click", function () {
+        mainDiv.classList.toggle("_ai07");
     });
     backButton.addEventListener("click", function () {
-        span.innerHTML = "";
+        span_a1_1_1.innerHTML = "";
     })
-    handleContacts()
 }
 
 // const sendInvitation = async (event) => {
@@ -333,7 +422,7 @@ async function handleContactClick(event) {
         if (!findChat) {
             findChat = await fetchCheckChatRoomExists(chatInstance.user.id, contactData.id);
         }
-        chatBoxElement != null ? ariaSelected(chatBoxElement,chatInstance,innerDiv) : ariaSelectedRemove(chatInstance);
+        chatBoxElement != null ? ariaSelected(chatBoxElement, chatInstance, innerDiv) : ariaSelectedRemove(chatInstance);
         const messages = await fetchGetLatestMessages(findChat.id);
         console.log("FIND CHAT > ", findChat)
         const chatRequestDTO = {
