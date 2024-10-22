@@ -11,8 +11,8 @@ let selection = null;
 const emojiRegex = /([\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF}|\u{1F700}-\u{1F77F}|\u{1F780}-\u{1F7FF}|\u{1F800}-\u{1F8FF}|\u{1F900}-\u{1F9FF}|\u{1FA00}-\u{1FA6F}|\u{1FA70}-\u{1FAFF}])/gu;
 
 async function createMessageBox(chat) {
-    console.log("CHAT > ", chat);
-    const messageBoxElement = createMessageBoxHTML(chat);
+    console.log("MESSAGE BOX > ", chat);
+    const messageBoxElement = await createMessageBoxHTML(chat);
     renderMessage(chat.messages, chat.user.id);
     let typingStatus = { isTyping: false, previousText: "" };
     chat.friendEmail;
@@ -44,11 +44,9 @@ async function createMessageBox(chat) {
         showEmojiPicker(panel, showEmojiDOM);
     });
     const statusSpan = messageBoxElement.querySelector('.online-status-1');
-    let friendStatus = await isOnline(chat.contact.userProfileResponseDTO.id, statusSpan);
-    chatInstance.webSocketManagerChat.subscribeToChannel(`/user/${chat.user.id}/queue/message-box-typing`, (typingMessage) => {
+
+    chatInstance.webSocketManagerChat.subscribeToChannel(`/user/${chat.contactsDTO.userProfileResponseDTO.id}/queue/message-box-typing`, (typingMessage) => {
         const status = JSON.parse(typingMessage.body);
-        console.log("STATUS > ", status)
-        console.log("STATUS SPAN > ", statusSpan)
         if (status.userId === chat.contact.userProfileResponseDTO.id) {
             if (status.typing) {
                 statusSpan.textContent = `yazıyor...`;
@@ -61,10 +59,11 @@ async function createMessageBox(chat) {
             }
         }
     });
-    chatInstance.webSocketManagerChat.subscribeToChannel(`/user/${chat.user.id}/queue/online-status`, (statusMessage) => {
+    console.log("CHAT USER ID > ", chat.user.id)
+    chatInstance.webSocketManagerChat.subscribeToChannel(`/user/${chat.contactsDTO.userProfileResponseDTO.id}/queue/online-status`, (statusMessage) => {
         const status = JSON.parse(statusMessage.body);
-        friendStatus = status.online;
-        if (friendStatus) {
+        console.log("STATUS > ", status)
+        if (status.online) {
             statusSpan.textContent = 'çevrimiçi';
         } else {
             statusSpan.textContent = 'çevrimdışı';
@@ -90,12 +89,10 @@ function handlePaste(event) {
 function handleTextInput(inputBox, textArea, sendButton, chat, typingStatus, event) {
     const currentText = textArea.textContent.trim();
     if (currentText && !typingStatus.isTyping) {
-        console.log("DOLUUUUUUUUUUUUUUUU")
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contact.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
     }
     else if (!currentText && typingStatus.previousText && typingStatus.isTyping) {
-        console.log("BOSSSSSSSSSSSSSS")
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("stop-typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contact.userProfileResponseDTO.id });
         typingStatus.isTyping = false;
     }
@@ -295,7 +292,6 @@ function keydown(event, textArea) {
 
 
 const updatePlaceholder = (inputBox, textArea, sendButton) => {
-    console.log("AAAAAAAAAAAAAAAA")
     const placeholderClass = 'message-box1-7-1-1-1-2-1-1-1-2';
     const placeholderText = 'Bir mesaj yazın';
     let placeholder = inputBox.querySelector(`.${placeholderClass}`);
@@ -328,7 +324,6 @@ const updateCaretPosition = (event) => {
     selection = window.getSelection();
     if (selection.rangeCount > 0) {
         range = selection.getRangeAt(0);
-        console.log("SELECTED TEXT > ", selection.toString());
         caretPosition = range.startOffset;
         caretNode = range.startContainer;
         if (caretNode.nodeType !== Node.TEXT_NODE) {
@@ -342,7 +337,6 @@ const updateCaretPosition = (event) => {
     } else {
         console.error("Selection rangeCount is 0.");
     }
-    console.log("CARET NODE222 > ", caretNode)
 };
 
 const setStartRange = (startNode, startOffset) => {
@@ -390,10 +384,8 @@ function generateEmojiHTML() {
 }
 
 const updateMessageBox = (chat) => {
-    console.log("UPDATE CHAT > ", chat)
 }
-const createMessageBoxHTML = (chat) => {
-    console.log("createMessageBoxHTML > ", chat)
+const createMessageBoxHTML = async (chat) => {
     const messageBoxElement = document.querySelector('.message-box');
     const startMessageElement = messageBoxElement.querySelector('.start-message')
     if (startMessageElement) {
@@ -401,8 +393,10 @@ const createMessageBoxHTML = (chat) => {
     } else {
         messageBoxElement.removeChild(messageBoxElement.firstElementChild);
     }
-
+    console.log("MESSAGE BOX 123 > ", chat)
     const main = createElement('div', 'message-box1', null, { id: 'main' });
+    main.data = chat;
+    console.log("MAIN DATA > ", main.data)
     const divMessageBox1_1 = createElement('div', 'message-box1-1', { opacity: '0.4' });
     main.appendChild(divMessageBox1_1);
     const header = createElement('header', 'message-box1-2');
@@ -410,7 +404,7 @@ const createMessageBoxHTML = (chat) => {
     const messageBoxDiv1 = createElement('div', 'message-box1-2-1', {}, { title: "Profil Detayları", role: "button" });
 
     const profileImgContainer = createElement('div', 'message-box1-2-1-1', { height: '40px', width: '40px' });
-    const imgElement = createVisibilityProfilePhoto(chat.contact.userProfileResponseDTO);
+    const imgElement = createVisibilityProfilePhoto(chat.contactsDTO.userProfileResponseDTO, chat.contactsDTO.contact, chat.user);
     profileImgContainer.appendChild(imgElement);
     messageBoxDiv1.appendChild(profileImgContainer);
 
@@ -420,7 +414,7 @@ const createMessageBoxHTML = (chat) => {
     const innerMessageBoxDiv2 = createElement('div', 'message-box1-2-2-1-1');
 
     const nameContainer = createElement('div', 'message-box1-2-2-1-1-1');
-    const nameSpan = createElement('span', 'message-box1-2-2-1-1-1-1', {}, { dir: 'auto', 'aria-label': '' }, chat.contact.userContactName ? chat.contact.userContactName : chat.contact.userProfileResponseDTO.email);
+    const nameSpan = createElement('span', 'message-box1-2-2-1-1-1-1', {}, { dir: 'auto', 'aria-label': '' }, chat.contactsDTO.contact.userContactName ? chat.contactsDTO.contact.userContactName : chat.contactsDTO.userProfileResponseDTO.email);
     nameContainer.appendChild(nameSpan);
     innerMessageBoxDiv2.appendChild(nameContainer);
     innerMessageBoxDiv1.appendChild(innerMessageBoxDiv2);
@@ -429,39 +423,7 @@ const createMessageBoxHTML = (chat) => {
     const messageBoxDiv3 = createElement('div', 'message-box1-2-3');
 
     const searchButtonContainer = createElement('div', 'message-box1-2-3-1');
-    // const searchButton = createElement('div', 'message-box1-2-3-1-2', {}, {
-    //     'aria-disabled': 'false',
-    //     role: 'button',
-    //     tabindex: '0',
-    //     'data-tab': '6',
-    //     title: 'Ara...',
-    //     'aria-label': 'Ara...',
-    //     'aria-expanded': 'false'
-    // });
 
-    // const searchIcon = createElement('span', '', {}, { 'data-icon': 'search-alt' });
-
-    // // Create SVG for the search icon
-    // const svgSearch = createSvgElement('svg', {
-    //     viewBox: "0 0 24 24",
-    //     height: "24",
-    //     width: "24",
-    //     preserveAspectRatio: "xMidYMid meet",
-    //     version: "1.1",
-    //     x: "0px",
-    //     y: "0px",
-    //     "enable-background": "new 0 0 24 24"
-    // });
-
-    // const searchPath = createSvgElement('path', {
-    //     fill: "currentColor",
-    //     d: "M15.9,14.3H15L14.7,14c1-1.1,1.6-2.7,1.6-4.3c0-3.7-3-6.7-6.7-6.7S3,6,3,9.7 s3,6.7,6.7,6.7c1.6,0,3.2-0.6,4.3-1.6l0.3,0.3v0.8l5.1,5.1l1.5-1.5L15.9,14.3z M9.7,14.3c-2.6,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6 s4.6,2.1,4.6,4.6S12.3,14.3,9.7,14.3z"
-    // });
-    // svgSearch.appendChild(searchPath);
-    // searchIcon.appendChild(svgSearch);
-    // searchButton.appendChild(searchIcon);
-    // searchButtonContainer.appendChild(searchButton);
-    // messageBoxDiv3.appendChild(searchButtonContainer);
     const menuDiv1_2_3_1_3_1 = createElement('div', 'message-box1-2-3-1-3');
     const menuDiv1_2_3_1_3_1_1 = createElement('div', 'message-box1-2-3-1-3-1');
     const menuDiv1_2_3_1_3_1_1_1 = createElement('span', '');
@@ -502,17 +464,19 @@ const createMessageBoxHTML = (chat) => {
     menuDiv1_2_3_1_3_1.appendChild(menuDiv1_2_3_1_3_1_1);
     searchButtonContainer.appendChild(menuDiv1_2_3_1_3_1);
     messageBoxDiv3.appendChild(searchButtonContainer);
-
-
-
-
-    if (chat) {
-        // ToDo privacy
+    const contactsOnlineStatusElement = await isOnline(chat.user, chat.contactsDTO);
+    // if ((chat.contact.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'EVERYONE' || (chat.contact.userProfileResponseDTO.privacySettings.inContactList && chat.contact.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'CONTACTS')) && (chat.user.privacySettings.onlineStatusVisibility === 'EVERYONE' || (chat.user.privacySettings.inContactList && chat.user.privacySettings.onlineStatusVisibility === 'CONTACTS'))) {
+    //     console.log("AAAAAAAAAAAAAAA")
+    //     const statusDiv = createElement('div', 'online-status');
+    //     const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, '');
+    //     statusDiv.appendChild(statusSpan);
+    //     messageBoxDiv2.appendChild(statusDiv);
+    //     const friendStatus = await isOnline(chat.contact.userProfileResponseDTO.id, statusSpan);
+    //     console.log("FRIEND STATUS > ", friendStatus)
+    // }
+    if (contactsOnlineStatusElement) {
+        messageBoxDiv2.appendChild(contactsOnlineStatusElement);
     }
-    const statusDiv = createElement('div', 'online-status');
-    const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, 'Online');
-    statusDiv.appendChild(statusSpan);
-    messageBoxDiv2.appendChild(statusDiv);
     header.appendChild(messageBoxDiv1);
     header.appendChild(messageBoxDiv2);
     header.appendChild(messageBoxDiv3);
@@ -792,7 +756,6 @@ const createMessageBoxHTML = (chat) => {
     const div2 = createElement('div', 'message-box1-7-2');
     footer.appendChild(div2);
     textArea.addEventListener('keydown', (event) => {
-        console.log("EVENT > ", event)
         if (event.key === 'Enter') {
             event.preventDefault();
             if (!sendButton.disabled) {
@@ -929,8 +892,6 @@ const renderMessage = (messages, userId) => {
 
         div.addEventListener('mouseenter', (event) => {
             const messageOptions = event.currentTarget.querySelector('.message-options');
-            console.log(messageOptions)
-            console.log(event.currentTarget.messageData)
             messageOptions.innerHTML = `<div class="message-options-1"> <div data-js-context-icon="true" class="message-options-1-1" tabindex="0" aria-label="Bağlam Menüsü" role="button"><span data-icon="down-context" class=""><svg viewBox="0 0 18 18" height="18" width="18" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 18 18"><title>down-context</title><path fill="currentColor" d="M3.3,4.6L9,10.3l5.7-5.7l1.6,1.6L9,13.4L1.7,6.2L3.3,4.6z"></path></svg></span></div></div>`;
             const btn = messageOptions.querySelector('.message-options-1-1')
             btn.messageData = event.currentTarget.messageData
@@ -954,7 +915,6 @@ const scrollToBottom = () => {
 };
 const handleOptionsBtnClick = (target) => {
     const data = target.messageData;
-    console.log("DATA > ", data)
 
 
     const spans = document.querySelectorAll('.app span');
@@ -964,14 +924,11 @@ const handleOptionsBtnClick = (target) => {
         const existingOptionsDiv = showChatOptions.querySelector('.options1');
 
         if (existingOptionsDiv) {
-            console.log("Seçenekler kapatılıyor");
             existingOptionsDiv.remove();
         } else {
-            console.log("Seçenekler açılıyor");
             const chatOptionsDiv = document.createElement("div");
 
             const rect = target.getBoundingClientRect();
-            console.log(rect);
             chatOptionsDiv.classList.add('options1');
             chatOptionsDiv.setAttribute('role', 'application');
             chatOptionsDiv.style.transformOrigin = 'left top';
@@ -1062,17 +1019,13 @@ const handleOptionsBtnClick = (target) => {
                             }
                             break;
                         case 2:
-                            console.log('Sohbet siliniyor');
                             break;
                         case 3:
                             if (chatData.pinned) {
-                                console.log('Sabitleme kaldırılıyor');
                             } else {
-                                console.log('Sabitleme işlemi yapılıyor');
                             }
                             break;
                         case 4:
-                            console.log('Okunmadı olarak işaretleniyor');
                             break;
                     }
                     showChatOptions.innerHTML = '';
@@ -1089,22 +1042,48 @@ function closeOptionsDivOnClickOutside(event) {
         document.removeEventListener('click', closeOptionsDivOnClickOutside);
     }
 }
-const isOnline = async (friendId, statusSpan) => {
-    const friendStatus = await checkUserOnlineStatus(friendId);
-    if (friendStatus.online) {
-        // Todo online (privacy)
-        statusSpan.textContent = 'çevrimiçi';
-    } else {
-        // Todo offline (privacy and lastSeen)
-        statusSpan.textContent = friendStatus.lastSeen;
-    }
-    return friendStatus;
-}
+const isOnline = async (user, contactsDTO) => {
+    console.log("USER > ", user)
+    console.log("CONTACT > ", contactsDTO)
+    if (user.privacySettings.lastSeenVisibility !== 'NOBODY' || user.privacySettings.onlineStatusVisibility !== 'NOBODY') {
+        const friendStatus = await checkUserOnlineStatus(contactsDTO.contact.userContactId);
+        console.log("FRIEND STATUS > ", friendStatus)
+        if (user.privacySettings.onlineStatusVisibility !== 'NOBODY') {
+            if (friendStatus.online) {
+                return isOnlineStatus(user, contactsDTO);
+            } else if (user.privacySettings.lastSeenVisibility !== 'NOBODY') {
+                return lastSeenStatus(user, contactsDTO, friendStatus.lastSeen);
+            }
+        }
 
+    }
+    return null;
+}
+const isOnlineStatus = (user, contactsDTO) => {
+    console.log("CONTACTSSSSSSSSSSSS > ", contactsDTO)
+    if ((contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'EVERYONE' || (contactsDTO.contact.relatedUserHasAddedUser && contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'CONTACTS')) && (user.privacySettings.onlineStatusVisibility === 'EVERYONE' || (contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.onlineStatusVisibility === 'CONTACTS'))) {
+        const statusDiv = createElement('div', 'online-status');
+        console.log("FRIEND STATUS > ")
+        const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, 'çevrimiçi');
+        statusDiv.appendChild(statusSpan);
+        return statusDiv;
+    }
+    return null;
+}
+const lastSeenStatus = (user, contactsDTO, lastSeen) => {
+    if ((contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.relatedUserHasAddedUser && contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'CONTACTS')) && (user.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.lastSeenVisibility === 'CONTACTS'))) {
+        console.log("AAAAAAAAAAAAAAA")
+        const statusDiv = createElement('div', 'online-status');
+        const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, lastSeen);
+        statusDiv.appendChild(statusSpan);
+        return statusDiv;
+    }
+    return null;
+}
 const sendMessage = async (chat, sendButton) => {
     const messageContentElement = document.querySelector('.message-box1-7-1-1-1-2-1-1-1-1');
     const messageContent = messageContentElement.textContent.trim();
-    console.log(chat)
+    console.log("SEND MESSAGE CHAT >>> ", chat)
     if (messageContent) {
         const message = {
             messageContent: messageContent,
@@ -1115,14 +1094,13 @@ const sendMessage = async (chat, sendButton) => {
         };
         if (!chat.id) {
             const result = await fetchCreateChatRoomIfNotExists(chat.user.id, chat.contact.userProfileResponseDTO.id);
-            console.log("RESULT > ", result)
             message.chatRoomId = result.id;
             result.friendEmail = chat.friendEmail
             const newChat = {
                 friendImage: chat.contact.userProfileResponseDTO.imagee,
                 friendEmail: chat.contact.userProfileResponseDTO.email,
                 friendId: chat.contact.userProfileResponseDTO.id,
-                userId: chat.user.id,
+                user: chat.user,
                 lastMessage: message.messageContent,
                 id: message.chatRoomId,
                 lastMessageTime: message.fullDateTime,
@@ -1147,8 +1125,6 @@ const sendMessage = async (chat, sendButton) => {
 
 
 const appendMessage = (message, userId) => {
-    console.log("MESSAGE > ", message)
-    console.log("USERID  > ", userId)
     const messageList = document.querySelector("#message-list");
     const messageDiv = document.createElement("div");
     const senderClass = (message.senderId === userId) ? "sent" : "received";
@@ -1240,6 +1216,7 @@ async function checkUserOnlineStatus(userId) {
             throw new Error('Kullanıcı durumu kontrol edilemedi');
         }
         const isOnline = await response.json();
+        console.log("IS ONLINE > ", isOnline)
         return isOnline;
     } catch (error) {
         console.error('Hata:', error.message);
@@ -1261,4 +1238,4 @@ class DeleteMessageDTO {
     }
 }
 
-export { createMessageBox, appendMessage, renderMessage };
+export { createMessageBox, appendMessage, renderMessage, isOnlineStatus, lastSeenStatus };

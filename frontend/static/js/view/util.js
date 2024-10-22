@@ -1,3 +1,5 @@
+
+
 function changeContent(newContent) {
   var contentElement = document.querySelector('.chat-content');
   contentElement.innerHTML = newContent;
@@ -177,8 +179,10 @@ const ariaSelectedRemove = (chatInstance) => {
   }
 }
 
-const createVisibilityProfilePhoto = (user) => {
-  if (user.privacySettings.profilePhotoVisibility === 'EVERYONE' || (user.privacySettings.inContactList && user.privacySettings.profilePhotoVisibility === 'CONTACTS')) {
+const createVisibilityProfilePhoto = (userProfileResponseDTO, contacts) => {
+  console.log("USERPROFILE > ", userProfileResponseDTO)
+  console.log("CONTACTS > ", contacts)
+  if ((userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'EVERYONE' || (contacts.relatedUserHasAddedUser && userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'CONTACTS'))) {
     console.log("AAAAAAAAAAAAAAAAAAAA")
     const imgElement = createElement('img', 'user-image', {}, { 'src': 'static/image/img.jpeg', 'alt': '', 'draggable': 'false', 'tabindex': '-1' });
     return imgElement;
@@ -205,4 +209,6 @@ const createVisibilityProfilePhoto = (user) => {
     return svgDiv;
   }
 }
+
+
 export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace, onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements, removeHeaderAndFooter, createElement, createSvgElement, ariaSelected, ariaSelectedRemove, createVisibilityProfilePhoto };
