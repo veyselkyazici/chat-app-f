@@ -5,6 +5,7 @@ import { showModal, ModalOptionsDTO } from './showModal.js';
 import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
 import { ariaSelected, ariaSelectedRemove, createElement, createSvgElement, createVisibilityProfilePhoto } from './util.js';
 function createContactHTML(user, index) {
+    console.log("CREATE CONTACT HTML USER > ", user)
     const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
 
     const newHeight = chatInstance.contactList.length * 72;
@@ -19,9 +20,9 @@ function createContactHTML(user, index) {
     contactElementDOM.style.height = "72px";
     contactElementDOM.style.transform = `translateY(${index * 72}px)`;
     contactElementDOM.contactData = user;
-    contactElementDOM.dataset.user = user.userContactName
+    contactElementDOM.dataset.user = user.contactsDTO.userContactName;
     console.log("USER > ", user);
-    if (user.id) {
+    if (user.contactsDTO) {
         const chatBox = createContactsHTML(user);
         contactElementDOM.appendChild(chatBox);
     } else {
@@ -42,14 +43,14 @@ const createContactsHTML = (user) => {
 
     const chatImage = createElement('div', 'chat-image');
     chat.appendChild(chatImage);
-    user.userProfileResponseDTO.privacySettings.inContactList
     const chatLeftImage = createElement('div', 'chat-left-image');
     chatImage.appendChild(chatLeftImage);
 
     const imageContainer = createElement('div', 'image', { height: '49px', width: '49px' });
     chatLeftImage.appendChild(imageContainer);
 
-    const photo = createVisibilityProfilePhoto(user.userProfileResponseDTO);
+    console.log("USER > ", user)
+    const photo = createVisibilityProfilePhoto(user.userProfileResponseDTO, user.contactsDTO);
 
     imageContainer.appendChild(photo);
 
@@ -65,7 +66,7 @@ const createContactsHTML = (user) => {
     const nameContainer = createElement('div', 'name');
     chatName.appendChild(nameContainer);
 
-    const nameSpan = createElement('span', 'name-span', {}, { 'dir': 'auto', 'title': user.userContactName, 'aria-label': '' }, user.userContactName);
+    const nameSpan = createElement('span', 'name-span', {}, { 'dir': 'auto', 'title': user.contactsDTO.userContactName, 'aria-label': '' }, user.contactsDTO.userContactName);
     nameContainer.appendChild(nameSpan);
 
     const lastMessage = createElement('div', 'last-message');
@@ -74,10 +75,11 @@ const createContactsHTML = (user) => {
     const messageContainer = createElement('div', 'message');
     lastMessage.appendChild(messageContainer);
 
-    const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
-    messageContainer.appendChild(messageSpan);
+    console.log("CREATE CONTACT HTML USER > ", user)
 
-    if (user.userProfileResponseDTO.privacySettings.aboutVisibility === 'EVERYONE' || (user.userProfileResponseDTO.privacySettings.inContactList && user.userProfileResponseDTO.privacySettings.aboutVisibility === 'CONTACTS')) {
+    if (user.userProfileResponseDTO.privacySettings.aboutVisibility === 'EVERYONE' || (user.contactsDTO.relatedUserHasAddedUser && user.userProfileResponseDTO.privacySettings.aboutVisibility === 'CONTACTS')) {
+        const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
+        messageContainer.appendChild(messageSpan);
         const innerSpan = createElement('span', 'message-span-span', {}, { 'dir': 'ltr', 'aria-label': '' }, user.userProfileResponseDTO.about);
         messageSpan.appendChild(innerSpan);
     }
@@ -95,7 +97,7 @@ const createContactsHTML = (user) => {
 }
 const createInvitationsHTML = (user) => {
     const chatBox = createElement('div', 'chat-box');
-
+    console.log("USERRRRRRRRRRRRRRRRRRRR> ", user)
     const chatRow = createElement('div', '', {}, { 'tabindex': '-1', 'aria-selected': 'false', 'role': 'row' });
     chatBox.appendChild(chatRow);
 
@@ -139,11 +141,16 @@ const createInvitationsHTML = (user) => {
     const chatName = createElement('div', 'chat-name');
     chatNameAndTime.appendChild(chatName);
 
+    const chatAboutDiv = createElement('div', 'chat-about-div');
+
+    const chatAbout = createElement('div', 'chat-about');
+    const chatAboutSpan = createElement('span', 'chat-about-span', null, { title: user.userProfileResponseDTO?.about, dir: 'auto' }, user.userProfileResponseDTO?.about);
+
+    chatAbout.appendChild(chatAboutSpan);
+    chatAboutDiv.appendChild(chatAbout);
+
     const nameContainer = createElement('div', 'name');
     chatName.appendChild(nameContainer);
-
-    const nameSpan = createElement('span', 'name-span', {}, { 'dir': 'auto', 'title': user.invitationResponseDTO.contactName, 'aria-label': '' }, user.invitationResponseDTO.contactName);
-    nameContainer.appendChild(nameSpan);
 
     const chatOptions = createElement('div', 'chat-options-contact');
     chatNameAndTime.appendChild(chatOptions);
@@ -155,19 +162,31 @@ const createInvitationsHTML = (user) => {
     chatOptions.appendChild(span2);
     chatOptions.appendChild(span3);
 
-    const invitationBtnContainer = createElement('div', 'invitation-btn');
-    chatNameAndTime.appendChild(invitationBtnContainer);
+    if (user.invitationResponseDTO && !user.invitationResponseDTO.invited) {
+        console.log("AAAAAAAAAAAAAAA")
+        const nameSpan = createElement('span', 'name-span', {}, { 'dir': 'auto', 'title': user.invitationResponseDTO.contactName, 'aria-label': '' }, user.invitationResponseDTO.contactName);
+        nameContainer.appendChild(nameSpan);
+        const invitationBtnContainer = createElement('div', 'invitation-btn');
+        chatNameAndTime.appendChild(invitationBtnContainer);
+        const invitationButton = createElement('button', 'invitation-button');
+        if (!user.invitationResponseDTO.invited) {
+            invitationButton.removeAttribute('disabled');
+        } else {
+            invitationButton.setAttribute('disabled', 'disabled');
+        }
 
-    const invitationButton = createElement('button', 'invitation-button');
-    if (user.invitationResponseDTO.invited) {
-        invitationButton.setAttribute('disabled', 'disabled');
+        const buttonDiv1 = createElement('div', 'invitation-button-1');
+        const buttonDiv2 = createElement('div', 'invitation-button-1-1', { flexGrow: '1' }, {}, 'Davet et');
+        buttonDiv1.appendChild(buttonDiv2);
+        invitationButton.appendChild(buttonDiv1);
+        invitationBtnContainer.appendChild(invitationButton);
+    } else {
+        console.log("BBBBBBBBBBBBBBB")
+        const nameSpan = createElement('span', 'name-span', {}, { 'dir': 'auto', 'title': user.contactsDTO.userContactName, 'aria-label': '' }, user.contactsDTO.userContactName);
+        nameContainer.appendChild(nameSpan);
     }
-    const buttonDiv1 = createElement('div', 'invitation-button-1');
-    const buttonDiv2 = createElement('div', 'invitation-button-1-1', { flexGrow: '1' }, {}, 'Davet et');
+    chatInfo.appendChild(chatAboutDiv);
 
-    buttonDiv1.appendChild(buttonDiv2);
-    invitationButton.appendChild(buttonDiv1);
-    invitationBtnContainer.appendChild(invitationButton);
     return chatBox;
 }
 function createContactList() {
@@ -411,27 +430,33 @@ function createContactListViewHTML() {
 async function handleContactClick(event) {
     const contactElementDOM = event.currentTarget;
     const contactData = contactElementDOM.contactData;
+    console.log("CONTACTDATA > ", contactData)
     const chatBoxDivs = [...document.querySelectorAll('.chat-list-content > .chat1')];
-    const chatBoxElement = chatBoxDivs.find(chatBoxDiv => chatBoxDiv.chatData.id === `${chatInstance.user.id}_${contactData.userProfileResponseDTO.id}` || chatBoxDiv.chatData.id === `${contactData.userProfileResponseDTO.id}_${chatInstance.user.id}`)
+    const chatBoxElement = chatBoxDivs.find(chatBoxDiv => chatBoxDiv.chatData.id === `${contactData.contactsDTO.userId}_${contactData.contactsDTO.userContactId}` || chatBoxDiv.chatData.id === `${contactData.contactsDTO.userContactId}_${contactData.contactsDTO.userId}`)
     const innerDiv = chatBoxElement?.querySelector('.chat-box > div');
     if (innerDiv?.getAttribute('aria-selected') === 'true' && chatBoxElement) {
         return;
     }
-    if (contactData.id) {
-        let findChat = chatInstance.chatList.find(chatItem => chatItem.id === `${chatInstance.user.id}_${contactData.userProfileResponseDTO.id}` || chatItem.id === `${contactData.userProfileResponseDTO.id}_${chatInstance.user.id}`);
+    if (contactData) {
+        let findChat = chatInstance.chatList.find(chatItem => chatItem.chatDTO.id === `${chatInstance.user.id}_${contactData.contactsDTO.userContactId}` || chatItem.chatDTO.id === `${contactData.contactsDTO.userContactId}_${chatInstance.user.id}`);
         if (!findChat) {
-            findChat = await fetchCheckChatRoomExists(chatInstance.user.id, contactData.id);
+            findChat = await fetchCheckChatRoomExists(chatInstance.user.id, contactData.contactsDTO.userContactId);
         }
         chatBoxElement != null ? ariaSelected(chatBoxElement, chatInstance, innerDiv) : ariaSelectedRemove(chatInstance);
-        const messages = await fetchGetLatestMessages(findChat.id);
+        const messages = await fetchGetLatestMessages(findChat.chatDTO.id);
         console.log("FIND CHAT > ", findChat)
         const chatRequestDTO = {
-            contact: contactData,
+            contactsDTO: {
+                contact: { ...contactData.contactsDTO },
+                userProfileResponseDTO: { ...contactData.userProfileResponseDTO }
+            },
             user: chatInstance.user,
             messages: messages,
             userChatSettings: findChat.userChatSettings,
-            id: findChat.id,
+            id: findChat.chatDTO.id,
         };
+
+        console.log("CHAT REQUEST DTO > ", chatRequestDTO)
         const contactsElement = document.querySelector('.a1-1-1');
         // ToDo removeChild ile yapılacak onun için innerHTML ile basmak yerine create ile yapılacak
         contactsElement.innerHTML = '';

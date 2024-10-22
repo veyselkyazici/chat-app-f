@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Div Toggle</title>
+    <style>
+        .div1 {
+            width: 200px;
+            height: 200px;
+            background-color: lightgray;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .div2 {
+            width: 100px;
+            height: 100px;
+            background-color: blue;
+        }
+    </style>
+</head>
+<body>
+
+<div class="div1">
+    <div class="div2"></div>
+</div>
+<button id="toggleButton">Div2'yi Kaldır ve Tekrar Ekle</button>
+
+<script>
+    const div1 = document.querySelector('.div1');
+    const div2 = document.querySelector('.div2');
+    const button = document.getElementById('toggleButton');
+
+    button.addEventListener('click', function() {
+        // div2'yi önce kaldır
+        div1.removeChild(div2);
+        // Sonra hemen tekrar ekle
+        div1.appendChild(div2);
+    });
+</script>
+
+</body>
+</html>

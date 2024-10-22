@@ -64,7 +64,7 @@ function createSettingsHtml() {
 
     const divListItemsInnerDiv = createElement("div", "settings-1-1-2-1-1-1-1-1");
 
-    divListItemsInnerDiv.appendChild(createButton("", "Veysel", "Meşgul", "https://media-ist1-1.cdn.whatsapp.net/v/t61.24694-24/95075216_213302013300004_3915533723724724065_n.jpg?ccb=11-4&oh=01_Q5AaIDmuzX_bRwkwWkXfTl7f9rz7YHF2k-0-xKau2lQHHQbh&oe=66E2266C&_nc_sid=5e03e0&_nc_cat=101", null, handleProfileClick));
+    divListItemsInnerDiv.appendChild(createButton("", chatInstance.user.firstName, chatInstance.user.about, "https://media-ist1-1.cdn.whatsapp.net/v/t61.24694-24/95075216_213302013300004_3915533723724724065_n.jpg?ccb=11-4&oh=01_Q5AaIDmuzX_bRwkwWkXfTl7f9rz7YHF2k-0-xKau2lQHHQbh&oe=66E2266C&_nc_sid=5e03e0&_nc_cat=101", null, handleProfileClick));
     divListItemsInnerDiv.appendChild(createButton('<svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"></path></svg>', "Hesap", "", "", "account-circle", handleAccountClick));
     divListItemsInnerDiv.appendChild(createButton('<svg viewBox="0 0 28 35" height="23" width="23" preserveAspectRatio="xMidYMid meet" fill="none"><path d="M 14 1.10204 C 18.5689 1.10204 22.2727 4.80587 22.2727 9.37477 L 22.272 12.179 L 22.3565 12.1816 C 24.9401 12.2949 27 14.4253 27 17.0369 L 27 29.4665 C 27 32.1506 24.8241 34.3265 22.14 34.3265 L 5.86 34.3265 C 3.1759 34.3265 1 32.1506 1 29.4665 L 1 17.0369 C 1 14.3971 3.10461 12.2489 5.72743 12.1786 L 5.72727 9.37477 C 5.72727 4.80587 9.4311 1.10204 14 1.10204 Z M 14 19.5601 C 12.0419 19.5601 10.4545 21.2129 10.4545 23.2517 C 10.4545 25.2905 12.0419 26.9433 14 26.9433 C 15.9581 26.9433 17.5455 25.2905 17.5455 23.2517 C 17.5455 21.2129 15.9581 19.5601 14 19.5601 Z M 14 4.79365 C 11.4617 4.79365 9.39069 6.79417 9.27759 9.30454 L 9.27273 9.52092 L 9.272 12.176 L 18.727 12.176 L 18.7273 9.52092 C 18.7273 6.91012 16.6108 4.79365 14 4.79365 Z" fill="currentColor"></path></svg>', "Gizlilik", "", "", "security-lock", handlePrivacyClick));
     divListItemsInnerDiv.appendChild(createButton('<svg viewBox="0 0 24 24" height="27" width="27" preserveAspectRatio="xMidYMid meet" fill="none" x="0px" y="0px"><path d="M 12 21.7 c 0.9 0 1.7 -0.8 1.7 -1.7 h -3.4 C 10.3 20.9 11.1 21.7 12 21.7 Z M 17.6 16.5 v -4.7 c 0 -2.7 -1.8 -4.8 -4.3 -5.4 V 5.8 c 0 -0.7 -0.6 -1.3 -1.3 -1.3 s -1.3 0.6 -1.3 1.3 v 0.6 C 8.2 7 6.4 9.1 6.4 11.8 v 4.7 l -1.7 1.7 v 0.9 h 14.6 v -0.9 L 17.6 16.5 Z" fill="currentColor"></path></svg>', "Bildirimler", "", "", "settings-notifications", handleNotificationsClick));
@@ -183,7 +183,6 @@ const handleSettingsBackBtnClick = () => {
 
 
 const handlePrivacyClick = () => {
-    console.log("GIZLILIK>>>>>>>>>")
     const divSettings1 = document.querySelector(".settings-1-1");
     divSettings1.classList.add('privacy-background')
     divSettings1.replaceChildren();
@@ -304,32 +303,14 @@ const handlePrivacyClick = () => {
     // Okundu bilgisi
     if (chatInstance.user.privacySettings.readReceipts) {
         const divPrivacy2_1_6 = readReceiptsTrue();
-        console.log("AAAAAAA > ", divPrivacy2_1_6)
         divPrivacy2_1.appendChild(divPrivacy2_1_6);
     } else {
         const divPrivacy2_1_6 = readReceiptsFalse();
-        console.log("BBBBBBBBBB > ", divPrivacy2_1_6)
         divPrivacy2_1.appendChild(divPrivacy2_1_6);
     }
-    // Gruplar
-    const divPrivacy2_2 = createElement('div', 'privacy-2-2');
-    const divPrivacy2_2_1 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, handleGroupsClick);
-    const divPrivacy2_2_1_1 = createElement('div', 'privacy-2-1-2-1');
-    const divPrivacy2_2_1_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
-    const divPrivacy2_2_1_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Gruplar');
-    const divPrivacy2_2_1_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
-    const spanPrivacy2_2_1_1_1_2 = createElement('span', '', null, null, 'Kişilerim');
-    divPrivacy2_2_1_1_1_2.appendChild(spanPrivacy2_2_1_1_1_2);
-    divPrivacy2_2_1_1_1.appendChild(divPrivacy2_2_1_1_1_1);
-    divPrivacy2_2_1_1_1.appendChild(divPrivacy2_2_1_1_1_2);
-    divPrivacy2_2_1_1.appendChild(divPrivacy2_2_1_1_1);
-    const divPrivacy2_2_1_1_2 = createElement('div', 'privacy-2-1-2-1-2');
-    divPrivacy2_2_1_1_2.appendChild(spanChevronIcon.cloneNode(true));
-    divPrivacy2_2_1_1.appendChild(divPrivacy2_2_1_1_2);
-    divPrivacy2_2_1.appendChild(divPrivacy2_2_1_1);
-    divPrivacy2_2.appendChild(divPrivacy2_2_1);
-
     // Engellenmiş kişiler
+    const divPrivacy2_2 = createElement('div', 'privacy-2-2');
+
     const divPrivacy2_2_2 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, handleBlockedContactsClick);
     const divPrivacy2_2_2_1 = createElement('div', 'privacy-2-1-6-1');
     const divPrivacy2_2_2_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
@@ -352,7 +333,6 @@ const handlePrivacyClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        console.log("GERİ")
         divSettings1.remove();
         createSettingsHtml();
     });
@@ -511,7 +491,7 @@ const handleLastSeenAndOnlineClick = () => {
     lastSeenAndOnline1.appendChild(lastSeenAndOnline211);
 
 
-    const radioGroup2 = createElement('div', null, null, { role: 'radiogroup', 'aria-label': 'Çevrimiçi olduğumu kimler görebilir' });
+    const radioGroup2 = createElement('div', '', null, { role: 'radiogroup', 'aria-label': 'Çevrimiçi olduğumu kimler görebilir' });
 
     const buttonEveryone2 = createRadioButton('Herkes', 'Herkes', 'onlineStatusVisibility');
     const buttonSameLastSeen = createRadioButton('Son görülme bilgisiyle aynı', 'Son görülme bilgisiyle aynı', 'onlineStatusVisibility');
@@ -538,11 +518,7 @@ const handleLastSeenAndOnlineClick = () => {
 
     lastSeenAndOnline1.appendChild(lastSeenAndOnline1_3);
 
-
-
-    console.log(lastSeenAndOnline1)
     lastSeenAndOnline.appendChild(lastSeenAndOnline1);
-    console.log(lastSeenAndOnline)
     divSettings1.appendChild(lastSeenAndOnline);
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
@@ -599,9 +575,7 @@ const handleProfilePhotoClick = () => {
 
     lastSeenAndOnline1.appendChild(lastSeenAndOnline11);
 
-    const radioGroup = document.createElement('div', null, null, { role: 'radiogroup', 'aria-label': 'Profil Fotoğrafımı kimler görebilir' });
-
-
+    const radioGroup = createElement('div', '', null, { role: 'radiogroup', 'aria-label': 'Profil Fotoğrafımı kimler görebilir' });
 
 
     const buttonEveryone = createRadioButton('Herkes', 'Herkes', 'profilePhotoVisibility');
@@ -670,7 +644,7 @@ const handleAboutMeClick = () => {
 
     lastSeenAndOnline1.appendChild(lastSeenAndOnline11);
 
-    const radioGroup = createElement('div', null, null, { role: 'radiogroup', 'aria-label': 'Hakkımda bilgimi kimler görebilir' });
+    const radioGroup = createElement('div', '', null, { role: 'radiogroup', 'aria-label': 'Hakkımda bilgimi kimler görebilir' });
 
 
 
@@ -770,139 +744,182 @@ const handleBlockedContactsClick = () => {
 }
 
 function createRadioButton(ariaLabel, textContent, optionName) {
-    const button = createElement('button', 'lastseen-and-online-1-2', null, { tabIndex: '-1' });
+    const button = createElement('button', 'lastseen-and-online-1-2', null, { tabIndex: '-1', role: 'button' });
     button.type = 'button';
 
     const innerDiv = createElement('div', 'lastseen-and-online-1-2-1');
 
     const iconWrapper = createElement('div', 'lastseen-and-online-1-2-1-1');
-
     const iconSpan = createElement('span', 'lastseen-and-online-1-2-1-1-1');
 
-    const isSelected = chatInstance.user.privacySettings[optionName] === mapAriaLabelToEnum(ariaLabel);
-    const radioButton = isSelected ? markedRadioButton(ariaLabel) : unMarkedRadioButton(ariaLabel);
+    const radioButton = createRadioIcon(ariaLabel, optionName);
     iconSpan.appendChild(radioButton);
     iconWrapper.appendChild(iconSpan);
 
     const textWrapper = createElement('div', 'lastseen-and-online-1-2-1-2', { flexGrow: '1' });
-
     const textSpan = createElement('span', 'lastseen-and-online-1-2-1-2-1', null, null, textContent);
 
     textWrapper.appendChild(textSpan);
-
     innerDiv.appendChild(iconWrapper);
     innerDiv.appendChild(textWrapper);
     button.appendChild(innerDiv);
+
     button.addEventListener('click', () => handleRadioButtonClick(radioButton, optionName));
+
     return button;
 }
-const markedRadioButton = (ariaLabel) => {
 
-    const radioButton = createElement('button', 'lastseen-and-online-1-2-1-1-1-1', null, { role: 'radio', 'aria-checked': 'true', 'aria-label': ariaLabel });
+function createRadioIcon(ariaLabel, optionName) {
+    let isSelected = chatInstance.user.privacySettings[optionName] === mapAriaLabelToEnum(ariaLabel);
 
-    const spanHidden = createElement('span', '', null, { 'aria-hidden': true, 'data-icon': 'checkbox-round-radio-checked' });
+    if (optionName === 'onlineStatusVisibility' && ariaLabel !== 'Herkes') {
+        isSelected = chatInstance.user.privacySettings[optionName] !== VisibilityOption.EVERYONE;
+    }
 
+    const radioButton = createElement('button', 'lastseen-and-online-1-2-1-1-1-1', null, {
+        role: 'radio',
+        'aria-checked': isSelected ? 'true' : 'false',
+        'aria-label': ariaLabel
+    });
+
+    const spanHidden = createElement('span', '', null, {
+        'aria-hidden': true,
+        'data-icon': isSelected ? 'checkbox-round-radio-checked' : 'checkbox-round-passive'
+    });
     const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svgIcon.setAttribute('viewBox', '2 2 20 20');
+    svgIcon.setAttribute('viewBox', isSelected ? '2 2 20 20' : '0 0 20 20');
     svgIcon.setAttribute('height', '20');
     svgIcon.setAttribute('width', '20');
     svgIcon.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    svgIcon.classList.add('marked');
-    svgIcon.setAttribute('fill', 'none');
+    svgIcon.setAttribute('fill', isSelected ? 'none' : 'currentColor');
+    svgIcon.classList.add(isSelected ? 'marked' : 'lastseen-and-online-1-2-1-1-1-1-1');
 
-    const svgTitle = createElement('title', '', null, null, 'checkbox-round-radio-checked');
-
+    const svgTitle = createElement('title', '', null, null, isSelected ? 'checkbox-round-radio-checked' : 'checkbox-round-passive');
     const svgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     svgPath.setAttribute('fill', 'currentColor');
-    svgPath.setAttribute('d', 'M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 Z M 12 20 C 7.58 20 4 16.42 4 12 C 4 7.58 7.58 4 12 4 C 16.42 4 20 7.58 20 12 C 20 16.42 16.42 20 12 20 Z M 17 12 C 17 14.7614 14.7614 17 12 17 C 9.23858 17 7 14.7614 7 12 C 7 9.23858 9.23858 7 12 7 C 14.7614 7 17 9.23858 17 12 Z');
+    svgPath.setAttribute('d', isSelected ?
+        'M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 Z M 12 20 C 7.58 20 4 16.42 4 12 C 4 7.58 7.58 4 12 4 C 16.42 4 20 7.58 20 12 C 20 16.42 16.42 20 12 20 Z M 17 12 C 17 14.7614 14.7614 17 12 17 C 9.23858 17 7 14.7614 7 12 C 7 9.23858 9.23858 7 12 7 C 14.7614 7 17 9.23858 17 12 Z'
+        :
+        'M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z');
 
     svgIcon.appendChild(svgTitle);
     svgIcon.appendChild(svgPath);
     spanHidden.appendChild(svgIcon);
     radioButton.appendChild(spanHidden);
+
     return radioButton;
 }
-
-const unMarkedRadioButton = (ariaLabel) => {
-
-    const radioButton = createElement('button', 'lastseen-and-online-1-2-1-1-1-1', null, { role: 'radio', 'aria-checked': 'false', 'aria-label': ariaLabel });
-
-    const spanHidden = createElement('span', '', null, { 'aria-hidden': true, 'data-icon': 'checkbox-round-radio-checked' });
-
-    const svgIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svgIcon.setAttribute('viewBox', '0 0 20 20');
-    svgIcon.setAttribute('height', '20');
-    svgIcon.setAttribute('width', '20');
-    svgIcon.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-    svgIcon.classList.add('lastseen-and-online-1-2-1-1-1-1-1');
-    svgIcon.setAttribute('version', '1.1');
-    svgIcon.setAttribute('x', '0px');
-    svgIcon.setAttribute('y', '0px');
-    svgIcon.setAttribute('enable-background', 'new 0 0 20 20');
-
-    const svgTitle = createElement('title', '', null, null, 'checkbox-round-passive');
-
-    const svgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    svgPath.setAttribute('fill', 'currentColor');
-    svgPath.setAttribute('fill-opacity', 'inherit');
-    svgPath.setAttribute('d', 'M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z');
-
-    svgIcon.appendChild(svgTitle);
-    svgIcon.appendChild(svgPath);
-    spanHidden.appendChild(svgIcon);
-    radioButton.appendChild(spanHidden);
-    return radioButton;
-}
-const removeMarkedRadioButton = (parentElement) => {
-    console.log(parentElement)
-    console.log(parentElement.firstElementChild)
-    parentElement.removeChild(parentElement.firstElementChild);
-    return parentElement;
-}
-const toggleRadioButton = (radioButton, isChecked) => {
-    const ariaLabel = radioButton.getAttribute('aria-label');
+const updateRadioButtonState = (radioButton, isChecked) => {
     radioButton.setAttribute('aria-checked', isChecked ? 'true' : 'false');
+    const span = radioButton.querySelector('span');
+    span.setAttribute('data-icon', isChecked ? 'checkbox-round-radio-checked' : 'checkbox-round-passive');
 
-    const parentElement = removeMarkedRadioButton(radioButton.parentElement);
-    const newRadioButton = isChecked ? markedRadioButton(ariaLabel) : unMarkedRadioButton(ariaLabel);
-    console.log("NEW RADIO BUTTON > ", newRadioButton)
-    parentElement.appendChild(newRadioButton);
+    const svg = span.querySelector('svg');
+    svg.setAttribute('viewBox', isChecked ? '2 2 20 20' : '0 0 20 20');
+    svg.classList.toggle('marked', isChecked);
+    svg.classList.toggle('lastseen-and-online-1-2-1-1-1-1-1', !isChecked);
+
+    const title = svg.querySelector('title');
+    title.textContent = isChecked ? 'checkbox-round-radio-checked' : 'checkbox-round-passive';
+
+    const path = svg.querySelector('path');
+    path.setAttribute('d', isChecked
+        ? 'M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 Z M 12 20 C 7.58 20 4 16.42 4 12 C 4 7.58 7.58 4 12 4 C 16.42 4 20 7.58 20 12 C 20 16.42 16.42 20 12 20 Z M 17 12 C 17 14.7614 14.7614 17 12 17 C 9.23858 17 7 14.7614 7 12 C 7 9.23858 9.23858 7 12 7 C 14.7614 7 17 9.23858 17 12 Z'
+        : 'M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z');
 };
+
 const handleRadioButtonClick = async (radioButton, optionName) => {
     const ariaLabel = radioButton.getAttribute('aria-label');
-    const visibilityOption = mapAriaLabelToEnum(ariaLabel);
-    const currentlyCheckedButton = document.querySelector('button[role="radio"][aria-checked="true"]');
-    console.log(radioButton)
-    console.log(currentlyCheckedButton)
+    let visibilityOption = mapAriaLabelToEnum(ariaLabel);
+    console.log("RADIO BUTTON > ", radioButton)
+    console.log("OPTION NAME  > ", optionName)
+    if (!visibilityOption) {
+        visibilityOption = chatInstance.user.privacySettings[PrivacySettings.LAST_SEEN_VISIBILITY];
+    }
+
+    const radioGroup = radioButton.closest('div[role="radiogroup"]');
+    const currentlyCheckedButton = radioGroup.querySelector('button[role="radio"][aria-checked="true"]');
+
     if (radioButton === currentlyCheckedButton) {
-        console.log("AYNI BUTON TIKLANDI")
         return;
     }
 
     if (currentlyCheckedButton) {
-        toggleRadioButton(currentlyCheckedButton, false);
+        updateRadioButtonState(currentlyCheckedButton, false);
     }
 
-    // Seçilen butonu işaretle
-    toggleRadioButton(radioButton, true);
-    const privacyDTO = {
+    updateRadioButtonState(radioButton, true);
+
+    let updatedPrivacySettingsDTO = {
         ...chatInstance.user.privacySettings,
         [optionName]: visibilityOption
     };
+    console.log("SETTINGS > ", updatedPrivacySettingsDTO);
+    console.log("SETTINGS CHAT INSTANCE > ", chatInstance.user);
+    if (optionName === PrivacySettings.LAST_SEEN_VISIBILITY) {
+        const radioGroups = document.querySelectorAll('[role="radiogroup"]');
+        if (radioGroups.length > 1) {
+            const secondRadioGroup = radioGroups[1];
+            const selectedButton = secondRadioGroup.querySelector('button[aria-checked="true"]');
+            if (!mapAriaLabelToEnum(selectedButton.ariaLabel)) {
+                updatedPrivacySettingsDTO[PrivacySettings.ONLINE_STATUS_VISIBILITY] = visibilityOption;
+            }
+        }
+    }
 
-    const result = await fetchUpdatePrivacy(chatInstance.user.id, privacyDTO);
-    console.log("RESULT >> ", result)
+    const result = await fetchUpdatePrivacy(chatInstance.user.id, updatedPrivacySettingsDTO);
     if (result) {
+        updatedPrivacySettings(chatInstance.user, result);
+        chatInstance.user = { ...chatInstance.user, ...result };
         chatInstance.webSocketManagerContacts.sendMessageToAppChannel('update-privacy', result);
     }
 };
+const updatedPrivacySettings = (oldPrivacySettings, newPrivacySettings) => {
+    console.log("NEW PRIVACY > ", newPrivacySettings)
+    console.log("OLD PRIVACY > ", oldPrivacySettings)
+    if (newPrivacySettings.onlineStatusVisibility !== oldPrivacySettings.onlineStatusVisibility) {
+        const messageBoxElement = document.querySelector('.message-box1');
+        if (messageBoxElement && messageBoxElement.data.id === newContactPrivacy.id) {
+            if (newPrivacySettings.onlineStatusVisibility === "EVERYONE" && ((messageBoxElement.data.privacySettings.onlineStatusVisibility === "CONTACTS" && messageBoxElement.data.privacySettings.inContactList) || messageBoxElement.data.privacySettings.onlineStatusVisibility === "EVERYONE")) {
 
+                if (!statusElement) {
+                    const contactsOnlineStatusElement = isOnlineStatus(user, newContactPrivacy);
+                    const onlineStatusParentElement = messageBoxElement.querySelector('.message-box1-2-2');
+                    if (contactsOnlineStatusElement && onlineStatusParentElement) {
+                        onlineStatusParentElement.appendChild(contactsOnlineStatusElement);
+                    }
+                }
+            } else {
+                const statusElement = messageBoxElement.querySelector('.online-status');
+                if (statusElement) {
+                    statusElement.remove();
+                }
+            }
+        }
+    }
 
+    else if (newPrivacySettings.profilePhotoVisibility !== oldPrivacySettings.profilePhotoVisibility) {
+        console.log("PROFILE STATUS");
+        // handleProfilePhotoVisibilityChange(this.user, updatePrivacy);
+    }
+
+    else if (newPrivacySettings.lastSeenVisibility !== oldPrivacySettings.lastSeenVisibility) {
+        console.log("LASTSEEN STATUS");
+        // handleLastSeenVisibilityChange(this.user, updatePrivacy);
+    }
+
+    else if (newPrivacySettings.aboutVisibility !== oldPrivacySettings.aboutVisibility) {
+        console.log("ABOUT STATUS");
+        // handleAboutVisibilityChange(this.user, updatePrivacy);
+    }
+
+}
 const VisibilityOption = {
     EVERYONE: 'EVERYONE',
     CONTACTS: 'CONTACTS',
     NOBODY: 'NOBODY'
 };
+
 const mapAriaLabelToEnum = (ariaLabel) => {
     switch (ariaLabel) {
         case 'Herkes':
@@ -914,7 +931,8 @@ const mapAriaLabelToEnum = (ariaLabel) => {
         default:
             return null;
     }
-}
+};
+
 const mapEnumToAriaLabel = (visibilityOption) => {
     switch (visibilityOption) {
         case VisibilityOption.EVERYONE:
@@ -926,6 +944,14 @@ const mapEnumToAriaLabel = (visibilityOption) => {
         default:
             return null;
     }
+};
+
+const PrivacySettings = {
+    LAST_SEEN_VISIBILITY: 'lastSeenVisibility',
+    ONLINE_STATUS_VISIBILITY: 'onlineStatusVisibility',
+    ABOUT_VISIBILITY: 'aboutVisibility',
+    PROFILE_PHOTO_VISIBILITY: 'profilePhotoVisibility',
+    READ_RECEIPTS: 'readReceipts'
 };
 
 const fetchUpdatePrivacy = async (userId, privacyDTO) => {

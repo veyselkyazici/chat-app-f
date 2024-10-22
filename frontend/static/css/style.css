@@ -1350,6 +1350,34 @@ button {
   background-color: white;
 }
 
+.chat-about-div {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 20px;
+  color: #667781;
+}
+
+.chat-about-span {
+  word-break: break-word;
+  visibility: visible;
+  -webkit-user-select: text;
+}
+
+.chat-about {
+  flex-grow: 1;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 20px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-color: transparent;
+}
+
 .chat:hover,
 .cursor:focus {
   background-color: #f5f6f6;
@@ -4436,6 +4464,10 @@ button.chat-options-btn:focus {
   color: #008069;
 }
 
+button:focus {
+  outline: none;
+}
+
 .lastseen-and-online {
   overflow-x: hidden;
   overflow-y: auto;
@@ -4465,10 +4497,11 @@ button.chat-options-btn:focus {
 .lastseen-and-online-1-1 {
   margin-bottom: 20px;
   margin-top: 20px;
+  line-height: 1.2;
+  font-weight: normal;
   color: #008069;
   margin-left: 0;
-  font-size: 1rem;
-  line-height: 20px;
+  font-size: .875rem;
   margin-right: 0;
 }
 

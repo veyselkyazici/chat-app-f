@@ -7,8 +7,9 @@ import { ModalOptionsDTO } from "./showModal.js";
 import { createIncomingFriendRequests } from "./IncomingFriendRequests.js";
 import { createApprovedRequestHistory } from "./ApprovedRequestHistory.js";
 import WebSocketManager from "../websocket.js";
-import { hideElements } from './util.js';
+import { hideElements, createElement, createSvgElement } from './util.js';
 import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateMessageBox, isChatExist } from "./ChatBox.js";
+import { isOnlineStatus } from "./MessageBox.js";
 
 export let webSocketManagerContacts;
 export let webSocketManagerChat;
@@ -328,20 +329,62 @@ export default class Chat extends AbstractView {
 
         this.webSocketManagerContacts.subscribeToChannel(updatePrivacy, async (updatePrivacyMessage) => {
             const updatePrivacy = JSON.parse(updatePrivacyMessage.body);
-            const chats = Array.from(document.querySelectorAll('.chat1'));
-            const findChat = chats.find(chat => chat.chatData.userProfileResponseDTO.id === updatePrivacy.id);
+
             const findContact = this.contactList.find(contact => contact.userProfileResponseDTO.id === updatePrivacy.id);
-            const findChatx = this.chatList.find(chat => chat.userProfileResponseDTO.id === updatePrivacy.id);
+            const findChat = this.chatList.find(chat => chat.userProfileResponseDTO.id === updatePrivacy.id);
+            console.log("FIND CHAT > ", findChat)
+            console.log("FIND CONTACT > ", findContact)
+            console.log("FIND CONTACT > ", updatePrivacy)
 
-            if (findContact) {
-                if (findContact.inContactList) {
+            let oldPrivacySettings = null;
+            let newPrivacySettings;
 
-                } else {
-                    
+            if (findChat) {
+                oldPrivacySettings = findChat.userProfileResponseDTO.privacySettings;
+                findChat.userProfileResponseDTO = updatePrivacy;
+                newPrivacySettings = {
+                    contactsDTO: {
+                        contact: { ...findChat.contactsDTO },
+                        userProfileResponseDTO: { ...findChat.userProfileResponseDTO }
+                    }
                 }
-            } else {
-                console.log("AAAAAAAAAAAAAAA")
             }
+            if (findContact) {
+                oldPrivacySettings = findContact.userProfileResponseDTO.privacySettings;
+                findContact.userProfileResponseDTO = updatePrivacy;
+                newPrivacySettings = {
+                    contactsDTO: {
+                        contact: { ...findContact.contactsDTO },
+                        userProfileResponseDTO: { ...findContact.userProfileResponseDTO }
+                    }
+                }
+            }
+            console.log("newPrivacySettings > ", newPrivacySettings)
+            console.log("UPDATE PRIVACY > ", updatePrivacy)
+            console.log("UPDATE PRIVACY > ", oldPrivacySettings)
+            if (oldPrivacySettings && newPrivacySettings) {
+                console.log("SSSSSSSSSSSSSSSSS")
+                if (updatePrivacy.privacySettings.onlineStatusVisibility !== oldPrivacySettings.onlineStatusVisibility) {
+                    console.log("ONLINE STATUS");
+                    handleOnlineStatusVisibilityChange(this.user, newPrivacySettings);
+                }
+
+                if ((updatePrivacy.privacySettings.profilePhotoVisibility !== oldPrivacySettings.profilePhotoVisibility)) {
+                    console.log("PROFILE STATUS");
+                    handleProfilePhotoVisibilityChange(newPrivacySettings.contactsDTO);
+                }
+
+                if (updatePrivacy.privacySettings.lastSeenVisibility !== oldPrivacySettings.lastSeenVisibility) {
+                    console.log("LASTSEEN STATUS");
+                    handleLastSeenVisibilityChange(this.user, newPrivacySettings);
+                }
+
+                if (updatePrivacy.privacySettings.aboutVisibility !== oldPrivacySettings.aboutVisibility) {
+                    console.log("ABOUT STATUS");
+                    handleAboutVisibilityChange(newPrivacySettings.contactsDTO);
+                }
+            }
+
         });
 
 
@@ -398,8 +441,7 @@ export default class Chat extends AbstractView {
 
     async initialData() {
         this.user = await fetchGetUserWithPrivacySettingsByToken();
-        console.log("InitialData userId: ", this.user)
-
+        console.log("USER >>", this.user)
         this.contactList = await fetchGetContactList(this.user.id);
         console.log("CONTACT LIST > ", this.contactList)
         this.chatList = await fetchGetChatSummaries(this.user.id);
@@ -412,10 +454,8 @@ export default class Chat extends AbstractView {
         //     newData.lastMessageTime = i;
         //     this.chatList.push(newData)
         // }
-        console.log(this.chatList)
-        console.log("UZUNLUK > ", this.chatList.length)
+        console.log("CHAT LIST >>> ", this.chatList)
     }
-
 
     addEventListeners() {
         const chatListContentElement = document.querySelector(".chat-list-content")
@@ -493,36 +533,8 @@ export default class Chat extends AbstractView {
     }
 
     handleInitialContactList() {
-        createContactList(this.contactList, this.chatList/**, this.chatElements*/);
+        createContactList();
     }
-
-    // handleReSize() {
-    //     const chatListContentElement = document.querySelector(".chat-list-content");
-    //     const boxElement = document.querySelector(".box");
-    //     const visibleItemCount = Math.ceil(boxElement.clientHeight / 72) + 7;
-    //     chatListContentElement.style.height = this.chatList.length * 72 + "px";
-
-    //     const currentItemElements = document.querySelectorAll('.chat1');
-    //     const currentItemCount = currentItemElements.length;
-    //     console.log("currentItemCount: ", currentItemCount, " visibleItemCount: " + visibleItemCount);
-
-
-    //         for (let i = currentItemCount; i < visibleItemCount; i++) {
-    //             const chatDOM = this.createChatElement(this.chatList[i], i);
-    //             this.chatElements.push(chatDOM);
-    //             chatListContentElement.appendChild(chatDOM.chatElementDOM);
-    //             this.addChatEventListeners(chatDOM.chatElementDOM);
-    //         }
-
-    //         for (let i = currentItemCount - 1; i >= visibleItemCount; i--) {
-    //             chatListContentElement.removeChild(currentItemElements[i]);
-    //             this.removeChatEventListeners(currentItemElements[i]);
-
-    //     }
-
-    //     // Update positions and content of visible items
-    //     this.updateVisibleItems();
-    // }
 
     destroy() {
 
@@ -530,7 +542,158 @@ export default class Chat extends AbstractView {
 
 }
 
+const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
+    const messageBoxElement = document.querySelector('.message-box1');
+    if (messageBoxElement && messageBoxElement.data.contactsDTO.userProfileResponseDTO.id === newContactPrivacy.contactsDTO.userProfileResponseDTO.id) {
+        console.log("AAAAAAAAAAAAAAAAAAAASDFASDF1")
+        const statusElement = messageBoxElement.querySelector('.online-status');
+        if (user.privacySettings.lastSeenVisibility === 'EVERYONE' || (newContactPrivacy.contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.lastSeenVisibility === 'CONTACTS')) {
+            if (newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'EVERYONE') {
+                if (!statusElement) {
+                    const contactsOnlineStatusElement = isOnlineStatus(user, newContactPrivacy.contactsDTO);
+                    const onlineStatusParentElement = messageBoxElement.querySelector('.message-box1-2-2');
+                    if (contactsOnlineStatusElement && onlineStatusParentElement) {
+                        onlineStatusParentElement.appendChild(contactsOnlineStatusElement);
+                    }
+                }
+            } else if (newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'CONTACTS' && newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser) {
+                if (!statusElement) {
+                    const contactsOnlineStatusElement = isOnlineStatus(user, newContactPrivacy.contactsDTO);
+                    const onlineStatusParentElement = messageBoxElement.querySelector('.message-box1-2-2');
+                    if (contactsOnlineStatusElement && onlineStatusParentElement) {
+                        onlineStatusParentElement.appendChild(contactsOnlineStatusElement);
+                    }
+                }
+            }
+            else {
+                if (statusElement) {
+                    statusElement.remove();
+                }
+            }
+        }
 
+    }
+}
+
+const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
+    console.log('Online Status Visibility changed > ', newContactPrivacy);
+    const messageBoxElement = document.querySelector('.message-box1');
+    if (messageBoxElement && messageBoxElement.data.contactsDTO.userProfileResponseDTO.id === newContactPrivacy.contactsDTO.userProfileResponseDTO.id) {
+        console.log("AAAAAAAAAAAAAAAAAAAASDFASDF1")
+        const statusElement = messageBoxElement.querySelector('.online-status');
+        if (user.privacySettings.onlineStatusVisibility === 'EVERYONE' || (newContactPrivacy.contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.onlineStatusVisibility === 'CONTACTS')) {
+            if (newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'EVERYONE') {
+                if (!statusElement) {
+                    const contactsOnlineStatusElement = isOnlineStatus(user, newContactPrivacy.contactsDTO);
+                    const onlineStatusParentElement = messageBoxElement.querySelector('.message-box1-2-2');
+                    if (contactsOnlineStatusElement && onlineStatusParentElement) {
+                        onlineStatusParentElement.appendChild(contactsOnlineStatusElement);
+                    }
+                }
+            } else if (newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'CONTACTS' && newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser) {
+                if (!statusElement) {
+                    const contactsOnlineStatusElement = isOnlineStatus(user, newContactPrivacy.contactsDTO);
+                    const onlineStatusParentElement = messageBoxElement.querySelector('.message-box1-2-2');
+                    if (contactsOnlineStatusElement && onlineStatusParentElement) {
+                        onlineStatusParentElement.appendChild(contactsOnlineStatusElement);
+                    }
+                }
+            }
+            else {
+                if (statusElement) {
+                    statusElement.remove();
+                }
+            }
+        }
+
+    }
+}
+const handleProfilePhotoVisibilityChange = (newValue) => {
+    const visibleChatsElements = [...document.querySelectorAll('.chat1')];
+    const visibleChatElement = visibleChatsElements.find(chat => chat.chatData.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id);
+    const bool = (newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'EVERYONE') || (newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'CONTACTS' && newValue.contact.userHasAddedRelatedUser);
+    if (visibleChatElement) {
+        const imageElement = visibleChatElement.querySelector('.image');
+        changesVisibilityProfilePhoto(bool, imageElement);
+    }
+    if (document.querySelector('.a1-1-1-1-1-1-3')) {
+        const visibleContactsElements = [...document.querySelectorAll('.contact1')];
+        const visibleContactElement = visibleContactsElements.find(chat => chat.contactData.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id);
+        const imageElement = visibleContactElement?.querySelector('.image');
+        changesVisibilityProfilePhoto(bool, imageElement);
+    }
+    const messageBoxElement = document.querySelector('.message-box1');
+    console.log("MESSAGE BOX DATA > ", messageBoxElement.data)
+    if (messageBoxElement && messageBoxElement.data.contactsDTO.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id) {
+        console.log("MESSAGE BOX DATA > ", messageBoxElement.data)
+        const imageElement = messageBoxElement.querySelector('.message-box1-2-1-1');
+        changesVisibilityProfilePhoto(bool, imageElement);
+    }
+}
+const changesVisibilityProfilePhoto = (bool, imageElement) => {
+    if (bool && imageElement) {
+        if (imageElement.firstElementChild.className === 'svg-div') {
+            imageElement.removeChild(imageElement.firstElementChild);
+            const imgElement = createElement('img', 'user-image', {}, { 'src': 'static/image/img.jpeg', 'alt': '', 'draggable': 'false', 'tabindex': '-1' });
+            imageElement.appendChild(imgElement);
+        }
+    } else {
+        if (imageElement?.firstElementChild.className === 'user-image') {
+            imageElement.removeChild(imageElement.firstElementChild);
+            const svgDiv = createElement('div', 'svg-div');
+
+            const svgSpan = createElement('span', '', {}, { 'aria-hidden': 'true', 'data-icon': 'default-user' });
+            const svgElement = createSvgElement('svg', { class: 'svg-element', viewBox: '0 0 212 212', height: '212', width: '212', preserveAspectRatio: 'xMidYMid meet', version: '1.1', x: '0px', y: '0px', 'enable-background': 'new 0 0 212 212' });
+            const titleElement = createSvgElement('title', {});
+            titleElement.textContent = 'default-user';
+            const pathBackground = createSvgElement('path', { fill: '#DFE5E7', class: 'background', d: 'M106.251,0.5C164.653,0.5,212,47.846,212,106.25S164.653,212,106.25,212C47.846,212,0.5,164.654,0.5,106.25 S47.846,0.5,106.251,0.5z' });
+            const groupElement = createSvgElement('g', {});
+            const pathPrimary1 = createSvgElement('path', { fill: '#FFFFFF', class: 'primary', d: 'M173.561,171.615c-0.601-0.915-1.287-1.907-2.065-2.955c-0.777-1.049-1.645-2.155-2.608-3.299 c-0.964-1.144-2.024-2.326-3.184-3.527c-1.741-1.802-3.71-3.646-5.924-5.47c-2.952-2.431-6.339-4.824-10.204-7.026 c-1.877-1.07-3.873-2.092-5.98-3.055c-0.062-0.028-0.118-0.059-0.18-0.087c-9.792-4.44-22.106-7.529-37.416-7.529 s-27.624,3.089-37.416,7.529c-0.338,0.153-0.653,0.318-0.985,0.474c-1.431,0.674-2.806,1.376-4.128,2.101 c-0.716,0.393-1.417,0.792-2.101,1.197c-3.421,2.027-6.475,4.191-9.15,6.395c-2.213,1.823-4.182,3.668-5.924,5.47 c-1.161,1.201-2.22,2.384-3.184,3.527c-0.964,1.144-1.832,2.25-2.609,3.299c-0.778,1.049-1.464,2.04-2.065,2.955 c-0.557,0.848-1.033,1.622-1.447,2.324c-0.033,0.056-0.073,0.119-0.104,0.174c-0.435,0.744-0.79,1.392-1.07,1.926 c-0.559,1.068-0.818,1.678-0.818,1.678v0.398c18.285,17.927,43.322,28.985,70.945,28.985c27.678,0,52.761-11.103,71.055-29.095 v-0.289c0,0-0.619-1.45-1.992-3.778C174.594,173.238,174.117,172.463,173.561,171.615z' });
+            const pathPrimary2 = createSvgElement('path', { fill: '#FFFFFF', class: 'primary', d: 'M106.002,125.5c2.645,0,5.212-0.253,7.68-0.737c1.234-0.242,2.443-0.542,3.624-0.896 c1.772-0.532,3.482-1.188,5.12-1.958c2.184-1.027,4.242-2.258,6.15-3.67c2.863-2.119,5.39-4.646,7.509-7.509 c0.706-0.954,1.367-1.945,1.98-2.971c0.919-1.539,1.729-3.155,2.422-4.84c0.462-1.123,0.872-2.277,1.226-3.458 c0.177-0.591,0.341-1.188,0.49-1.792c0.299-1.208,0.542-2.443,0.725-3.701c0.275-1.887,0.417-3.827,0.417-5.811 c0-1.984-0.142-3.925-0.417-5.811c-0.184-1.258-0.426-2.493-0.725-3.701c-0.15-0.604-0.313-1.202-0.49-1.793 c-0.354-1.181-0.764-2.335-1.226-3.458c-0.693-1.685-1.504-3.301-2.422-4.84c-0.613-1.026-1.274-2.017-1.98-2.971 c-2.119-2.863-4.646-5.39-7.509-7.509c-1.909-1.412-3.966-2.643-6.15-3.67c-1.638-0.77-3.348-1.426-5.12-1.958 c-1.181-0.355-2.39-0.655-3.624-0.896c-2.468-0.484-5.035-0.737-7.68-0.737c-21.162,0-37.345,16.183-37.345,37.345 C68.657,109.317,84.84,125.5,106.002,125.5z' });
+
+            svgElement.appendChild(titleElement);
+            svgElement.appendChild(pathBackground);
+            groupElement.appendChild(pathPrimary1);
+            groupElement.appendChild(pathPrimary2);
+            svgElement.appendChild(groupElement);
+            svgSpan.appendChild(svgElement);
+            svgDiv.appendChild(svgSpan);
+            imageElement.appendChild(svgDiv);
+        }
+    }
+}
+
+const handleAboutVisibilityChange = (newValue) => {
+    console.log('ABOUT VISIBILITY CHANGE > ', newValue);
+    const bool = (newValue.userProfileResponseDTO.privacySettings.aboutVisibility === 'EVERYONE') || (newValue.userProfileResponseDTO.privacySettings.aboutVisibility === 'CONTACTS' && newValue.contact.userHasAddedRelatedUser);
+    if (document.querySelector('.a1-1-1-1-1-1-3')) {
+        const visibleContactsElements = [...document.querySelectorAll('.contact1')];
+        const visibleContactElement = visibleContactsElements.find(chat => chat.contactData.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id);
+        const aboutElement = visibleContactElement?.querySelector('.message');
+        changesVisibilityAbout(bool, aboutElement, newValue.userProfileResponseDTO.about);
+    }
+}
+const changesVisibilityAbout = (bool, aboutElement, about) => {
+    console.log("DDDDDDDDDDDDDDDDDDDDDD > ", bool);
+    console.log("DDDDDDDDDDDDDDDDDDDDDD > ", aboutElement);
+    console.log("DDDDDDDDDDDDDDDDDDDDDD > ", about);
+    if (bool) {
+        if (aboutElement) {
+            if (!aboutElement.firstElementChild) {
+                const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
+                aboutElement.appendChild(messageSpan);
+                const innerSpan = createElement('span', 'message-span-span', {}, { 'dir': 'ltr', 'aria-label': '' }, about);
+                messageSpan.appendChild(innerSpan);
+                console.log("DDDDDDDDDDDDDDDDDDDDDD > ", aboutElement);
+            }
+        }
+    } else {
+        if (aboutElement && aboutElement.firstElementChild) {
+            aboutElement.removeChild(aboutElement.firstElementChild);
+        }
+
+    }
+}
 const getContactList = 'http://localhost:8080/api/v1/contacts/get-contact-list';
 const fetchGetContactList = async (userId) => {
     try {

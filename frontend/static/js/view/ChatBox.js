@@ -58,7 +58,7 @@ function handleChats() {
 }
 
 function createChatBox(chat, index) {
-    const time = chat.lastMessageTime;
+    const time = chat.chatDTO.lastMessageTime;
     const date = new Date(time);
     const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -92,7 +92,7 @@ function createChatBox(chat, index) {
     const imageDiv = createElement('div', 'image', { 'height': '49px', 'width': '49px' });
     innerDiv.appendChild(imageDiv);
 
-    const imgElement = createVisibilityProfilePhoto(chat.userProfileResponseDTO);
+    const imgElement = createVisibilityProfilePhoto(chat.userProfileResponseDTO, chat.contactsDTO, chatInstance.user);
 
     imageDiv.appendChild(imgElement);
 
@@ -108,7 +108,7 @@ function createChatBox(chat, index) {
     const nameDiv = createElement('div', 'name');
     chatNameDiv.appendChild(nameDiv);
 
-    const contactName = chat.userContactName != null ? chat.userContactName : chat.userProfileResponseDTO.email;
+    const contactName = chat.contactsDTO.userContactName != null ? chat.contactsDTO.userContactName : chat.userProfileResponseDTO.email;
 
     const nameSpan = createElement('span', 'name-span', { 'min-height': '0px' }, { 'dir': 'auto', 'title': contactName, 'aria-label': '' }, contactName);
     nameDiv.appendChild(nameSpan);
@@ -125,7 +125,7 @@ function createChatBox(chat, index) {
     const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
     messageDiv.appendChild(messageSpan);
 
-    const innerMessageSpan = createElement('span', 'message-span-span', { 'min-height': '0px' }, { 'dir': 'ltr', 'aria-label': '' }, chat.lastMessage);
+    const innerMessageSpan = createElement('span', 'message-span-span', { 'min-height': '0px' }, { 'dir': 'ltr', 'aria-label': '' }, chat.chatDTO.lastMessage);
     messageSpan.appendChild(innerMessageSpan);
 
     const chatOptionsDiv = createElement('div', 'chat-options');
@@ -161,12 +161,12 @@ function updateMessageBox(recipientJSON) {
 }
 
 function moveChatToTop(chatRoomId) {
-    const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatRoomId);
+    const chatIndex = chatInstance.chatList.findIndex(chat => chat.chatDTO.id === chatRoomId);
     if (chatIndex !== -1) {
         const chat = chatInstance.chatList.splice(chatIndex, 1)[0];
         chatInstance.chatList.unshift(chat);
         const chatElements = document.querySelectorAll('.chat1');
-        const chatElement = Array.from(chatElements).find(el => el.chatData.id === chatRoomId);
+        const chatElement = Array.from(chatElements).find(el => el.chatData.chatDTO.id === chatRoomId);
         if (chatElement) {
             const chatListContentElement = document.querySelector(".chat-list-content");
             chatListContentElement.prepend(chatElement);
@@ -291,10 +291,10 @@ function handleOptionsBtnClick(event) {
                 });
                 li.addEventListener('click', async () => {
                     const dto = new UserSettingsDTO({
-                        friendId: chatData.friendId,
-                        userId: chatData.userId,
-                        id: chatData.id,
-                        friendEmail: chatData.friendEmail,
+                        friendId: chatData.userProfileResponseDTO.id,
+                        userId: chatData.contactsDTO.userId,
+                        id: chatData.chatDTO.id,
+                        friendEmail: chatData.userProfileResponseDTO.email,
                         userChatSettings: { ...chatData.userChatSettings }
                     });
                     switch (index) {
@@ -309,14 +309,14 @@ function handleOptionsBtnClick(event) {
                             if (chatData.userChatSettings.blocked) {
                                 const mainCallback = async () => {
                                     await fetchChatUnblock(dto);
-                                    const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
+                                    const chatIndex = chatInstance.chatList.findIndex(chat => chat.chatDTO.id === chatData.chatDTO.id);
                                     if (chatIndex !== -1) {
                                         chatInstance.chatList[chatIndex].userChatSettings.blocked = false;
                                     }
                                 };
                                 const modalDTO = new ModalOptionsDTO({
                                     title: '',
-                                    content: `${chatData.friendEmail} kişinin Engeli kaldırılsın mı ?`,
+                                    content: `${chatData.userProfileResponseDTO.friendEmail} kişinin Engeli kaldırılsın mı ?`,
                                     mainCallback: mainCallback,
                                     buttonText: 'Engeli kaldır',
                                     showBorders: false,
@@ -328,14 +328,14 @@ function handleOptionsBtnClick(event) {
                             } else {
                                 const mainCallback = async () => {
                                     await fetchChatBlock(dto);
-                                    const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
+                                    const chatIndex = chatInstance.chatList.findIndex(chat => chat.chatDTO.id === chatData.chatDTO.id);
                                     if (chatIndex !== -1) {
                                         chatInstance.chatList[chatIndex].userChatSettings.blocked = true;
                                     }
                                 };
                                 const modalDTO = new ModalOptionsDTO({
                                     title: '',
-                                    content: `${chatData.friendEmail} kişi Engellensin mi?`,
+                                    content: `${chatData.userProfileResponseDTO.friendEmail} kişi Engellensin mi?`,
                                     mainCallback: mainCallback,
                                     buttonText: 'Engelle',
                                     showBorders: false,
@@ -371,17 +371,16 @@ async function handleChatClick(event) {
         return;
     }
     ariaSelected(chatElementDOM, chatInstance, innerDiv);
-    const latestMessages = await fetchGetLatestMessages(chatData.id);
+    const latestMessages = await fetchGetLatestMessages(chatData.chatDTO.id);
     const chatDTO = {
-        contact: {
-            id: chatData.contactId,
-            userContactName: chatData.userContactName,
-            userProfileResponseDTO: chatData.userProfileResponseDTO
+        contactsDTO: {
+            contact: { ...chatData.contactsDTO },
+            userProfileResponseDTO: { ...chatData.userProfileResponseDTO }
         },
         user: chatInstance.user,
         messages: latestMessages,
         userChatSettings: chatData.userChatSettings,
-        id: chatData.id,
+        id: chatData.chatDTO.id,
     };
     chatData.messages = latestMessages;
     console.log("CHAT DATA >> ", chatData)
