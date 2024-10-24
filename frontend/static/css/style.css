@@ -154,11 +154,7 @@ section {
 }
 
 /* Footer styles */
-.footer {
-  text-align: center;
-  padding: 20px;
-  background-color: #111B21;
-}
+
 
 .social-icons {
   display: flex;
@@ -192,6 +188,11 @@ body>.footer {
   margin-top: auto;
 }
 
+.footer {
+  text-align: center;
+  padding: 20px;
+  background-color: #111B21;
+}
 
 .buttons {
   margin-top: 20px;
@@ -845,12 +846,26 @@ svg {
   flex-grow: 0;
 }
 
+.default-content-1 {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f0f0f0;
+  text-align: center;
+  padding: 20px;
+}
+.default-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 .content {
   position: relative;
   z-index: 100;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .app {

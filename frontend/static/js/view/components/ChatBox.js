@@ -1,9 +1,9 @@
 // ChatBox.js
-import { appendMessage, createMessageBox, renderMessage } from "./MessageBox.js";
-import { chatInstance, UserSettingsDTO } from "./Chat.js";
-import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
-import { showModal, ModalOptionsDTO } from './showModal.js';
-import { ariaSelected, createElement, createVisibilityProfilePhoto } from "./util.js";
+import { createMessageBox, renderMessage, removeMessageBoxAndUnsubscribe } from "./MessageBox.js";
+import { chatInstance, UserSettingsDTO } from "../pages/Chat.js";
+import { virtualScroll, UpdateItemsDTO } from '../utils/virtualScroll.js';
+import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
+import { ariaSelected, createElement, createVisibilityProfilePhoto } from "../utils/util.js";
 
 function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
@@ -383,12 +383,8 @@ async function handleChatClick(event) {
         id: chatData.chatDTO.id,
     };
     chatData.messages = latestMessages;
-    console.log("CHAT DATA >> ", chatData)
-    console.log("DTO >> ", chatDTO)
-    // createMessageBox(chatData);
+    removeMessageBoxAndUnsubscribe();
     createMessageBox(chatDTO);
-
-    console.log('Chat clicked:', chatElementDOM, chatData);
 }
 
 function removeEventListeners(chatElementDOM) {

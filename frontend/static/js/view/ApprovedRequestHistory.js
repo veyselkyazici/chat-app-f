@@ -1,5 +1,5 @@
 // FriendRequestReplyNotificationView.js
-import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
+import { addBackspaceEventListener, removeElements, visibleElements } from './utils/util.js'
 
 async function createApprovedRequestHistory(fetchFriendRequestReplyData) {
 

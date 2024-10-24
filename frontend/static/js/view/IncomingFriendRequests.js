@@ -1,6 +1,6 @@
 // friendReqeustNotification.js
-import { webSocketManagerContacts } from "./Chat.js";
-import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
+import { webSocketManagerContacts } from "./pages/Chat.js";
+import { addBackspaceEventListener, removeElements, visibleElements } from './utils/util.js'
 
 
 async function createIncomingFriendRequests() {
