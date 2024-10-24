@@ -6,7 +6,7 @@ class WebSocketManager {
         this.subscriptions = new Map();
     }
 
-    connectWebSocket(successCallback = () => {}, errorCallback = () => {}) {
+    connectWebSocket(successCallback = () => { }, errorCallback = () => { }) {
         try {
             this.sockJs = new SockJS(this.webSocketUrl);
             this.stompClient = Stomp.over(this.sockJs);
@@ -27,7 +27,6 @@ class WebSocketManager {
 
     disconnectWebSocket() {
         if (this.stompClient) {
-            this.notifyOnlineStatus(false);
             this.stompClient.disconnect();
             this.subscriptions.forEach((subscription) => {
                 subscription.unsubscribe();
@@ -36,14 +35,19 @@ class WebSocketManager {
         }
     }
 
-  
+
     subscribeToChannel(channel, callback) {
+        console.log("SUBSCRIBE TO CHANNEL");
         if (this.stompClient && !this.subscriptions.has(channel)) {
+            console.log("SUBSCRIBE TO CHANNEL IFFFFFFFFFFFFFFFF");
             const subscription = this.stompClient.subscribe(channel, callback);
             this.subscriptions.set(channel, subscription);
         }
+        for (const [key, value] of this.subscriptions) {
+            console.log(`Key: ${key}, Value: ${value}`);
+        }
     }
-  
+
     unsubscribeFromChannel(channel) {
         if (this.subscriptions.has(channel)) {
             const subscription = this.subscriptions.get(channel);
@@ -88,7 +92,7 @@ const fetchUpdateUserLastSeen = async (userId) => {
                 'Content-Type': 'application/json',
                 'Authorization': token,
             },
-            body: JSON.stringify({userId: userId}),
+            body: JSON.stringify({ userId: userId }),
         });
 
         if (!response.ok) {

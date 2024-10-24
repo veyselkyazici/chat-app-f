@@ -1,5 +1,5 @@
-import { chatInstance } from "./Chat.js";
-import { clearErrorMessages, isValidEmail, showError } from "./util.js";
+import { chatInstance } from "../pages/Chat.js";
+import { isValidEmail, showError } from "../utils/util.js";
 
 const addContactModal = (options) => {
     const headerStyle = options.showBorders ? '' : 'border-bottom: none;';

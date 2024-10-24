@@ -1,6 +1,7 @@
 
-import { createElement } from "./util.js";
-import { chatInstance } from "./Chat.js";
+import { createElement } from "../utils/util.js";
+import { chatInstance } from "../pages/Chat.js";
+import { ifVisibilitySettingsChangeWhileMessageBoxIsOpen } from "./MessageBox.js";
 
 function createSettingsHtml() {
     const span = document.querySelector(".a1-1-1");
@@ -341,7 +342,7 @@ const handleNotificationsClick = () => {
     console.log("BİLDİRİMLER TIKLANDI")
 }
 function handleLogoutClick() {
-    console.log("ÇIKIŞ YAP TIKLANDI")
+    chatInstance.logout();
 }
 const handleReadReceiptsClick = async () => {
     const newReadReceiptsValue = !chatInstance.user.privacySettings.readReceipts;
@@ -869,51 +870,14 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
 
     const result = await fetchUpdatePrivacy(chatInstance.user.id, updatedPrivacySettingsDTO);
     if (result) {
-        updatedPrivacySettings(chatInstance.user, result);
+        if (document.querySelector('.message-box1')) {
+            ifVisibilitySettingsChangeWhileMessageBoxIsOpen(chatInstance.user, result);
+        }
         chatInstance.user = { ...chatInstance.user, ...result };
         chatInstance.webSocketManagerContacts.sendMessageToAppChannel('update-privacy', result);
     }
 };
-const updatedPrivacySettings = (oldPrivacySettings, newPrivacySettings) => {
-    console.log("NEW PRIVACY > ", newPrivacySettings)
-    console.log("OLD PRIVACY > ", oldPrivacySettings)
-    if (newPrivacySettings.onlineStatusVisibility !== oldPrivacySettings.onlineStatusVisibility) {
-        const messageBoxElement = document.querySelector('.message-box1');
-        if (messageBoxElement && messageBoxElement.data.id === newContactPrivacy.id) {
-            if (newPrivacySettings.onlineStatusVisibility === "EVERYONE" && ((messageBoxElement.data.privacySettings.onlineStatusVisibility === "CONTACTS" && messageBoxElement.data.privacySettings.inContactList) || messageBoxElement.data.privacySettings.onlineStatusVisibility === "EVERYONE")) {
 
-                if (!statusElement) {
-                    const contactsOnlineStatusElement = isOnlineStatus(user, newContactPrivacy);
-                    const onlineStatusParentElement = messageBoxElement.querySelector('.message-box1-2-2');
-                    if (contactsOnlineStatusElement && onlineStatusParentElement) {
-                        onlineStatusParentElement.appendChild(contactsOnlineStatusElement);
-                    }
-                }
-            } else {
-                const statusElement = messageBoxElement.querySelector('.online-status');
-                if (statusElement) {
-                    statusElement.remove();
-                }
-            }
-        }
-    }
-
-    else if (newPrivacySettings.profilePhotoVisibility !== oldPrivacySettings.profilePhotoVisibility) {
-        console.log("PROFILE STATUS");
-        // handleProfilePhotoVisibilityChange(this.user, updatePrivacy);
-    }
-
-    else if (newPrivacySettings.lastSeenVisibility !== oldPrivacySettings.lastSeenVisibility) {
-        console.log("LASTSEEN STATUS");
-        // handleLastSeenVisibilityChange(this.user, updatePrivacy);
-    }
-
-    else if (newPrivacySettings.aboutVisibility !== oldPrivacySettings.aboutVisibility) {
-        console.log("ABOUT STATUS");
-        // handleAboutVisibilityChange(this.user, updatePrivacy);
-    }
-
-}
 const VisibilityOption = {
     EVERYONE: 'EVERYONE',
     CONTACTS: 'CONTACTS',

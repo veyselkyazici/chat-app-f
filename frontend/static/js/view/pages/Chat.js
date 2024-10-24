@@ -1,15 +1,16 @@
 // Chat.js
-import AbstractView from "./AbstractView.js";
-import createContactList from "./Contacts.js";
-import { createSettingsHtml } from "./Settings.js";
-import { addContactModal } from "./AddContact.js";
-import { ModalOptionsDTO } from "./showModal.js";
-import { createIncomingFriendRequests } from "./IncomingFriendRequests.js";
-import { createApprovedRequestHistory } from "./ApprovedRequestHistory.js";
-import WebSocketManager from "../websocket.js";
-import { hideElements, createElement, createSvgElement } from './util.js';
-import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateMessageBox, isChatExist } from "./ChatBox.js";
-import { isOnlineStatus } from "./MessageBox.js";
+import AbstractView from "../AbstractView.js";
+import createContactList from "../components/Contacts.js";
+import { createSettingsHtml } from "../components/Settings.js";
+import { addContactModal } from "../components/AddContact.js";
+import { ModalOptionsDTO } from "../utils/showModal.js";
+import { createIncomingFriendRequests } from "../IncomingFriendRequests.js";
+import { createApprovedRequestHistory } from "../ApprovedRequestHistory.js";
+import WebSocketManager from "../../websocket.js";
+import { hideElements, createElement, createSvgElement } from '../utils/util.js';
+import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateMessageBox, isChatExist } from "../components/ChatBox.js";
+import { isOnlineStatus } from "../components/MessageBox.js";
+import { navigateTo } from "../../index.js";
 
 export let webSocketManagerContacts;
 export let webSocketManagerChat;
@@ -48,7 +49,6 @@ export default class Chat extends AbstractView {
         this.chatList = [];
         this.contactList = [];
         this.fetchFriendRequestReplyData = [];
-
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
         this.init()
     }
@@ -258,8 +258,7 @@ export default class Chat extends AbstractView {
         this.initContactsWebSocket();
         this.initChatWebSocket()
         handleChats();
-
-        // window.addEventListener('beforeunload', this.handleBeforeUnload);
+        window.addEventListener('beforeunload', () => this.handleBeforeUnload());
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
     }
 
@@ -270,8 +269,14 @@ export default class Chat extends AbstractView {
             console.error('Friendships WebSocket bağlantı hatası: ' + error);
         });
     }
-    handleBeforeUnload(event) {
-        this.webSocketManagerChat.notifyOnlineStatus(false);
+    handleBeforeUnload() {
+        if (this.webSocketManagerChat) {
+            this.webSocketManagerChat.notifyOnlineStatus(false);
+            this.webSocketManagerChat.disconnectWebSocket();
+        }
+        if (this.webSocketManagerContacts) {
+            this.webSocketManagerContacts.disconnectWebSocket();
+        }
     }
 
     handleVisibilityChange(event) {
@@ -536,8 +541,18 @@ export default class Chat extends AbstractView {
         createContactList();
     }
 
-    destroy() {
+    logout() {
+        document.removeEventListener('visibilitychange', this.handleVisibilityChange);
 
+        if (this.webSocketManagerContacts) {
+            this.webSocketManagerChat.notifyOnlineStatus(false);
+            this.webSocketManagerContacts.disconnectWebSocket();
+        }
+        if (this.webSocketManagerChat) {
+            this.webSocketManagerChat.disconnectWebSocket();
+        }
+        sessionStorage.clear();
+        navigateTo('/');
     }
 
 }
@@ -664,7 +679,6 @@ const changesVisibilityProfilePhoto = (bool, imageElement) => {
 }
 
 const handleAboutVisibilityChange = (newValue) => {
-    console.log('ABOUT VISIBILITY CHANGE > ', newValue);
     const bool = (newValue.userProfileResponseDTO.privacySettings.aboutVisibility === 'EVERYONE') || (newValue.userProfileResponseDTO.privacySettings.aboutVisibility === 'CONTACTS' && newValue.contact.userHasAddedRelatedUser);
     if (document.querySelector('.a1-1-1-1-1-1-3')) {
         const visibleContactsElements = [...document.querySelectorAll('.contact1')];
@@ -674,9 +688,6 @@ const handleAboutVisibilityChange = (newValue) => {
     }
 }
 const changesVisibilityAbout = (bool, aboutElement, about) => {
-    console.log("DDDDDDDDDDDDDDDDDDDDDD > ", bool);
-    console.log("DDDDDDDDDDDDDDDDDDDDDD > ", aboutElement);
-    console.log("DDDDDDDDDDDDDDDDDDDDDD > ", about);
     if (bool) {
         if (aboutElement) {
             if (!aboutElement.firstElementChild) {
@@ -684,7 +695,6 @@ const changesVisibilityAbout = (bool, aboutElement, about) => {
                 aboutElement.appendChild(messageSpan);
                 const innerSpan = createElement('span', 'message-span-span', {}, { 'dir': 'ltr', 'aria-label': '' }, about);
                 messageSpan.appendChild(innerSpan);
-                console.log("DDDDDDDDDDDDDDDDDDDDDD > ", aboutElement);
             }
         }
     } else {

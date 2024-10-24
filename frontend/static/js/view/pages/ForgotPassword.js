@@ -1,7 +1,6 @@
 //Register.js
-import AbstractView from "./AbstractView.js";
-import { clearErrorMessages, isValidEmail } from "./util.js";
-import { navigateTo } from '../index.js';
+import AbstractView from "../AbstractView.js";
+import { clearErrorMessages, isValidEmail } from "../utils/util.js";
 
 export default class extends AbstractView {
     constructor(params) {
@@ -166,56 +165,56 @@ async function resetPassword(event) {
     let hasError;
 
     if (!password) {
-      showError(resetPasswordFormElements.passwordDOM, "Parola boş olamaz.");
-      hasError = true;
+        showError(resetPasswordFormElements.passwordDOM, "Parola boş olamaz.");
+        hasError = true;
     }
 
     if (password.length < 6) {
-      showError(resetPasswordFormElements.passwordDOM, "Parola en az 6 karakter olmalıdır.");
-      hasError = true;
+        showError(resetPasswordFormElements.passwordDOM, "Parola en az 6 karakter olmalıdır.");
+        hasError = true;
     }
 
     if (password.length > 32) {
-      showError(resetPasswordFormElements.passwordDOM, "Parola en fazla 32 karakter olmalıdır.");
-      hasError = true;
+        showError(resetPasswordFormElements.passwordDOM, "Parola en fazla 32 karakter olmalıdır.");
+        hasError = true;
     }
 
     if (!confirmPassword) {
-      showError(resetPasswordFormElements.confirmPasswordDOM, "Parola doğrulaması boş olamaz");
-      hasError = true;
+        showError(resetPasswordFormElements.confirmPasswordDOM, "Parola doğrulaması boş olamaz");
+        hasError = true;
     }
     if (password && confirmPassword && password !== confirmPassword) {
-      showError(resetPasswordFormElements.confirmPasswordDOM, "Parolalar eşleşmiyor");
-      showError(resetPasswordFormElements.passwordDOM, "Parolalar eşleşmiyor");
-      hasError = true;
+        showError(resetPasswordFormElements.confirmPasswordDOM, "Parolalar eşleşmiyor");
+        showError(resetPasswordFormElements.passwordDOM, "Parolalar eşleşmiyor");
+        hasError = true;
     }
 
     if (hasError) {
-      return;
+        return;
     }
 
     const requestBody = {
-      forgotPasswordId: forgotPasswordId,
-      newPassword: password
+        forgotPasswordId: forgotPasswordId,
+        newPassword: password
     }
 
     console.log(requestBody)
     try {
-      const response = await fetch("http://localhost:9000/api/v1/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
-      });
+        const response = await fetch("http://localhost:9000/api/v1/auth/reset-password", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(requestBody)
+        });
 
-      if (response.ok) {
-       // showModal(null, showModalContet, redirectToLogin, false);
-       toastr.success("Şifreniz Değiştirildi")
-      } else {
-        console.error("Registration failed");
-      }
+        if (response.ok) {
+            // showModal(null, showModalContet, redirectToLogin, false);
+            toastr.success("Şifreniz Değiştirildi")
+        } else {
+            console.error("Registration failed");
+        }
     } catch (error) {
-      console.error("An error occurred:", error);
+        console.error("An error occurred:", error);
     }
 }

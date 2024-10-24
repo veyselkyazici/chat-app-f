@@ -1,68 +1,62 @@
 //index.js
-import { removeHeaderAndFooter } from './view/util.js';
-import Home from './view/Home.js';
-import Register from './view/Register.js';
-import Login from './view/Login.js';
-import ForgotPassord from './view/ForgotPassword.js';
-import Chat from './view/Chat.js';
-const pathToRegex = path => new RegExp("^" + path.replace(/\//g, "\\/").replace(/:\w+/g, "(.+)") + "$");
+import { isAuthenticated } from './view/services/authService.js';
+import Home from './view/pages/Home.js';
+import Register from './view/pages/Register.js';
+import Login from './view/pages/Login.js';
+import ForgotPassord from './view/pages/ForgotPassword.js';
+import Chat from './view/pages/Chat.js';
+import { ChatLayout } from './view/layouts/ChatLayout.js';
+import { DefaultLayout } from './view/layouts/DefaultLayout.js';
 
-const getParams = match => {
-    const values = match.result.slice(1);
-    const keys = Array.from(match.route.path.matchAll(/:(\w+)/g)).map(result => result[1]);
+const routes = [
+    { path: '/', view: Home, layout: DefaultLayout },
+    { path: '/register', view: Register, layout: DefaultLayout },
+    { path: '/login', view: Login, layout: DefaultLayout },
+    { path: '/forgot-password', view: ForgotPassord, layout: DefaultLayout },
+    { path: '/chat', view: Chat, layout: ChatLayout, authRequired: true },
+];
 
-    return Object.fromEntries(keys.map((key, i) => {
-        return [key, values[i]];
-    }));
-};
+const pathToRegex = (path) => new RegExp(`^${path.replace(/\//g, '\\/')}$`);
 
-const navigateTo = url => {
+const navigateTo = (url) => {
     history.pushState(null, null, url);
     router();
 };
 
 const router = async () => {
-    const routes = [
-        { path: "/", view: Home },
-        { path: "/register", view: Register },
-        { path: "/login", view: Login },
-        { path: "/forgot-password", view: ForgotPassord },
-        { path: "/chat", view: Chat },
-    ];
+    const potentialMatches = routes.map((route) => ({
+        route,
+        result: location.pathname.match(pathToRegex(route.path)),
+    }));
 
-    const potentialMatches = routes.map(route => {
-        return {
-            route: route,
-            result: location.pathname.match(pathToRegex(route.path))
-        };
-    });
-    
-    let match = potentialMatches.find(potentialMatch => potentialMatch.result !== null);
+    let match = potentialMatches.find((potentialMatch) => potentialMatch.result !== null);
 
     if (!match) {
-        match = {
-            route: routes[0],
-            result: [location.pathname]
-        };
+        match = { route: routes[0], result: [location.pathname] };
     }
 
-    const view = new match.route.view(getParams(match));
+    // Doğrulama gereken route için kontrol
+    if (match.route.authRequired && !(await isAuthenticated())) {
+        console.log('Kullanıcı doğrulanmadı, login sayfasına yönlendiriliyor.');
+        return navigateTo('/login');
+    }
 
-    document.querySelector("#content").innerHTML = await view.getHtml();
+    const view = new match.route.view();
+    const html = await view.getHtml();
+
+    const layoutHtml = match.route.layout(html);
+    document.querySelector('#app').innerHTML = layoutHtml;
+
     if (typeof view.addEventListeners === 'function') {
-        await view.addEventListeners();
-    }
-
-    if (match.route.path === "/chat") {
-        removeHeaderAndFooter();
+        view.addEventListeners();
     }
 };
 
-window.addEventListener("popstate", router);
+window.addEventListener('popstate', router);
 
-document.addEventListener("DOMContentLoaded", () => {
-    document.body.addEventListener("click", e => {
-        if (e.target.matches("[data-link]")) {
+document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('click', (e) => {
+        if (e.target.matches('[data-link]')) {
             e.preventDefault();
             navigateTo(e.target.href);
         }
@@ -71,4 +65,4 @@ document.addEventListener("DOMContentLoaded", () => {
     router();
 });
 
-export { navigateTo } ;
+export { navigateTo };

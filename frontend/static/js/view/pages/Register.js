@@ -1,7 +1,7 @@
 //Register.js
-import AbstractView from "./AbstractView.js";
-import { clearErrorMessages, isValidEmail, showError } from "./util.js";
-import { navigateTo } from '../index.js';
+import AbstractView from "../AbstractView.js";
+import { clearErrorMessages, isValidEmail, showError } from "../utils/util.js";
+import { navigateTo } from '../../index.js';
 
 export default class extends AbstractView {
   constructor(params) {

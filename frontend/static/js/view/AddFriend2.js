@@ -1,12 +1,12 @@
 // AddFriend.js
-import { addBackspaceEventListener, removeElements, visibleElements } from './util.js'
-import { chatInstance, webSocketManagerFriendships } from "./Chat.js";
+import { addBackspaceEventListener, removeElements, visibleElements } from './utils/util.js'
+import { chatInstance, webSocketManagerFriendships } from "./pages/Chat.js";
 
 async function addFriendView() {
     const chatListHeaderElement = document.querySelector(".chat-list-header");
     const chatListContentElement = document.querySelector(".chat-list-content");
     const chatContentElement = document.querySelector('.chat-content');
-    
+
     const addFriendHTML = `
     <div class="add-friend-div" id="add-friend-div">
     <div class="" id="backspace">
@@ -35,7 +35,7 @@ async function addFriendView() {
         friendAddInput.addEventListener('input', (event) => {
             handleSearchInput(event);
         });
-    } 
+    }
 }
 
 function handleSearchInput(event) {
@@ -108,15 +108,15 @@ function renderSearchResults(searchResults) {
 
         const addFriendBtns = chatItem.querySelector('.add-btn');
 
-        addFriendBtns.addEventListener('click', function  () {
-            console.log(user.id, "----" , user.email)
+        addFriendBtns.addEventListener('click', function () {
+            console.log(user.id, "----", user.email)
             const friendRequest = {
                 token: sessionStorage.getItem('access_token'),
                 friendId: user.id,
                 friendEmail: user.email
             };
             console.log(friendRequest)
-       sendFriendRequest(friendRequest)
+            sendFriendRequest(friendRequest)
         });
 
     });

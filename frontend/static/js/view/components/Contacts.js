@@ -1,9 +1,10 @@
 // Contacts.js
-import { createMessageBox } from './MessageBox.js';
-import { chatInstance } from "./Chat.js";
-import { showModal, ModalOptionsDTO } from './showModal.js';
-import { virtualScroll, UpdateItemsDTO } from './virtualScroll.js';
-import { ariaSelected, ariaSelectedRemove, createElement, createSvgElement, createVisibilityProfilePhoto } from './util.js';
+import { createMessageBox, removeMessageBoxAndUnsubscribe } from './MessageBox.js';
+import { chatInstance } from "../pages/Chat.js";
+import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
+import { virtualScroll, UpdateItemsDTO } from '../utils/virtualScroll.js';
+import { ariaSelected, ariaSelectedRemove, createElement, createSvgElement, createVisibilityProfilePhoto } from '../utils/util.js';
+
 function createContactHTML(user, index) {
     console.log("CREATE CONTACT HTML USER > ", user)
     const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
@@ -456,10 +457,8 @@ async function handleContactClick(event) {
             id: findChat.chatDTO.id,
         };
 
-        console.log("CHAT REQUEST DTO > ", chatRequestDTO)
-        const contactsElement = document.querySelector('.a1-1-1');
-        // ToDo removeChild ile yapılacak onun için innerHTML ile basmak yerine create ile yapılacak
-        contactsElement.innerHTML = '';
+        removeMessageBoxAndUnsubscribe();
+        // ToDo Profile.js ten sonra eğer o varken başka bir chat e clickleniyorsa o da remove edilecek
         createMessageBox(chatRequestDTO);
     } else if (!contactData.id && !contactData.invited) {
         const options = new ModalOptionsDTO({

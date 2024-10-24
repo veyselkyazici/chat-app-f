@@ -1,6 +1,7 @@
 
-import { showModal } from './showModal.js';
-import { formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace } from './util.js';
+import { showModal } from '../utils/showModal.js';
+import { formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace } from '../utils/util.js';
+
 async function userUpdateModal() {
     const userProfilePhotoUrl = getUserProfilePhotoUrl();
     const photoOptionsHtml = `
@@ -17,7 +18,7 @@ async function userUpdateModal() {
         : ` <div class="profile-photo" id="defaultPhotoOptions">
                 <img src="/static/image/default-user-profile-photo.png" alt="Varsayılan Fotoğraf" id="profilePhoto" />
             </div>`;
-            
+
     const userUpdateShowModalContent = `
     <form id="updateForm">
     <div class="input-icon">
@@ -59,7 +60,7 @@ async function userUpdateModal() {
     <div class="error-message"></div>
 </div>
 </form> `;
-console.log("userUpdateModal")
+    console.log("userUpdateModal")
     showModal("", userUpdateShowModalContent, goHome, "Devam Et");
     document.getElementById("editButtonName").addEventListener("click", toggleEditName);
     document.getElementById("editButtonSurname").addEventListener("click", toggleEditSurname);
@@ -85,7 +86,7 @@ function goHome() {
     const about = document.getElementById("aboutInput").value.trim();
     let hashError = false;
     // Hataları kontrol et
-    
+
     if (!name) {
         toastr.error('İsim boş olamaz');
         hashError = true; // Hata varsa modal kapanmaz
