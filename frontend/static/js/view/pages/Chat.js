@@ -424,11 +424,11 @@ export default class Chat extends AbstractView {
         })
         this.webSocketManagerChat.subscribeToChannel(typingChannel, (typingMessage) => {
             const status = JSON.parse(typingMessage.body);
-            console.log("THIS USER ID > ", this.userId)
-            const chatDOMS = [...document.querySelectorAll(".chat1")];
+            const visibleChats = [...document.querySelectorAll(".chat1")];
             console.log("STATUS > ", status)
-            if (chatDOMS) {
-                const chat = chatDOMS.find(el => el.chatData.id === status.chatRoomId);
+            if (visibleChats) {
+                console.log("CHATDOMS >>>>>> ", visibleChats)
+                const chat = visibleChats.find(el => el.chatData.chatDTO.id === status.chatRoomId);
                 if (chat) {
                     console.log("CHAT > ", chat)
                     const lastMessageDOM = chat.querySelector(".message-span-span");
@@ -437,7 +437,7 @@ export default class Chat extends AbstractView {
                         lastMessageDOM.textContent = 'yaziyor...';
                     } else {
                         console.log("aaaaaaaaaaaaaaaa")
-                        lastMessageDOM.textContent = chat.chatData.lastMessage;
+                        lastMessageDOM.textContent = chat.chatData.chatDTO.lastMessage;
                     }
                 }
             }

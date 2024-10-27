@@ -3,6 +3,7 @@ import { chatInstance } from "../pages/Chat.js";
 import { createChatBox, updateChatsTranslateY } from "./ChatBox.js";
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
 import { createElement, createSvgElement, createVisibilityProfilePhoto } from "../utils/util.js";
+import { MessageDTO } from "../dtos/MessageDTO.js";
 
 let caretPosition = 0;
 let caretNode = null;
@@ -43,56 +44,55 @@ async function createMessageBox(chat) {
     emojiButton.addEventListener('click', () => {
         showEmojiPicker(panel, showEmojiDOM);
     });
-
-
-
-    chatInstance.webSocketManagerChat.subscribeToChannel(`/user/${chat.contactsDTO.userProfileResponseDTO.id}/queue/message-box-typing`, (typingMessage) => {
-        const status = JSON.parse(typingMessage.body);
-        if (status.userId === chat.contact.userProfileResponseDTO.id) {
-            if (status.typing) {
-                statusSpan.textContent = `yazıyor...`;
-            } else {
-                if (friendStatus) {
-                    statusSpan.textContent = 'çevrimdışı';
-                } else {
-                    statusSpan.textContent = `SON GORULME`;
-                }
-            }
-        }
-    });
 }
 const checkingPrivacySettingsOnlineVisibility = (user, contactsDTO) => {
     if ((contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'EVERYONE' || (contactsDTO.contact.relatedUserHasAddedUser && contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'CONTACTS')) && (user.privacySettings.onlineStatusVisibility === 'EVERYONE' || (contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.onlineStatusVisibility === 'CONTACTS'))) { return true; } else { return false; }
 }
+const typingStatusSubscribe = (chat, messageBoxElement) => {
+    chatInstance.webSocketManagerChat.subscribeToChannel(`/user/${chat.user.id}/queue/message-box-typing`, async (typingMessage) => {
+        const status = JSON.parse(typingMessage.body);
+        console.log("typingStatusSubscribe > ", status);
+        const statusSpan = messageBoxElement.querySelector('.online-status-1');
+        if (statusSpan) {
+            messageBoxElement.removeChild(statusSpan.parentElement);
+        }
+        if (status.typing) {
+            const statusDiv = createElement('div', 'online-status');
+            const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, 'yaziyor...');
+            statusDiv.appendChild(statusSpan);
+            messageBoxElement.appendChild(statusDiv);
+        } else {
+            const onlineElement = await isOnline(chat.user, chat.contactsDTO);
+            messageBoxElement.appendChild(onlineElement);
+        }
+    });
+}
 const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
     chatInstance.webSocketManagerChat.subscribeToChannel(`/user/${chat.contactsDTO.userProfileResponseDTO.id}/queue/online-status`, async (statusMessage) => {
         const status = JSON.parse(statusMessage.body);
-
-        console.log("STATUS > ", status)
-        console.log("CHAT STATUS > ", chat)
-        const messageBoxStatusElement = messageBoxElement.querySelector('.message-box1-2-2');
-        const statusSpan = messageBoxStatusElement.querySelector('.online-status-1');
+        console.log("onlineVisibilitySubscribe > ", status);
+        const statusSpan = messageBoxElement.querySelector('.online-status-1');
         if (statusSpan) {
-            messageBoxStatusElement.removeChild(statusSpan);
+            messageBoxElement.removeChild(statusSpan.parentElement);
         }
         if (status.online) {
             const onlineElement = isOnlineStatus(chat.user, chat.contactsDTO);
-            messageBoxStatusElement.appendChild(onlineElement);
+            messageBoxElement.appendChild(onlineElement);
         } else {
             const statusDiv = lastSeenStatus(chat.user, chat.contactsDTO, status.lastSeen);
-            messageBoxStatusElement.appendChild(statusDiv);
+            messageBoxElement.appendChild(statusDiv);
         }
     });
 }
 const handleTextBlur = (chat, typingStatus) => {
     if (typingStatus.previousText) {
-        chatInstance.webSocketManagerChat.sendMessageToAppChannel("stop-typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contact.userProfileResponseDTO.id });
+        chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = false;
     }
 }
 const handleTextFocus = (chat, typingStatus, textArea) => {
     if (typingStatus.previousText) {
-        chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contact.userProfileResponseDTO.id });
+        chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
     }
 }
@@ -102,12 +102,13 @@ function handlePaste(event) {
 
 function handleTextInput(inputBox, textArea, sendButton, chat, typingStatus, event) {
     const currentText = textArea.textContent.trim();
+    console.log("CHAT > ", chat)
     if (currentText && !typingStatus.isTyping) {
-        chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contact.userProfileResponseDTO.id });
+        chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
     }
     else if (!currentText && typingStatus.previousText && typingStatus.isTyping) {
-        chatInstance.webSocketManagerChat.sendMessageToAppChannel("stop-typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contact.userProfileResponseDTO.id });
+        chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = false;
     }
     typingStatus.previousText = currentText;
@@ -472,6 +473,12 @@ const createMessageBoxHTML = async (chat) => {
     menuDiv1_2_3_1_3_1.appendChild(menuDiv1_2_3_1_3_1_1);
     searchButtonContainer.appendChild(menuDiv1_2_3_1_3_1);
     messageBoxDiv3.appendChild(searchButtonContainer);
+
+    header.appendChild(messageBoxDiv1);
+    header.appendChild(messageBoxDiv2);
+    header.appendChild(messageBoxDiv3);
+    main.appendChild(header);
+
     const contactsOnlineStatusElement = await isOnline(chat.user, chat.contactsDTO);
     // if ((chat.contact.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'EVERYONE' || (chat.contact.userProfileResponseDTO.privacySettings.inContactList && chat.contact.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'CONTACTS')) && (chat.user.privacySettings.onlineStatusVisibility === 'EVERYONE' || (chat.user.privacySettings.inContactList && chat.user.privacySettings.onlineStatusVisibility === 'CONTACTS'))) {
     //     console.log("AAAAAAAAAAAAAAA")
@@ -486,10 +493,9 @@ const createMessageBoxHTML = async (chat) => {
         onlineVisibilitySubscribe(chat, messageBoxDiv2);
         messageBoxDiv2.appendChild(contactsOnlineStatusElement);
     }
-    header.appendChild(messageBoxDiv1);
-    header.appendChild(messageBoxDiv2);
-    header.appendChild(messageBoxDiv3);
-    main.appendChild(header);
+    typingStatusSubscribe(chat, messageBoxDiv2);
+
+
 
     const spanMessageBox1_3 = createElement('span', 'message-box1-3');
     const divMessageBox1_4 = createElement('div', 'message-box1-4');
@@ -1123,11 +1129,12 @@ const sendMessage = async (chat, sendButton) => {
     const messageContent = messageContentElement.textContent.trim();
     console.log("SEND MESSAGE CHAT >>> ", chat)
     if (messageContent) {
+        // const messageDTO = new MessageDTO({ chatRoomId: chat.id, messageContent: messageContent, fullDateTime: new Date().toISOString, senderId: chat.user.id, recipientId: chat.contactsDTO.userProfileResponseDTO.id })
         const message = {
             messageContent: messageContent,
             fullDateTime: new Date().toISOString(),
             senderId: chat.user.id,
-            recipientId: chat.contact.userProfileResponseDTO.id,
+            recipientId: chat.contactsDTO.userProfileResponseDTO.id,
             chatRoomId: chat.id
         };
         if (!chat.id) {
@@ -1135,9 +1142,9 @@ const sendMessage = async (chat, sendButton) => {
             message.chatRoomId = result.id;
             result.friendEmail = chat.friendEmail
             const newChat = {
-                friendImage: chat.contact.userProfileResponseDTO.imagee,
-                friendEmail: chat.contact.userProfileResponseDTO.email,
-                friendId: chat.contact.userProfileResponseDTO.id,
+                friendImage: chat.contactsDTO.userProfileResponseDTO.imagee,
+                friendEmail: chat.contactsDTO.userProfileResponseDTO.email,
+                friendId: chat.contactsDTO.userProfileResponseDTO.id,
                 user: chat.user,
                 lastMessage: message.messageContent,
                 id: message.chatRoomId,
@@ -1150,14 +1157,14 @@ const sendMessage = async (chat, sendButton) => {
             updateChatsTranslateY();
         }
         else {
-            const chatIndex = chatInstance.chatList.findIndex(data => data.id == chat.id);
-            chatInstance.chatList[chatIndex].lastMessage = messageContent;
+            const chatIndex = chatInstance.chatList.findIndex(data => data.chatDTO.id == chat.id);
+            chatInstance.chatList[chatIndex].chatDTO.lastMessage = messageContent;
         }
         renderMessage(message, chat.user.id);
         messageContentElement.textContent = "";
         updatePlaceholder(messageContentElement.parentElement.parentElement, messageContentElement.parentElement, sendButton)
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
-        chatInstance.webSocketManagerChat.sendMessageToAppChannel("stop-typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false });
+        chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false });
     }
 };
 
