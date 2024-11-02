@@ -2,12 +2,12 @@
 export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount) {
     let start = 0;
     let end = visibleItemCount;
-    
+
     const onScroll = () => {
         const scrollTop = paneSideElement.scrollTop;
         const newStart = Math.max(Math.floor(scrollTop / 72) - 1, 0);
         const newEnd = newStart + visibleItemCount;
-        
+
         if (newStart !== start || newEnd !== end) {
             start = newStart;
             end = newEnd;
@@ -20,7 +20,7 @@ export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount)
 
 }
 
-
+// Todo PrivacySettings islemleri yapilacak
 export function updateItems(updateItemsDTO, newStart, newEnd) {
     const itemsToUpdate = updateItemsDTO.itemsToUpdate.filter(item => {
         const translateY = parseInt(item.style.transform.replace("translateY(", "").replace("px)", ""));
@@ -34,19 +34,21 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
         const newIndex = (index < newStart) ? (newEnd - 1 - idx) : (newStart + idx);
         const listItem = updateItemsDTO.list[newIndex];
         if (listItem && !('about' in listItem)) {
-            console.log(listItem)
+            console.log("listItem > ", listItem)
+            console.log("item.data > ", item.data)
+            console.log("item.data > ", item)
             item.data = listItem;
-            const time = listItem.lastMessageTime;
+            const time = listItem.chatDTO.lastMessageTime;
             console.log(time)
-            // const date = new Date(time);
-            // const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const date = new Date(time);
+            const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const nameSpan = item.querySelector(".name-span");
             const timeSpan = item.querySelector(".time");
             const messageSpan = item.querySelector(".message-span-span");
 
-            nameSpan.textContent = listItem.friendEmail;
-            timeSpan.textContent = time;
-            messageSpan.textContent = listItem.lastMessage;
+            nameSpan.textContent = listItem.contactsDTO.userContactName ? listItem.contactsDTO.userContactName : listItem.userProfileResponseDTO.email;
+            timeSpan.textContent = formattedTime;
+            messageSpan.textContent = listItem.chatDTO.lastMessage;
             console.log(listItem.lastMessage)
 
             item.style.transform = `translateY(${newIndex * 72}px)`;

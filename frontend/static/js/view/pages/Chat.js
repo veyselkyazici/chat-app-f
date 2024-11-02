@@ -8,8 +8,8 @@ import { createIncomingFriendRequests } from "../IncomingFriendRequests.js";
 import { createApprovedRequestHistory } from "../ApprovedRequestHistory.js";
 import WebSocketManager from "../../websocket.js";
 import { hideElements, createElement, createSvgElement } from '../utils/util.js';
-import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateMessageBox, isChatExist } from "../components/ChatBox.js";
-import { isOnlineStatus } from "../components/MessageBox.js";
+import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBoxLastMessage, isChatExists } from "../components/ChatBox.js";
+import { isOnlineStatus, isMessageBoxDomExists } from "../components/MessageBox.js";
 import { navigateTo } from "../../index.js";
 
 export let webSocketManagerContacts;
@@ -50,7 +50,7 @@ export default class Chat extends AbstractView {
         this.contactList = [];
         this.fetchFriendRequestReplyData = [];
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
-        this.init()
+        this.init();
     }
     /* async renderChat () {
         const chatHtml = `<div class="chat-container">
@@ -238,10 +238,6 @@ export default class Chat extends AbstractView {
                         </div>
                     </div>
                 </div>
-
-
-
-
             </div>
         </div>
         <div class="message-box" id="chatWindow">
@@ -253,13 +249,13 @@ export default class Chat extends AbstractView {
 
     async init() {
         await this.initialData();
-        this.webSocketManagerContacts = new WebSocketManager('http://localhost:9030/ws', this.user.id);;
+        this.webSocketManagerContacts = new WebSocketManager('http://localhost:9030/ws', this.user.id);
         this.webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws', this.user.id);
         this.initContactsWebSocket();
-        this.initChatWebSocket()
-        handleChats();
+        this.initChatWebSocket();
         window.addEventListener('beforeunload', () => this.handleBeforeUnload());
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
+        console.log("INIT > ", document.querySelector('.chats').clientHeight)
     }
 
     async initContactsWebSocket() {
@@ -412,13 +408,15 @@ export default class Chat extends AbstractView {
         this.webSocketManagerChat.subscribeToChannel(recipientMessageChannel, async (recipientMessage) => {
             const recipientJSON = JSON.parse(recipientMessage.body);
             console.log("RECIPENT > ", recipientJSON)
-            if (!isChatExist(recipientJSON)) {
+            if (!isChatExists(recipientJSON)) {
                 console.log("IFFFFFFFFFFFFFFFFFF")
                 console.log("RECIPENT > ", recipientJSON)
                 await createChatBoxWithFirstMessage(recipientJSON)
             } else {
                 console.log("RECIPENT > ", recipientJSON)
-                updateMessageBox(recipientJSON)
+                if (isMessageBoxDomExists(recipientJSON.chatRoomId))
+                    renderMessage(recipientJSON, chatInstance.user.id);
+                updateChatBoxLastMessage(recipientJSON);
                 lastMessageChange(recipientJSON.chatRoomId, recipientJSON.messageContent)
             }
         })
@@ -460,6 +458,7 @@ export default class Chat extends AbstractView {
         //     this.chatList.push(newData)
         // }
         console.log("CHAT LIST >>> ", this.chatList)
+        handleChats();
     }
 
     addEventListeners() {
@@ -833,7 +832,7 @@ async function fetchGetUserWithPrivacySettingsByToken() {
 
 
 const fetchChatBlockUrl = 'http://localhost:8080/api/v1/chat/chat-block';
-const fetchChatBlock = async (chatSummaryDTO) => {
+export const fetchChatBlock = async (chatSummaryDTO) => {
     try {
         const token = sessionStorage.getItem('access_token');
         if (!token) {
@@ -864,9 +863,72 @@ const fetchChatBlock = async (chatSummaryDTO) => {
         throw error;
     }
 };
+const fetchChatPinnedUrl = 'http://localhost:8080/api/v1/chat/chat-pinned';
+export const fetchChatPinned = async (chatSummaryDTO) => {
+    try {
+        const token = sessionStorage.getItem('access_token');
+        if (!token) {
+            throw new Error('Access token not found');
+        }
 
+        const response = await fetch(fetchChatPinnedUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify(chatSummaryDTO),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            toastr.error(errorData.message);
+            throw new Error(errorData.message);
+        }
+
+        const result = await response.json();
+        toastr.success(result.message);
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.error('Hata:', error.message);
+        throw error;
+    }
+};
+const fetchChatUnPinnedUrl = 'http://localhost:8080/api/v1/chat/chat-unpinned';
+export const fetchChatUnPinned = async (chatSummaryDTO) => {
+    try {
+        const token = sessionStorage.getItem('access_token');
+        if (!token) {
+            throw new Error('Access token not found');
+        }
+
+        const response = await fetch(fetchChatUnPinnedUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            },
+            body: JSON.stringify(chatSummaryDTO),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            toastr.error(errorData.message);
+            throw new Error(errorData.message);
+        }
+
+        const result = await response.json();
+        toastr.success(result.message);
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.error('Hata:', error.message);
+        throw error;
+    }
+};
 const fetchChatUnblockUrl = 'http://localhost:8080/api/v1/chat/chat-unblock';
-const fetchChatUnblock = async (chatSummaryDTO) => {
+export const fetchChatUnblock = async (chatSummaryDTO) => {
     try {
         const token = sessionStorage.getItem('access_token');
         if (!token) {

@@ -1,6 +1,6 @@
 // MessageBox.js
 import { chatInstance } from "../pages/Chat.js";
-import { createChatBox, updateChatsTranslateY } from "./ChatBox.js";
+import { createChatBox, updateChatsTranslateY, updateChatBoxLastMessage, fetchGetChatSummary } from "./ChatBox.js";
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
 import { createElement, createSvgElement, createVisibilityProfilePhoto } from "../utils/util.js";
 import { MessageDTO } from "../dtos/MessageDTO.js";
@@ -13,8 +13,9 @@ const emojiRegex = /([\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF
 
 async function createMessageBox(chat) {
     console.log("MESSAGE BOX > ", chat);
+    console.log("MESSAGE BOX > ", chat.messagesDTO.lastPage);
     const messageBoxElement = await createMessageBoxHTML(chat);
-    renderMessage(chat.messages, chat.user.id);
+    renderMessage(chat.messagesDTO.messages, chat.user.id, chat.messagesDTO.lastPage);
     let typingStatus = { isTyping: false, previousText: "" };
     chat.friendEmail;
     chat.image;
@@ -397,9 +398,6 @@ function generateEmojiHTML() {
         </div>
     </div>`;
 }
-
-const updateMessageBox = (chat) => {
-}
 const createMessageBoxHTML = async (chat) => {
     console.log("MESSAGE BOX 123 > ", chat)
     const messageBoxElement = document.querySelector('.message-box');
@@ -490,6 +488,7 @@ const createMessageBoxHTML = async (chat) => {
     //     console.log("FRIEND STATUS > ", friendStatus)
     // }
     if (contactsOnlineStatusElement) {
+        console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxx > ", contactsOnlineStatusElement)
         onlineVisibilitySubscribe(chat, messageBoxDiv2);
         messageBoxDiv2.appendChild(contactsOnlineStatusElement);
     }
@@ -799,22 +798,43 @@ const createMessageBoxHTML = async (chat) => {
     const span = createElement('span', '');
     main.appendChild(span);
     messageBoxElement.appendChild(main);
+    messageBox1_2.addEventListener('scroll', async () => {
+        if (messageBox1_2.scrollTop === 0) {
+            const visibleFirstMessageData = getFirstMessageDate();
+            console.log("visibleFirstMessageData > ", visibleFirstMessageData)
+            console.log('En üstteyiz, eski mesajlar yükleniyor...');
+            const messages = await fetchGetOlder30Messages(visibleFirstMessageData.message.chatRoomId, message.fullDateTime);
+            console.log("NEW OLDER MESSAGES > ", messages)
+        } else {
+
+        }
+    });
     return messageBoxElement;
 };
-
-
-const renderMessage = (messages, userId) => {
+const getFirstMessageDate = () => {
+    const firstMessageElement = document.querySelector('.message-box1-5-1-2-2 [role="row"][class=""]');
+    return firstMessageElement?.messageData;
+};
+const isMessageBoxDomExists = (chatRoomId) => {
+    const messageBoxDom = document.querySelector('.message-box1');
+    return messageBoxDom ? messageBoxDom.data.id === chatRoomId : false;
+}
+const renderMessage = (messages, userId, lastPage) => {
+    console.log("MESSAGES RENDER MESSAGE > ", messages)
+    console.log("MESSAGES RENDER MESSAGE > ", userId)
     const messageRenderDOM = document.querySelector('.message-box1-5-1-2-2');
     const messagesArray = Array.isArray(messages) ? messages : [messages];
-
     messagesArray.forEach(message => {
         const rowDOM = createElement('div', '', null, { 'role': 'row' });
+        // ToDo lastPage
+        console.log("LAST PGAE > ", lastPage)
+        rowDOM.messageData = { message: message, isLastPage: !lastPage ? lastPage : true };
+        console.log("LAST PGAE > ", lastPage)
         const divMessage = createElement('div', 'message1');
         const divMessage12 = createElement('div', '');
         const spanFirst = createElement('span', '');
         const divMessage1_1_1 = createElement('div', 'message1-1-1');
         const divMessage1_1_1_2 = createElement('div', 'message1-1-1-2');
-
         const spanTail = createElement('span', '', null, { 'aria-hidden': ' true' });
 
 
@@ -1065,7 +1085,7 @@ const isOnline = async (user, contactsDTO) => {
         console.log("FRIEND STATUS > ", friendStatus)
         if (friendStatus.online) {
             return isOnlineStatus(user, contactsDTO);
-        } else if (user.privacySettings.lastSeenVisibility !== 'NOBODY') {
+        } else {
             return lastSeenStatus(user, contactsDTO, friendStatus.lastSeen);
         }
     }
@@ -1084,7 +1104,7 @@ const isOnlineStatus = (user, contactsDTO) => {
 }
 const lastSeenStatus = (user, contactsDTO, lastSeen) => {
     if ((contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.relatedUserHasAddedUser && contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'CONTACTS')) && (user.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.lastSeenVisibility === 'CONTACTS'))) {
-        console.log("AAAAAAAAAAAAAAA")
+        console.log("AAAAAAAAAAAAAAA  lastSeen > ", lastSeen)
         const statusDiv = createElement('div', 'online-status');
         const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, lastSeen);
         statusDiv.appendChild(statusSpan);
@@ -1138,61 +1158,51 @@ const sendMessage = async (chat, sendButton) => {
             chatRoomId: chat.id
         };
         if (!chat.id) {
-            const result = await fetchCreateChatRoomIfNotExists(chat.user.id, chat.contact.userProfileResponseDTO.id);
+            console.log("!CHAT ID > ", chat)
+            const result = await fetchCreateChatRoomIfNotExists(chat.user.id, chat.contactsDTO.userProfileResponseDTO.id);
+            console.log("RESULT > ", result)
+            // const result2 = await fetchGetChatSummary(chat.user.id, chat.contactsDTO.userProfileResponseDTO.id, result.id);
+            // console.log("RESULT2222222222 > ", result2)
             message.chatRoomId = result.id;
             result.friendEmail = chat.friendEmail
             const newChat = {
-                friendImage: chat.contactsDTO.userProfileResponseDTO.imagee,
-                friendEmail: chat.contactsDTO.userProfileResponseDTO.email,
-                friendId: chat.contactsDTO.userProfileResponseDTO.id,
-                user: chat.user,
-                lastMessage: message.messageContent,
-                id: message.chatRoomId,
-                lastMessageTime: message.fullDateTime,
-                userChatSettings: result.userChatSettings
+                chatDTO: { id: message.chatRoomId, lastMessage: message.messageContent, lastMessageTime: message.fullDateTime, senderId: chat.user.id, recipientId: chat.contactsDTO.userProfileResponseDTO.id },
+                userProfileResponseDTO: { ...chat.contactsDTO.userProfileResponseDTO },
+                userChatSettings: { ...result.userChatSettings },
+                contactsDTO: { ...chat.contactsDTO.contact }
+                // friendImage: chat.contactsDTO.userProfileResponseDTO.imagee,
+                // friendEmail: chat.contactsDTO.userProfileResponseDTO.email,
+                // friendId: chat.contactsDTO.userProfileResponseDTO.id,
+                // user: chat.user,
+                // lastMessage: message.messageContent,
+                // id: message.chatRoomId,
+                // lastMessageTime: message.fullDateTime,
+                // userChatSettings: result.userChatSettings
             }
+            console.log("NEW CHAT > ", newChat)
             chat.id = newChat.id;
-            chatInstance.chatList.unshift(result);
-            createChatBox(newChat, 0);
+            chatInstance.chatList.unshift(newChat);
             updateChatsTranslateY();
+            createChatBox(newChat, 0);
+            console.log("MESSAGEEEEEEEEEEE > ", message)
+            chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
+            chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         }
         else {
             const chatIndex = chatInstance.chatList.findIndex(data => data.chatDTO.id == chat.id);
             chatInstance.chatList[chatIndex].chatDTO.lastMessage = messageContent;
+            chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
+            chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
+
         }
         renderMessage(message, chat.user.id);
-        messageContentElement.textContent = "";
+        messageContentElement.removeChild(messageContentElement.firstElementChild);
+        messageContentElement.appendChild(createElement('br', ''));
         updatePlaceholder(messageContentElement.parentElement.parentElement, messageContentElement.parentElement, sendButton)
-        chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
-        chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false });
+
     }
 };
 
-
-const appendMessage = (message, userId) => {
-    const messageList = document.querySelector("#message-list");
-    const messageDiv = document.createElement("div");
-    const senderClass = (message.senderId === userId) ? "sent" : "received";
-    messageDiv.classList.add("chat-message", senderClass);
-
-    const contentParagraph = document.createElement("p");
-    contentParagraph.textContent = message.messageContent;
-
-    const timeSpan = document.createElement("span");
-    timeSpan.classList.add("time");
-    timeSpan.textContent = getHourAndMinute(message.fullDateTime);
-
-    messageDiv.appendChild(contentParagraph);
-    messageDiv.appendChild(timeSpan);
-    if (messageList) {
-        messageList.appendChild(messageDiv);
-        messageList.scrollTo({
-            top: messageList.scrollHeight,
-            behavior: "auto"
-        });
-    }
-
-};
 
 function getHourAndMinute(dateTimeString) {
     const date = new Date(dateTimeString);
@@ -1279,7 +1289,34 @@ async function checkUserOnlineStatus(userId) {
         return false;
     }
 }
+const getOlder30MessagesUrl = 'http://localhost:8080/api/v1/chat/messages/older-30-messages';
+const fetchGetOlder30Messages = async (chatRoomId, before) => {
+    try {
+        const token = sessionStorage.getItem('access_token');
+        if (!token) {
+            throw new Error('Access token not found');
+        }
 
+        const response = await fetch(`${getOlderMessagesUrl}?chatRoomId=${chatRoomId}&before=${before}&limit=30`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': sessionStorage.getItem('access_token'),
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Kullanıcı bulunamadı');
+        }
+
+        const result = await response.json();
+        console.log(result);
+        return result;
+    } catch (error) {
+        console.error('Hata:', error.message);
+        throw error;
+    }
+};
 class DeleteMessageDTO {
     constructor({
         senderId = '',
@@ -1294,4 +1331,4 @@ class DeleteMessageDTO {
     }
 }
 
-export { createMessageBox, appendMessage, renderMessage, isOnlineStatus, lastSeenStatus, ifVisibilitySettingsChangeWhileMessageBoxIsOpen, removeMessageBoxAndUnsubscribe };
+export { createMessageBox, renderMessage, isOnlineStatus, lastSeenStatus, ifVisibilitySettingsChangeWhileMessageBoxIsOpen, removeMessageBoxAndUnsubscribe, isMessageBoxDomExists };

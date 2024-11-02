@@ -140,7 +140,7 @@ section {
   left: 0;
   z-index: 1;
   height: 59px;
-  content: " ";
+  content: "";
   background-color: #f0f2f5;
 }
 
@@ -358,7 +358,6 @@ button {
 
 
 
-
 .chat-container {
   position: relative;
   top: 0;
@@ -372,7 +371,19 @@ button {
   background-position: top left;
   border-radius: 0;
   transform-origin: center;
-  animation: app-enter .3s cubic-bezier(.1, .82, .25, 1);
+  /*animation: app-enter .3s cubic-bezier(.1, .82, .25, 1);  Bunu açarsam handleChats fonksiyonunda .chats yuksekligi dogru gelmiyor. Dogru gelmesi icin runHandleChatsAfterAnimation() {
+    const container = document.querySelector(".chat-container");
+
+    if (!container) {
+        console.error("'.chat-container' elementi bulunamadı.");
+        return;
+    }
+
+    container.addEventListener("animationend", () => {
+        handleChats();
+    }, { once: true }); // Sadece bir kez dinler ve sonra kaldırır
+    Bu işlemi yapmam gerekiyor Chat.js te
+}*/
 }
 
 
@@ -403,12 +414,7 @@ button {
   }
 }
 
-@media screen and (min-width: 1024px) and (max-width: 1300px) {
-  .chats {
-    flex: 0 0 40%;
-    max-width: 40%;
-  }
-}
+
 
 body {
   line-height: 1;
@@ -442,11 +448,19 @@ body,
 .chats {
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow-x: visible;
+  overflow-y: visible;
   position: relative;
   height: 100%;
   z-index: 101;
   transform: translateZ(0);
+}
+
+@media screen and (min-width: 1024px) and (max-width: 1300px) {
+  .chats {
+    flex: 0 0 40%;
+    max-width: 40%;
+  }
 }
 
 @media screen and (min-width: 1300px) {
@@ -851,11 +865,13 @@ svg {
   text-align: center;
   padding: 20px;
 }
+
 .default-content {
   display: flex;
   flex-direction: column;
   height: 100%;
 }
+
 .content {
   position: relative;
   z-index: 100;
