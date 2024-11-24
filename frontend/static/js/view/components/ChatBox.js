@@ -7,17 +7,8 @@ import { ariaSelected, createElement, createVisibilityProfilePhoto } from "../ut
 
 function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
-    const boxElement = document.querySelector(".chats");
-    const calculateVisibleItemCount = () => {
-        const boxHeight = boxElement.clientHeight;
-        return Math.ceil(boxHeight / 72) + 7;
-    };
 
     let visibleItemCount = calculateVisibleItemCount();
-    console.log("newVisibleItemCount > ", visibleItemCount)
-
-
-
     for (let i = 0; i < visibleItemCount && i < chatInstance.chatList.length; i++) {
         console.log(i)
         createChatBox(chatInstance.chatList[i], i);
@@ -55,7 +46,11 @@ function handleChats() {
     //     }
     // });
 }
-
+const calculateVisibleItemCount = () => {
+    const boxElement = document.querySelector(".chats");
+    const boxHeight = boxElement.clientHeight;
+    return Math.ceil(boxHeight / 72) + 7;
+};
 function createChatBox(chat, index) {
     console.log("CHATQWE > ", chat.contactsDTO.userContactName)
     console.log("CHAT > ", chat)
@@ -72,6 +67,7 @@ function createChatBox(chat, index) {
     chatElementDOM.style.transform = `translateY(${index * 72}px)`;
     chatElementDOM.style.zIndex = index;
     chatElementDOM.chatData = chat;
+    chatElementDOM.dataset.user = chat.contactsDTO.userContactName != null ? chat.contactsDTO.userContactName : chat.userProfileResponseDTO.email;
     console.log("CHAT BOX >>>>>> ", chat);
 
     const chatBox = createElement('div', 'chat-box');
@@ -136,6 +132,12 @@ function createChatBox(chat, index) {
     const optionSpan1 = createElement('span', '');
     const optionSpan2 = createElement('span', '');
     const optionSpan3 = createElement('span', '');
+
+    const unreadMessageCountDiv = createUnreadMessageCount(chat);
+    if (unreadMessageCountDiv) {
+        optionSpan1.appendChild(unreadMessageCountDiv);
+    }
+
     chatOptionsDiv.appendChild(optionSpan1);
     chatOptionsDiv.appendChild(optionSpan2);
     chatOptionsDiv.appendChild(optionSpan3);
@@ -147,13 +149,24 @@ function createChatBox(chat, index) {
     chatListContentElement.style.height = chatInstance.chatList.length * 72 + "px";
     console.log("CHAT ELEMENT DOM > ", chatElementDOM)
     addEventListeners(chatElementDOM);
-    if (index === 0) {
-        updateChatsTranslateY();
-        chatListContentElement.prepend(chatElementDOM);
-    } else {
-        chatListContentElement.appendChild(chatElementDOM);
+    // if (index === 0) {
+    //     chatListContentElement.prepend(chatElementDOM);
+    // } else {
+    //     chatListContentElement.appendChild(chatElementDOM);
+
+    // }
+    chatListContentElement.appendChild(chatElementDOM);
+}
+function createUnreadMessageCount(chat) {
+    if (chat.userChatSettings.unreadMessageCount > 0) {
+        console.log("chat.userChatSettings.unreadMessageCount > ", chat.userChatSettings.unreadMessageCount)
+        const unreadMessageCountDiv = createElement('div', 'unread-message-count-div');
+        const unreadMessageCountSpan = createElement('span', 'unread-message-count-span', {}, { 'aria-label': `${chat.userChatSettings.unreadMessageCount} okunmamış mesaj` }, chat.userChatSettings.unreadMessageCount);
+        unreadMessageCountDiv.appendChild(unreadMessageCountSpan);
+        return unreadMessageCountDiv;
 
     }
+    return null;
 }
 
 function updateChatBoxLastMessage(recipientJSON) {
@@ -179,20 +192,38 @@ function moveChatToTop(chatRoomId) {
         const chatElements = document.querySelectorAll('.chat1');
         const chatElement = Array.from(chatElements).find(el => el.chatData.chatDTO.id === chatRoomId);
         if (chatElement) {
-            console.log("CHAT ELEMENT MOVE CHAT TO TOP > ", chatElement)
-            const chatListContentElement = document.querySelector(".chat-list-content");
-            chatListContentElement.prepend(chatElement);
-            updateChatsTranslateY();
+            const currentTranslateY = parseInt(chatElement.style.transform.replace("translateY(", "").replace("px)", ""));
+            const { maxIndex, minIndex } = updateTranslateYAfterDelete(currentTranslateY);
+
+            if (isChatListLengthGreaterThanVisibleItemCount()) {
+                let newChatData = chatInstance.chatList[maxIndex + 1];
+                if (newChatData) {
+                    updateDOMElement(chatElement, newChatData, maxIndex);
+                    updateChatsTranslateY();
+                } else {
+                    newChatData = chatInstance.chatList[minIndex - 1];
+                    updateDOMElement(chatElement, newChatData, minIndex - 1);
+                }
+            } else {
+                createChatBox(chat, 0);
+                updateChatsTranslateY();
+            }
         }
     }
 }
-
+const isChatListLengthGreaterThanVisibleItemCount = () => {
+    const visibleItemCount = calculateVisibleItemCount();
+    return chatInstance.chatList.length > visibleItemCount;
+}
 function updateChatsTranslateY() {
     const chatElements = document.querySelectorAll('.chat1');
-    console.log(chatElements)
-    chatElements.forEach((chatElement, index) => {
-        chatElement.style.transform = `translateY(${(index + 1) * 72}px)`;
-        chatElement.style.zIndex = index;
+    console.log("chatElements > ", chatElements)
+    chatElements.forEach((chatElement) => {
+        console.log("chatElement > ", chatElement)
+        const currentTranslateY = parseInt(chatElement.style.transform.replace("translateY(", "").replace("px)", ""));
+        chatElement.style.transform = `translateY(${(currentTranslateY + 72)}px)`;
+        console.log("chatElement.style.zIndex > ", chatElement.style.zIndex, " chatName > ", chatElement.chatData.userProfileResponseDTO.email)
+        chatElement.style.zIndex = +chatElement.style.zIndex + 1;
     });
 }
 function handleMouseover(event) {
@@ -206,8 +237,6 @@ function handleMouseover(event) {
         chatOptionsButton.setAttribute("aria-label", "Open chat context menu");
         chatOptionsButton.setAttribute("aria-hidden", "true");
         chatOptionsButton.tabIndex = 0;
-        chatOptionsButton.style.width = "20px";
-        chatOptionsButton.style.opacity = "1";
         chatOptionsButton.chatData = chatElementDOM.chatData;
 
         const spanHTML = `
@@ -405,9 +434,13 @@ const deleteChat = async (chatData, showChatOptions, chatElement) => {
         showBorders: false,
         secondOptionButton: false
     }));
+    const chatElements1 = document.querySelectorAll('.chat1');
+    console.log("chatElements > ", chatElements1)
 };
 
 function removeChat(chatElement) {
+    const chatElements1 = document.querySelectorAll('.chat1');
+    console.log("chatElements1 > ", chatElements1)
     const deletedChatTranslateY = parseInt(chatElement.style.transform.replace("translateY(", "").replace("px)", ""));
     removeEventListeners(chatElement);
     const removeIndex = chatInstance.chatList.findIndex(chat =>
@@ -424,8 +457,7 @@ function removeChat(chatElement) {
     chatListElement.style.height = `${newHeight}px`;
     const { maxIndex, minIndex } = updateTranslateYAfterDelete(deletedChatTranslateY);
 
-    const chatElements = document.querySelectorAll('.chat1')
-    if (chatElements.length < chatInstance.chatList.length) {
+    if (isChatListLengthGreaterThanVisibleItemCount()) {
 
         let newChatData = chatInstance.chatList[maxIndex];
 
@@ -442,6 +474,7 @@ function removeChat(chatElement) {
 
 function updateTranslateYAfterDelete(deletedChatTranslateY) {
     const chatElements = document.querySelectorAll('.chat1');
+    console.log("chatElements > ", chatElements)
     let maxTranslateY = -1;
     let minTranslateY = Infinity;
 
@@ -449,6 +482,7 @@ function updateTranslateYAfterDelete(deletedChatTranslateY) {
         const currentTranslateY = parseInt(chat.style.transform.replace("translateY(", "").replace("px)", ""));
         if (deletedChatTranslateY < currentTranslateY) {
             chat.style.transform = `translateY(${currentTranslateY - 72}px)`;
+            chat.zIndex = currentTranslateY / 72;
         }
         if (currentTranslateY > maxTranslateY) {
             maxTranslateY = currentTranslateY;
@@ -458,6 +492,8 @@ function updateTranslateYAfterDelete(deletedChatTranslateY) {
         }
 
     });
+    const chatElements1 = document.querySelectorAll('.chat1');
+    console.log("chatElements > ", chatElements1)
     return {
         maxIndex: maxTranslateY / 72,
         minIndex: minTranslateY / 72
@@ -474,8 +510,8 @@ function updateDOMElement(chatElement, newChatData, newIndex) {
     chatElement.dataset.user = newChatData.contactsDTO.userContactName ? newChatData.contactsDTO.userContactName : newChatData.userProfileResponseDTO.email;
     timeDiv.textContent = newChatData.chatDTO.lastMessageTime;
     messageSpan.textContent = newChatData.chatDTO.lastMessage;
-
     chatElement.style.transform = `translateY(${newIndex * 72}px)`;
+    console.log("chatElement.style.transform > ", chatElement.style.transform)
     chatElement.style.zIndex = chatInstance.chatList.length - newIndex;
 }
 const togglePinnedChat = async (chatData, showChatOptions) => {
@@ -519,6 +555,14 @@ async function handleChatClick(event) {
         return;
     }
     ariaSelected(chatElementDOM, chatInstance, innerDiv);
+    if (chatData.userChatSettings.unreadMessageCount > 0) {
+        const dto = {
+            userId: chatInstance.user.id,
+            userChatSettingsId: chatData.userChatSettings.id,
+            chatRoomId: chatData.chatDTO.id
+        };
+        chatInstance.webSocketManagerChat.sendMessageToAppChannel("read-message", dto);
+    }
     const messages = await fetchGetLast30Messages(chatData.chatDTO.id);
     const chatDTO = {
         contactsDTO: {
@@ -533,6 +577,7 @@ async function handleChatClick(event) {
     chatData.messages = messages;
     removeMessageBoxAndUnsubscribe();
     createMessageBox(chatDTO);
+    setTimeout( () =>  fetchGetLast30Messages(chatData.chatDTO.id), 1)
 }
 
 function removeEventListeners(chatElementDOM) {
@@ -549,14 +594,49 @@ function addEventListeners(chatElementDOM) {
 
 async function createChatBoxWithFirstMessage(recipientJSON) {
     const result = await fetchGetChatSummary(recipientJSON.recipientId, recipientJSON.senderId, recipientJSON.chatRoomId);
+    console.log("RESULT > ", result)
     chatInstance.chatList.unshift(result);
-    createChatBox(result, 0);
+    const paneSideElement = document.querySelector("#pane-side");
+    const scrollTop = paneSideElement.scrollTop;
+    const newStart = Math.max(Math.floor(scrollTop / 72) - 2, 0);
+    console.log("newStart > ", newStart)
+    updateChatsTranslateY();
+    if (newStart === 0) {
+        if (isChatListLengthGreaterThanVisibleItemCount()) {
+            const chatElementMaxTranslateY = findMaxTranslateYChatElement();
+            let newChatData = chatInstance.chatList[0];
+
+            if (newChatData) {
+                updateDOMElement(chatElementMaxTranslateY, newChatData, 0);
+            }
+        } else {
+            createChatBox(result, 0);
+        }
+    }
 }
 
+function findMaxTranslateYChatElement() {
+    const chatElements = document.querySelectorAll('.chat1');
+    console.log("chatElements > ", chatElements)
+    let maxTranslateY = -1;
+    let chatElementMaxTranslateY = null;
 
+    chatElements.forEach(chat => {
+        const currentTranslateY = parseInt(chat.style.transform.replace("translateY(", "").replace("px)", ""));
+
+        if (currentTranslateY > maxTranslateY) {
+            maxTranslateY = currentTranslateY;
+            chatElementMaxTranslateY = chat;
+        }
+
+    });
+    return chatElementMaxTranslateY;
+
+}
 
 function isChatExists(recipientJSON) {
     chatInstance.chatList.forEach(x => console.log("CHAT LIST FOREACH IS CHAT EXISTS > ", x));
+    chatInstance.chatList.forEach(x => console.log("CHAT LIST FOREACH IS CHAT EXISTS > ", chatInstance.chatList.some(chat => chat.chatDTO.id === recipientJSON.chatRoomId)));
     return chatInstance.chatList.some(chat => chat.chatDTO.id === recipientJSON.chatRoomId);
 }
 
@@ -579,7 +659,7 @@ const fetchGetLast30Messages = async (chatRoomId) => {
             throw new Error('Access token not found');
         }
 
-        const response = await fetch(`${getLast30MessagesUrl}?chatRoomId=${chatRoomId}&limit=30`, {
+        const response = await fetch(`${getLast30MessagesUrl}?chatRoomId=${chatRoomId}&limit=30&userId=${chatInstance.user.id}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -592,13 +672,14 @@ const fetchGetLast30Messages = async (chatRoomId) => {
         }
 
         const result = await response.json();
-        console.log(result);
+        console.log("KARDESIM TEMIZLE ARTIK SURAYI > ", result);
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
         throw error;
     }
 };
+
 const getUserByIdUrl = 'http://localhost:8080/api/v1/user/get-user-by-id';
 async function fetchGetUserById(userId) {
     try {

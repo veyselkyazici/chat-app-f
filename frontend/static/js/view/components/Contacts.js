@@ -435,14 +435,18 @@ async function handleContactClick(event) {
     const contactData = contactElementDOM.contactData;
     console.log("CONTACTDATA > ", contactData)
     if (contactData.contactsDTO) {
-        const chatBoxDivs = [...document.querySelectorAll('.chat-list-content > .chat1')];
-        const chatBoxElement = chatBoxDivs.find(chatBoxDiv => chatBoxDiv.chatData.id === `${contactData.contactsDTO.userId}_${contactData.contactsDTO.userContactId}` || chatBoxDiv.chatData.id === `${contactData.contactsDTO.userContactId}_${contactData.contactsDTO.userId}`)
+        const chatBoxElement = findChatRoomElement(contactData.contactsDTO.userId, contactData.contactsDTO.userContactId);
+        console.log("CHATBOXELEMENT > ", chatBoxElement)
         const innerDiv = chatBoxElement?.querySelector('.chat-box > div');
         if (chatBoxElement && innerDiv?.getAttribute('aria-selected') === 'true') {
+            const contactListRenderDiv = document.querySelector('.a1-1-1');
+            if (contactListRenderDiv) {
+                contactListRenderDiv.removeChild(contactListRenderDiv.firstElementChild);
+            }
             return;
         }
         chatBoxElement != null ? ariaSelected(chatBoxElement, chatInstance, innerDiv) : ariaSelectedRemove(chatInstance);
-        let findChat = chatInstance.chatList.find(chatItem => chatItem.chatDTO.id === `${chatInstance.user.id}_${contactData.contactsDTO.userContactId}` || chatItem.chatDTO.id === `${contactData.contactsDTO.userContactId}_${chatInstance.user.id}`);
+        let findChat = findChatRoom(chatInstance.user.id, contactData.contactsDTO.userContactId);
         let chatRequestDTO;
         if (!findChat) {
             chatRequestDTO = {
@@ -472,6 +476,10 @@ async function handleContactClick(event) {
         // ToDo Profile.js ten sonra eğer o varken başka bir chat e clickleniyorsa o da remove edilecek
         removeMessageBoxAndUnsubscribe();
         createMessageBox(chatRequestDTO);
+        const contactListRenderDiv = document.querySelector('.a1-1-1');
+        if (contactListRenderDiv) {
+            contactListRenderDiv.removeChild(contactListRenderDiv.firstElementChild);
+        }
     } else if (!contactData.invitationResponseDTO.invited) {
         const options = new ModalOptionsDTO({
             content: `${contactData.userContactName} kişisini davet etmek istiyor musunuz?`,
@@ -499,8 +507,25 @@ async function handleContactClick(event) {
 }
 
 
-
-
+function findChatRoomElement(userId, friendId) {
+    const chatBoxDivs = [...document.querySelectorAll('.chat-list-content > .chat1')];
+    return chatBoxDivs.find(chatBoxDiv => {
+        const participants = chatBoxDiv.chatData.chatDTO.participantIds;
+        return (
+            (participants.includes(userId) && participants.includes(friendId)) &&
+            participants.length === 2
+        );
+    });
+}
+function findChatRoom(userId, friendId) {
+    return chatInstance.chatList.find(chat => {
+        const participants = chat.chatDTO.participantIds;
+        return (
+            (participants.includes(userId) && participants.includes(friendId)) &&
+            participants.length === 2
+        );
+    });
+}
 function handleMouseover(event) {
     const contactElementDOM = event.currentTarget;
     const chatOptionsSpan = contactElementDOM.querySelectorAll('.chat-options-contact span')[2];

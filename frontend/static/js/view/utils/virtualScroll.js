@@ -5,7 +5,9 @@ export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount)
 
     const onScroll = () => {
         const scrollTop = paneSideElement.scrollTop;
-        const newStart = Math.max(Math.floor(scrollTop / 72) - 1, 0);
+        const newStart = Math.max(Math.floor(scrollTop / 72) - 2, 0);
+        // const newStart1 = Math.max(Math.floor(scrollTop / 72) - 1, 0);
+        // console.log("NEWSTART > ", newStart1)
         const newEnd = newStart + visibleItemCount;
 
         if (newStart !== start || newEnd !== end) {
@@ -21,7 +23,10 @@ export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount)
 }
 
 // Todo PrivacySettings islemleri yapilacak
+// ToDo profilePhoto halledilecek
+// ToDo invitationlar yapilacak
 export function updateItems(updateItemsDTO, newStart, newEnd) {
+    console.log("UPDATE ITEM DTO > ", updateItemsDTO, " newStart > ", newStart, " newEnd > ", newEnd)
     const itemsToUpdate = updateItemsDTO.itemsToUpdate.filter(item => {
         const translateY = parseInt(item.style.transform.replace("translateY(", "").replace("px)", ""));
         const index = translateY / 72;
@@ -33,37 +38,50 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
         const index = Math.floor(translateY / 72);
         const newIndex = (index < newStart) ? (newEnd - 1 - idx) : (newStart + idx);
         const listItem = updateItemsDTO.list[newIndex];
-        if (listItem && !('about' in listItem)) {
-            console.log("listItem > ", listItem)
-            console.log("item.data > ", item.data)
-            console.log("item.data > ", item)
-            item.data = listItem;
-            const time = listItem.chatDTO.lastMessageTime;
-            console.log(time)
-            const date = new Date(time);
-            const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const nameSpan = item.querySelector(".name-span");
-            const timeSpan = item.querySelector(".time");
-            const messageSpan = item.querySelector(".message-span-span");
+        console.log("listItem > ", listItem)
+        if (listItem) {
+            if (!('invitationResponseDTO' in listItem)) {
+                console.log("item.data > ", item.data)
+                console.log("item.data > ", item)
+                console.log("item.data > ", item.chatData)
+                item.chatData = listItem;
+                const time = listItem.chatDTO.lastMessageTime;
+                console.log(time)
+                const date = new Date(time);
+                const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const nameSpan = item.querySelector(".name-span");
+                const timeSpan = item.querySelector(".time");
+                const messageSpan = item.querySelector(".message-span-span");
 
-            nameSpan.textContent = listItem.contactsDTO.userContactName ? listItem.contactsDTO.userContactName : listItem.userProfileResponseDTO.email;
-            timeSpan.textContent = formattedTime;
-            messageSpan.textContent = listItem.chatDTO.lastMessage;
-            console.log(listItem.lastMessage)
-
-            item.style.transform = `translateY(${newIndex * 72}px)`;
-        }
-        if (listItem && ('about' in listItem)) {
-            const nameSpan = item.querySelector(".name-span");
-            item.contactData = listItem
-            const messageSpan = item.querySelector(".message-span-span");
-            nameSpan.textContent = listItem.userContactName;
-            if (messageSpan) {
-                messageSpan.textContent = listItem.about;
+                nameSpan.textContent = listItem.contactsDTO.userContactName ? listItem.contactsDTO.userContactName : listItem.userProfileResponseDTO.email;
+                timeSpan.textContent = formattedTime;
+                messageSpan.textContent = listItem.chatDTO.lastMessage;
+                item.dataset.user = nameSpan.textContent = listItem.contactsDTO.userContactName ? listItem.contactsDTO.userContactName : listItem.userProfileResponseDTO.email;
+                item.style.transform = `translateY(${newIndex * 72}px)`;
             }
-            item.dataset.user = listItem.userContactName
-            item.style.transform = `translateY(${newIndex * 72}px)`;
-
+            else {
+                if (!listItem.invitationResponseDTO) {
+                    const nameSpan = item.querySelector(".name-span");
+                    item.contactData = listItem
+                    console.log("CONTACT DATA > ", item.contactData)
+                    const messageSpan = item.querySelector(".message-span-span");
+                    nameSpan.textContent = listItem.contactsDTO.userContactName;
+                    if (messageSpan) {
+                        messageSpan.textContent = listItem.userProfileResponseDTO.about;
+                    }
+                    item.dataset.user = listItem.contactsDTO.userContactName;
+                } else {
+                    const nameSpan = item.querySelector(".name-span");
+                    item.contactData = listItem
+                    const messageSpan = item.querySelector(".message-span-span");
+                    nameSpan.textContent = listItem.invitationResponseDTO.contactName;
+                    if (messageSpan) {
+                        messageSpan.remove();
+                    }
+                    item.dataset.user = listItem.contactsDTO.userContactName;
+                }
+                item.style.transform = `translateY(${newIndex * 72}px)`;
+            }
         }
     });
     itemsToUpdate.forEach(item => updateItemsDTO.addEventListeners(item));

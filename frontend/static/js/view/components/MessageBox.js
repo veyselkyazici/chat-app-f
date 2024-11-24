@@ -92,7 +92,9 @@ const handleTextBlur = (chat, typingStatus) => {
     }
 }
 const handleTextFocus = (chat, typingStatus, textArea) => {
-    if (typingStatus.previousText) {
+    console.log("typingStatus > ", typingStatus)
+    if (typingStatus.isTyping) {
+        console.log("typingStatus > ", typingStatus)
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
     }
@@ -102,8 +104,11 @@ function handlePaste(event) {
 }
 
 function handleTextInput(inputBox, textArea, sendButton, chat, typingStatus, event) {
-    const currentText = textArea.textContent.trim();
+    const currentText = textArea.textContent;
     console.log("CHAT > ", chat)
+    console.log("CURRENT TEXT > ", chat)
+    console.log("CURRENT TEXT > ", currentText)
+    console.log("CURRENT TEXT > ", currentText.length)
     if (currentText && !typingStatus.isTyping) {
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
@@ -116,35 +121,38 @@ function handleTextInput(inputBox, textArea, sendButton, chat, typingStatus, eve
     updatePlaceholder(inputBox, textArea, sendButton);
     updateCaretPosition(event);
     if (event.inputType === 'deleteContentBackward') {
+        console.log("ABCDE")
         handleDeleteContentBackward(event);
     } else {
         input(event.data, textArea);
     }
-
-
 }
 
 function handleDeleteContentBackward(event) {
-    if (caretNode.parentNode.nextSibling && caretNode.parentNode.className === 'message-box1-7-1-1-1-2-1-1-1-1' && caretNode.parentNode.nextSibling.className === 'message-box1-7-1-1-1-2-1-1-1-1') {
-        const textLength = caretNode.parentNode.textContent.length;
-        const combinedContent = caretNode.parentNode.textContent + caretNode.parentNode.nextSibling.textContent;
+    if (caretNode) {
+        if (caretNode.parentNode.nextSibling && caretNode.parentNode.className === 'message-box1-7-1-1-1-2-1-1-1-1' && caretNode.parentNode.nextSibling.className === 'message-box1-7-1-1-1-2-1-1-1-1') {
+            const textLength = caretNode.parentNode.textContent.length;
+            const combinedContent = caretNode.parentNode.textContent + caretNode.parentNode.nextSibling.textContent;
 
-        const textNode = document.createTextNode(combinedContent);
-        const newSpan = document.createElement('span');
-        newSpan.className = 'message-box1-7-1-1-1-2-1-1-1-1';
-        newSpan.appendChild(textNode);
+            const textNode = document.createTextNode(combinedContent);
+            const newSpan = document.createElement('span');
+            newSpan.className = 'message-box1-7-1-1-1-2-1-1-1-1';
+            newSpan.appendChild(textNode);
 
-        const parent = caretNode.parentNode.parentNode;
-        parent.replaceChild(newSpan, caretNode.parentNode);
-        caretNode = newSpan.firstChild;
-        newSpan.nextSibling.remove();
+            const parent = caretNode.parentNode.parentNode;
+            parent.replaceChild(newSpan, caretNode.parentNode);
+            caretNode = newSpan.firstChild;
+            newSpan.nextSibling.remove();
 
-        caretPosition = textLength;
-        setStartRange(newSpan.firstChild, textLength);
+            caretPosition = textLength;
+            setStartRange(newSpan.firstChild, textLength);
+        }
     }
+
 }
 
 function handleTextKeyDown(event) {
+    console.log("AZSASDFASDF")
     keydown(event, event.target);
 }
 
@@ -299,8 +307,17 @@ const insertEmoji = (emoji) => {
     setStartAfter(emojiOuterSpan)
 };
 function keydown(event, textArea) {
+    console.log(caretNode.parentElement.className)
     if (event.key === 'Backspace') {
         if (textArea.innerText.trim() === '') {
+            if (caretNode) {
+                if (caretNode.parentElement.className === 'message-box1-7-1-1-1-2-1-1-1-1') {
+                    caretNode.parentElement.remove();
+                }
+                else if (caretNode.parentElement.parentElement.className === 'message-emoji-span-1') {
+                    caretNode.parentElement.parentElement.remove();
+                }
+            }
             event.preventDefault();
         }
     }
@@ -312,7 +329,7 @@ const updatePlaceholder = (inputBox, textArea, sendButton) => {
     const placeholderText = 'Bir mesaj yazın';
     let placeholder = inputBox.querySelector(`.${placeholderClass}`);
 
-    if (textArea.innerText.trim() === '') {
+    if (textArea.textContent.length === 0) {
         if (!placeholder) {
             placeholder = document.createElement('div');
             placeholder.className = placeholderClass;
@@ -1142,7 +1159,6 @@ const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = (oldPrivacySettings, new
             console.log("CIFT TRUE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         }
     }
-    debugger;
 }
 const sendMessage = async (chat, sendButton) => {
     const messageContentElement = document.querySelector('.message-box1-7-1-1-1-2-1-1-1-1');
@@ -1155,8 +1171,10 @@ const sendMessage = async (chat, sendButton) => {
             fullDateTime: new Date().toISOString(),
             senderId: chat.user.id,
             recipientId: chat.contactsDTO.userProfileResponseDTO.id,
-            chatRoomId: chat.id
+            chatRoomId: chat.id,
+            userChatSettingsId: chat.userChatSettings.id
         };
+        console.log("BX10 > ", message)
         if (!chat.id) {
             console.log("!CHAT ID > ", chat)
             const result = await fetchCreateChatRoomIfNotExists(chat.user.id, chat.contactsDTO.userProfileResponseDTO.id);
@@ -1164,9 +1182,10 @@ const sendMessage = async (chat, sendButton) => {
             // const result2 = await fetchGetChatSummary(chat.user.id, chat.contactsDTO.userProfileResponseDTO.id, result.id);
             // console.log("RESULT2222222222 > ", result2)
             message.chatRoomId = result.id;
+            message.userChatSettingsId = result.userChatSettings.id;
             result.friendEmail = chat.friendEmail
             const newChat = {
-                chatDTO: { id: message.chatRoomId, lastMessage: message.messageContent, lastMessageTime: message.fullDateTime, senderId: chat.user.id, recipientId: chat.contactsDTO.userProfileResponseDTO.id },
+                chatDTO: { id: message.chatRoomId, lastMessage: message.messageContent, lastMessageTime: message.fullDateTime, senderId: chat.user.id, recipientId: chat.contactsDTO.userProfileResponseDTO.id, participantIds: result.participantIds },
                 userProfileResponseDTO: { ...chat.contactsDTO.userProfileResponseDTO },
                 userChatSettings: { ...result.userChatSettings },
                 contactsDTO: { ...chat.contactsDTO.contact }
@@ -1190,7 +1209,17 @@ const sendMessage = async (chat, sendButton) => {
         }
         else {
             const chatIndex = chatInstance.chatList.findIndex(data => data.chatDTO.id == chat.id);
-            chatInstance.chatList[chatIndex].chatDTO.lastMessage = messageContent;
+            chatInstance.chatList[chatIndex].chatDTO.lastMessage = message.messageContent;
+            console.log("AX12 > ", chatInstance.chatList[chatIndex])
+            const chatElements = [...document.querySelectorAll('.chat1')];
+            const chatElement = chatElements.find(chatElement => chatElement.chatData.chatDTO.id === chatInstance.chatList[chatIndex].chatDTO.id)
+            if (chatElement) {
+                const lastMessageElement = chatElement.querySelector('.message-span-span');
+                const lastMessageTimeElement = chatElement.querySelector('.time');
+                lastMessageElement.textContent = message.messageContent;
+                console.log("AX12 > ", messageContent.fullDateTime)
+                lastMessageTimeElement.textContent = message.fullDateTime;
+            }
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
 

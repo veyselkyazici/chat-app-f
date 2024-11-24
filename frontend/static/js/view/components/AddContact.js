@@ -18,12 +18,10 @@ const addContactModal = (options) => {
             <div class="error-message" id="generalError"></div>
         </div>
                           <div class="input-icon">
-          <i class="fa-solid fa-envelope"></i>
           <div class="error-message"></div>
           <input id="contactEmail" name="email" placeholder="E-posta" >
         </div>
                 <div class="input-icon">
-          <i class="fa-solid fa-envelope"></i>
           <div class="error-message"></div>
           <input id="contactName" name="name" placeholder="Ad" >
         </div>

@@ -414,10 +414,34 @@ export default class Chat extends AbstractView {
                 await createChatBoxWithFirstMessage(recipientJSON)
             } else {
                 console.log("RECIPENT > ", recipientJSON)
-                if (isMessageBoxDomExists(recipientJSON.chatRoomId))
+                const chat = this.chatList.find(chat => chat.chatDTO.id === recipientJSON.chatRoomId);
+                chat.userChatSettings.unreadMessageCount = recipientJSON.unreadMessageCount;
+                console.log(this.chatList)
+                const chatDOMs = [...document.querySelectorAll('.chat1')];
+                const chatDOM = chatDOMs.find(chat => chat.chatData.chatDTO.id === recipientJSON.chatRoomId);
+
+
+                if (chatDOM) {
+                    const unreadMessageCountSpan = chatDOM.querySelector('.unread-message-count-span');
+                    const chatOptionsDiv = chatDOM.querySelector('.chat-options');
+                    if (unreadMessageCountSpan) {
+                        unreadMessageCountSpan.textContent = recipientJSON.unreadMessageCount;
+                    } else {
+                        const unreadMessageCountDiv = createElement('div', 'unread-message-count-div');
+                        const unreadMessageCountSpan = createElement('span', 'unread-message-count-span', {}, { 'aria-label': `${recipientJSON.unreadMessageCount} okunmamış mesaj` }, recipientJSON.unreadMessageCount);
+                        unreadMessageCountDiv.appendChild(unreadMessageCountSpan);
+                        chatOptionsDiv.firstElementChild.appendChild(unreadMessageCountDiv);
+                    }
+                }
+                if (isMessageBoxDomExists(recipientJSON.chatRoomId)) {
+                    if (unreadMessageCountSpan)
+                        chatOptionsDiv.removeChild(chatOptionsDiv.firstElementChild);
                     renderMessage(recipientJSON, chatInstance.user.id);
-                updateChatBoxLastMessage(recipientJSON);
-                lastMessageChange(recipientJSON.chatRoomId, recipientJSON.messageContent)
+                } else {
+                    updateChatBoxLastMessage(recipientJSON);
+                    lastMessageChange(recipientJSON.chatRoomId, recipientJSON.messageContent)
+                }
+
             }
         })
         this.webSocketManagerChat.subscribeToChannel(typingChannel, (typingMessage) => {
