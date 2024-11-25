@@ -551,33 +551,55 @@ async function handleChatClick(event) {
     const chatElementDOM = event.currentTarget;
     const chatData = chatElementDOM.chatData;
     const innerDiv = chatElementDOM.querySelector('.chat-box > div');
+
+    // Eğer zaten seçiliyse işlem yapma
     if (innerDiv.getAttribute('aria-selected') === 'true') {
         return;
     }
+
     ariaSelected(chatElementDOM, chatInstance, innerDiv);
+
     if (chatData.userChatSettings.unreadMessageCount > 0) {
-        const dto = {
-            userId: chatInstance.user.id,
-            userChatSettingsId: chatData.userChatSettings.id,
-            chatRoomId: chatData.chatDTO.id
-        };
-        chatInstance.webSocketManagerChat.sendMessageToAppChannel("read-message", dto);
+        await markMessagesAsReadAndFetchMessages(chatData);
+    } else {
+        await fetchMessages(chatData);
     }
+}
+
+async function markMessagesAsReadAndFetchMessages(chatData) {
+    const readConfirmationChannel = `/user/${chatInstance.user.id}/queue/read-confirmation`;
+    const dto = {
+        userId: chatInstance.user.id,
+        userChatSettingsId: chatData.userChatSettings.id,
+        chatRoomId: chatData.chatDTO.id,
+    };
+
+    chatInstance.webSocketManagerChat.sendMessageToAppChannel("read-message", dto);
+
+    chatInstance.webSocketManagerChat.subscribeToChannel(readConfirmationChannel, async (message) => {
+        console.log("Read confirmation received:", message.body);
+
+        await fetchMessages(chatData);
+    });
+}
+
+async function fetchMessages(chatData) {
     const messages = await fetchGetLast30Messages(chatData.chatDTO.id);
+
     const chatDTO = {
         contactsDTO: {
             contact: { ...chatData.contactsDTO },
-            userProfileResponseDTO: { ...chatData.userProfileResponseDTO }
+            userProfileResponseDTO: { ...chatData.userProfileResponseDTO },
         },
         user: chatInstance.user,
         messagesDTO: messages,
         userChatSettings: chatData.userChatSettings,
         id: chatData.chatDTO.id,
     };
+
     chatData.messages = messages;
     removeMessageBoxAndUnsubscribe();
     createMessageBox(chatDTO);
-    setTimeout( () =>  fetchGetLast30Messages(chatData.chatDTO.id), 1)
 }
 
 function removeEventListeners(chatElementDOM) {

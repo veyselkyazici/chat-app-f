@@ -3486,10 +3486,16 @@ button.chat-options-btn:focus {
 }
 
 
+/* MESSAGE SEEN */
+.message-seen-tick-div {
+  margin-left: 3px;
+  display: inline-block;
+  color: #8696a0;
+}
 
-
-
-
+.message-seen-tick-span {
+  color: #53bdeb;
+}
 
 
 
