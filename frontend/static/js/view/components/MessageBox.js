@@ -2,7 +2,7 @@
 import { chatInstance } from "../pages/Chat.js";
 import { createChatBox, updateChatsTranslateY, updateChatBoxLastMessage, fetchGetChatSummary } from "./ChatBox.js";
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
-import { createElement, createSvgElement, createVisibilityProfilePhoto } from "../utils/util.js";
+import { createElement, createSvgElement, createVisibilityProfilePhoto, messageDeliveredTick } from "../utils/util.js";
 import { MessageDTO } from "../dtos/MessageDTO.js";
 
 let caretPosition = 0;
@@ -15,7 +15,8 @@ async function createMessageBox(chat) {
     console.log("MESSAGE BOX > ", chat);
     console.log("MESSAGE BOX > ", chat.messagesDTO.lastPage);
     const messageBoxElement = await createMessageBoxHTML(chat);
-    renderMessage(chat.messagesDTO.messages, chat.user.id, chat.messagesDTO.lastPage);
+    // ToDo lastPage bakilacak renderMessage
+    renderMessage(chat.messagesDTO.messages, chat.messagesDTO.lastPage, chat.contactsDTO.userProfileResponseDTO.privacySettings);
     let typingStatus = { isTyping: false, previousText: "" };
     chat.friendEmail;
     chat.image;
@@ -93,7 +94,8 @@ const handleTextBlur = (chat, typingStatus) => {
 }
 const handleTextFocus = (chat, typingStatus, textArea) => {
     console.log("typingStatus > ", typingStatus)
-    if (typingStatus.isTyping) {
+    console.log("typingStatus > ", textArea.textContent)
+    if (!typingStatus.isTyping && typingStatus.previousText.length > 0) {
         console.log("typingStatus > ", typingStatus)
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
@@ -307,17 +309,8 @@ const insertEmoji = (emoji) => {
     setStartAfter(emojiOuterSpan)
 };
 function keydown(event, textArea) {
-    console.log(caretNode.parentElement.className)
     if (event.key === 'Backspace') {
         if (textArea.innerText.trim() === '') {
-            if (caretNode) {
-                if (caretNode.parentElement.className === 'message-box1-7-1-1-1-2-1-1-1-1') {
-                    caretNode.parentElement.remove();
-                }
-                else if (caretNode.parentElement.parentElement.className === 'message-emoji-span-1') {
-                    caretNode.parentElement.parentElement.remove();
-                }
-            }
             event.preventDefault();
         }
     }
@@ -834,11 +827,17 @@ const getFirstMessageDate = () => {
 };
 const isMessageBoxDomExists = (chatRoomId) => {
     const messageBoxDom = document.querySelector('.message-box1');
-    return messageBoxDom ? messageBoxDom.data.id === chatRoomId : false;
+    if (messageBoxDom) {
+        if (messageBoxDom.data.id === chatRoomId) {
+            return true;
+        }
+        return false;
+    } else {
+        return false;
+    }
 }
-const renderMessage = (messages, userId, lastPage) => {
+const renderMessage = (messages, lastPage, privacySettings) => {
     console.log("MESSAGES RENDER MESSAGE > ", messages)
-    console.log("MESSAGES RENDER MESSAGE > ", userId)
     const messageRenderDOM = document.querySelector('.message-box1-5-1-2-2');
     const messagesArray = Array.isArray(messages) ? messages : [messages];
     messagesArray.forEach(message => {
@@ -848,6 +847,7 @@ const renderMessage = (messages, userId, lastPage) => {
         rowDOM.messageData = { message: message, isLastPage: !lastPage ? lastPage : true };
         console.log("LAST PGAE > ", lastPage)
         const divMessage = createElement('div', 'message1');
+        divMessage.data = message;
         const divMessage12 = createElement('div', '');
         const spanFirst = createElement('span', '');
         const divMessage1_1_1 = createElement('div', 'message1-1-1');
@@ -886,28 +886,51 @@ const renderMessage = (messages, userId, lastPage) => {
         const span1_1_1_2_1_2_1_1 = createElement('span', 'message1-1-1-2-1-2-1-1', null, { 'dir': 'auto' }, message.fullDateTime);
 
         const divMessage1_1_1_2_1_2_1_2 = createElement('div', 'message1-1-1-2-1-2-1-2');
-        const span2 = createElement('span', '', null, { 'data-icon': 'msg-check', 'aria-label': ' Gönderildi ' })
-        const msgCheckSVG = createSvgElement('svg', {
-            viewBox: "0 0 12 11",
-            height: "11",
-            width: "16",
-            version: "1.1",
-            preserveAspectRatio: "xMidYMid meet",
-            fill: "none"
-        });
+        // const span2 = createElement('span', '', null, { 'data-icon': 'msg-check', 'aria-label': ' Gönderildi ' })
+        // const msgCheckSVG = createSvgElement('svg', {
+        //     viewBox: "0 0 12 11",
+        //     height: "11",
+        //     width: "16",
+        //     version: "1.1",
+        //     preserveAspectRatio: "xMidYMid meet",
+        //     fill: "none"
+        // });
 
-        const title = createElement('title', '', null, null, 'msg-check')
-        const msgCheckSVGPath = createSvgElement('path', {
-            d: "M11.1549 0.652832C11.0745 0.585124 10.9729 0.55127 10.8502 0.55127C10.7021 0.55127 10.5751 0.610514 10.4693 0.729004L4.28038 8.36523L1.87461 6.09277C1.8323 6.04622 1.78151 6.01025 1.72227 5.98486C1.66303 5.95947 1.60166 5.94678 1.53819 5.94678C1.407 5.94678 1.29275 5.99544 1.19541 6.09277L0.884379 6.40381C0.79128 6.49268 0.744731 6.60482 0.744731 6.74023C0.744731 6.87565 0.79128 6.98991 0.884379 7.08301L3.88047 10.0791C4.02859 10.2145 4.19574 10.2822 4.38194 10.2822C4.48773 10.2822 4.58929 10.259 4.68663 10.2124C4.78396 10.1659 4.86436 10.1003 4.92784 10.0156L11.5738 1.59863C11.6458 1.5013 11.6817 1.40186 11.6817 1.30029C11.6817 1.14372 11.6183 1.01888 11.4913 0.925781L11.1549 0.652832Z",
-            fill: "currentColor",
-        });
+        // const title = createElement('title', '', null, null, 'msg-check')
+        // const msgCheckSVGPath = createSvgElement('path', {
+        //     d: "M11.1549 0.652832C11.0745 0.585124 10.9729 0.55127 10.8502 0.55127C10.7021 0.55127 10.5751 0.610514 10.4693 0.729004L4.28038 8.36523L1.87461 6.09277C1.8323 6.04622 1.78151 6.01025 1.72227 5.98486C1.66303 5.95947 1.60166 5.94678 1.53819 5.94678C1.407 5.94678 1.29275 5.99544 1.19541 6.09277L0.884379 6.40381C0.79128 6.49268 0.744731 6.60482 0.744731 6.74023C0.744731 6.87565 0.79128 6.98991 0.884379 7.08301L3.88047 10.0791C4.02859 10.2145 4.19574 10.2822 4.38194 10.2822C4.48773 10.2822 4.58929 10.259 4.68663 10.2124C4.78396 10.1659 4.86436 10.1003 4.92784 10.0156L11.5738 1.59863C11.6458 1.5013 11.6817 1.40186 11.6817 1.30029C11.6817 1.14372 11.6183 1.01888 11.4913 0.925781L11.1549 0.652832Z",
+        //     fill: "currentColor",
+        // });
 
 
-        msgCheckSVG.appendChild(title);
-        msgCheckSVG.appendChild(msgCheckSVGPath);
-        span2.appendChild(msgCheckSVG);
-        divMessage1_1_1_2_1_2_1_2.appendChild(span2);
-        span1_1_1_2_1_2_1_1.appendChild(divMessage1_1_1_2_1_2_1_2);
+
+        if (message.senderId === chatInstance.user.id) {
+
+            const messageDeliveredTickDiv = messageDeliveredTick();
+            divMessage1_1_1_2_1_2_1_2.appendChild(messageDeliveredTickDiv);
+            span1_1_1_2_1_2_1_1.appendChild(divMessage1_1_1_2_1_2_1_2);
+
+            if (message.seen && chatInstance.user.privacySettings.readReceipts && privacySettings.readReceipts) {
+                const messageTickSpan = span1_1_1_2_1_2_1_1.querySelector('.message-delivered-tick-span');
+                messageTickSpan.className = 'message-seen-tick-span';
+                messageTickSpan.ariaLabel = ' Okundu ';
+            }
+
+
+            // msgCheckSVG.appendChild(title);
+            // msgCheckSVG.appendChild(msgCheckSVGPath);
+            // span2.appendChild(msgCheckSVG);
+            // divMessage1_1_1_2_1_2_1_2.appendChild(span2);
+            divMessage12.className = "message-out";
+            spanTail.setAttribute('data-icon', 'tail-out')
+            spanTail.className = 'span-tail';
+        } else {
+            divMessage12.className = "message-in";
+            spanTail.setAttribute('data-icon', 'tail-in')
+            spanTail.className = 'span-tail';
+        }
+
+
         divMessage1_1_1_2_1_2_1.appendChild(span1_1_1_2_1_2_1_1);
         divMessage1_1_1_2_1_2.appendChild(divMessage1_1_1_2_1_2_1);
         divMessage1_1_1_2_1.appendChild(divMessage1_1_1_2_1_2);
@@ -919,15 +942,7 @@ const renderMessage = (messages, userId, lastPage) => {
         const divMessage1_1_1_2_2 = createElement('div', 'message1-1-1-2-2');
         divMessage1_1_1_2.appendChild(messageOptionsSpan);
         divMessage1_1_1_2.appendChild(divMessage1_1_1_2_2);
-        if (message.senderId === userId) {
-            divMessage12.className = "message-out";
-            spanTail.setAttribute('data-icon', 'tail-out')
-            spanTail.className = 'span-tail';
-        } else {
-            divMessage12.className = "message-in";
-            spanTail.setAttribute('data-icon', 'tail-in')
-            spanTail.className = 'span-tail';
-        }
+
         divMessage1_1_1.appendChild(spanTail);
         divMessage1_1_1.appendChild(divMessage1_1_1_2);
         divMessage12.appendChild(divMessage1_1_1);
@@ -1097,7 +1112,7 @@ function closeOptionsDivOnClickOutside(event) {
 const isOnline = async (user, contactsDTO) => {
     console.log("USER > ", user)
     console.log("CONTACT > ", contactsDTO)
-    if (user.privacySettings.lastSeenVisibility !== 'NOBODY' && contactsDTO.userProfileResponseDTO.lastSeenVisibility !== 'NOBODY') {
+    if ((user.privacySettings.lastSeenVisibility !== 'NOBODY' || user.privacySettings.onlineStatusVisibility !== 'NOBODY') && (contactsDTO.userProfileResponseDTO.lastSeenVisibility !== 'NOBODY' || contactsDTO.userProfileResponseDTO.onlineStatusVisibility !== 'NOBODY')) {
         const friendStatus = await checkUserOnlineStatus(contactsDTO.contact.userContactId);
         console.log("FRIEND STATUS > ", friendStatus)
         if (friendStatus.online) {
@@ -1160,6 +1175,25 @@ const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = (oldPrivacySettings, new
         }
     }
 }
+
+function messageBoxElementMessagesReadTick(messages, privacySettings) {
+    const renderMessages = [...document.querySelectorAll('.message1')];
+    messages.length;
+    const reverseRenderMessages = renderMessages.reverse();
+    for (let index = 0; index < renderMessages.length; index++) {
+        if (index >= messages.length) {
+            break;
+        }
+
+        const messageElement = reverseRenderMessages[index];
+        if (chatInstance.user.privacySettings.readReceipts && privacySettings.readReceipts) {
+            const messageTickSpan = messageElement.querySelector('.message-delivered-tick-span');
+            messageTickSpan.className = 'message-seen-tick-span';
+            messageTickSpan.ariaLabel = ' Okundu ';
+        }
+    }
+}
+
 const sendMessage = async (chat, sendButton) => {
     const messageContentElement = document.querySelector('.message-box1-7-1-1-1-2-1-1-1-1');
     const messageContent = messageContentElement.textContent.trim();
@@ -1172,7 +1206,8 @@ const sendMessage = async (chat, sendButton) => {
             senderId: chat.user.id,
             recipientId: chat.contactsDTO.userProfileResponseDTO.id,
             chatRoomId: chat.id,
-            userChatSettingsId: chat.userChatSettings.id
+            userChatSettingsId: chat.userChatSettings.id,
+            seen: false
         };
         console.log("BX10 > ", message)
         if (!chat.id) {
@@ -1210,25 +1245,41 @@ const sendMessage = async (chat, sendButton) => {
         else {
             const chatIndex = chatInstance.chatList.findIndex(data => data.chatDTO.id == chat.id);
             chatInstance.chatList[chatIndex].chatDTO.lastMessage = message.messageContent;
+            chatInstance.chatList[chatIndex].chatDTO.lastMessageTime = message.fullDateTime;
+            chatInstance.chatList[chatIndex].chatDTO.recipientId = message.recipientId;
+            chatInstance.chatList[chatIndex].chatDTO.senderId = message.senderId;
+            chatInstance.chatList[chatIndex].chatDTO.lastMessageTime = message.fullDateTime;
+            chatInstance.chatList[chatIndex].chatDTO.seen = false;
+            chatInstance.chatList[chatIndex].chatDTO.messageId = null;
             console.log("AX12 > ", chatInstance.chatList[chatIndex])
             const chatElements = [...document.querySelectorAll('.chat1')];
             const chatElement = chatElements.find(chatElement => chatElement.chatData.chatDTO.id === chatInstance.chatList[chatIndex].chatDTO.id)
             if (chatElement) {
+                const messageSpan = chatElement.querySelector('.message-span');
                 const lastMessageElement = chatElement.querySelector('.message-span-span');
                 const lastMessageTimeElement = chatElement.querySelector('.time');
                 lastMessageElement.textContent = message.messageContent;
                 console.log("AX12 > ", messageContent.fullDateTime)
                 lastMessageTimeElement.textContent = message.fullDateTime;
+                if (messageSpan.children.length === 2) {
+                    messageSpan.removeChild(messageSpan.firstElementChild);
+                    const messageDeliveredTickDiv = messageDeliveredTick();
+                    messageSpan.insertBefore(messageDeliveredTickDiv, messageSpan.firstElementChild);
+                } else {
+                    const messageDeliveredTickDiv = messageDeliveredTick();
+                    messageSpan.insertBefore(messageDeliveredTickDiv, messageSpan.firstElementChild);
+                }
             }
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
 
         }
-        renderMessage(message, chat.user.id);
+        // ToDo lastPage bakilacak renderMessage
+        renderMessage(message, null, chat.contactsDTO.userProfileResponseDTO.privacySettings);
         messageContentElement.removeChild(messageContentElement.firstElementChild);
         messageContentElement.appendChild(createElement('br', ''));
         updatePlaceholder(messageContentElement.parentElement.parentElement, messageContentElement.parentElement, sendButton)
-
+        console.log("CHAT INSTANCE CHAT LIST > ", chatInstance.chatList)
     }
 };
 
@@ -1360,4 +1411,4 @@ class DeleteMessageDTO {
     }
 }
 
-export { createMessageBox, renderMessage, isOnlineStatus, lastSeenStatus, ifVisibilitySettingsChangeWhileMessageBoxIsOpen, removeMessageBoxAndUnsubscribe, isMessageBoxDomExists };
+export { createMessageBox, renderMessage, isOnlineStatus, lastSeenStatus, ifVisibilitySettingsChangeWhileMessageBoxIsOpen, removeMessageBoxAndUnsubscribe, isMessageBoxDomExists, messageBoxElementMessagesReadTick };

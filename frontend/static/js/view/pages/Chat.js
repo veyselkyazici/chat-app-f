@@ -9,7 +9,7 @@ import { createApprovedRequestHistory } from "../ApprovedRequestHistory.js";
 import WebSocketManager from "../../websocket.js";
 import { hideElements, createElement, createSvgElement } from '../utils/util.js';
 import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBoxLastMessage, isChatExists } from "../components/ChatBox.js";
-import { isOnlineStatus, isMessageBoxDomExists } from "../components/MessageBox.js";
+import { isOnlineStatus, isMessageBoxDomExists, renderMessage, messageBoxElementMessagesReadTick } from "../components/MessageBox.js";
 import { navigateTo } from "../../index.js";
 
 export let webSocketManagerContacts;
@@ -253,7 +253,7 @@ export default class Chat extends AbstractView {
         this.webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws', this.user.id);
         this.initContactsWebSocket();
         this.initChatWebSocket();
-        window.addEventListener('beforeunload', () => this.handleBeforeUnload());
+        window.addEventListener('beforeunload', (event) => this.handleBeforeUnload(event));
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
         console.log("INIT > ", document.querySelector('.chats').clientHeight)
     }
@@ -265,7 +265,19 @@ export default class Chat extends AbstractView {
             console.error('Friendships WebSocket bağlantı hatası: ' + error);
         });
     }
-    handleBeforeUnload() {
+    handleBeforeUnload(event) {
+        // console.log("beforeunload tetiklendi!");
+        // console.log("beforeunload tetiklendi!", event);
+        const messageBoxElement = document.querySelector('.message-box1');
+        if (messageBoxElement) {
+            const textArea = messageBoxElement.querySelector('.message-box1-7-1-1-1-2-1-1-1');
+            const messageBox = messageBoxElement.data;
+            if (textArea.textContent.length > 0) {
+                chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chatInstance.user.id, chatRoomId: messageBox.id, typing: false, friendId: messageBox.contactsDTO.userProfileResponseDTO.id });
+                typingStatus.isTyping = false;
+            }
+        }
+
         if (this.webSocketManagerChat) {
             this.webSocketManagerChat.notifyOnlineStatus(false);
             this.webSocketManagerChat.disconnectWebSocket();
@@ -273,6 +285,8 @@ export default class Chat extends AbstractView {
         if (this.webSocketManagerContacts) {
             this.webSocketManagerContacts.disconnectWebSocket();
         }
+        // event.preventDefault();
+        // event.returnValue = '';
     }
 
     handleVisibilityChange(event) {
@@ -403,47 +417,79 @@ export default class Chat extends AbstractView {
         const recipientMessageChannel = `/user/${this.user.id}/queue/received-message`;
         const typingChannel = `/user/${this.user.id}/queue/typing`;
         const stopTypingChannel = `/user/${this.user.id}/queue/stop-typing`;
+        // const readConfirmationSenderChannel = `/user/${this.user.id}/queue/read-confirmation-sender`;
+        const readMessagesChannel = `/user/${this.user.id}/queue/read-messages`;
 
+        this.webSocketManagerChat.subscribeToChannel(readMessagesChannel, (readMessages) => {
+            debugger
+            const readMessagesJSON = JSON.parse(readMessages.body);
+            const firstReadMessage = readMessagesJSON[0];
+            console.log("senderMessageJSON > ", readMessagesJSON);
+            const messageBoxElement = document.querySelector('.message-box1');
+            const chatBoxElements = [...document.querySelectorAll('.chat1')];
+            const findChatElement = chatBoxElements.find(chatElement => chatElement.chatData.chatDTO.id === firstReadMessage.chatRoomId);
+            const findChat = this.chatList.find(chat => chat.chatDTO.id === firstReadMessage.chatRoomId);
+            findChat.chatDTO.seen = true;
+            if (findChatElement) {
+                const chatBoxElementDeliveredTick = findChatElement.querySelector('.message-span').firstElementChild;
+                chatBoxElementDeliveredTick.className = 'message-seen-tick-span';
+                chatBoxElementDeliveredTick.ariaLabel = ' Okundu ';
+            }
+            if (messageBoxElement) {
+                const messageData = messageBoxElement.data;
+                messageBoxElementMessagesReadTick(readMessagesJSON, messageData.contactsDTO.userProfileResponseDTO.privacySettings);
+            }
+
+        });
 
         this.webSocketManagerChat.subscribeToChannel(recipientMessageChannel, async (recipientMessage) => {
+
             const recipientJSON = JSON.parse(recipientMessage.body);
             console.log("RECIPENT > ", recipientJSON)
-            if (!isChatExists(recipientJSON)) {
+            const chat = this.chatList.find(chat => chat.chatDTO.id === recipientJSON.chatRoomId);
+            if (!chat) {
                 console.log("IFFFFFFFFFFFFFFFFFF")
                 console.log("RECIPENT > ", recipientJSON)
                 await createChatBoxWithFirstMessage(recipientJSON)
             } else {
-                console.log("RECIPENT > ", recipientJSON)
-                const chat = this.chatList.find(chat => chat.chatDTO.id === recipientJSON.chatRoomId);
                 chat.userChatSettings.unreadMessageCount = recipientJSON.unreadMessageCount;
-                console.log(this.chatList)
                 const chatDOMs = [...document.querySelectorAll('.chat1')];
                 const chatDOM = chatDOMs.find(chat => chat.chatData.chatDTO.id === recipientJSON.chatRoomId);
 
-
+                let unreadMessageCountDiv;
+                let chatOptionsDiv;
                 if (chatDOM) {
+                    chatOptionsDiv = chatDOM.querySelector('.chat-options');
                     const unreadMessageCountSpan = chatDOM.querySelector('.unread-message-count-span');
-                    const chatOptionsDiv = chatDOM.querySelector('.chat-options');
                     if (unreadMessageCountSpan) {
                         unreadMessageCountSpan.textContent = recipientJSON.unreadMessageCount;
                     } else {
-                        const unreadMessageCountDiv = createElement('div', 'unread-message-count-div');
+                        unreadMessageCountDiv = createElement('div', 'unread-message-count-div');
                         const unreadMessageCountSpan = createElement('span', 'unread-message-count-span', {}, { 'aria-label': `${recipientJSON.unreadMessageCount} okunmamış mesaj` }, recipientJSON.unreadMessageCount);
                         unreadMessageCountDiv.appendChild(unreadMessageCountSpan);
                         chatOptionsDiv.firstElementChild.appendChild(unreadMessageCountDiv);
                     }
                 }
                 if (isMessageBoxDomExists(recipientJSON.chatRoomId)) {
-                    if (unreadMessageCountSpan)
-                        chatOptionsDiv.removeChild(chatOptionsDiv.firstElementChild);
-                    renderMessage(recipientJSON, chatInstance.user.id);
-                } else {
-                    updateChatBoxLastMessage(recipientJSON);
-                    lastMessageChange(recipientJSON.chatRoomId, recipientJSON.messageContent)
+                    const dto = {
+                        recipientId: recipientJSON.recipientId,
+                        userChatSettingsId: chat.userChatSettings.id,
+                        chatRoomId: recipientJSON.chatRoomId,
+                        senderId: recipientJSON.senderId
+                    };
+                    chatInstance.webSocketManagerChat.sendMessageToAppChannel("read-message", dto);
+                    renderMessage(recipientJSON, null, chat.userProfileResponseDTO.privacySettings);
                 }
+                updateChatBoxLastMessage(recipientJSON);
+                lastMessageChange(recipientJSON.chatRoomId, recipientJSON.messageContent)
 
             }
         })
+        // ToDo
+        // chatInstance.webSocketManagerChat.subscribeToChannel(readConfirmationSenderChannel, async (message) => {
+        //     console.log("Read confirmation received:", message.body);
+
+        // });
         this.webSocketManagerChat.subscribeToChannel(typingChannel, (typingMessage) => {
             const status = JSON.parse(typingMessage.body);
             const visibleChats = [...document.querySelectorAll(".chat1")];

@@ -1,9 +1,9 @@
 // ChatBox.js
-import { createMessageBox, renderMessage, removeMessageBoxAndUnsubscribe } from "./MessageBox.js";
+import { createMessageBox, renderMessage, removeMessageBoxAndUnsubscribe, isMessageBoxDomExists } from "./MessageBox.js";
 import { chatInstance, UserSettingsDTO, fetchChatUnblock, fetchChatBlock } from "../pages/Chat.js";
 import { virtualScroll, UpdateItemsDTO } from '../utils/virtualScroll.js';
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
-import { ariaSelected, createElement, createVisibilityProfilePhoto } from "../utils/util.js";
+import { ariaSelected, createElement, createVisibilityProfilePhoto, messageDeliveredTick } from "../utils/util.js";
 
 function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
@@ -123,6 +123,17 @@ function createChatBox(chat, index) {
     const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
     messageDiv.appendChild(messageSpan);
 
+    if (chat.chatDTO.senderId === chatInstance.user.id) {
+        if (chat.chatDTO.seen) {
+            const messageSeenTick = chatBoxLastMessageDeliveredBlueTick();
+            messageSpan.appendChild(messageSeenTick);
+        } else {
+            const messageDeliveredTickDiv = messageDeliveredTick();
+            messageSpan.appendChild(messageDeliveredTickDiv);
+        }
+
+    }
+
     const innerMessageSpan = createElement('span', 'message-span-span', { 'min-height': '0px' }, { 'dir': 'ltr', 'aria-label': '' }, chat.chatDTO.lastMessage);
     messageSpan.appendChild(innerMessageSpan);
 
@@ -183,6 +194,7 @@ function updateChatBoxLastMessage(recipientJSON) {
 }
 
 function moveChatToTop(chatRoomId) {
+    debugger
     const chatIndex = chatInstance.chatList.findIndex(chat => chat.chatDTO.id === chatRoomId);
     console.log("CHAT INDEX MOVE TO TOP > ", chatIndex)
     if (chatIndex !== -1 && chatIndex !== 0) {
@@ -205,8 +217,8 @@ function moveChatToTop(chatRoomId) {
                     updateDOMElement(chatElement, newChatData, minIndex - 1);
                 }
             } else {
-                createChatBox(chat, 0);
                 updateChatsTranslateY();
+                createChatBox(chat, 0);
             }
         }
     }
@@ -229,7 +241,7 @@ function updateChatsTranslateY() {
 function handleMouseover(event) {
     const chatElementDOM = event.currentTarget;
     console.log(chatElementDOM.chatData)
-    const chatOptionsSpan = chatElementDOM.querySelectorAll('.chat-options span')[2];
+    const chatOptionsSpan = chatElementDOM.querySelectorAll('.chat-options > span')[1];
     if (chatOptionsSpan) {
 
         const chatOptionsButton = document.createElement("button");
@@ -257,7 +269,7 @@ function handleMouseover(event) {
 
 function handleMouseout(event) {
     const chatElementDOM = event.currentTarget;
-    const chatOptionsSpan = chatElementDOM.querySelectorAll('.chat-options span')[2];
+    const chatOptionsSpan = chatElementDOM.querySelectorAll('.chat-options > span')[1];
     const chatOptionsBtn = document.querySelector(".chat-options-btn");
 
     if (chatOptionsBtn) {
@@ -548,41 +560,47 @@ function closeOptionsDivOnClickOutside(event) {
     }
 }
 async function handleChatClick(event) {
-    const chatElementDOM = event.currentTarget;
-    const chatData = chatElementDOM.chatData;
-    const innerDiv = chatElementDOM.querySelector('.chat-box > div');
+    const chatElement = event.currentTarget;
+    const chatData = chatElement.chatData;
+    const innerDiv = chatElement.querySelector('.chat-box > div');
 
     // Eğer zaten seçiliyse işlem yapma
     if (innerDiv.getAttribute('aria-selected') === 'true') {
         return;
     }
 
-    ariaSelected(chatElementDOM, chatInstance, innerDiv);
-
+    ariaSelected(chatElement, chatInstance, innerDiv);
+    const readConfirmationRecipientChannel = `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`;
+    chatInstance.webSocketManagerChat.subscribeToChannel(readConfirmationRecipientChannel, async (message) => {
+        console.log("Read confirmation received:", message.body);
+        removeUnreadMessageCountElement(chatElement);
+        if (!isMessageBoxDomExists(chatElement.chatData.chatDTO.id))
+            await fetchMessages(chatElement.chatData);
+    });
     if (chatData.userChatSettings.unreadMessageCount > 0) {
-        await markMessagesAsReadAndFetchMessages(chatData);
+        await markMessagesAsReadAndFetchMessages(chatElement);
     } else {
         await fetchMessages(chatData);
     }
 }
 
-async function markMessagesAsReadAndFetchMessages(chatData) {
-    const readConfirmationChannel = `/user/${chatInstance.user.id}/queue/read-confirmation`;
+async function markMessagesAsReadAndFetchMessages(chatElement) {
+
     const dto = {
-        userId: chatInstance.user.id,
-        userChatSettingsId: chatData.userChatSettings.id,
-        chatRoomId: chatData.chatDTO.id,
+        recipientId: chatInstance.user.id,
+        userChatSettingsId: chatElement.chatData.userChatSettings.id,
+        chatRoomId: chatElement.chatData.chatDTO.id,
+        senderId: chatElement.chatData.userProfileResponseDTO.id
     };
 
     chatInstance.webSocketManagerChat.sendMessageToAppChannel("read-message", dto);
 
-    chatInstance.webSocketManagerChat.subscribeToChannel(readConfirmationChannel, async (message) => {
-        console.log("Read confirmation received:", message.body);
 
-        await fetchMessages(chatData);
-    });
 }
-
+const removeUnreadMessageCountElement = (chatElement) => {
+    const unreadMessageCountDiv = chatElement.querySelector('.unread-message-count-div');
+    unreadMessageCountDiv.remove();
+}
 async function fetchMessages(chatData) {
     const messages = await fetchGetLast30Messages(chatData.chatDTO.id);
 
@@ -657,8 +675,6 @@ function findMaxTranslateYChatElement() {
 }
 
 function isChatExists(recipientJSON) {
-    chatInstance.chatList.forEach(x => console.log("CHAT LIST FOREACH IS CHAT EXISTS > ", x));
-    chatInstance.chatList.forEach(x => console.log("CHAT LIST FOREACH IS CHAT EXISTS > ", chatInstance.chatList.some(chat => chat.chatDTO.id === recipientJSON.chatRoomId)));
     return chatInstance.chatList.some(chat => chat.chatDTO.id === recipientJSON.chatRoomId);
 }
 
@@ -671,6 +687,40 @@ function lastMessageChange(chatRoomId, lastMessage) {
         const lastMessageElement = chat.querySelector('.message-span-span');
         lastMessageElement.textContent = lastMessage;
     }
+}
+
+function chatBoxLastMessageDeliveredBlueTick() {
+    const messageDeliveredTickDiv = createElement('div', 'message-delivered-tick-div');
+
+
+    const messageDeliveredTickSpan = createElement('span', 'message-seen-tick-span', {}, { 'aria-hidden': 'true', 'aria-label': ' Okundu ', 'data-icon': 'dblcheck' });
+
+
+    const messageDeliveredTickSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    messageDeliveredTickSvg.setAttribute("viewBox", "0 0 18 18");
+    messageDeliveredTickSvg.setAttribute("height", "18");
+    messageDeliveredTickSvg.setAttribute("width", "18");
+    messageDeliveredTickSvg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    messageDeliveredTickSvg.setAttribute("class", "");
+    messageDeliveredTickSvg.setAttribute("version", "1.1");
+    messageDeliveredTickSvg.setAttribute("y", "0px");
+    messageDeliveredTickSvg.setAttribute("x", "0px");
+    messageDeliveredTickSvg.setAttribute("enable-background", "new 0 0 18 18");
+
+
+    const messageDeliveredTickTitle = createElement('title', '', {}, {}, 'dblcheck');
+
+
+
+    const messageDeliveredTickPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    messageDeliveredTickPath.setAttribute("fill", "currentColor");
+    messageDeliveredTickPath.setAttribute("d", "M17.394,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-0.427-0.388c-0.171-0.167-0.431-0.15-0.578,0.038L7.792,13.13 c-0.147,0.188-0.128,0.478,0.043,0.645l1.575,1.51c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C17.616,5.456,17.582,5.182,17.394,5.035z M12.502,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-2.614-2.556c-0.171-0.167-0.447-0.164-0.614,0.007l-0.505,0.516 c-0.167,0.171-0.164,0.447,0.007,0.614l3.887,3.8c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C12.724,5.456,12.69,5.182,12.502,5.035z");
+
+    messageDeliveredTickSvg.appendChild(messageDeliveredTickTitle);
+    messageDeliveredTickSvg.appendChild(messageDeliveredTickPath);
+    messageDeliveredTickSpan.appendChild(messageDeliveredTickSvg);
+    messageDeliveredTickDiv.appendChild(messageDeliveredTickSpan);
+    return messageDeliveredTickDiv;
 }
 
 const getLast30MessagesUrl = 'http://localhost:8080/api/v1/chat/messages/last-30-messages';
