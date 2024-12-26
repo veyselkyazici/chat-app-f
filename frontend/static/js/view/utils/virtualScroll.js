@@ -1,4 +1,7 @@
 // virtualScroll.js
+import { updateUnreadMessageCountAndSeenTick } from '../components/ChatBox.js'
+import { chatInstance } from "../pages/Chat.js";
+
 export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount) {
     let start = 0;
     let end = visibleItemCount;
@@ -33,6 +36,7 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
         return (index < newStart || index >= newEnd);
     });
     itemsToUpdate.forEach(item => updateItemsDTO.removeEventListeners(item));
+
     itemsToUpdate.forEach((item, idx) => {
         const translateY = parseInt(item.style.transform.replace("translateY(", "").replace("px)", ""));
         const index = Math.floor(translateY / 72);
@@ -52,6 +56,9 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
                 const nameSpan = item.querySelector(".name-span");
                 const timeSpan = item.querySelector(".time");
                 const messageSpan = item.querySelector(".message-span-span");
+
+                updateUnreadMessageCountAndSeenTick(item, listItem);
+
 
                 nameSpan.textContent = listItem.contactsDTO.userContactName ? listItem.contactsDTO.userContactName : listItem.userProfileResponseDTO.email;
                 timeSpan.textContent = formattedTime;

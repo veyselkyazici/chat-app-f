@@ -38,7 +38,6 @@ function isValidEmail(email) {
 function formatPhoneNumber(input) {
   var originalValue = input.value.replace(/\D/g, ''); // Sadece rakamları al
 
-  // İstenen formata göre düzenle
   var formattedPhoneNumber = '';
   if (originalValue.length >= 3) {
     formattedPhoneNumber += originalValue.substring(0, 3) + '-';
@@ -52,11 +51,7 @@ function formatPhoneNumber(input) {
     formattedPhoneNumber = originalValue;
   }
 
-  // Düzenlenmiş telefon numarasını input alanına yazdır
   input.value = formattedPhoneNumber;
-
-  // Orijinal değeri console'a yazdır
-  console.log("Orijinal Değer: " + originalValue);
 }
 
 function removeHyphens(phoneNumber) {
@@ -210,38 +205,62 @@ const createVisibilityProfilePhoto = (userProfileResponseDTO, contacts) => {
   }
 }
 
-function messageDeliveredTick() {
-  const messageDeliveredTickDiv = createElement('div', 'message-delivered-tick-div');
+function chatBoxFormatDateTime(dateTime) {
+  const now = new Date();
+  const date = new Date(dateTime);
 
+  const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  let formattedDate;
 
-  const messageDeliveredTickSpan = createElement('span', 'message-delivered-tick-span', {}, { 'aria-hidden': 'true','aria-label': ' İletildi ', 'data-icon': 'status-dblcheck' });
+  if (diffInDays === 0) {
+    formattedDate = new Intl.DateTimeFormat(navigator.language, {
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  } else if (diffInDays === 1) {
+    formattedDate = new Intl.RelativeTimeFormat(navigator.language, {
+      numeric: 'auto'
+    }).format(-1, 'day');
+  } else if (diffInDays < 7) {
+    formattedDate = new Intl.DateTimeFormat(navigator.language, {
+      weekday: 'long'
+    }).format(date);
+  } else {
+    formattedDate = new Intl.DateTimeFormat(navigator.language, {
+      dateStyle: 'short'
+    }).format(date);
+  }
 
-
-  const messageDeliveredTickSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  messageDeliveredTickSvg.setAttribute("viewBox", "0 0 18 18");
-  messageDeliveredTickSvg.setAttribute("height", "18");
-  messageDeliveredTickSvg.setAttribute("width", "18");
-  messageDeliveredTickSvg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-  messageDeliveredTickSvg.setAttribute("class", "");
-  messageDeliveredTickSvg.setAttribute("version", "1.1");
-  messageDeliveredTickSvg.setAttribute("y", "0px");
-  messageDeliveredTickSvg.setAttribute("x", "0px");
-  messageDeliveredTickSvg.setAttribute("enable-background", "new 0 0 18 18");
-
-
-  const messageDeliveredTickTitle = createElement('title', '', {}, {}, 'status-dblcheck');
-
-
-
-  const messageDeliveredTickPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  messageDeliveredTickPath.setAttribute("fill", "currentColor");
-  messageDeliveredTickPath.setAttribute("d", "M17.394,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-0.427-0.388c-0.171-0.167-0.431-0.15-0.578,0.038L7.792,13.13 c-0.147,0.188-0.128,0.478,0.043,0.645l1.575,1.51c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C17.616,5.456,17.582,5.182,17.394,5.035z M12.502,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-2.614-2.556c-0.171-0.167-0.447-0.164-0.614,0.007l-0.505,0.516 c-0.167,0.171-0.164,0.447,0.007,0.614l3.887,3.8c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C12.724,5.456,12.69,5.182,12.502,5.035z");
-
-  messageDeliveredTickSvg.appendChild(messageDeliveredTickTitle);
-  messageDeliveredTickSvg.appendChild(messageDeliveredTickPath);
-  messageDeliveredTickSpan.appendChild(messageDeliveredTickSvg);
-  messageDeliveredTickDiv.appendChild(messageDeliveredTickSpan);
-  return messageDeliveredTickDiv;
+  console.log("formattedDate > ", formattedDate);
+  return formattedDate;
 }
 
-export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace, onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements, removeHeaderAndFooter, createElement, createSvgElement, ariaSelected, ariaSelectedRemove, createVisibilityProfilePhoto, messageDeliveredTick };
+
+function messageBoxFormatDateTime(dateTime) {
+  const now = new Date();
+  const date = new Date(dateTime);
+
+  const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+  let formattedDate;
+
+  if (diffInDays === 0) {
+    formattedDate = 'BUGÜN';
+  } else if (diffInDays === 1) {
+    formattedDate = 'DÜN';
+  } else if (diffInDays < 7) {
+    formattedDate = new Intl.DateTimeFormat(navigator.language, {
+      weekday: 'long'
+    }).format(date);
+  } else {
+    formattedDate = new Intl.DateTimeFormat(navigator.language, {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    }).format(date);
+  }
+
+  console.log("formattedDate > ", formattedDate);
+  return formattedDate;
+}
+
+export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace, onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements, removeHeaderAndFooter, createElement, createSvgElement, ariaSelected, ariaSelectedRemove, createVisibilityProfilePhoto, chatBoxFormatDateTime, messageBoxFormatDateTime };

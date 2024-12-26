@@ -1,9 +1,9 @@
 // MessageBox.js
-import { chatInstance } from "../pages/Chat.js";
-import { createChatBox, updateChatsTranslateY, updateChatBoxLastMessage, fetchGetChatSummary } from "./ChatBox.js";
-import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
-import { createElement, createSvgElement, createVisibilityProfilePhoto, messageDeliveredTick } from "../utils/util.js";
-import { MessageDTO } from "../dtos/MessageDTO.js";
+import { chatInstance, UserSettingsDTO } from "../pages/Chat.js";
+import { ModalOptionsDTO, showModal } from '../utils/showModal.js';
+import { chatBoxFormatDateTime, createElement, createSvgElement, createVisibilityProfilePhoto, messageBoxFormatDateTime } from "../utils/util.js";
+import { updateChatBox } from "./ChatBox.js";
+import { createContactInformation } from "./ContactInformation.js";
 
 let caretPosition = 0;
 let caretNode = null;
@@ -14,10 +14,10 @@ const emojiRegex = /([\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF
 async function createMessageBox(chat) {
     console.log("MESSAGE BOX > ", chat);
     console.log("MESSAGE BOX > ", chat.messagesDTO.lastPage);
-    const messageBoxElement = await createMessageBoxHTML(chat);
-    // ToDo lastPage bakilacak renderMessage
-    renderMessage(chat.messagesDTO.messages, chat.messagesDTO.lastPage, chat.contactsDTO.userProfileResponseDTO.privacySettings);
     let typingStatus = { isTyping: false, previousText: "" };
+    const messageBoxElement = await createMessageBoxHTML(chat, typingStatus);
+    // ToDo lastPage bakilacak renderMessage
+    renderMessage(chat.messagesDTO.messages, chat.messagesDTO.lastPage, chat.contactsDTO.userProfileResponseDTO.privacySettings, true);
     chat.friendEmail;
     chat.image;
     chat.messages;
@@ -41,7 +41,7 @@ async function createMessageBox(chat) {
     textArea.addEventListener('mouseup', updateCaretPosition);
     textArea.addEventListener('paste', handlePaste);
 
-    textArea.addEventListener("blur", () => handleTextBlur(chat, typingStatus));
+    textArea.addEventListener("blur", () => handleTextBlur(chat, typingStatus, textArea));
     textArea.addEventListener("focus", () => handleTextFocus(chat, typingStatus, textArea));
     emojiButton.addEventListener('click', () => {
         showEmojiPicker(panel, showEmojiDOM);
@@ -82,19 +82,22 @@ const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
             messageBoxElement.appendChild(onlineElement);
         } else {
             const statusDiv = lastSeenStatus(chat.user, chat.contactsDTO, status.lastSeen);
-            messageBoxElement.appendChild(statusDiv);
+            if (statusDiv) {
+                messageBoxElement.appendChild(statusDiv);
+            }
         }
     });
 }
-const handleTextBlur = (chat, typingStatus) => {
+const handleTextBlur = (chat, typingStatus, textArea) => {
+    typingStatus.previousText = textArea.textContent;
     if (typingStatus.previousText) {
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = false;
     }
 }
 const handleTextFocus = (chat, typingStatus, textArea) => {
-    console.log("typingStatus > ", typingStatus)
-    console.log("typingStatus > ", textArea.textContent)
+    console.log("typingStatus FOCUS > ", typingStatus)
+    console.log("typingStatus FOCUS > ", textArea.textContent)
     if (!typingStatus.isTyping && typingStatus.previousText.length > 0) {
         console.log("typingStatus > ", typingStatus)
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
@@ -109,18 +112,19 @@ function handleTextInput(inputBox, textArea, sendButton, chat, typingStatus, eve
     const currentText = textArea.textContent;
     console.log("CHAT > ", chat)
     console.log("CURRENT TEXT > ", chat)
+    console.log("CURRENT TEXT > ", typingStatus)
     console.log("CURRENT TEXT > ", currentText)
     console.log("CURRENT TEXT > ", currentText.length)
     if (currentText && !typingStatus.isTyping) {
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
     }
-    else if (!currentText && typingStatus.previousText && typingStatus.isTyping) {
+    else if (!currentText && typingStatus.isTyping) {
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = false;
     }
     typingStatus.previousText = currentText;
-    updatePlaceholder(inputBox, textArea, sendButton);
+    updatePlaceholder(inputBox, textArea, sendButton, typingStatus);
     updateCaretPosition(event);
     if (event.inputType === 'deleteContentBackward') {
         console.log("ABCDE")
@@ -317,7 +321,7 @@ function keydown(event, textArea) {
 }
 
 
-const updatePlaceholder = (inputBox, textArea, sendButton) => {
+const updatePlaceholder = (inputBox, textArea, sendButton, typingStatus) => {
     const placeholderClass = 'message-box1-7-1-1-1-2-1-1-1-2';
     const placeholderText = 'Bir mesaj yazın';
     let placeholder = inputBox.querySelector(`.${placeholderClass}`);
@@ -329,19 +333,21 @@ const updatePlaceholder = (inputBox, textArea, sendButton) => {
             placeholder.textContent = placeholderText;
             inputBox.appendChild(placeholder);
         }
-        setSendButtonState(sendButton, false);
+        setSendButtonState(sendButton, false, typingStatus);
     } else {
         if (placeholder) {
             placeholder.remove();
         }
-        setSendButtonState(sendButton, true);
+        setSendButtonState(sendButton, true, typingStatus);
     }
 };
 
-const setSendButtonState = (button, isEnabled) => {
+const setSendButtonState = (button, isEnabled, typingStatus) => {
     if (isEnabled) {
+        typingStatus.isTyping = true;
         button.disabled = false;
     } else {
+        typingStatus.isTyping = false;
         button.disabled = true;
     }
 };
@@ -408,7 +414,7 @@ function generateEmojiHTML() {
         </div>
     </div>`;
 }
-const createMessageBoxHTML = async (chat) => {
+const createMessageBoxHTML = async (chat, typingStatus) => {
     console.log("MESSAGE BOX 123 > ", chat)
     const messageBoxElement = document.querySelector('.message-box');
     const main = createElement('div', 'message-box1', null, { id: 'main' });
@@ -418,14 +424,26 @@ const createMessageBoxHTML = async (chat) => {
     main.appendChild(divMessageBox1_1);
     const header = createElement('header', 'message-box1-2');
 
-    const messageBoxDiv1 = createElement('div', 'message-box1-2-1', {}, { title: "Profil Detayları", role: "button" });
+    const messageBoxDiv1 = createElement('div', 'message-box1-2-1', {}, { title: "Profil Detayları", role: "button" }, null, () => createContactInformation(new ContactInformationDTO({
+        name: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.contact.userContactName : chat.contactsDTO.userProfileResponseDTO.email,
+        email: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.userProfileResponseDTO.email : chat.contactsDTO.userProfileResponseDTO.firstName,
+        contactId: chat.contactsDTO.userProfileResponseDTO.id,
+        chatRoomId: chat.id,
+        about: chat.contactsDTO.userProfileResponseDTO.about
+    })));
 
     const profileImgContainer = createElement('div', 'message-box1-2-1-1', { height: '40px', width: '40px' });
     const imgElement = createVisibilityProfilePhoto(chat.contactsDTO.userProfileResponseDTO, chat.contactsDTO.contact, chat.user);
     profileImgContainer.appendChild(imgElement);
     messageBoxDiv1.appendChild(profileImgContainer);
 
-    const messageBoxDiv2 = createElement('div', 'message-box1-2-2', {}, { role: 'button' });
+    const messageBoxDiv2 = createElement('div', 'message-box1-2-2', {}, { role: 'button' }, null, () => createContactInformation(new ContactInformationDTO({
+        name: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.contact.userContactName : chat.contactsDTO.userProfileResponseDTO.email,
+        email: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.userProfileResponseDTO.email : chat.contactsDTO.userProfileResponseDTO.firstName,
+        contactId: chat.contactsDTO.userProfileResponseDTO.id,
+        chatRoomId: chat.id,
+        about: chat.contactsDTO.userProfileResponseDTO.about
+    })));
 
     const innerMessageBoxDiv1 = createElement('div', 'message-box1-2-2-1');
     const innerMessageBoxDiv2 = createElement('div', 'message-box1-2-2-1-1');
@@ -441,11 +459,11 @@ const createMessageBoxHTML = async (chat) => {
 
     const searchButtonContainer = createElement('div', 'message-box1-2-3-1');
 
-    const menuDiv1_2_3_1_3_1 = createElement('div', 'message-box1-2-3-1-3');
-    const menuDiv1_2_3_1_3_1_1 = createElement('div', 'message-box1-2-3-1-3-1');
-    const menuDiv1_2_3_1_3_1_1_1 = createElement('span', '');
+    const optionsDiv1_2_3_1_3_1 = createElement('div', 'message-box1-2-3-1-3');
+    const optionsDiv_2_3_1_3_1_1 = createElement('div', 'message-box1-2-3-1-3-1');
+    const optionsDiv_2_3_1_3_1_1_1 = createElement('span', '');
 
-    const menuButton = createElement('div', 'message-box1-2-3-1-3-1-1', {}, {
+    const optionsButton = createElement('div', 'message-box1-2-3-1-3-1-1', {}, {
         'aria-disabled': 'false',
         role: 'button',
         tabindex: '0',
@@ -453,12 +471,12 @@ const createMessageBoxHTML = async (chat) => {
         title: 'Menü',
         'aria-label': 'Menü',
         'aria-expanded': 'false'
-    });
+    }, null, (event) => handleOptionsBtnClick(event, chat));
 
-    const menuIcon = createElement('span', 'message-box1-2-3-1-3-1-1-1', {}, { 'data-icon': 'menu' });
+    const optionsIcon = createElement('span', 'message-box1-2-3-1-3-1-1-1', {}, { 'data-icon': 'menu' });
 
     // Create SVG for the menu icon
-    const svgMenu = createSvgElement('svg', {
+    const svgOptions = createSvgElement('svg', {
         viewBox: "0 0 24 24",
         height: "24",
         width: "24",
@@ -469,17 +487,17 @@ const createMessageBoxHTML = async (chat) => {
         "enable-background": "new 0 0 24 24"
     });
 
-    const menuPath = createSvgElement('path', {
+    const optionsPath = createSvgElement('path', {
         fill: "currentColor",
         d: "M12,7c1.104,0,2-0.896,2-2c0-1.105-0.895-2-2-2c-1.104,0-2,0.894-2,2 C10,6.105,10.895,7,12,7z M12,9c-1.104,0-2,0.894-2,2c0,1.104,0.895,2,2,2c1.104,0,2-0.896,2-2C13.999,9.895,13.104,9,12,9z M12,15 c-1.104,0-2,0.894-2,2c0,1.104,0.895,2,2,2c1.104,0,2-0.896,2-2C13.999,15.894,13.104,15,12,15z"
     });
-    svgMenu.appendChild(menuPath);
-    menuIcon.appendChild(svgMenu);
-    menuButton.appendChild(menuIcon);
-    menuDiv1_2_3_1_3_1_1.appendChild(menuButton);
-    menuDiv1_2_3_1_3_1_1.appendChild(menuDiv1_2_3_1_3_1_1_1);
-    menuDiv1_2_3_1_3_1.appendChild(menuDiv1_2_3_1_3_1_1);
-    searchButtonContainer.appendChild(menuDiv1_2_3_1_3_1);
+    svgOptions.appendChild(optionsPath);
+    optionsIcon.appendChild(svgOptions);
+    optionsButton.appendChild(optionsIcon);
+    optionsDiv_2_3_1_3_1_1.appendChild(optionsButton);
+    optionsDiv_2_3_1_3_1_1.appendChild(optionsDiv_2_3_1_3_1_1_1);
+    optionsDiv1_2_3_1_3_1.appendChild(optionsDiv_2_3_1_3_1_1);
+    searchButtonContainer.appendChild(optionsDiv1_2_3_1_3_1);
     messageBoxDiv3.appendChild(searchButtonContainer);
 
     header.appendChild(messageBoxDiv1);
@@ -567,58 +585,14 @@ const createMessageBoxHTML = async (chat) => {
     messageBox1_2.appendChild(oldMessagesDiv);
 
     const applicationDiv = createElement("div", "message-box1-5-1-2-2", null, { "tabindex": "-1", "role": "application" });
+    // const todayDiv = createElement("div", "message-box1-5-1-2-2-1", null, { "tabindex": "-1" });
 
-    const todayDiv = createElement("div", "message-box1-5-1-2-2-1", null, { "tabindex": "-1" });
+    // const todaySpan = createElement("span", "message-box1-5-1-2-2-1-1", { "minHeight": "0px" }, { "dir": "auto", "aria-label": "" }, "BUGÜN");
 
-    const todaySpan = createElement("span", "message-box1-5-1-2-2-1-1", { "minHeight": "0px" }, { "dir": "auto", "aria-label": "" }, "BUGÜN");
+    // todayDiv.appendChild(todaySpan);
+    // applicationDiv.appendChild(todayDiv);
 
-    todayDiv.appendChild(todaySpan);
-    applicationDiv.appendChild(todayDiv);
 
-    const messageRow = createElement("div", "message-box1-5-1-2-2-2", null, { "role": "row" });
-    // ToDo data-id
-    const messageRow1 = createElement("div", "message-box1-5-1-2-2-2-1", null, { "tabindex": "-1", "data-id": "" });
-
-    const encryptedMessageDiv = createElement("div", "message-box1-5-1-2-2-2-1-1");
-
-    const lockSmallSpan = createElement("span", "", null, { "data-icon": "lock-small" });
-
-    const lockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    lockSvg.setAttribute("viewBox", "0 0 10 12");
-    lockSvg.setAttribute("height", "12");
-    lockSvg.setAttribute("width", "10");
-    lockSvg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-    lockSvg.setAttribute("version", "1.1");
-
-    const lockPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    lockPath.setAttribute("fill", "currentColor");
-    lockPath.setAttribute("d", "M5.00847986,1.6 C6.38255462,1.6 7.50937014,2.67435859 7.5940156,4.02703389 L7.59911976,4.1906399 L7.599,5.462 L7.75719976,5.46214385 C8.34167974,5.46214385 8.81591972,5.94158383 8.81591972,6.53126381 L8.81591972,9.8834238 C8.81591972,10.4731038 8.34167974,10.9525438 7.75719976,10.9525438 L2.25767996,10.9525438 C1.67527998,10.9525438 1.2,10.4731038 1.2,9.8834238 L1.2,6.53126381 C1.2,5.94158383 1.67423998,5.46214385 2.25767996,5.46214385 L2.416,5.462 L2.41679995,4.1906399 C2.41679995,2.81636129 3.49135449,1.68973395 4.84478101,1.60510326 L5.00847986,1.6 Z M5.00847986,2.84799995 C4.31163824,2.84799995 3.73624912,3.38200845 3.6709675,4.06160439 L3.6647999,4.1906399 L3.663,5.462 L6.35,5.462 L6.35111981,4.1906399 C6.35111981,3.53817142 5.88169076,2.99180999 5.26310845,2.87228506 L5.13749818,2.85416626 L5.00847986,2.84799995 Z");
-    lockSvg.appendChild(lockPath);
-    lockSmallSpan.appendChild(lockSvg);
-
-    const lockMessageSpan = createElement("span", "message-box1-5-1-2-2-2-1-1-1-1-1-2", { "minHeight": "0px" }, { "dir": "ltr", "aria-label": "" }, "Mesajlar uçtan uca şifrelidir. WhatsApp da dahil olmak üzere bu sohbetin dışında bulunan hiç kimse mesajlarınızı okuyamaz ve dinleyemez. Daha fazla bilgi edinmek için tıklayın");
-
-    const lockContainerDiv = createElement("div", "message-box1-5-1-2-2-2-1-1-1");
-
-    const lockSubContainerDiv = createElement("div", "message-box1-5-1-2-2-2-1-1-1-1");
-
-    const lockIconContainerDiv = createElement("div", "message-box1-5-1-2-2-2-1-1-1-1-1-1");
-
-    const divMessageBox1_5_1_2_2_2_1_1_1_1_1 = createElement("div", "message-box1-5-1-2-2-2-1-1-1-1");
-    const divMessageBox1_5_1_2_2_2_1_1_1_2 = createElement("div", "message-box1-5-1-2-2-2-1-1-1-1");
-
-    lockIconContainerDiv.appendChild(lockSmallSpan);
-    lockIconContainerDiv.appendChild(divMessageBox1_5_1_2_2_2_1_1_1_1_1);
-    lockSubContainerDiv.appendChild(lockIconContainerDiv);
-    lockSubContainerDiv.appendChild(lockMessageSpan);
-    lockSubContainerDiv.appendChild(divMessageBox1_5_1_2_2_2_1_1_1_2);
-    lockContainerDiv.appendChild(lockSubContainerDiv);
-    encryptedMessageDiv.appendChild(lockContainerDiv);
-
-    messageRow1.appendChild(encryptedMessageDiv);
-    messageRow.appendChild(messageRow1);
-
-    applicationDiv.appendChild(messageRow);
     messageBox1_2.appendChild(applicationDiv);
     messageBox1.appendChild(messageBox1_2);
     messageBox.appendChild(messageBox1);
@@ -748,7 +722,7 @@ const createMessageBoxHTML = async (chat) => {
 
     const sendBtnSpan = createElement('span', '', null, { 'data-icon': 'send' });
     const divSendButton = createElement('div', 'message-box1-7-1-1-1-2-2');
-    const sendButton = createElement('button', 'message-box1-7-1-1-1-2-2-1', null, { 'data-tab': '11', 'aria-label': 'Gönder' }, '', () => sendMessage(chat, sendButton));
+    const sendButton = createElement('button', 'message-box1-7-1-1-1-2-2-1', null, { 'data-tab': '11', 'aria-label': 'Gönder' }, '', () => sendMessage(chat, sendButton, typingStatus));
     sendButton.disabled = true;
     const sendBtnSVG = createSvgElement('svg', {
         viewBox: "0 0 24 24",
@@ -783,7 +757,7 @@ const createMessageBoxHTML = async (chat) => {
         if (event.key === 'Enter') {
             event.preventDefault();
             if (!sendButton.disabled) {
-                sendMessage(chat, sendButton)
+                sendMessage(chat, sendButton, typingStatus)
             }
         }
     })
@@ -813,8 +787,8 @@ const createMessageBoxHTML = async (chat) => {
             const visibleFirstMessageData = getFirstMessageDate();
             console.log("visibleFirstMessageData > ", visibleFirstMessageData)
             console.log('En üstteyiz, eski mesajlar yükleniyor...');
-            const messages = await fetchGetOlder30Messages(visibleFirstMessageData.message.chatRoomId, message.fullDateTime);
-            console.log("NEW OLDER MESSAGES > ", messages)
+            const older30Messages = await fetchGetOlder30Messages(visibleFirstMessageData.message.chatRoomId, visibleFirstMessageData.message.fullDateTime);
+            renderMessage(older30Messages.messages, older30Messages.lastPage, chat.contactsDTO.userProfileResponseDTO.privacySettings, false);
         } else {
 
         }
@@ -836,18 +810,52 @@ const isMessageBoxDomExists = (chatRoomId) => {
         return false;
     }
 }
-const renderMessage = (messages, lastPage, privacySettings) => {
+const renderMessage = (messages, lastPage, privacySettings, scroll) => {
     console.log("MESSAGES RENDER MESSAGE > ", messages)
     const messageRenderDOM = document.querySelector('.message-box1-5-1-2-2');
     const messagesArray = Array.isArray(messages) ? messages : [messages];
+    const oldHeight = messageRenderDOM.clientHeight;
+
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    // Tarayıcı dilini al
+    const userLanguage = navigator.language || 'en-US';
+
+    // RelativeTimeFormat oluştur
+    const rtf = new Intl.RelativeTimeFormat(userLanguage, { numeric: 'auto' });
+
+    // Gün başlıklarını kontrol etmek için kullanılan değişken
+    let lastRenderedDate = messageRenderDOM.querySelector('div[role="row"]') ? messageRenderDOM.querySelector('div[role="row"]').messageData.message.fullDateTime : null;
+    const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
+
+    const addDateHeader = (dateString) => {
+        const formatDate = messageBoxFormatDateTime(dateString);
+        const applicationDiv = document.querySelector('.message-box1-5-1-2-2');
+
+        const todayDiv = createElement("div", "message-box1-5-1-2-2-1", null, { "tabindex": "-1" });
+        const todaySpan = createElement("span", "message-box1-5-1-2-2-1-1", { "minHeight": "0px" }, { "dir": "auto", "aria-label": "" }, formatDate);
+        todayDiv.appendChild(todaySpan);
+        applicationDiv.prepend(todayDiv);
+    };
+
     messagesArray.forEach(message => {
+        const messageDate = new Date(message.fullDateTime).toDateString();
+
+        if (lastRenderedDate !== messageDate) {
+            addDateHeader(message.fullDateTime);
+            lastRenderedDate = messageDate; // Güncel tarih olarak yeni değeri ata
+        }
+
+
         const rowDOM = createElement('div', '', null, { 'role': 'row' });
         // ToDo lastPage
         console.log("LAST PGAE > ", lastPage)
         rowDOM.messageData = { message: message, isLastPage: !lastPage ? lastPage : true };
         console.log("LAST PGAE > ", lastPage)
         const divMessage = createElement('div', 'message1');
-        divMessage.data = message;
+        // divMessage.data = message;
         const divMessage12 = createElement('div', '');
         const spanFirst = createElement('span', '');
         const divMessage1_1_1 = createElement('div', 'message1-1-1');
@@ -859,8 +867,7 @@ const renderMessage = (messages, lastPage, privacySettings) => {
         const span = createElement('span', '', null, { 'aria-label': 'Siz:' });
         const div = createElement('div', '');
 
-
-
+        const messageFormatDate = getHourAndMinute(message.fullDateTime);
         const divMessage1_1_1_2_1 = createElement('div', 'message1-1-1-2-1');
         const divMessage1_1_1_2_1_1 = createElement('div', 'message1-1-1-2-1-1', null, { 'data-pre-plain-text': '' });
         const divMessage1_1_1_2_1_1_1 = createElement('div', 'message1-1-1-2-1-1-1');
@@ -869,8 +876,7 @@ const renderMessage = (messages, lastPage, privacySettings) => {
         const span1_1 = createElement('span', '');
         const span1_1_1_2_1_1_1_2 = createElement('span', 'message1-1-1-2-1-1-1-2', null, { 'aria-hidden': 'true' });
         const span1_1_1_2_1_1_1_2_1 = createElement('span', 'message1-1-1-2-1-1-1-2-1', null, null);
-        const span1_1_1_2_1_1_1_2_2 = createElement('span', 'message1-1-1-2-1-1-1-2-2', null, null, message.fullDateTime);
-
+        const span1_1_1_2_1_1_1_2_2 = createElement('span', 'message1-1-1-2-1-1-1-2-2', null, null, messageFormatDate);
         span1_1_1_2_1_1_1_2.appendChild(span1_1_1_2_1_1_1_2_1);
         span1_1_1_2_1_1_1_2.appendChild(span1_1_1_2_1_1_1_2_2);
         span1_1.appendChild(span1_1_1_2_1_1_1_2);
@@ -883,7 +889,7 @@ const renderMessage = (messages, lastPage, privacySettings) => {
 
         const divMessage1_1_1_2_1_2 = createElement('div', 'message1-1-1-2-1-2');
         const divMessage1_1_1_2_1_2_1 = createElement('div', 'message1-1-1-2-1-2-1', null, { 'role': 'button' });
-        const span1_1_1_2_1_2_1_1 = createElement('span', 'message1-1-1-2-1-2-1-1', null, { 'dir': 'auto' }, message.fullDateTime);
+        const span1_1_1_2_1_2_1_1 = createElement('span', 'message1-1-1-2-1-2-1-1', null, { 'dir': 'auto' }, messageFormatDate);
 
         const divMessage1_1_1_2_1_2_1_2 = createElement('div', 'message1-1-1-2-1-2-1-2');
         // const span2 = createElement('span', '', null, { 'data-icon': 'msg-check', 'aria-label': ' Gönderildi ' })
@@ -906,7 +912,7 @@ const renderMessage = (messages, lastPage, privacySettings) => {
 
         if (message.senderId === chatInstance.user.id) {
 
-            const messageDeliveredTickDiv = messageDeliveredTick();
+            const messageDeliveredTickDiv = createMessageDeliveredTickElement();
             divMessage1_1_1_2_1_2_1_2.appendChild(messageDeliveredTickDiv);
             span1_1_1_2_1_2_1_1.appendChild(divMessage1_1_1_2_1_2_1_2);
 
@@ -951,164 +957,161 @@ const renderMessage = (messages, lastPage, privacySettings) => {
 
         const divDOM = rowDOM.querySelector('.message1-1-1-2');
         divDOM.appendChild(div);
-        messageRenderDOM.appendChild(rowDOM);
-        // div.addEventListener('click', (event) => {
-        //     event.stopPropagation();
-        //     handleOptionsBtnClick(event.currentTarget.messageData);
-        // });
-
-        div.addEventListener('mouseenter', (event) => {
-            const messageOptions = event.currentTarget.querySelector('.message-options');
-            messageOptions.innerHTML = `<div class="message-options-1"> <div data-js-context-icon="true" class="message-options-1-1" tabindex="0" aria-label="Bağlam Menüsü" role="button"><span data-icon="down-context" class=""><svg viewBox="0 0 18 18" height="18" width="18" preserveAspectRatio="xMidYMid meet" class="" version="1.1" x="0px" y="0px" enable-background="new 0 0 18 18"><title>down-context</title><path fill="currentColor" d="M3.3,4.6L9,10.3l5.7-5.7l1.6,1.6L9,13.4L1.7,6.2L3.3,4.6z"></path></svg></span></div></div>`;
-            const btn = messageOptions.querySelector('.message-options-1-1')
-            btn.messageData = event.currentTarget.messageData
-            btn.addEventListener('click', (event) => {
-                event.stopPropagation();
-                handleOptionsBtnClick(event.currentTarget);
-            });
-        });
-
-        div.addEventListener('mouseleave', (event) => {
-            const messageOptions = event.currentTarget.querySelector('.message-options');
-            messageOptions.innerHTML = ''; // Arkaplan rengini eski haline getir
-        });
+        if (scroll) {
+            messageRenderDOM.appendChild(rowDOM);
+        } else {
+            messageRenderDOM.prepend(rowDOM);
+        }
     })
-    scrollToBottom();
+    const newHeight = messageRenderDOM.clientHeight;
+    if (scroll) {
+        scrollToBottom();
+    } else {
+        const height = newHeight - oldHeight;
+        const percent = (height / newHeight) * 100;
+        scrollToPercentage(percent);
+    }
 }
+const scrollToPercentage = (percent) => {
+    const scrollElement = document.querySelector('.message-box1-5-1-2');
+    const totalScrollableHeight = scrollElement.scrollHeight - scrollElement.clientHeight;
+    const scrollPosition = scrollElement.scrollTop + (totalScrollableHeight * (percent / 100));
+    scrollElement.scrollTop = scrollPosition;
+};
 
 const scrollToBottom = () => {
     const messageRenderDOM = document.querySelector('.message-box1-5-1-2');
     messageRenderDOM.scrollTop = messageRenderDOM.scrollHeight;
 };
-const handleOptionsBtnClick = (target) => {
-    const data = target.messageData;
+// const handleOptionsBtnClick = (target) => {
+//     const data = target.messageData;
 
 
-    const spans = document.querySelectorAll('.app span');
-    const showChatOptions = spans[1];
+//     const spans = document.querySelectorAll('.app span');
+//     const showChatOptions = spans[1];
 
-    if (showChatOptions) {
-        const existingOptionsDiv = showChatOptions.querySelector('.options1');
+//     if (showChatOptions) {
+//         const existingOptionsDiv = showChatOptions.querySelector('.options1');
 
-        if (existingOptionsDiv) {
-            existingOptionsDiv.remove();
-        } else {
-            const chatOptionsDiv = document.createElement("div");
+//         if (existingOptionsDiv) {
+//             existingOptionsDiv.remove();
+//         } else {
+//             const chatOptionsDiv = document.createElement("div");
 
-            const rect = target.getBoundingClientRect();
-            chatOptionsDiv.classList.add('options1');
-            chatOptionsDiv.setAttribute('role', 'application');
-            chatOptionsDiv.style.transformOrigin = 'left top';
-            chatOptionsDiv.style.top = (rect.top + window.scrollY) + 'px';
-            chatOptionsDiv.style.left = (rect.left + window.scrollX) + 'px';
-            chatOptionsDiv.style.transform = 'scale(1)';
-            chatOptionsDiv.style.opacity = '1';
+//             const rect = target.getBoundingClientRect();
+//             chatOptionsDiv.classList.add('options1');
+//             chatOptionsDiv.setAttribute('role', 'application');
+//             chatOptionsDiv.style.transformOrigin = 'left top';
+//             chatOptionsDiv.style.top = (rect.top + window.scrollY) + 'px';
+//             chatOptionsDiv.style.left = (rect.left + window.scrollX) + 'px';
+//             chatOptionsDiv.style.transform = 'scale(1)';
+//             chatOptionsDiv.style.opacity = '1';
 
-            const deleteMessageLabel = 'Sil';
+//             const deleteMessageLabel = 'Sil';
 
-            const chatOptionsLiItemHTML = `
-                <ul class="ul1">
-                    <div>
-                        <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
-                            <div class="list-item1-div" role="button" aria-label="${deleteMessageLabel}">${deleteMessageLabel}</div>
-                        </li>
-                    </div>
-                </ul>
-            `;
-            chatOptionsDiv.innerHTML = chatOptionsLiItemHTML;
-            showChatOptions.appendChild(chatOptionsDiv);
+//             const chatOptionsLiItemHTML = `
+//                 <ul class="ul1">
+//                     <div>
+//                         <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+//                             <div class="list-item1-div" role="button" aria-label="${deleteMessageLabel}">${deleteMessageLabel}</div>
+//                         </li>
+//                     </div>
+//                 </ul>
+//             `;
+//             chatOptionsDiv.innerHTML = chatOptionsLiItemHTML;
+//             showChatOptions.appendChild(chatOptionsDiv);
 
-            const listItems = document.querySelectorAll(".list-item1");
-            listItems.forEach((li, index) => {
-                li.addEventListener('mouseover', () => {
-                    li.classList.add('background-color');
-                });
-                li.addEventListener('mouseout', () => {
-                    li.classList.remove('background-color');
-                });
-                li.addEventListener('click', async () => {
-                    const dto = new DeleteMessageDTO({
-                        senderId: data.senderId,
-                        recipientId: data.recipientId,
-                        id: data.id,
-                        chatRoomId: data.friendEmail,
-                    });
-                    switch (index) {
-                        case 0:
-                            const mainCallback = async () => {
-                                await fetchChatUnblock(dto);
-                                const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
-                                if (chatIndex !== -1) {
-                                    chatInstance.chatList[chatIndex].userChatSettings.blocked = false;
-                                }
-                            };
-                            const secondOptionCallback = async () => {
-                                await fetchChatUnblock(dto);
-                                const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
-                                if (chatIndex !== -1) {
-                                    chatInstance.chatList[chatIndex].userChatSettings.blocked = false;
-                                }
-                            };
-                            const modalDTO = new ModalOptionsDTO({
-                                title: '',
-                                content: `Mesaj silinsin mi?`,
-                                mainCallback: mainCallback,
-                                buttonText: 'Benden sil',
-                                showBorders: false,
-                                secondOptionCallBack: secondOptionCallback,
-                                secondOptionButtonText: 'Herkesten sil'
-                            })
-                            showModal(modalDTO);
-                            break;
-                        case 1:
-                            if (chatData.userChatSettings.blocked) {
-                                const title = '';
-                                const content = `${chatData.friendEmail} kişinin Engeli kaldırılsın mı ?`;
-                                const mainCallback = async () => {
-                                    await fetchChatUnblock(dto);
-                                    const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
-                                    if (chatIndex !== -1) {
-                                        chatInstance.chatList[chatIndex].userChatSettings.blocked = false;
-                                    }
-                                };
-                                showModal(title, content, mainCallback, 'Engeli kaldır', false);
-                            } else {
-                                const title = '';
-                                const content = `${chatData.friendEmail} kişi Engellensin mi?`;
-                                const mainCallback = async () => {
-                                    await fetchChatBlock(dto);
-                                    const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
-                                    if (chatIndex !== -1) {
-                                        chatInstance.chatList[chatIndex].userChatSettings.blocked = true;
-                                    }
-                                };
-                                showModal(title, content, mainCallback, 'Engelle', false);
-                            }
-                            break;
-                        case 2:
-                            break;
-                        case 3:
-                            if (chatData.pinned) {
-                            } else {
-                            }
-                            break;
-                        case 4:
-                            break;
-                    }
-                    showChatOptions.innerHTML = '';
-                });
-            });
-            document.addEventListener('click', closeOptionsDivOnClickOutside);
-        }
-    }
-}
-function closeOptionsDivOnClickOutside(event) {
-    const optionsDiv = document.querySelector('.options1');
-    if (optionsDiv && !optionsDiv.contains(event.target)) {
-        optionsDiv.remove();
-        document.removeEventListener('click', closeOptionsDivOnClickOutside);
-    }
-}
+//             const listItems = document.querySelectorAll(".list-item1");
+//             listItems.forEach((li, index) => {
+//                 li.addEventListener('mouseover', () => {
+//                     li.classList.add('background-color');
+//                 });
+//                 li.addEventListener('mouseout', () => {
+//                     li.classList.remove('background-color');
+//                 });
+//                 li.addEventListener('click', async () => {
+//                     const dto = new DeleteMessageDTO({
+//                         senderId: data.senderId,
+//                         recipientId: data.recipientId,
+//                         id: data.id,
+//                         chatRoomId: data.friendEmail,
+//                     });
+//                     switch (index) {
+//                         case 0:
+//                             const mainCallback = async () => {
+//                                 await fetchChatUnblock(dto);
+//                                 const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
+//                                 if (chatIndex !== -1) {
+//                                     chatInstance.chatList[chatIndex].userChatSettings.blocked = false;
+//                                 }
+//                             };
+//                             const secondOptionCallback = async () => {
+//                                 await fetchChatUnblock(dto);
+//                                 const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
+//                                 if (chatIndex !== -1) {
+//                                     chatInstance.chatList[chatIndex].userChatSettings.blocked = false;
+//                                 }
+//                             };
+//                             const modalDTO = new ModalOptionsDTO({
+//                                 title: '',
+//                                 content: `Mesaj silinsin mi?`,
+//                                 mainCallback: mainCallback,
+//                                 buttonText: 'Benden sil',
+//                                 showBorders: false,
+//                                 secondOptionCallBack: secondOptionCallback,
+//                                 secondOptionButtonText: 'Herkesten sil'
+//                             })
+//                             showModal(modalDTO);
+//                             break;
+//                         case 1:
+//                             if (chatData.userChatSettings.blocked) {
+//                                 const title = '';
+//                                 const content = `${chatData.friendEmail} kişinin Engeli kaldırılsın mı ?`;
+//                                 const mainCallback = async () => {
+//                                     await fetchChatUnblock(dto);
+//                                     const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
+//                                     if (chatIndex !== -1) {
+//                                         chatInstance.chatList[chatIndex].userChatSettings.blocked = false;
+//                                     }
+//                                 };
+//                                 showModal(title, content, mainCallback, 'Engeli kaldır', false);
+//                             } else {
+//                                 const title = '';
+//                                 const content = `${chatData.friendEmail} kişi Engellensin mi?`;
+//                                 const mainCallback = async () => {
+//                                     await fetchChatBlock(dto);
+//                                     const chatIndex = chatInstance.chatList.findIndex(chat => chat.id === chatData.id);
+//                                     if (chatIndex !== -1) {
+//                                         chatInstance.chatList[chatIndex].userChatSettings.blocked = true;
+//                                     }
+//                                 };
+//                                 showModal(title, content, mainCallback, 'Engelle', false);
+//                             }
+//                             break;
+//                         case 2:
+//                             break;
+//                         case 3:
+//                             if (chatData.pinned) {
+//                             } else {
+//                             }
+//                             break;
+//                         case 4:
+//                             break;
+//                     }
+//                     showChatOptions.innerHTML = '';
+//                 });
+//             });
+//             document.addEventListener('click', closeOptionsDivOnClickOutside);
+//         }
+//     }
+// }
+// function closeOptionsDivOnClickOutside(event) {
+//     const optionsDiv = document.querySelector('.options1');
+//     if (optionsDiv && !optionsDiv.contains(event.target)) {
+//         optionsDiv.remove();
+//         document.removeEventListener('click', closeOptionsDivOnClickOutside);
+//     }
+// }
 const isOnline = async (user, contactsDTO) => {
     console.log("USER > ", user)
     console.log("CONTACT > ", contactsDTO)
@@ -1138,7 +1141,7 @@ const lastSeenStatus = (user, contactsDTO, lastSeen) => {
     if ((contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.relatedUserHasAddedUser && contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'CONTACTS')) && (user.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.lastSeenVisibility === 'CONTACTS'))) {
         console.log("AAAAAAAAAAAAAAA  lastSeen > ", lastSeen)
         const statusDiv = createElement('div', 'online-status');
-        const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, lastSeen);
+        const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, formatDateTime(lastSeen));
         statusDiv.appendChild(statusSpan);
         return statusDiv;
     }
@@ -1178,7 +1181,6 @@ const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = (oldPrivacySettings, new
 
 function messageBoxElementMessagesReadTick(messages, privacySettings) {
     const renderMessages = [...document.querySelectorAll('.message1')];
-    messages.length;
     const reverseRenderMessages = renderMessages.reverse();
     for (let index = 0; index < renderMessages.length; index++) {
         if (index >= messages.length) {
@@ -1194,7 +1196,7 @@ function messageBoxElementMessagesReadTick(messages, privacySettings) {
     }
 }
 
-const sendMessage = async (chat, sendButton) => {
+const sendMessage = async (chat, sendButton, typingStatus) => {
     const messageContentElement = document.querySelector('.message-box1-7-1-1-1-2-1-1-1-1');
     const messageContent = messageContentElement.textContent.trim();
     console.log("SEND MESSAGE CHAT >>> ", chat)
@@ -1206,7 +1208,7 @@ const sendMessage = async (chat, sendButton) => {
             senderId: chat.user.id,
             recipientId: chat.contactsDTO.userProfileResponseDTO.id,
             chatRoomId: chat.id,
-            userChatSettingsId: chat.userChatSettings.id,
+            userChatSettingsId: chat.userChatSettings?.id,
             seen: false
         };
         console.log("BX10 > ", message)
@@ -1233,12 +1235,8 @@ const sendMessage = async (chat, sendButton) => {
                 // lastMessageTime: message.fullDateTime,
                 // userChatSettings: result.userChatSettings
             }
-            console.log("NEW CHAT > ", newChat)
             chat.id = newChat.id;
-            chatInstance.chatList.unshift(newChat);
-            updateChatsTranslateY();
-            createChatBox(newChat, 0);
-            console.log("MESSAGEEEEEEEEEEE > ", message)
+            updateChatBox(newChat);
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         }
@@ -1259,31 +1257,63 @@ const sendMessage = async (chat, sendButton) => {
                 const lastMessageElement = chatElement.querySelector('.message-span-span');
                 const lastMessageTimeElement = chatElement.querySelector('.time');
                 lastMessageElement.textContent = message.messageContent;
-                console.log("AX12 > ", messageContent.fullDateTime)
-                lastMessageTimeElement.textContent = message.fullDateTime;
+                lastMessageTimeElement.textContent = chatBoxFormatDateTime(message.fullDateTime);
                 if (messageSpan.children.length === 2) {
                     messageSpan.removeChild(messageSpan.firstElementChild);
-                    const messageDeliveredTickDiv = messageDeliveredTick();
+                    const messageDeliveredTickDiv = createMessageDeliveredTickElement();
                     messageSpan.insertBefore(messageDeliveredTickDiv, messageSpan.firstElementChild);
                 } else {
-                    const messageDeliveredTickDiv = messageDeliveredTick();
+                    const messageDeliveredTickDiv = createMessageDeliveredTickElement();
                     messageSpan.insertBefore(messageDeliveredTickDiv, messageSpan.firstElementChild);
                 }
             }
+            updateChatBox(chatInstance.chatList[chatIndex]);
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
 
         }
         // ToDo lastPage bakilacak renderMessage
-        renderMessage(message, null, chat.contactsDTO.userProfileResponseDTO.privacySettings);
+        renderMessage(message, null, chat.contactsDTO.userProfileResponseDTO.privacySettings, true);
         messageContentElement.removeChild(messageContentElement.firstElementChild);
         messageContentElement.appendChild(createElement('br', ''));
-        updatePlaceholder(messageContentElement.parentElement.parentElement, messageContentElement.parentElement, sendButton)
+        updatePlaceholder(messageContentElement.parentElement.parentElement, messageContentElement.parentElement, sendButton, typingStatus)
         console.log("CHAT INSTANCE CHAT LIST > ", chatInstance.chatList)
     }
 };
 
+function createMessageDeliveredTickElement() {
+    const messageDeliveredTickDiv = createElement('div', 'message-delivered-tick-div');
 
+
+    const messageDeliveredTickSpan = createElement('span', 'message-delivered-tick-span', {}, { 'aria-hidden': 'true', 'aria-label': ' İletildi ', 'data-icon': 'status-dblcheck' });
+
+
+    const messageDeliveredTickSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    messageDeliveredTickSvg.setAttribute("viewBox", "0 0 18 18");
+    messageDeliveredTickSvg.setAttribute("height", "18");
+    messageDeliveredTickSvg.setAttribute("width", "18");
+    messageDeliveredTickSvg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    messageDeliveredTickSvg.setAttribute("class", "");
+    messageDeliveredTickSvg.setAttribute("version", "1.1");
+    messageDeliveredTickSvg.setAttribute("y", "0px");
+    messageDeliveredTickSvg.setAttribute("x", "0px");
+    messageDeliveredTickSvg.setAttribute("enable-background", "new 0 0 18 18");
+
+
+    const messageDeliveredTickTitle = createElement('title', '', {}, {}, 'status-dblcheck');
+
+
+
+    const messageDeliveredTickPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    messageDeliveredTickPath.setAttribute("fill", "currentColor");
+    messageDeliveredTickPath.setAttribute("d", "M17.394,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-0.427-0.388c-0.171-0.167-0.431-0.15-0.578,0.038L7.792,13.13 c-0.147,0.188-0.128,0.478,0.043,0.645l1.575,1.51c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C17.616,5.456,17.582,5.182,17.394,5.035z M12.502,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-2.614-2.556c-0.171-0.167-0.447-0.164-0.614,0.007l-0.505,0.516 c-0.167,0.171-0.164,0.447,0.007,0.614l3.887,3.8c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C12.724,5.456,12.69,5.182,12.502,5.035z");
+
+    messageDeliveredTickSvg.appendChild(messageDeliveredTickTitle);
+    messageDeliveredTickSvg.appendChild(messageDeliveredTickPath);
+    messageDeliveredTickSpan.appendChild(messageDeliveredTickSvg);
+    messageDeliveredTickDiv.appendChild(messageDeliveredTickSpan);
+    return messageDeliveredTickDiv;
+}
 function getHourAndMinute(dateTimeString) {
     const date = new Date(dateTimeString);
     const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1294,26 +1324,52 @@ function formatDateTime(dateTime) {
     const now = new Date();
     const date = new Date(dateTime);
     const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+    const userLanguage = navigator.language || 'en-US';
+
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const formattedTime = `${hours}:${minutes}`;
 
-    let formattedDate;
+    let relativeTimeText;
+    const relativeTimeFormatter = new Intl.RelativeTimeFormat(userLanguage, { numeric: 'auto' });
+
     if (diffInDays === 0) {
-        formattedDate = `son görülme (bugün) ${formattedTime}`;
+        relativeTimeText = relativeTimeFormatter.format(0, 'day');
     } else if (diffInDays === 1) {
-        formattedDate = `son görülme (dün) ${formattedTime}`;
+        relativeTimeText = relativeTimeFormatter.format(-1, 'day');
     } else if (diffInDays < 7) {
-        const daysOfWeek = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-        const dayName = daysOfWeek[date.getDay()];
-        formattedDate = `son görülme (${dayName}) ${formattedTime}`;
+        relativeTimeText = new Intl.DateTimeFormat(userLanguage, { weekday: 'long' }).format(date);
+    } else if (now.getFullYear() === date.getFullYear()) {
+        relativeTimeText = new Intl.DateTimeFormat(userLanguage, {
+            month: 'long',
+            day: 'numeric'
+        }).format(date);
     } else {
-        const formattedDateStr = date.toLocaleDateString();
-        formattedDate = `son görülme (${formattedDateStr} ${formattedTime})`;
+        relativeTimeText = new Intl.DateTimeFormat(userLanguage, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }).format(date);
+
     }
 
-    document.getElementById('datetime').textContent = formattedDate;
+    let lastSeenPrefix = "last seen";
+    try {
+        if (Intl.DisplayNames) {
+            const displayNames = new Intl.DisplayNames([userLanguage], { type: 'region' });
+            lastSeenPrefix = displayNames.of("lastSeen") || "last seen";
+        } else {
+            lastSeenPrefix = userLanguage.startsWith('tr') ? "son görülme" : "last seen";
+        }
+    } catch (error) {
+        console.warn("DisplayNames API is not supported. Falling back to default.");
+    }
+
+    return `${lastSeenPrefix} ${relativeTimeText} ${formattedTime}`;
 }
+
+
 const removeMessageBoxAndUnsubscribe = () => {
     const messageBoxElement = document.querySelector('.message-box');
     const messageBox = messageBoxElement.querySelector('.message-box1');
@@ -1324,6 +1380,104 @@ const removeMessageBoxAndUnsubscribe = () => {
         chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${messageBox.data.contactsDTO.userProfileResponseDTO.id}/queue/message-box-typing`);
     } else {
         messageBoxElement.removeChild(startMessageElement);
+    }
+}
+
+function handleOptionsBtnClick(event, chatData) {
+    const spans = document.querySelectorAll('.content span');
+    const showChatOptions = spans[2];
+    const target = event.currentTarget;
+    if (showChatOptions) {
+        const existingOptionsDiv = showChatOptions.querySelector('.options1');
+
+        if (existingOptionsDiv) {
+            console.log("Seçenekler kapatılıyor");
+            existingOptionsDiv.remove();
+        } else {
+            console.log("Seçenekler açılıyor");
+            const chatOptionsDiv = document.createElement("div");
+            debugger
+            const rect = target.getBoundingClientRect();
+            console.log(rect);
+            chatOptionsDiv.classList.add('options1');
+            chatOptionsDiv.setAttribute('role', 'application');
+            chatOptionsDiv.style.transformOrigin = 'right top';
+            chatOptionsDiv.style.top = (rect.bottom) + 'px';
+            chatOptionsDiv.style.left = (rect.right - 240) + 'px';
+            chatOptionsDiv.style.transform = 'scale(1)';
+            chatOptionsDiv.style.opacity = '1';
+
+            // const archiveLabel = chatData.userChatSettings.archived ? 'Sohbeti arşivden çıkar' : 'Sohbeti arşivle';
+            const archiveLabel = chatData.userChatSettings.archived ? 'Arşivden çıkar' : 'Sohbeti arşivle';
+            const blockLabel = chatData.userChatSettings.blocked ? 'Engeli kaldır' : 'Engelle';
+            const pinLabel = chatData.userChatSettings.pinned ? 'Sohbeti sabitlemeyi kaldır' : 'Sohbeti sabitle';
+            // ToDo
+            const markUnreadLabel = 'Okunmadı olarak işaretle';
+            const deleteChatLabel = 'Sohbeti sil';
+
+            const dto = new UserSettingsDTO({
+                // friendId: chatData.userProfileResponseDTO.id,
+                // userId: chatData.contactsDTO.userId,
+                // id: chatData.chatDTO.id,
+                // friendEmail: chatData.userProfileResponseDTO.email,
+                // userChatSettings: { ...chatData.userChatSettings }
+            });
+
+            const ulElement = createElement('ul', 'ul1');
+            const divElement = createElement('div', '');
+
+            // const archiveLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
+            // const archiveLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${archiveLabel}` }, archiveLabel);
+
+            const blockLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
+            const blockLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${blockLabel}` }, blockLabel, () => toggleBlockUser(chatData, showChatOptions));
+
+            const pinLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
+            const pinLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${pinLabel}` }, pinLabel);
+
+            const deleteLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
+            const deleteLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${deleteChatLabel}` }, deleteChatLabel, () => deleteChat(chatData, showChatOptions, chatElement));
+
+            const markUnreadLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
+            const markUnreadLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${markUnreadLabel}` }, markUnreadLabel);
+
+
+            blockLiElement.appendChild(blockLiDivElement);
+            pinLiElement.appendChild(pinLiDivElement);
+            deleteLiElement.appendChild(deleteLiDivElement);
+            markUnreadLiElement.appendChild(markUnreadLiDivElement);
+            divElement.appendChild(blockLiElement);
+            divElement.appendChild(pinLiElement);
+            divElement.appendChild(deleteLiElement);
+            divElement.appendChild(markUnreadLiElement);
+            ulElement.appendChild(divElement);
+
+            chatOptionsDiv.appendChild(ulElement);
+            // const chatOptionsLiItemHTML = `
+            //     <ul class="ul1">
+            //         <div>
+            //             <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+            //                 <div class="list-item1-div" role="button" aria-label="${archiveLabel}">${archiveLabel}</div>
+            //             </li>
+            //             <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+            //                 <div class="list-item1-div" role="button" aria-label="${blockLabel}">${blockLabel}</div>
+            //             </li>
+            //             <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+            //                 <div class="list-item1-div" role="button" aria-label="Sohbeti sil">Sohbeti sil</div>
+            //             </li>
+            //             <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+            //                 <div class="list-item1-div" role="button" aria-label="${pinLabel}">${pinLabel}</div>
+            //             </li>
+            //             <li tabindex="0" class="list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
+            //                 <div class="list-item1-div" role="button" aria-label="Okunmadı olarak işaretle">Okunmadı olarak işaretle</div>
+            //             </li>
+            //         </div>
+            //     </ul>
+            // `;
+            // chatOptionsDiv.innerHTML = chatOptionsLiItemHTML;
+            showChatOptions.appendChild(chatOptionsDiv);
+            document.addEventListener('click', closeOptionsDivOnClickOutside);
+        }
     }
 }
 const createChatRoomIfNotExistsUrl = 'http://localhost:8080/api/v1/chat/create-chat-room-if-not-exists';
@@ -1377,7 +1531,7 @@ const fetchGetOlder30Messages = async (chatRoomId, before) => {
             throw new Error('Access token not found');
         }
 
-        const response = await fetch(`${getOlderMessagesUrl}?chatRoomId=${chatRoomId}&before=${before}&limit=30`, {
+        const response = await fetch(`${getOlder30MessagesUrl}?chatRoomId=${chatRoomId}&before=${before}&limit=30`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -1410,5 +1564,20 @@ class DeleteMessageDTO {
         this.recipientId = recipientId;
     }
 }
+class ContactInformationDTO {
+    constructor({
+        name = '',
+        email = '',
+        about = '',
+        chatRoomId = '',
+        contactId = ''
+    } = {}) {
+        this.name = name;
+        this.email = email;
+        this.about = about;
+        this.chatRoomId = chatRoomId;
+        this.contactId = contactId
+    }
+}
+export { createMessageBox, ifVisibilitySettingsChangeWhileMessageBoxIsOpen, isMessageBoxDomExists, isOnlineStatus, lastSeenStatus, messageBoxElementMessagesReadTick, removeMessageBoxAndUnsubscribe, renderMessage, createMessageDeliveredTickElement };
 
-export { createMessageBox, renderMessage, isOnlineStatus, lastSeenStatus, ifVisibilitySettingsChangeWhileMessageBoxIsOpen, removeMessageBoxAndUnsubscribe, isMessageBoxDomExists, messageBoxElementMessagesReadTick };

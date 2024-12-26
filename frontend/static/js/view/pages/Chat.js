@@ -8,8 +8,8 @@ import { createIncomingFriendRequests } from "../IncomingFriendRequests.js";
 import { createApprovedRequestHistory } from "../ApprovedRequestHistory.js";
 import WebSocketManager from "../../websocket.js";
 import { hideElements, createElement, createSvgElement } from '../utils/util.js';
-import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBoxLastMessage, isChatExists } from "../components/ChatBox.js";
-import { isOnlineStatus, isMessageBoxDomExists, renderMessage, messageBoxElementMessagesReadTick } from "../components/MessageBox.js";
+import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBox } from "../components/ChatBox.js";
+import { isOnlineStatus, isMessageBoxDomExists, renderMessage, messageBoxElementMessagesReadTick, createMessageDeliveredTickElement } from "../components/MessageBox.js";
 import { navigateTo } from "../../index.js";
 
 export let webSocketManagerContacts;
@@ -92,6 +92,7 @@ export default class Chat extends AbstractView {
     async getHtml() {
         return `
            <span class></span>
+    <span class></span>
     <span class></span>
     <div class="chat-container">
 
@@ -242,6 +243,9 @@ export default class Chat extends AbstractView {
         </div>
         <div class="message-box" id="chatWindow">
             <div class="start-message">Arkadaş Seçerek Sohbet Etmeye Başlayabilirsiniz.</div>
+        </div>
+        <div class="contact-information profile">
+            <span class="contact-information-span"></span>
         </div>
     </div>
         `;
@@ -421,7 +425,6 @@ export default class Chat extends AbstractView {
         const readMessagesChannel = `/user/${this.user.id}/queue/read-messages`;
 
         this.webSocketManagerChat.subscribeToChannel(readMessagesChannel, (readMessages) => {
-            debugger
             const readMessagesJSON = JSON.parse(readMessages.body);
             const firstReadMessage = readMessagesJSON[0];
             console.log("senderMessageJSON > ", readMessagesJSON);
@@ -443,7 +446,6 @@ export default class Chat extends AbstractView {
         });
 
         this.webSocketManagerChat.subscribeToChannel(recipientMessageChannel, async (recipientMessage) => {
-
             const recipientJSON = JSON.parse(recipientMessage.body);
             console.log("RECIPENT > ", recipientJSON)
             const chat = this.chatList.find(chat => chat.chatDTO.id === recipientJSON.chatRoomId);
@@ -453,14 +455,17 @@ export default class Chat extends AbstractView {
                 await createChatBoxWithFirstMessage(recipientJSON)
             } else {
                 chat.userChatSettings.unreadMessageCount = recipientJSON.unreadMessageCount;
-                const chatDOMs = [...document.querySelectorAll('.chat1')];
-                const chatDOM = chatDOMs.find(chat => chat.chatData.chatDTO.id === recipientJSON.chatRoomId);
+                chat.chatDTO.lastMessage = recipientJSON.messageContent;
+                chat.chatDTO.lastMessageTime = recipientJSON.fullDateTime;
+                updateChatBox(chat);
+                const chatElements = [...document.querySelectorAll('.chat1')];
+                const chatElement = chatElements.find(chat => chat.chatData.chatDTO.id === recipientJSON.chatRoomId);
 
                 let unreadMessageCountDiv;
                 let chatOptionsDiv;
-                if (chatDOM) {
-                    chatOptionsDiv = chatDOM.querySelector('.chat-options');
-                    const unreadMessageCountSpan = chatDOM.querySelector('.unread-message-count-span');
+                if (chatElement) {
+                    chatOptionsDiv = chatElement.querySelector('.chat-options');
+                    const unreadMessageCountSpan = chatElement.querySelector('.unread-message-count-span');
                     if (unreadMessageCountSpan) {
                         unreadMessageCountSpan.textContent = recipientJSON.unreadMessageCount;
                     } else {
@@ -469,6 +474,11 @@ export default class Chat extends AbstractView {
                         unreadMessageCountDiv.appendChild(unreadMessageCountSpan);
                         chatOptionsDiv.firstElementChild.appendChild(unreadMessageCountDiv);
                     }
+                    const messageTickSpan = chatElement.querySelector('.message-delivered-tick-div');
+                    if (messageTickSpan) {
+                        messageTickSpan.remove();
+                    }
+
                 }
                 if (isMessageBoxDomExists(recipientJSON.chatRoomId)) {
                     const dto = {
@@ -478,10 +488,10 @@ export default class Chat extends AbstractView {
                         senderId: recipientJSON.senderId
                     };
                     chatInstance.webSocketManagerChat.sendMessageToAppChannel("read-message", dto);
-                    renderMessage(recipientJSON, null, chat.userProfileResponseDTO.privacySettings);
+                    renderMessage(recipientJSON, null, chat.userProfileResponseDTO.privacySettings, true);
                 }
-                updateChatBoxLastMessage(recipientJSON);
-                lastMessageChange(recipientJSON.chatRoomId, recipientJSON.messageContent)
+                lastMessageChange(recipientJSON, chatElement);
+
 
             }
         })
@@ -499,13 +509,25 @@ export default class Chat extends AbstractView {
                 const chat = visibleChats.find(el => el.chatData.chatDTO.id === status.chatRoomId);
                 if (chat) {
                     console.log("CHAT > ", chat)
-                    const lastMessageDOM = chat.querySelector(".message-span-span");
-                    console.log("SPAN DOM > ", lastMessageDOM)
+                    const messageSpan = chat.querySelector(".message-span");
+                    const messageSpanSpan = chat.querySelector(".message-span-span");
+
                     if (status.typing) {
-                        lastMessageDOM.textContent = 'yaziyor...';
+                        if (chat.chatData.chatDTO.senderId === this.user.id) {
+                            messageSpan.removeChild(messageSpan.firstElementChild);
+                        }
+                        messageSpanSpan.textContent = 'yaziyor...';
                     } else {
-                        console.log("aaaaaaaaaaaaaaaa")
-                        lastMessageDOM.textContent = chat.chatData.chatDTO.lastMessage;
+                        if (chat.chatData.chatDTO.senderId === this.user.id) {
+                            const messageDeliveredTickElement = createMessageDeliveredTickElement();
+                            if (chat.chatData.chatDTO.seen) {
+                                messageDeliveredTickElement.firstElementChild.className = 'message-seen-tick-span';
+                                messageDeliveredTickElement.firstElementChild.ariaLabel = ' Okundu ';
+                            }
+                            messageSpan.prepend(messageDeliveredTickElement);
+
+                        }
+                        messageSpanSpan.textContent = chat.chatData.chatDTO.lastMessage;
                     }
                 }
             }

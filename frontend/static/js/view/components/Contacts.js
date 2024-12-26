@@ -661,10 +661,10 @@ function removeContact(contactElement, contactData) {
         let newContactData = chatInstance.contactList[maxIndex];
 
         if (newContactData) {
-            updateDOMElement(contactElement, newContactData, maxIndex);
+            updateContactElement(contactElement, newContactData, maxIndex);
         } else {
             newContactData = chatInstance.contactList[minIndex - 1];
-            updateDOMElement(contactElement, newContactData, minIndex - 1);
+            updateContactElement(contactElement, newContactData, minIndex - 1);
         }
     } else {
         contactElement.remove();
@@ -696,7 +696,7 @@ function updateTranslateYAfterDelete(deletedContactTranslateY) {
     };
 }
 
-function updateDOMElement(contactElement, newContactData, newIndex) {
+function updateContactElement(contactElement, newContactData, newIndex) {
     const nameSpan = contactElement.querySelector(".name-span");
     const messageSpan = contactElement.querySelector(".message-span-span");
 
