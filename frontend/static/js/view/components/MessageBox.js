@@ -2,7 +2,7 @@
 import { chatInstance, UserSettingsDTO } from "../pages/Chat.js";
 import { ModalOptionsDTO, showModal } from '../utils/showModal.js';
 import { chatBoxFormatDateTime, createElement, createSvgElement, createVisibilityProfilePhoto, messageBoxFormatDateTime } from "../utils/util.js";
-import { updateChatBox } from "./ChatBox.js";
+import { updateChatBox, closeOptionsDivOnClickOutside } from "./ChatBox.js";
 import { createContactInformation } from "./ContactInformation.js";
 
 let caretPosition = 0;
@@ -1382,11 +1382,12 @@ const removeMessageBoxAndUnsubscribe = () => {
         messageBoxElement.removeChild(startMessageElement);
     }
 }
-
-function handleOptionsBtnClick(event, chatData) {
+function handleOptionsBtnClick(event, chat) {
+    event.stopPropagation();
     const spans = document.querySelectorAll('.content span');
     const showChatOptions = spans[2];
     const target = event.currentTarget;
+    closeOptionsDivOnClickOutside();
     if (showChatOptions) {
         const existingOptionsDiv = showChatOptions.querySelector('.options1');
 
@@ -1396,23 +1397,22 @@ function handleOptionsBtnClick(event, chatData) {
         } else {
             console.log("Seçenekler açılıyor");
             const chatOptionsDiv = document.createElement("div");
-            debugger
             const rect = target.getBoundingClientRect();
             console.log(rect);
             chatOptionsDiv.classList.add('options1');
             chatOptionsDiv.setAttribute('role', 'application');
             chatOptionsDiv.style.transformOrigin = 'right top';
             chatOptionsDiv.style.top = (rect.bottom) + 'px';
-            chatOptionsDiv.style.left = (rect.right - 240) + 'px';
+            chatOptionsDiv.style.left = (rect.right - 155) + 'px';
             chatOptionsDiv.style.transform = 'scale(1)';
             chatOptionsDiv.style.opacity = '1';
 
             // const archiveLabel = chatData.userChatSettings.archived ? 'Sohbeti arşivden çıkar' : 'Sohbeti arşivle';
-            const archiveLabel = chatData.userChatSettings.archived ? 'Arşivden çıkar' : 'Sohbeti arşivle';
-            const blockLabel = chatData.userChatSettings.blocked ? 'Engeli kaldır' : 'Engelle';
-            const pinLabel = chatData.userChatSettings.pinned ? 'Sohbeti sabitlemeyi kaldır' : 'Sohbeti sabitle';
+            // const archiveLabel = chatData.userChatSettings.archived ? 'Arşivden çıkar' : 'Sohbeti arşivle';
+            const blockLabel = chat.userChatSettings.blocked ? 'Engeli kaldır' : 'Engelle';
+            // const pinLabel = chatData.userChatSettings.pinned ? 'Sohbeti sabitlemeyi kaldır' : 'Sohbeti sabitle';
             // ToDo
-            const markUnreadLabel = 'Okunmadı olarak işaretle';
+            // const markUnreadLabel = 'Okunmadı olarak işaretle';
             const deleteChatLabel = 'Sohbeti sil';
 
             const dto = new UserSettingsDTO({
@@ -1430,26 +1430,37 @@ function handleOptionsBtnClick(event, chatData) {
             // const archiveLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${archiveLabel}` }, archiveLabel);
 
             const blockLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
-            const blockLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${blockLabel}` }, blockLabel, () => toggleBlockUser(chatData, showChatOptions));
+            const blockLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${blockLabel}` }, blockLabel, () => toggleBlockUser(chat, showChatOptions));
 
-            const pinLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
-            const pinLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${pinLabel}` }, pinLabel);
+            const contactInformationLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
+            const contactInformationDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': 'contactInformation' }, 'Kişi bilgisi', () => createContactInformation(new ContactInformationDTO({
+                name: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.contact.userContactName : chat.contactsDTO.userProfileResponseDTO.email,
+                email: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.userProfileResponseDTO.email : chat.contactsDTO.userProfileResponseDTO.firstName,
+                contactId: chat.contactsDTO.userProfileResponseDTO.id,
+                chatRoomId: chat.id,
+                about: chat.contactsDTO.userProfileResponseDTO.about
+            })));
+
+            // const pinLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
+            // const pinLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${pinLabel}` }, pinLabel);
 
             const deleteLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
-            const deleteLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${deleteChatLabel}` }, deleteChatLabel, () => deleteChat(chatData, showChatOptions, chatElement));
+            const deleteLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${deleteChatLabel}` }, deleteChatLabel, () => deleteChat(chat, showChatOptions, chatElement));
 
-            const markUnreadLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
-            const markUnreadLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${markUnreadLabel}` }, markUnreadLabel);
+            // const markUnreadLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
+            // const markUnreadLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${markUnreadLabel}` }, markUnreadLabel);
 
 
+            contactInformationLiElement.appendChild(contactInformationDivElement);
             blockLiElement.appendChild(blockLiDivElement);
-            pinLiElement.appendChild(pinLiDivElement);
+            // pinLiElement.appendChild(pinLiDivElement);
             deleteLiElement.appendChild(deleteLiDivElement);
-            markUnreadLiElement.appendChild(markUnreadLiDivElement);
+            // markUnreadLiElement.appendChild(markUnreadLiDivElement);
+            divElement.appendChild(contactInformationLiElement);
             divElement.appendChild(blockLiElement);
-            divElement.appendChild(pinLiElement);
+            // divElement.appendChild(pinLiElement);
             divElement.appendChild(deleteLiElement);
-            divElement.appendChild(markUnreadLiElement);
+            // divElement.appendChild(markUnreadLiElement);
             ulElement.appendChild(divElement);
 
             chatOptionsDiv.appendChild(ulElement);
@@ -1477,6 +1488,11 @@ function handleOptionsBtnClick(event, chatData) {
             // chatOptionsDiv.innerHTML = chatOptionsLiItemHTML;
             showChatOptions.appendChild(chatOptionsDiv);
             document.addEventListener('click', closeOptionsDivOnClickOutside);
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape') {
+                    chatOptionsDiv.remove();
+                }
+            });
         }
     }
 }

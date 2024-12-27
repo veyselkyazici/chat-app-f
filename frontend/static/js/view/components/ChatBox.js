@@ -288,13 +288,14 @@ function handleMouseout(event) {
     }
 }
 function handleOptionsBtnClick(event) {
+    
     const target = event.currentTarget;
     const chatData = target.chatData;
     const chatElement = target.closest('.chat1');
     console.log(chatElement)
     const spans = document.querySelectorAll('.app span');
     const showChatOptions = spans[1];
-
+    
     if (showChatOptions) {
         const existingOptionsDiv = showChatOptions.querySelector('.options1');
 
@@ -314,7 +315,7 @@ function handleOptionsBtnClick(event) {
             chatOptionsDiv.style.left = (rect.left + window.scrollX) + 'px';
             chatOptionsDiv.style.transform = 'scale(1)';
             chatOptionsDiv.style.opacity = '1';
-
+            closeOptionsDivOnClickOutside();
             // const archiveLabel = chatData.userChatSettings.archived ? 'Sohbeti arşivden çıkar' : 'Sohbeti arşivle';
             const archiveLabel = chatData.userChatSettings.archived ? 'Arşivden çıkar' : 'Sohbeti arşivle';
             const blockLabel = chatData.userChatSettings.blocked ? 'Engeli kaldır' : 'Engelle';
@@ -654,10 +655,17 @@ const togglePinnedChat = async (chatData, showChatOptions) => {
     }
 
 };
-function closeOptionsDivOnClickOutside(event) {
-    const optionsDiv = document.querySelector('.options1');
-    if (optionsDiv && !optionsDiv.contains(event.target)) {
-        optionsDiv.remove();
+function closeOptionsDivOnClickOutside() {
+    debugger;
+    const spans = document.querySelectorAll('.content span');
+    const chatBoxOptionsDiv = spans[1].querySelector('.options1');
+    const messageBoxOptionsDiv = spans[2].querySelector('.options1');
+    if (chatBoxOptionsDiv) {
+        chatBoxOptionsDiv.remove();
+        document.removeEventListener('click', closeOptionsDivOnClickOutside);
+    }
+    else if (messageBoxOptionsDiv) {
+        messageBoxOptionsDiv.remove();
         document.removeEventListener('click', closeOptionsDivOnClickOutside);
     }
 }
@@ -735,7 +743,6 @@ function addEventListeners(chatElementDOM) {
 }
 
 async function createChatBoxWithFirstMessage(recipientJSON) {
-    debugger
     const result = await fetchGetChatSummary(recipientJSON.recipientId, recipientJSON.senderId, recipientJSON.chatRoomId);
     console.log("RESULT > ", result)
     chatInstance.chatList.unshift(result);
@@ -928,4 +935,4 @@ export const fetchDeleteChat = async (userChatSettings) => {
         throw error;
     }
 };
-export { createChatBox, updateChatBox, moveChatToTop, handleChats, createChatBoxWithFirstMessage, isChatExists, lastMessageChange, updateChatsTranslateY, fetchGetLast30Messages, fetchGetChatSummary, isChatListLengthGreaterThanVisibleItemCount, createUnreadMessageCount, updateUnreadMessageCountAndSeenTick };
+export { createChatBox, updateChatBox, moveChatToTop, handleChats, createChatBoxWithFirstMessage, isChatExists, lastMessageChange, updateChatsTranslateY, fetchGetLast30Messages, fetchGetChatSummary, isChatListLengthGreaterThanVisibleItemCount, createUnreadMessageCount, updateUnreadMessageCountAndSeenTick, closeOptionsDivOnClickOutside };
