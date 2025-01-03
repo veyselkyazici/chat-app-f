@@ -1,5 +1,5 @@
 // Contacts.js
-import { createMessageBox, removeMessageBoxAndUnsubscribe } from './MessageBox.js';
+import { createMessageBox, removeMessageBoxAndUnsubscribe, fetchCreateChatRoomIfNotExists } from './MessageBox.js';
 import { fetchGetLast30Messages } from './ChatBox.js';
 import { chatInstance } from "../pages/Chat.js";
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
@@ -449,6 +449,8 @@ async function handleContactClick(event) {
         let findChat = findChatRoom(chatInstance.user.id, contactData.contactsDTO.userContactId);
         let chatRequestDTO;
         if (!findChat) {
+            const createChatRoomAndUserChatSettings = await fetchCreateChatRoomIfNotExists(chatInstance.user.id, contactData.contactsDTO.userContactId);
+            console.log("ABCDE > ", createChatRoomAndUserChatSettings)
             chatRequestDTO = {
                 contactsDTO: {
                     contact: { ...contactData.contactsDTO },
@@ -456,8 +458,8 @@ async function handleContactClick(event) {
                 },
                 user: chatInstance.user,
                 messagesDTO: { messages: [], isLastPage: true },
-                userChatSettings: null,
-                id: null,
+                userChatSettings: {...createChatRoomAndUserChatSettings.userChatSettings},
+                id: createChatRoomAndUserChatSettings.id,
             };
         } else {
             const messages = await fetchGetLast30Messages(findChat.chatDTO.id);

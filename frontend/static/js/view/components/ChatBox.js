@@ -288,14 +288,13 @@ function handleMouseout(event) {
     }
 }
 function handleOptionsBtnClick(event) {
-    
     const target = event.currentTarget;
     const chatData = target.chatData;
     const chatElement = target.closest('.chat1');
     console.log(chatElement)
     const spans = document.querySelectorAll('.app span');
     const showChatOptions = spans[1];
-    
+
     if (showChatOptions) {
         const existingOptionsDiv = showChatOptions.querySelector('.options1');
 
@@ -339,7 +338,7 @@ function handleOptionsBtnClick(event) {
             // const archiveLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${archiveLabel}` }, archiveLabel);
 
             const blockLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
-            const blockLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${blockLabel}` }, blockLabel, () => toggleBlockUser(chatData, showChatOptions));
+            const blockLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${blockLabel}` }, blockLabel, () => toggleBlockUser(chatData));
 
             const pinLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
             const pinLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${pinLabel}` }, pinLabel);
@@ -395,8 +394,8 @@ const updateChatInstance = (chatId, blockedStatus) => {
         chatInstance.chatList[chatIndex].userChatSettings.blocked = blockedStatus;
     }
 };
-const toggleBlockUser = async (chatData, showChatOptions) => {
-    showChatOptions.removeChild(showChatOptions.firstElementChild);
+const toggleBlockUser = async (chatData) => {
+    debugger;
     console.log("CHAT DATA TOOGLE BLOCK USER > ", chatData)
     const isBlocked = chatData.userChatSettings.blocked;
     console.log("isBlocked > ", isBlocked)
@@ -406,13 +405,22 @@ const toggleBlockUser = async (chatData, showChatOptions) => {
 
     const mainCallback = async () => {
         try {
+            let result;
             if (isBlocked) {
-                await fetchChatUnblock(chatData);
+                result = await fetchChatUnblock(chatData);
                 updateChatInstance(chatData.chatDTO.id, false);
             } else {
-                await fetchChatBlock(chatData);
+                debugger;
+                result = await fetchChatBlock(chatData);
                 updateChatInstance(chatData.chatDTO.id, true);
+                if (isMessageBoxDomExists(chatData.chatDTO.id)) {
+                    chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${chatData.contactsDTO.userContactId}/queue/online-status`);
+                    chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${chatInstance.user.id}/queue/message-box-typing`);
+                }
+                const subscribedChannels = chatInstance.webSocketManagerChat.getSubscribedChannels();
+                console.log('Abone olunan kanallar:', subscribedChannels);
             }
+            toastr.success(result.message);
             return true;
         } catch (error) {
             console.error('Hata:', error);
@@ -656,7 +664,6 @@ const togglePinnedChat = async (chatData, showChatOptions) => {
 
 };
 function closeOptionsDivOnClickOutside() {
-    debugger;
     const spans = document.querySelectorAll('.content span');
     const chatBoxOptionsDiv = spans[1].querySelector('.options1');
     const messageBoxOptionsDiv = spans[2].querySelector('.options1');
@@ -935,4 +942,4 @@ export const fetchDeleteChat = async (userChatSettings) => {
         throw error;
     }
 };
-export { createChatBox, updateChatBox, moveChatToTop, handleChats, createChatBoxWithFirstMessage, isChatExists, lastMessageChange, updateChatsTranslateY, fetchGetLast30Messages, fetchGetChatSummary, isChatListLengthGreaterThanVisibleItemCount, createUnreadMessageCount, updateUnreadMessageCountAndSeenTick, closeOptionsDivOnClickOutside };
+export { createChatBox, updateChatBox, moveChatToTop, handleChats, createChatBoxWithFirstMessage, isChatExists, lastMessageChange, updateChatsTranslateY, fetchGetLast30Messages, fetchGetChatSummary, isChatListLengthGreaterThanVisibleItemCount, createUnreadMessageCount, updateUnreadMessageCountAndSeenTick, closeOptionsDivOnClickOutside, toggleBlockUser, updateChatInstance };

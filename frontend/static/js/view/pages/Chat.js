@@ -8,7 +8,7 @@ import { createIncomingFriendRequests } from "../IncomingFriendRequests.js";
 import { createApprovedRequestHistory } from "../ApprovedRequestHistory.js";
 import WebSocketManager from "../../websocket.js";
 import { hideElements, createElement, createSvgElement } from '../utils/util.js';
-import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBox } from "../components/ChatBox.js";
+import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBox, updateChatInstance } from "../components/ChatBox.js";
 import { isOnlineStatus, isMessageBoxDomExists, renderMessage, messageBoxElementMessagesReadTick, createMessageDeliveredTickElement } from "../components/MessageBox.js";
 import { navigateTo } from "../../index.js";
 
@@ -423,6 +423,31 @@ export default class Chat extends AbstractView {
         const stopTypingChannel = `/user/${this.user.id}/queue/stop-typing`;
         // const readConfirmationSenderChannel = `/user/${this.user.id}/queue/read-confirmation-sender`;
         const readMessagesChannel = `/user/${this.user.id}/queue/read-messages`;
+        const chatBlock = `/user/${this.user.id}/queue/block`;
+        const chatUnBlock = `/user/${this.user.id}/queue/unblock`;
+        chatInstance.webSocketManagerChat.subscribeToChannel(chatBlock, async (block) => {
+            debugger
+            const blockData = JSON.parse(block.body);
+            const chatIndex = chatInstance.chatList.findIndex(chat => chat.chatDTO.id === blockData.chatRoomId);
+            if (chatIndex !== -1) {
+                chatInstance.chatList[chatIndex].userChatSettings.blockedMe = true;
+            }
+            if (isMessageBoxDomExists(chatData.chatDTO.id)) {
+                chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${messageBox.data.contactsDTO.userProfileResponseDTO.id}/queue/online-status`);
+                chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${messageBox.data.contactsDTO.userProfileResponseDTO.id}/queue/message-box-typing`);
+            }
+
+        });
+        chatInstance.webSocketManagerChat.subscribeToChannel(chatUnBlock, async (unblock) => {
+            debugger;
+            const unblockData = JSON.parse(unblock.body);
+            const chatIndex = chatInstance.chatList.findIndex(chat => chat.chatDTO.id === unblockData.chatRoomId);
+            if (chatIndex !== -1) {
+                chatInstance.chatList[chatIndex].userChatSettings.blockedMe = false;
+            }
+
+        });
+
 
         this.webSocketManagerChat.subscribeToChannel(readMessagesChannel, (readMessages) => {
             const readMessagesJSON = JSON.parse(readMessages.body);
@@ -507,7 +532,7 @@ export default class Chat extends AbstractView {
             if (visibleChats) {
                 console.log("CHATDOMS >>>>>> ", visibleChats)
                 const chat = visibleChats.find(el => el.chatData.chatDTO.id === status.chatRoomId);
-                if (chat) {
+                if (chat && !chat.userChatSettings.blocked && !chat.userChatSettings.blockedMe) {
                     console.log("CHAT > ", chat)
                     const messageSpan = chat.querySelector(".message-span");
                     const messageSpanSpan = chat.querySelector(".message-span-span");
@@ -925,12 +950,12 @@ async function fetchGetUserWithPrivacySettingsByToken() {
 
 const fetchChatBlockUrl = 'http://localhost:8080/api/v1/chat/chat-block';
 export const fetchChatBlock = async (chatSummaryDTO) => {
-    try {
-        const token = sessionStorage.getItem('access_token');
-        if (!token) {
-            throw new Error('Access token not found');
-        }
+    const token = sessionStorage.getItem('access_token');
+    if (!token) {
+        throw new Error('Access token not found. Please log in again.');
+    }
 
+    try {
         const response = await fetch(fetchChatBlockUrl, {
             method: 'PUT',
             headers: {
@@ -942,19 +967,16 @@ export const fetchChatBlock = async (chatSummaryDTO) => {
 
         if (!response.ok) {
             const errorData = await response.json();
-            toastr.error(errorData.message);
-            throw new Error(errorData.message);
+            throw new Error(errorData.message || 'Failed to block the user');
         }
 
-        const result = await response.json();
-        toastr.success(result.message);
-        console.log(result);
-        return result;
+        return await response.json();
     } catch (error) {
-        console.error('Hata:', error.message);
+        console.error('FetchChatBlock Error:', error.message);
         throw error;
     }
 };
+
 const fetchChatPinnedUrl = 'http://localhost:8080/api/v1/chat/chat-pinned';
 export const fetchChatPinned = async (chatSummaryDTO) => {
     try {
@@ -1038,14 +1060,10 @@ export const fetchChatUnblock = async (chatSummaryDTO) => {
 
         if (!response.ok) {
             const errorData = await response.json();
-            toastr.error(errorData.message);
-            throw new Error(errorData.message);
+            throw new Error(errorData.message || 'Failed to block the user');
         }
 
-        const result = await response.json();
-        toastr.success(result.message);
-        console.log(result);
-        return result;
+        return await response.json();
     } catch (error) {
         console.error('Hata:', error.message);
         throw error;

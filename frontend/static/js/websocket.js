@@ -76,6 +76,10 @@ class WebSocketManager {
             this.sendMessageToAppChannel('user-offline', { userId: this.userId, online: false });
         }
     }
+
+    getSubscribedChannels() {
+        return Array.from(this.subscriptions.keys());
+    }
 }
 
 const fetchUpdateUserLastSeenUrl = 'http://localhost:8080/api/v1/user/update-user-last-seen';
