@@ -1,5 +1,5 @@
 // ChatBox.js
-import { createMessageBox, createMessageDeliveredTickElement, removeMessageBoxAndUnsubscribe, isMessageBoxDomExists } from "./MessageBox.js";
+import { createMessageBox, createMessageDeliveredTickElement, removeMessageBoxAndUnsubscribe, isMessageBoxDomExists, onlineInfo, blockInput, unBlockInput } from "./MessageBox.js";
 import { chatInstance, UserSettingsDTO, fetchChatUnblock, fetchChatBlock } from "../pages/Chat.js";
 import { virtualScroll, UpdateItemsDTO } from '../utils/virtualScroll.js';
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
@@ -395,7 +395,6 @@ const updateChatInstance = (chatId, blockedStatus) => {
     }
 };
 const toggleBlockUser = async (chatData) => {
-    debugger;
     console.log("CHAT DATA TOOGLE BLOCK USER > ", chatData)
     const isBlocked = chatData.userChatSettings.blocked;
     console.log("isBlocked > ", isBlocked)
@@ -409,16 +408,47 @@ const toggleBlockUser = async (chatData) => {
             if (isBlocked) {
                 result = await fetchChatUnblock(chatData);
                 updateChatInstance(chatData.chatDTO.id, false);
+                if (isMessageBoxDomExists(chatData.chatDTO.id)) {
+                    debugger;
+                    const messageBoxElement = document.querySelector('.message-box');
+                    const statusSpan = messageBoxElement.querySelector('.online-status');
+                    const messageBoxOnlineStatus = messageBoxElement.querySelector('.message-box1-2-2');
+                    const messageBoxFooter = messageBoxElement.querySelector('.message-box1-7');
+                    const messageBoxMain = messageBoxElement.querySelector('.message-box1');
+                    messageBoxFooter.innerHTML = '';
+                    let typingStatus = { isTyping: false, previousText: "" };
+                    const chatDTO = {
+                        contactsDTO: {
+                            contact: { ...chatData.contactsDTO },
+                            userProfileResponseDTO: { ...chatData.userProfileResponseDTO },
+                        },
+                        user: chatInstance.user,
+                        userChatSettings: chatData.userChatSettings,
+                        id: chatData.chatDTO.id,
+                    };
+                    unBlockInput(chatDTO, messageBoxMain, messageBoxFooter, typingStatus);
+                    if (statusSpan) {
+                        statusSpan.remove();
+                    }
+                    const chat = { user: { ...chatInstance.user }, contactsDTO: { contact: { ...chatData.contactsDTO }, userProfileResponseDTO: { ...chatData.userProfileResponseDTO } }, userChatSettings: { ...chatData.userChatSettings } }
+                    await onlineInfo(chat, messageBoxOnlineStatus);
+                }
             } else {
-                debugger;
                 result = await fetchChatBlock(chatData);
                 updateChatInstance(chatData.chatDTO.id, true);
                 if (isMessageBoxDomExists(chatData.chatDTO.id)) {
+                    const messageBoxElement = document.querySelector('.message-box');
+                    const statusSpan = messageBoxElement.querySelector('.online-status');
+                    const messageBoxFooter = messageBoxElement.querySelector('.message-box1-7');
+                    const messageBoxMain = messageBoxElement.querySelector('.message-box1');
+                    messageBoxFooter.innerHTML = '';
+                    blockInput(chatData.contactsDTO.userContactName, messageBoxMain, messageBoxFooter);
+                    if (statusSpan) {
+                        statusSpan.remove();
+                    }
                     chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${chatData.contactsDTO.userContactId}/queue/online-status`);
                     chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${chatInstance.user.id}/queue/message-box-typing`);
                 }
-                const subscribedChannels = chatInstance.webSocketManagerChat.getSubscribedChannels();
-                console.log('Abone olunan kanallar:', subscribedChannels);
             }
             toastr.success(result.message);
             return true;

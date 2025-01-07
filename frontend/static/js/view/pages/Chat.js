@@ -9,7 +9,7 @@ import { createApprovedRequestHistory } from "../ApprovedRequestHistory.js";
 import WebSocketManager from "../../websocket.js";
 import { hideElements, createElement, createSvgElement } from '../utils/util.js';
 import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBox, updateChatInstance } from "../components/ChatBox.js";
-import { isOnlineStatus, isMessageBoxDomExists, renderMessage, messageBoxElementMessagesReadTick, createMessageDeliveredTickElement } from "../components/MessageBox.js";
+import { isOnlineStatus, isMessageBoxDomExists, renderMessage, messageBoxElementMessagesReadTick, createMessageDeliveredTickElement, onlineInfo } from "../components/MessageBox.js";
 import { navigateTo } from "../../index.js";
 
 export let webSocketManagerContacts;
@@ -425,25 +425,38 @@ export default class Chat extends AbstractView {
         const readMessagesChannel = `/user/${this.user.id}/queue/read-messages`;
         const chatBlock = `/user/${this.user.id}/queue/block`;
         const chatUnBlock = `/user/${this.user.id}/queue/unblock`;
-        chatInstance.webSocketManagerChat.subscribeToChannel(chatBlock, async (block) => {
-            debugger
+        this.webSocketManagerChat.subscribeToChannel(chatBlock, async (block) => {
             const blockData = JSON.parse(block.body);
-            const chatIndex = chatInstance.chatList.findIndex(chat => chat.chatDTO.id === blockData.chatRoomId);
-            if (chatIndex !== -1) {
-                chatInstance.chatList[chatIndex].userChatSettings.blockedMe = true;
+            const chatData = this.chatList.find(chat => chat.chatDTO.id === blockData.chatRoomId);
+            if (chatData) {
+                chatData.userChatSettings.blockedMe = true;
             }
             if (isMessageBoxDomExists(chatData.chatDTO.id)) {
-                chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${messageBox.data.contactsDTO.userProfileResponseDTO.id}/queue/online-status`);
-                chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${messageBox.data.contactsDTO.userProfileResponseDTO.id}/queue/message-box-typing`);
+                const messageBoxElement = document.querySelector('.message-box');
+                const statusSpan = messageBoxElement.querySelector('.online-status');
+                if (statusSpan) {
+                    statusSpan.remove();
+                }
+                this.webSocketManagerChat.unsubscribeFromChannel(`/user/${chatData.userProfileResponseDTO.id}/queue/online-status`);
+                this.webSocketManagerChat.unsubscribeFromChannel(`/user/${this.user.id}/queue/message-box-typing`);
             }
 
         });
-        chatInstance.webSocketManagerChat.subscribeToChannel(chatUnBlock, async (unblock) => {
-            debugger;
+        this.webSocketManagerChat.subscribeToChannel(chatUnBlock, async (unblock) => {
             const unblockData = JSON.parse(unblock.body);
-            const chatIndex = chatInstance.chatList.findIndex(chat => chat.chatDTO.id === unblockData.chatRoomId);
-            if (chatIndex !== -1) {
-                chatInstance.chatList[chatIndex].userChatSettings.blockedMe = false;
+            const chatData = this.chatList.find(chat => chat.chatDTO.id === unblockData.chatRoomId);
+            if (chatData) {
+                chatData.userChatSettings.blockedMe = false;
+            }
+            if (isMessageBoxDomExists(chatData.chatDTO.id)) {
+                const messageBoxElement = document.querySelector('.message-box');
+                const statusSpan = messageBoxElement.querySelector('.online-status');
+                const messageBoxOnlineStatus = messageBoxElement.querySelector('.message-box1-2-2');
+                if (statusSpan) {
+                    statusSpan.remove();
+                }
+                const chat = { user: { ...this.user }, contactsDTO: { contact: { ...chatData.contactsDTO }, userProfileResponseDTO: { ...chatData.userProfileResponseDTO } }, userChatSettings: { ...chatData.userChatSettings } }
+                await onlineInfo(chat, messageBoxOnlineStatus);
             }
 
         });
@@ -532,7 +545,7 @@ export default class Chat extends AbstractView {
             if (visibleChats) {
                 console.log("CHATDOMS >>>>>> ", visibleChats)
                 const chat = visibleChats.find(el => el.chatData.chatDTO.id === status.chatRoomId);
-                if (chat && !chat.userChatSettings.blocked && !chat.userChatSettings.blockedMe) {
+                if (chat && !chat.chatData.userChatSettings.blocked && !chat.chatData.userChatSettings.blockedMe) {
                     console.log("CHAT > ", chat)
                     const messageSpan = chat.querySelector(".message-span");
                     const messageSpanSpan = chat.querySelector(".message-span-span");

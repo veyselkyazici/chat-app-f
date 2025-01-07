@@ -2206,6 +2206,25 @@ button.chat-options-btn:focus {
 
 
 /* MESSAGE-BOX */
+
+/*Kişiyi engelleyince input alanı kapanacak */
+.block-message-input {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  min-height: 62px;
+  justify-content: center;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  background-color: #f0f2f5;
+  padding-right: 18px;
+  line-height: 20px;
+  font-size: .875rem;
+  padding-left: 18px;
+  color: #667781;
+}
+
 .online-status {
   min-height: 20px;
   line-height: 1.5385;
