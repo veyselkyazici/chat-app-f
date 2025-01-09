@@ -44,11 +44,14 @@ const checkingPrivacySettingsOnlineVisibility = (user, contactsDTO) => {
 }
 const typingStatusSubscribe = (chat, messageBoxElement) => {
     chatInstance.webSocketManagerChat.subscribeToChannel(`/user/${chat.user.id}/queue/message-box-typing`, async (typingMessage) => {
-        typingsStatus(typingMessage, chat, messageBoxElement);
+        const status = JSON.parse(typingMessage.body);
+        const messageBoxMainElement = document.querySelector('#main');
+        if (messageBoxMainElement && messageBoxMainElement.data.id === status.chatRoomId) {
+            typingsStatus(status, chat, messageBoxElement);
+        }
     });
 }
-const typingsStatus = async (typingMessage, chat, messageBoxElement) => {
-    const status = JSON.parse(typingMessage.body);
+const typingsStatus = async (status, chat, messageBoxElement) => {
     console.log("typingStatusSubscribe > ", status);
     const statusSpan = messageBoxElement.querySelector('.online-status-1');
     if (statusSpan) {
@@ -617,7 +620,6 @@ const blockInput = (userName, main, footer) => {
     main.appendChild(footer);
 }
 const unBlockInput = (chat, main, footer, typingStatus) => {
-    debugger;
     const div1 = createElement('div', 'message-box1-7-1');
 
 
@@ -777,7 +779,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     })
     const div2_1 = createElement('div', 'message-box1-7-2-1');
     div2.appendChild(div2_1);
-    
+
     let thirdChild;
     for (let i = 0; i < 6; i++) {
         const emptyDiv = createElement('div', 'x1n2onr6');
@@ -942,10 +944,12 @@ const renderMessage = (messages, lastPage, privacySettings, scroll) => {
 
             const messageDeliveredTickDiv = createMessageDeliveredTickElement();
             divMessage1_1_1_2_1_2_1_2.appendChild(messageDeliveredTickDiv);
-            span1_1_1_2_1_2_1_1.appendChild(divMessage1_1_1_2_1_2_1_2);
 
+            // span1_1_1_2_1_2_1_1.appendChild(divMessage1_1_1_2_1_2_1_2);
+            divMessage1_1_1_2_1_2_1.appendChild(span1_1_1_2_1_2_1_1);
+            divMessage1_1_1_2_1_2_1.appendChild(divMessage1_1_1_2_1_2_1_2);
             if (message.seen && chatInstance.user.privacySettings.readReceipts && privacySettings.readReceipts) {
-                const messageTickSpan = span1_1_1_2_1_2_1_1.querySelector('.message-delivered-tick-span');
+                const messageTickSpan = divMessage1_1_1_2_1_2_1.querySelector('.message-delivered-tick-span');
                 messageTickSpan.className = 'message-seen-tick-span';
                 messageTickSpan.ariaLabel = ' Okundu ';
             }
@@ -959,13 +963,14 @@ const renderMessage = (messages, lastPage, privacySettings, scroll) => {
             spanTail.setAttribute('data-icon', 'tail-out')
             spanTail.className = 'span-tail';
         } else {
+            divMessage1_1_1_2_1_2_1.appendChild(span1_1_1_2_1_2_1_1);
             divMessage12.className = "message-in";
             spanTail.setAttribute('data-icon', 'tail-in')
             spanTail.className = 'span-tail';
         }
 
 
-        divMessage1_1_1_2_1_2_1.appendChild(span1_1_1_2_1_2_1_1);
+
         divMessage1_1_1_2_1_2.appendChild(divMessage1_1_1_2_1_2_1);
         divMessage1_1_1_2_1.appendChild(divMessage1_1_1_2_1_2);
         div.appendChild(divMessage1_1_1_2_1);

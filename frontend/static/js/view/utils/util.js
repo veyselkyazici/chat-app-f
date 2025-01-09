@@ -1,4 +1,4 @@
-
+import { chatInstance } from "../pages/Chat.js";
 
 function changeContent(newContent) {
   var contentElement = document.querySelector('.chat-content');
@@ -154,22 +154,24 @@ const createSvgElement = (elementType, attributes = {}) => {
   return element;
 };
 
-const ariaSelected = (chatElementDOM, chatInstance, innerDiv) => {
+const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
+  if (Object.keys(selectedChat).length > 0 && selectedChat.chatData?.userProfileResponseDTO.id !== chatElementDOM.chatData.userProfileResponseDTO.id) {
+    const parentDiv = document.querySelector('.chat-list-content'); // Ana div'i seçin
+    const selectedDiv = parentDiv.querySelector('[aria-selected="true"]');
+    selectedDiv.setAttribute('aria-selected', 'false');
 
-  if (chatInstance.selectedChatElement && chatInstance.selectedChatElement !== chatElementDOM) {
-    const previouslySelectedInnerDiv = chatInstance.selectedChatElement.querySelector('.chat-box > div');
-    chatInstance.selectedChatElement.querySelector(".chat").classList.remove('selected-chat');
-    previouslySelectedInnerDiv.setAttribute('aria-selected', 'false');
+    selectedDiv.querySelector(".chat").classList.remove('selected-chat');
+
   }
   chatElementDOM.querySelector(".chat").classList.add('selected-chat');
   innerDiv.setAttribute('aria-selected', 'true');
-  chatInstance.selectedChatElement = chatElementDOM;
+  Object.assign(selectedChat, chatElementDOM);
 }
 
-const ariaSelectedRemove = (chatInstance) => {
-  if (chatInstance.selectedChatElement) {
-    const previouslySelectedInnerDiv = chatInstance.selectedChatElement.querySelector('.chat-box > div');
-    chatInstance.selectedChatElement.querySelector(".chat").classList.remove('selected-chat');
+const ariaSelectedRemove = (selectedChat) => {
+  if (selectedChat) {
+    const previouslySelectedInnerDiv = selectedChat.querySelector('.chat-box > div');
+    selectedChat.querySelector(".chat").classList.remove('selected-chat');
     previouslySelectedInnerDiv.setAttribute('aria-selected', 'false');
   }
 }

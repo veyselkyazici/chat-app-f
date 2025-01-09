@@ -445,7 +445,7 @@ async function handleContactClick(event) {
             }
             return;
         }
-        chatBoxElement != null ? ariaSelected(chatBoxElement, chatInstance, innerDiv) : ariaSelectedRemove(chatInstance);
+        chatBoxElement != null ? ariaSelected(chatBoxElement, chatInstance.selectedChatElement, innerDiv) : ariaSelectedRemove(chatInstance.selectedChatElement);
         let findChat = findChatRoom(chatInstance.user.id, contactData.contactsDTO.userContactId);
         let chatRequestDTO;
         if (!findChat) {
@@ -458,7 +458,7 @@ async function handleContactClick(event) {
                 },
                 user: chatInstance.user,
                 messagesDTO: { messages: [], isLastPage: true },
-                userChatSettings: {...createChatRoomAndUserChatSettings.userChatSettings},
+                userChatSettings: { ...createChatRoomAndUserChatSettings.userChatSettings },
                 id: createChatRoomAndUserChatSettings.id,
             };
         } else {

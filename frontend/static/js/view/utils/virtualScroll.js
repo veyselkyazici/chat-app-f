@@ -1,7 +1,7 @@
 // virtualScroll.js
 import { updateUnreadMessageCountAndSeenTick } from '../components/ChatBox.js'
 import { chatInstance } from "../pages/Chat.js";
-
+import { ariaSelected, ariaSelectedRemove } from '../utils/util.js';
 export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount) {
     let start = 0;
     let end = visibleItemCount;
@@ -29,12 +29,16 @@ export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount)
 // ToDo profilePhoto halledilecek
 // ToDo invitationlar yapilacak
 export function updateItems(updateItemsDTO, newStart, newEnd) {
+
     console.log("UPDATE ITEM DTO > ", updateItemsDTO, " newStart > ", newStart, " newEnd > ", newEnd)
     const itemsToUpdate = updateItemsDTO.itemsToUpdate.filter(item => {
         const translateY = parseInt(item.style.transform.replace("translateY(", "").replace("px)", ""));
         const index = translateY / 72;
         return (index < newStart || index >= newEnd);
     });
+
+
+
     itemsToUpdate.forEach(item => updateItemsDTO.removeEventListeners(item));
 
     itemsToUpdate.forEach((item, idx) => {
@@ -45,10 +49,18 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
         console.log("listItem > ", listItem)
         if (listItem) {
             if (!('invitationResponseDTO' in listItem)) {
-                console.log("item.data > ", item.data)
-                console.log("item.data > ", item)
-                console.log("item.data > ", item.chatData)
                 item.chatData = listItem;
+                if (Object.keys(chatInstance.selectedChat).length > 0) {
+                    const isSelected = chatInstance.selectedChat.chatData.userProfileResponseDTO.id === listItem.userProfileResponseDTO.id;
+                    if (isSelected) {
+                        item.setAttribute('aria-selected', 'true');
+                        item.querySelector(".chat").classList.add('selected-chat');
+                        chatInstance.selectedChat = { ...item };
+                    } else {
+                        item.setAttribute('aria-selected', 'false');
+                        item.querySelector(".chat").classList.remove('selected-chat');
+                    }
+                }
                 const time = listItem.chatDTO.lastMessageTime;
                 console.log(time)
                 const date = new Date(time);

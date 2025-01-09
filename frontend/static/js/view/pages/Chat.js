@@ -44,7 +44,7 @@ export default class Chat extends AbstractView {
             userId: "7c6f47eb-dad2-44b3-a036-ffbf92343ae2"
         };
         this.visibleItemCount = 0;
-        this.selectedChatElement = null;
+        this.selectedChat = {};
         this.user = {};
         this.chatList = [];
         this.contactList = [];

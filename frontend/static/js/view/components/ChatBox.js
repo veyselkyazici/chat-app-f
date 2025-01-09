@@ -409,7 +409,6 @@ const toggleBlockUser = async (chatData) => {
                 result = await fetchChatUnblock(chatData);
                 updateChatInstance(chatData.chatDTO.id, false);
                 if (isMessageBoxDomExists(chatData.chatDTO.id)) {
-                    debugger;
                     const messageBoxElement = document.querySelector('.message-box');
                     const statusSpan = messageBoxElement.querySelector('.online-status');
                     const messageBoxOnlineStatus = messageBoxElement.querySelector('.message-box1-2-2');
@@ -636,6 +635,8 @@ function updateChatBoxElement(chatElement, newChatData, newIndex) {
 }
 function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
     const tickElement = chatElement.querySelector('.message-delivered-tick-div');
+    const isSender = chatData.chatDTO.senderId === chatInstance.user.id;
+    const isSeen = chatData.chatDTO.seen;
     if (chatData.userChatSettings.unreadMessageCount !== 0) {
         const unreadMessageCountElement = chatElement.querySelector('.unread-message-count-div');
         if (unreadMessageCountElement) {
@@ -651,19 +652,21 @@ function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
             unreadMessageCountElement.remove();
         }
     }
-    if (chatData.chatDTO.senderId !== chatInstance.user.id) {
+    if (!isSender) {
         if (tickElement) {
             tickElement.remove();
         }
     } else {
+        const tickClassName = isSeen ? 'message-seen-tick-span' : 'message-delivered-tick-span';
+
         if (tickElement) {
-            if (tickElement.firstElementChild.className === 'message-seen-tick-span') {
-                tickElement.firstElementChild.remove();
+            if (tickElement.firstElementChild?.className !== tickClassName) {
+                tickElement.firstElementChild.className = tickClassName;
             }
         } else {
-            const messageDeliveredTickElement = createMessageDeliveredTickElement();
+            const messageTickElement = isSeen ? chatBoxLastMessageDeliveredBlueTick() : createMessageDeliveredTickElement();
             const messageElement = chatElement.querySelector('.message-span');
-            messageElement.prepend(messageDeliveredTickElement);
+            messageElement.prepend(messageTickElement);
         }
     }
 }
@@ -707,6 +710,7 @@ function closeOptionsDivOnClickOutside() {
     }
 }
 async function handleChatClick(event) {
+    debugger;
     const chatElement = event.currentTarget;
     const chatData = chatElement.chatData;
     const innerDiv = chatElement.querySelector('.chat-box > div');
@@ -716,10 +720,12 @@ async function handleChatClick(event) {
         return;
     }
 
-    ariaSelected(chatElement, chatInstance, innerDiv);
+    ariaSelected(chatElement, chatInstance.selectedChat, innerDiv);
+    chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${chatInstance.user.id}/queue/read-confirmation-recipient`);
     const readConfirmationRecipientChannel = `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`;
     chatInstance.webSocketManagerChat.subscribeToChannel(readConfirmationRecipientChannel, async (message) => {
         console.log("Read confirmation received:", message.body);
+        debugger;
         removeUnreadMessageCountElement(chatElement);
         if (!isMessageBoxDomExists(chatElement.chatData.chatDTO.id))
             await fetchMessages(chatElement.chatData);
@@ -898,29 +904,6 @@ const fetchGetLast30Messages = async (chatRoomId) => {
     }
 };
 
-const getUserByIdUrl = 'http://localhost:8080/api/v1/user/get-user-by-id';
-async function fetchGetUserById(userId) {
-    try {
-        const response = await fetch(getUserByIdUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify(userId),
-        });
-
-        if (!response.ok) {
-            throw new Error('Unauthorized');
-        }
-
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-}
 const getChatSummaryUrl = 'http://localhost:8080/api/v1/chat/chat-summary';
 async function fetchGetChatSummary(userId, userContactId, chatRoomId) {
     try {
