@@ -1,5 +1,6 @@
 import { chatInstance } from "../pages/Chat.js";
 import { isValidEmail, showError } from "../utils/util.js";
+import { fetchAddContact } from "../services/contactsService.js"
 
 const addContactModal = (options) => {
     const headerStyle = options.showBorders ? '' : 'border-bottom: none;';
@@ -83,32 +84,7 @@ const addContact = (emailDOM, nameDOM, closeModal) => {
     console.log("DENEME");
 };
 
-const addContactURL = 'http://localhost:8080/api/v1/contacts/add-contact';
-const fetchAddContact = async (dto, closeModal) => {
-    console.log(dto)
-    try {
-        const response = await fetch(addContactURL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify(dto),
-        });
 
-        if (!response.ok) {
-            const errorMessage = await response.text();
-            toastr.error(errorMessage || 'Beklenmedik bir hata oluştu.')
-            return;
-        }
-
-        toastr.success('Kullanıcı başarıyla eklendi!');
-        closeModal();
-    } catch (error) {
-        toastr.error('İşlem sırasında bir hata oluştu.');
-        throw error;
-    }
-};
 
 class AddContactRequestDTO {
     constructor({

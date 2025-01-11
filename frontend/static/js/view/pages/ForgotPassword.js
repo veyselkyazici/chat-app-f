@@ -1,7 +1,7 @@
 //Register.js
 import AbstractView from "../AbstractView.js";
 import { clearErrorMessages, isValidEmail } from "../utils/util.js";
-
+import { fetchCreateForgotPassword, fetchCheckOTP, fetchResetPassword } from "../services/authService.js"
 export default class extends AbstractView {
     constructor(params) {
         super(params);
@@ -91,14 +91,7 @@ async function sendOtp(event) {
     }
 
     try {
-        const response = await fetch("http://localhost:9000/api/v1/auth/create-forgot-password", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: email
-        });
-        console.log(response.ok)
+        const response = await createForgotPassword(email);
         if (response.ok) {
             sendOtpForm.style.display = "none";
             verifyOtpForm.style.display = "block";
@@ -129,32 +122,14 @@ async function verifyOtp(event) {
         return;
     }
 
-    const requestBody = {
-        email: email,
-        otp: otp
+    const data = await fetchCheckOTP(email, otp);
+    if (data.statusCode === 200) {
+        forgotPasswordId = data.data.forgotPasswordId;
+        verifyOtpForm.style.display = "none";
+        resetPasswordForm.style.display = "block";
+    } else {
+        showError(verifyOtpFormElements.otpDOM, data.message);
     }
-
-    await fetch("http://localhost:9000/api/v1/auth/check-otp", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
-    }).then(response => {
-        return response.json();
-    }).then(data => {
-        if (data.statusCode === 200) {
-            forgotPasswordId = data.data.forgotPasswordId;
-            verifyOtpForm.style.display = "none";
-            resetPasswordForm.style.display = "block";
-        }
-        else {
-            showError(verifyOtpFormElements.otpDOM, data => data.message);
-        }
-    })
-        .catch(error => {
-            console.error('Hata: ', error)
-        });
 }
 
 async function resetPassword(event) {
@@ -200,20 +175,13 @@ async function resetPassword(event) {
 
     console.log(requestBody)
     try {
-        const response = await fetch("http://localhost:9000/api/v1/auth/reset-password", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(requestBody)
-        });
-
+        const response = await fetchResetPassword(forgotPasswordId, password);
         if (response.ok) {
-            // showModal(null, showModalContet, redirectToLogin, false);
-            toastr.success("Şifreniz Değiştirildi")
+            toastr.success("Şifreniz Değiştirildi");
         } else {
-            console.error("Registration failed");
+            console.error("Password reset failed");
         }
+
     } catch (error) {
         console.error("An error occurred:", error);
     }

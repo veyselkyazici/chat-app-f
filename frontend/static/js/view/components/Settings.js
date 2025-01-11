@@ -2,7 +2,7 @@
 import { createElement } from "../utils/util.js";
 import { chatInstance } from "../pages/Chat.js";
 import { ifVisibilitySettingsChangeWhileMessageBoxIsOpen } from "./MessageBox.js";
-
+import { fetchUpdatePrivacy } from "../services/userService.js"
 function createSettingsHtml() {
     const span = document.querySelector(".a1-1-1");
     const existingSettingsDiv = span.querySelector(".settings");
@@ -918,30 +918,6 @@ const PrivacySettings = {
     READ_RECEIPTS: 'readReceipts'
 };
 
-const fetchUpdatePrivacy = async (userId, privacyDTO) => {
-    try {
-        const token = sessionStorage.getItem('access_token');
-        if (!token) {
-            throw new Error('Access token not found');
-        }
-        const response = await fetch(`http://localhost:8080/api/v1/user/${userId}/privacy-settings`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token
-            },
-            body: JSON.stringify(privacyDTO)
-        });
 
-        if (!response.ok) {
-            throw new Error('Gizlilik ayarları güncellenemedi');
-        }
-
-        const updatedUserProfile = await response.json();
-        return updatedUserProfile;
-    } catch (error) {
-        console.error('Hata:', error);
-    }
-}
 
 export { createSettingsHtml };

@@ -1,9 +1,10 @@
 // ChatBox.js
 import { createMessageBox, createMessageDeliveredTickElement, removeMessageBoxAndUnsubscribe, isMessageBoxDomExists, onlineInfo, blockInput, unBlockInput } from "./MessageBox.js";
-import { chatInstance, UserSettingsDTO, fetchChatUnblock, fetchChatBlock } from "../pages/Chat.js";
+import { chatInstance, UserSettingsDTO } from "../pages/Chat.js";
 import { virtualScroll, UpdateItemsDTO } from '../utils/virtualScroll.js';
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
 import { ariaSelected, createElement, createVisibilityProfilePhoto, chatBoxFormatDateTime } from "../utils/util.js";
+import { fetchGetChatSummary, fetchGetLast30Messages, fetchDeleteChat, fetchChatUnblock, fetchChatBlock } from "../services/chatService.js"
 
 function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
@@ -710,7 +711,6 @@ function closeOptionsDivOnClickOutside() {
     }
 }
 async function handleChatClick(event) {
-    debugger;
     const chatElement = event.currentTarget;
     const chatData = chatElement.chatData;
     const innerDiv = chatElement.querySelector('.chat-box > div');
@@ -725,7 +725,6 @@ async function handleChatClick(event) {
     const readConfirmationRecipientChannel = `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`;
     chatInstance.webSocketManagerChat.subscribeToChannel(readConfirmationRecipientChannel, async (message) => {
         console.log("Read confirmation received:", message.body);
-        debugger;
         removeUnreadMessageCountElement(chatElement);
         if (!isMessageBoxDomExists(chatElement.chatData.chatDTO.id))
             await fetchMessages(chatElement.chatData);
@@ -755,7 +754,7 @@ const removeUnreadMessageCountElement = (chatElement) => {
     unreadMessageCountDiv.remove();
 }
 async function fetchMessages(chatData) {
-    const messages = await fetchGetLast30Messages(chatData.chatDTO.id);
+    const messages = await fetchGetLast30Messages(chatData.chatDTO.id, chatInstance.user.id);
 
     const chatDTO = {
         contactsDTO: {
@@ -875,84 +874,6 @@ function chatBoxLastMessageDeliveredBlueTick() {
 }
 
 
-const getLast30MessagesUrl = 'http://localhost:8080/api/v1/chat/messages/last-30-messages';
-const fetchGetLast30Messages = async (chatRoomId) => {
-    try {
-        const token = sessionStorage.getItem('access_token');
-        if (!token) {
-            throw new Error('Access token not found');
-        }
 
-        const response = await fetch(`${getLast30MessagesUrl}?chatRoomId=${chatRoomId}&limit=30&userId=${chatInstance.user.id}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            }
-        });
 
-        if (!response.ok) {
-            throw new Error('Kullanıcı bulunamadı');
-        }
-
-        const result = await response.json();
-        console.log("KARDESIM TEMIZLE ARTIK SURAYI > ", result);
-        return result;
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
-
-const getChatSummaryUrl = 'http://localhost:8080/api/v1/chat/chat-summary';
-async function fetchGetChatSummary(userId, userContactId, chatRoomId) {
-    try {
-        const response = await fetch(`${getChatSummaryUrl}?userId=${userId}&userContactId=${userContactId}&chatRoomId=${chatRoomId}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Unauthorized');
-        }
-
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-}
-const fetchDeleteChatUrl = 'http://localhost:8080/api/v1/chat/delete-chat';
-export const fetchDeleteChat = async (userChatSettings) => {
-    try {
-        const token = sessionStorage.getItem('access_token');
-        if (!token) {
-            throw new Error('Access token not found');
-        }
-
-        const response = await fetch(fetchDeleteChatUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': token,
-            },
-            body: JSON.stringify(userChatSettings),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            toastr.error(errorData.message);
-            throw new Error(errorData.message);
-        } else {
-            return true;
-        }
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
-export { createChatBox, updateChatBox, moveChatToTop, handleChats, createChatBoxWithFirstMessage, isChatExists, lastMessageChange, updateChatsTranslateY, fetchGetLast30Messages, fetchGetChatSummary, isChatListLengthGreaterThanVisibleItemCount, createUnreadMessageCount, updateUnreadMessageCountAndSeenTick, closeOptionsDivOnClickOutside, toggleBlockUser, updateChatInstance };
+export { createChatBox, updateChatBox, moveChatToTop, handleChats, createChatBoxWithFirstMessage, isChatExists, lastMessageChange, updateChatsTranslateY, isChatListLengthGreaterThanVisibleItemCount, createUnreadMessageCount, updateUnreadMessageCountAndSeenTick, closeOptionsDivOnClickOutside, toggleBlockUser, updateChatInstance };

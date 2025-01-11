@@ -2,7 +2,7 @@
 import AbstractView from "../AbstractView.js";
 import { clearErrorMessages, isValidEmail, showError } from "../utils/util.js";
 import { navigateTo } from '../../index.js';
-
+import { fetchRegister } from "../services/authService.js";
 export default class extends AbstractView {
   constructor(params) {
     super(params);
@@ -48,7 +48,7 @@ export default class extends AbstractView {
   async addEventListeners() {
     const registerFormButton = document.getElementById("registerFormButton");
     if (registerFormButton) {
-      registerFormButton.addEventListener("click", register);
+      registerFormButton.addEventListener("click", registerUser);
     }
   }
 }
@@ -71,7 +71,7 @@ function getRegisterFormInputValues() {
 };
 
 
-async function register() {
+async function registerUser() {
   const { formElements, email, password, confirmPassword } = getRegisterFormInputValues();
   clearErrorMessages();
   let hasError = false;
@@ -133,22 +133,14 @@ async function register() {
   };
   console.log("asdfasdfasdfasdf")
   try {
-    const response = await fetch("http://localhost:9000/api/v1/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(requestBody)
-    });
+    const response = await fetchRegister(requestBody);
     const responseData = await response.json();
     if (response.ok) {
-
       console.log("Registration successful:", responseData);
-      toastr.success('Kayıt İşlemi Başarılı')
-      const showModalContet = `Başarıyla Kayıt Oldunuz`
-      //  showModal(null, showModalContet, redirectToLogin, undefined, false);
-      navigateTo("/login")
-      console.log("register modal bitisi")
+      toastr.success('Kayıt İşlemi Başarılı');
+      const showModalContet = `Başarıyla Kayıt Oldunuz`;
+      // showModal(null, showModalContet, redirectToLogin, undefined, false);
+      navigateTo("/login");
     } else {
       formElements.generalErrorDOM.textContent = responseData.message;
       console.error("Registration failed");

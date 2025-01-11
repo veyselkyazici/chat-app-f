@@ -1,10 +1,9 @@
 // MessageBox.js
-import { chatInstance, UserSettingsDTO } from "../pages/Chat.js";
-import { ModalOptionsDTO, showModal } from '../utils/showModal.js';
+import { chatInstance } from "../pages/Chat.js";
 import { chatBoxFormatDateTime, createElement, createSvgElement, createVisibilityProfilePhoto, messageBoxFormatDateTime } from "../utils/util.js";
 import { updateChatBox, closeOptionsDivOnClickOutside, toggleBlockUser } from "./ChatBox.js";
 import { createContactInformation } from "./ContactInformation.js";
-
+import { fetchCreateChatRoomIfNotExists, fetchGetOlder30Messages, checkUserOnlineStatus } from "../services/chatService.js"
 let caretPosition = 0;
 let caretNode = null;
 let range = null;
@@ -1392,77 +1391,9 @@ function handleOptionsBtnClick(event, chat) {
         }
     }
 }
-const createChatRoomIfNotExistsUrl = 'http://localhost:8080/api/v1/chat/create-chat-room-if-not-exists';
-async function fetchCreateChatRoomIfNotExists(userId, friendId) {
-    try {
-        const response = await fetch(createChatRoomIfNotExistsUrl, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify({ userId: userId, friendId: friendId }),
-        });
 
-        if (!response.ok) {
-            throw new Error('Unauthorized');
-        }
 
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-}
-async function checkUserOnlineStatus(userId) {
-    try {
-        const response = await fetch(`http://localhost:8080/status/is-online/${userId}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                'Authorization': sessionStorage.getItem('access_token'),
-            }
-        });
-        if (!response.ok) {
-            throw new Error('Kullanıcı durumu kontrol edilemedi');
-        }
-        const isOnline = await response.json();
-        console.log("IS ONLINE > ", isOnline)
-        return isOnline;
-    } catch (error) {
-        console.error('Hata:', error.message);
-        return false;
-    }
-}
-const getOlder30MessagesUrl = 'http://localhost:8080/api/v1/chat/messages/older-30-messages';
-const fetchGetOlder30Messages = async (chatRoomId, before) => {
-    try {
-        const token = sessionStorage.getItem('access_token');
-        if (!token) {
-            throw new Error('Access token not found');
-        }
 
-        const response = await fetch(`${getOlder30MessagesUrl}?chatRoomId=${chatRoomId}&before=${before}&limit=30`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Kullanıcı bulunamadı');
-        }
-
-        const result = await response.json();
-        console.log(result);
-        return result;
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
 class DeleteMessageDTO {
     constructor({
         senderId = '',

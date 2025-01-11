@@ -2,8 +2,9 @@
 import { navigateTo } from "../../index.js";
 import AbstractView from "../AbstractView.js";
 import { clearErrorMessages, isValidEmail } from "../utils/util.js";
-import { getUserByAuthId, userUpdateModal } from "../services/user.js";
-import { login } from "../services/authService.js";
+import { getUserByAuthId } from "../services/userService.js";
+import { userUpdateModal } from "../components/UpdateUserProfile.js";
+import { fetchLogin } from "../services/authService.js";
 
 export default class extends AbstractView {
   constructor(params) {
@@ -100,7 +101,7 @@ const loginForm = async () => {
   }
 
   if (!hasError) {
-    const response = await login(formElements, email, password);
+    const response = await fetchLogin(formElements, email, password);
     console.log("response: ", response)
 
     // ToDo Buraya bakılcak tekrardan

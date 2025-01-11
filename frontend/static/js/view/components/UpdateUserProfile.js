@@ -1,8 +1,8 @@
 
 import { showModal } from '../utils/showModal.js';
 import { formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace } from '../utils/util.js';
-
-async function userUpdateModal() {
+import { updateUserName, updateUserSurname, updateUserAbout, updateUserPhone } from '../services/userService.js';
+export async function userUpdateModal() {
     const userProfilePhotoUrl = getUserProfilePhotoUrl();
     const photoOptionsHtml = `
     <ul id="photoOptions" style="display: none;">
@@ -125,7 +125,7 @@ function toggleEditName() {
         if (nameInput.value) {
             nameInput.readOnly = true;
             editButton.innerHTML = '✎';
-            updateName(nameInput.value);
+            updateUserName(nameInput.value);
         }
         else {
             toastr.error('İsim boş olamaz');
@@ -230,167 +230,9 @@ function getUserProfilePhotoUrl() {
     return null;
 }
 
-const getUserByAuthIdUrl = 'http://localhost:8080/api/v1/user/find-by-authId';
-
-const getUserByAuthId = async (authId) => {
-    try {
-        const response = await fetch(getUserByAuthIdUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify({ authId: authId }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Kullanıcı bulunamadı');
-        }
-
-        return response.json();
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
-
-const updateUserNameUrl = 'http://localhost:8080/api/v1/user/update-user-name';
-const updateName = (name) => {
-    return fetch(updateUserNameUrl, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': sessionStorage.getItem('access_token'),
-        },
-        body: JSON.stringify({ name: name }),
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Kullanıcı bulunamadı');
-            }
-
-            return response.json();
-        })
-        .then(data => {
-            if (data === true) {
-                toastr.success('Adınız değiştirildi');
-                console.log('Kullanıcı adı başarıyla güncellendi');
-            } else {
-                toastr.error('Adınızı güncelleme başarısız');
-                console.log('Kullanıcı adı güncelleme başarısız');
-            }
-        })
-        .catch(error => {
-            console.error('Hata:', error.message);
-            throw error;
-        });
-};
-
-const updateNamee = async (name) => {
-    try {
-        const response = await fetch(updateUserNameUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify({ name: name }),
-        });
-        if (!response.ok) {
-            throw new Error('Kullanıcı bulunamadı');
-        }
-        const result = await response.json();
-        if (result) {
-            toastr.success('Adınız değiştirildi');
-            console.log('Kullanıcı adı başarıyla güncellendi');
-        } else {
-            toastr.error('Adınızı güncelleme başarısız');
-            console.log('Kullanıcı adı güncelleme başarısız');
-        }
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
-
-const updateUserSurnameUrl = 'http://localhost:8080/api/v1/user/update-user-surname';
-const updateUserSurname = async (surname) => {
-    try {
-        const response = await fetch(updateUserSurnameUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify({ surname: surname }),
-        });
-        if (!response.ok) {
-            throw new Error('Kullanıcı bulunamadı');
-        }
-        const result = await response.json();
-        if (result) {
-            toastr.success('Soyadınız değiştirildi');
-        } else {
-            toastr.error('Soyadınız güncelleme başarısız');
-        }
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
-
-const updateUserPhoneUrl = 'http://localhost:8080/api/v1/user/update-user-phone';
-const updateUserPhone = async (phone) => {
-    try {
-        const response = await fetch(updateUserPhoneUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify({ phoneNumber: phone }),
-        });
-        if (!response.ok) {
-            throw new Error('Kullanıcı bulunamadı');
-        }
-        const result = await response.json();
-        if (result) {
-            toastr.success('Telefon numaranız değiştirildi');
-        } else {
-            toastr.error('Telefon numarası güncelleme başarısız');
-        }
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
 
 
-const updateUserAboutUrl = 'http://localhost:8080/api/v1/user/update-user-about';
-const updateUserAbout = async (about) => {
-    try {
-        const response = await fetch(updateUserAboutUrl, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify({ about: about }),
-        });
-        if (!response.ok) {
-            throw new Error('Kullanıcı bulunamadı');
-        }
-        const result = await response.json();
-        if (result) {
-            toastr.success('Hakkımda değiştirildi');
-        } else {
-            toastr.error('Hakkımda güncelleme başarısız');
-        }
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
 
 
-export { userUpdateModal, getUserByAuthId };
+
+export { userUpdateModal };

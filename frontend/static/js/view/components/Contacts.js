@@ -1,10 +1,11 @@
 // Contacts.js
 import { createMessageBox, removeMessageBoxAndUnsubscribe, fetchCreateChatRoomIfNotExists } from './MessageBox.js';
-import { fetchGetLast30Messages } from './ChatBox.js';
 import { chatInstance } from "../pages/Chat.js";
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
 import { virtualScroll, UpdateItemsDTO } from '../utils/virtualScroll.js';
 import { ariaSelected, ariaSelectedRemove, createElement, createSvgElement, createVisibilityProfilePhoto } from '../utils/util.js';
+import { deleteContactOrInvitation, fetchSendInvitation } from '../services/contactsService.js';
+import { fetchGetLast30Messages } from '../services/chatService.js';
 
 function createContactHTML(user, index) {
     console.log("CREATE CONTACT HTML USER > ", user)
@@ -462,7 +463,7 @@ async function handleContactClick(event) {
                 id: createChatRoomAndUserChatSettings.id,
             };
         } else {
-            const messages = await fetchGetLast30Messages(findChat.chatDTO.id);
+            const messages = await fetchGetLast30Messages(findChat.chatDTO.id, chatInstance.user.id);
             chatRequestDTO = {
                 contactsDTO: {
                     contact: { ...contactData.contactsDTO },
@@ -722,135 +723,5 @@ function closeOptionsDivOnClickOutside(event) {
         document.removeEventListener('click', closeOptionsDivOnClickOutside);
     }
 }
-const getChatMessage = 'http://localhost:8080/api/v1/chat/get-chat-message';
-const fetchGetChatMessage = async (chatRequestDTO) => {
-    try {
-        const response = await fetch(getChatMessage, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify(chatRequestDTO),
-        });
-        if (!response.ok) {
-            throw new Error('Kullanıcı bulunamadı');
-        }
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
-const getLatestMessagesUrl = 'http://localhost:8080/api/v1/chat/messages/latest';
-const fetchGetLatestMessages = async (chatRoomId) => {
-    try {
-        const token = sessionStorage.getItem('access_token');
-        if (!token) {
-            throw new Error('Access token not found');
-        }
 
-        const response = await fetch(`${getLatestMessagesUrl}?chatRoomId=${chatRoomId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Kullanıcı bulunamadı');
-        }
-
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-};
-
-const checkChatRoomExistsUrl = 'http://localhost:8080/api/v1/chat/check-chat-room-exists';
-
-async function fetchCheckChatRoomExists(userId, contactId) {
-    try {
-        const response = await fetch(`${checkChatRoomExistsUrl}/${userId}/${contactId}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Unauthorized');
-        }
-
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-}
-
-
-const deleteContactUrl = 'http://localhost:8080/api/v1/contacts';
-const deleteInvitationUrl = 'http://localhost:8080/api/v1/invitation';
-async function deleteContactOrInvitation(id, type) {
-    console.log(id)
-    console.log(type)
-    const url = type === 'contact' ? `${deleteContactUrl}/${id}` : `${deleteInvitationUrl}/${id}`;
-    try {
-        const response = await fetch(url, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Unauthorized');
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('Hata:', error.message);
-        throw error;
-    }
-}
-
-
-async function fetchSendInvitation(data) {
-    const requestBody = {
-        invitationId: data.invitationId,
-        inviteeEmail: data.email,
-        contactName: data.userContactName,
-        inviterUserId: data.inviterUserId,
-        isInvited: data.invited,
-        inviterEmail: null
-    }
-    const sendInvitationUrl = `http://localhost:8080/api/v1/invitation/send-invitation`;
-    try {
-        const response = await fetch(sendInvitationUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': sessionStorage.getItem('access_token'),
-            },
-            body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return true;
-        console.log('Updated Invitation:', updatedInvitation);
-    } catch (error) {
-        console.error('Error updating invitation:', error);
-    }
-}
 export default createContactList;
