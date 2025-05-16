@@ -162,9 +162,9 @@ export async function updateUserAbout(about) {
     }
 }
 
-export const getUserByAuthId = async (authId) => {
+export const fetchGetUserByAuthId = async (authId) => {
     try {
-        const response = await fetch(`${USER_SERVICE_URL}/find-by-authId`, {
+        const response = await fetch(`${USER_SERVICE_URL}/get-user-by-auth-id`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -183,3 +183,48 @@ export const getUserByAuthId = async (authId) => {
         throw error;
     }
 };
+
+
+export const fetchGetUserWithUserKeyByAuthId = async (authId) => {
+    try {
+        const response = await fetch(`${USER_SERVICE_URL}/get-user-with-user-key-by-auth-id`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': sessionStorage.getItem('access_token'),
+            },
+            body: JSON.stringify({ authId: authId }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Kullanıcı bulunamadı');
+        }
+
+        return response.json();
+    } catch (error) {
+        console.error('Hata:', error.message);
+        throw error;
+    }
+};
+
+export async function fetchUploadPhoto(formData, userId) {
+    try {
+        const response = await fetch(`${USER_SERVICE_URL}/${userId}/upload-profile-picture`, {
+            method: 'POST',
+            headers: {
+                'Authorization': sessionStorage.getItem('access_token'),
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorMessage = await response.text();
+            throw new Error(`Error: ${response.status} - ${errorMessage}`);
+        }
+
+        return await response.text(); 
+    } catch (error) {
+        console.error('Error in uploadPhoto:', error);
+        throw error;
+    }
+}

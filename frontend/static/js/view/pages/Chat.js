@@ -11,9 +11,12 @@ import { hideElements, createElement, createSvgElement } from '../utils/util.js'
 import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBox } from "../components/ChatBox.js";
 import { isOnlineStatus, isMessageBoxDomExists, renderMessage, messageBoxElementMessagesReadTick, createMessageDeliveredTickElement, onlineInfo } from "../components/MessageBox.js";
 import { navigateTo } from "../../index.js";
-import { fetchGetUserWithPrivacySettingsByToken } from "../services/userService.js"
+import { fetchGetUserWithPrivacySettingsByToken, fetchGetUserByAuthId, fetchGetUserWithUserKeyByAuthId } from "../services/userService.js"
 import { fetchGetContactList } from "../services/contactsService.js"
 import { fetchGetChatSummaries } from "../services/chatService.js"
+import { userUpdateModal } from "../components/UpdateUserProfile.js"
+import { deriveAESKey, decryptPrivateKey, importPublicKey, base64ToUint8Array, getUserKey, setUserKey, decryptMessage } from "../utils/e2ee.js";
+
 
 export let webSocketManagerContacts;
 export let webSocketManagerChat;
@@ -187,51 +190,10 @@ export default class Chat extends AbstractView {
 
 
                         </div>
-                        <button class="xdj66r" data-tab="4" aria-label="Okunmamış sohbetler filtresi"
-                            aria-pressed="false" title="Okunmamış sohbetler filtresi">
-                            <div class="x1c4vz4f">
-                                <span data-icon="filter" class=""><svg viewBox="0 0 24 24" height="20" width="20"
-                                        preserveAspectRatio="xMidYMid meet" class="" fill="none">
-                                        <title>filter</title>
-                                        <path
-                                            d="M11 18C10.7167 18 10.4792 17.9042 10.2875 17.7125C10.0958 17.5208 10 17.2833 10 17C10 16.7167 10.0958 16.4792 10.2875 16.2875C10.4792 16.0958 10.7167 16 11 16H13C13.2833 16 13.5208 16.0958 13.7125 16.2875C13.9042 16.4792 14 16.7167 14 17C14 17.2833 13.9042 17.5208 13.7125 17.7125C13.5208 17.9042 13.2833 18 13 18H11ZM7 13C6.71667 13 6.47917 12.9042 6.2875 12.7125C6.09583 12.5208 6 12.2833 6 12C6 11.7167 6.09583 11.4792 6.2875 11.2875C6.47917 11.0958 6.71667 11 7 11H17C17.2833 11 17.5208 11.0958 17.7125 11.2875C17.9042 11.4792 18 11.7167 18 12C18 12.2833 17.9042 12.5208 17.7125 12.7125C17.5208 12.9042 17.2833 13 17 13H7ZM4 8C3.71667 8 3.47917 7.90417 3.2875 7.7125C3.09583 7.52083 3 7.28333 3 7C3 6.71667 3.09583 6.47917 3.2875 6.2875C3.47917 6.09583 3.71667 6 4 6H20C20.2833 6 20.5208 6.09583 20.7125 6.2875C20.9042 6.47917 21 6.71667 21 7C21 7.28333 20.9042 7.52083 20.7125 7.7125C20.5208 7.90417 20.2833 8 20 8H4Z"
-                                            fill="currentColor"></path>
-                                    </svg></span>
-                            </div>
-                        </button>
                     </div>
                 </div>
                 <span class="x78zum5"></span>
                 <div class="pane-side" id="pane-side">
-                    <button data-tab="4" class="archiv-button" aria-label="Arşivlenmiş">
-                        <div class="button1">
-                            <div class="div1">
-                                <div class="div1-1">
-                                    <div class="div1-1-1">
-                                        <span data-icon="archived" class>
-                                            <svg viewBox="0 0 20 20" height="20" width="20"
-                                                preserveAspectRatio="xMidYMid" class fill="none">
-                                                <title>archived</title>
-                                                <path
-                                                    d="M18.54 3.23L17.15 1.55C16.88 1.21 16.47 1 16 1H4C3.53 1 3.12 1.21 2.84 1.55L1.46 3.23C1.17 3.57 1 4.02 1 4.5V17C1 18.1 1.9 19 3 19H17C18.1 19 19 18.1 19 17V4.5C19 4.02 18.83 3.57 18.54 3.23ZM4.24 3H15.76L16.57 3.97H3.44L4.24 3ZM3 17V6H17V17H3ZM11.45 8H8.55V11H6L10 15L14 11H11.45V8Z"
-                                                    fill="currentColor"></path>
-                                            </svg>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="div2">
-                                <div class="div2-2" role="group">
-                                    <div class="div2-2-1">Arşivlenmiş</div>
-                                </div>
-                            </div>
-                            <div class="div3">
-                                <div class="div3-1">
-                                    <span class="div3-1-1" aria-label="2 okunmamış mesaj">2</span>
-                                </div>
-                            </div>
-                        </div>
-                    </button>
                     <div class="xh8yej33">
                         <div class="x9f6199"></div>
                     </div>
@@ -428,6 +390,30 @@ export default class Chat extends AbstractView {
         const readMessagesChannel = `/user/${this.user.id}/queue/read-messages`;
         const chatBlock = `/user/${this.user.id}/queue/block`;
         const chatUnBlock = `/user/${this.user.id}/queue/unblock`;
+        const error = `/user/${this.user.id}/queue/error-message`;
+
+
+        this.webSocketManagerChat.subscribeToChannel(error, async (errorMessageDTO) => {
+            const errorMessage = JSON.parse(errorMessageDTO.body);
+            const user = { name: "Veysel", age: "26" };
+            console.log("USER >", typeof user);
+            const userStringfy = JSON.stringify(user);
+            console.log("USERSTRINGFY >", typeof userStringfy);
+            console.log(userStringfy);
+            console.log(user);
+            const userParse = JSON.parse(userStringfy);
+            console.log("USERPARSE >", typeof userParse);
+            console.log(userParse);
+
+
+
+
+            console.log(typeof errorMessage);
+            toastr.error(errorMessage.message);
+
+
+        });
+
         this.webSocketManagerChat.subscribeToChannel(chatBlock, async (block) => {
             const blockData = JSON.parse(block.body);
             const chatData = this.chatList.find(chat => chat.chatDTO.id === blockData.chatRoomId);
@@ -487,7 +473,9 @@ export default class Chat extends AbstractView {
         });
 
         this.webSocketManagerChat.subscribeToChannel(recipientMessageChannel, async (recipientMessage) => {
+            debugger;
             const recipientJSON = JSON.parse(recipientMessage.body);
+            const decryptedMessage = await decryptMessage(recipientJSON);
             console.log("RECIPENT > ", recipientJSON)
             const chat = this.chatList.find(chat => chat.chatDTO.id === recipientJSON.chatRoomId);
             if (!chat) {
@@ -496,7 +484,7 @@ export default class Chat extends AbstractView {
                 await createChatBoxWithFirstMessage(recipientJSON)
             } else {
                 chat.userChatSettings.unreadMessageCount = recipientJSON.unreadMessageCount;
-                chat.chatDTO.lastMessage = recipientJSON.messageContent;
+                chat.chatDTO.lastMessage = decryptedMessage;
                 chat.chatDTO.lastMessageTime = recipientJSON.fullDateTime;
                 updateChatBox(chat);
                 const chatElements = [...document.querySelectorAll('.chat1')];
@@ -529,9 +517,9 @@ export default class Chat extends AbstractView {
                         senderId: recipientJSON.senderId
                     };
                     chatInstance.webSocketManagerChat.sendMessageToAppChannel("read-message", dto);
-                    renderMessage(recipientJSON, null, chat.userProfileResponseDTO.privacySettings, true);
+                    renderMessage({ messages: recipientJSON, lastPage: null }, chat.userProfileResponseDTO.privacySettings, true);
                 }
-                lastMessageChange(recipientJSON, chatElement);
+                lastMessageChange(recipientJSON.chatRoomId, chatElement, decryptedMessage, recipientJSON.fullDateTime);
 
 
             }
@@ -541,7 +529,7 @@ export default class Chat extends AbstractView {
         //     console.log("Read confirmation received:", message.body);
 
         // });
-        this.webSocketManagerChat.subscribeToChannel(typingChannel, (typingMessage) => {
+        this.webSocketManagerChat.subscribeToChannel(typingChannel, async (typingMessage) => {
             const status = JSON.parse(typingMessage.body);
             const visibleChats = [...document.querySelectorAll(".chat1")];
             console.log("STATUS > ", status)
@@ -568,7 +556,7 @@ export default class Chat extends AbstractView {
                             messageSpan.prepend(messageDeliveredTickElement);
 
                         }
-                        messageSpanSpan.textContent = chat.chatData.chatDTO.lastMessage;
+                        messageSpanSpan.textContent = await decryptMessage(chat.chatData.chatDTO, chat.chatData.chatDTO.senderId === this.user.id);
                     }
                 }
             }
@@ -576,22 +564,49 @@ export default class Chat extends AbstractView {
     }
 
     async initialData() {
-        this.user = await fetchGetUserWithPrivacySettingsByToken();
-        console.log("USER >>", this.user)
-        this.contactList = await fetchGetContactList(this.user.id);
-        console.log("CONTACT LIST > ", this.contactList)
-        this.chatList = await fetchGetChatSummaries(this.user.id);
-        // for (let i = 1; i <= 81; i++) {
-        //     const newData = JSON.parse(JSON.stringify(this.data)); // data nesnesinin derin bir kopyasını oluşturur
-        //     newData.messages[0].messageContent = i;
-        //     newData.id = i;
-        //     newData.friendEmail = i;
-        //     newData.lastMessage = i;
-        //     newData.lastMessageTime = i;
-        //     this.chatList.push(newData)
-        // }
-        console.log("CHAT LIST >>> ", this.chatList)
-        handleChats();
+        const storageId = sessionStorage.getItem('id');
+        this.user = await fetchGetUserWithUserKeyByAuthId(storageId);
+
+        if (this.user) {
+
+            if (this.user.updatedAt == null) {
+                userUpdateModal(this.user, false);
+            }
+            if (!getUserKey()) {
+                const {
+                    encryptedPrivateKey,
+                    publicKey: exportedPublicKey,
+                    salt,
+                    iv,
+                } = this.user.userKey;
+                const aesKey = await deriveAESKey(password, new base64ToUint8Array(salt));
+                const privateKey = await decryptPrivateKey(
+                    new base64ToUint8Array(encryptedPrivateKey),
+                    aesKey,
+                    new base64ToUint8Array(iv)
+                );
+                const publicKey = await importPublicKey(new base64ToUint8Array(exportedPublicKey));
+                setUserKey({ privateKey, publicKey });
+            }
+
+            this.contactList = await fetchGetContactList(this.user.id);
+            console.log("CONTACT LIST > ", this.contactList)
+            this.chatList = await fetchGetChatSummaries(this.user.id);
+            // for (let i = 1; i <= 81; i++) {
+            //     const newData = JSON.parse(JSON.stringify(this.data)); // data nesnesinin derin bir kopyasını oluşturur
+            //     newData.messages[0].messageContent = i;
+            //     newData.id = i;
+            //     newData.friendEmail = i;
+            //     newData.lastMessage = i;
+            //     newData.lastMessageTime = i;
+            //     this.chatList.push(newData)
+            // }
+            console.log("CHAT LIST >>> ", this.chatList)
+            handleChats();
+        } else {
+            // User olusturulmada herhangi bir problem olursa veya user bulunamadıysa
+        }
+
     }
 
     addEventListeners() {
@@ -603,16 +618,18 @@ export default class Chat extends AbstractView {
         const chatSearchBarElement = document.querySelector('#chats-search-bar');
         const friendRequestReplyNotificationElement = document.querySelector(".friend-request-reply-notification");
         const settingsBtnElement = document.querySelector(".settings-btn");
-        const box = document.querySelector(".box")
+        const userProfileImageButton = document.querySelector(".user-profile-photo");
 
-        console.log("ABCDE")
+        if (userProfileImageButton) {
+            userProfileImageButton.addEventListener("click", () => {
+                userUpdateModal(this.user, true);
+            });
 
-        // window.addEventListener('resize', () => { this.handleReSize() });
+        }
+
 
         if (addFriendButtonElement) {
             addFriendButtonElement.addEventListener("click", () => {
-                // hideElements(chatListHeaderElement, chatListContentElement, chatSearchBarElement)
-                // addFriendView();
                 const modalDTO = new ModalOptionsDTO({
                     title: 'Kişi ekle',
                     buttonText: 'Ekle',

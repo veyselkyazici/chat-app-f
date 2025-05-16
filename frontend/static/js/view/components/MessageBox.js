@@ -1,9 +1,10 @@
 // MessageBox.js
 import { chatInstance } from "../pages/Chat.js";
-import { chatBoxFormatDateTime, createElement, createSvgElement, createVisibilityProfilePhoto, messageBoxFormatDateTime } from "../utils/util.js";
+import { chatBoxLastMessageFormatDateTime, createElement, createSvgElement, createVisibilityProfilePhoto, messageBoxFormatDateTime } from "../utils/util.js";
 import { updateChatBox, closeOptionsDivOnClickOutside, toggleBlockUser } from "./ChatBox.js";
 import { createContactInformation } from "./ContactInformation.js";
 import { fetchCreateChatRoomIfNotExists, fetchGetOlder30Messages, checkUserOnlineStatus } from "../services/chatService.js"
+import { encryptMessage, decryptMessage, base64ToUint8Array, importPublicKey } from "../utils/e2ee.js"
 let caretPosition = 0;
 let caretNode = null;
 let range = null;
@@ -16,7 +17,7 @@ async function createMessageBox(chat) {
     let typingStatus = { isTyping: false, previousText: "" };
     const messageBoxElement = await createMessageBoxHTML(chat, typingStatus);
     // ToDo lastPage bakilacak renderMessage
-    renderMessage(chat.messagesDTO.messages, chat.messagesDTO.lastPage, chat.contactsDTO.userProfileResponseDTO.privacySettings, true);
+    renderMessage(chat.messagesDTO, chat.contactsDTO.userProfileResponseDTO.privacySettings, true);
     chat.friendEmail;
     chat.image;
     chat.messages;
@@ -93,16 +94,17 @@ const onlineStatus = async (statusMessage, chat, messageBoxElement) => {
 };
 
 const handleTextBlur = (chat, typingStatus, textArea) => {
-    typingStatus.previousText = textArea.textContent;
+    const hasElement = textArea.querySelector('.message-box1-7-1-1-1-2-1-1-1-2') !== null;
+    typingStatus.previousText = hasElement ? null : textArea.textContent;
     if (typingStatus.previousText) {
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = false;
     }
 }
 const handleTextFocus = (chat, typingStatus, textArea) => {
-    console.log("typingStatus FOCUS > ", typingStatus)
-    console.log("typingStatus FOCUS > ", textArea.textContent)
-    if (!typingStatus.isTyping && typingStatus.previousText.length > 0) {
+    const hasElement = textArea.querySelector('.message-box1-7-1-1-1-2-1-1-1-2') !== null;
+    typingStatus.previousText = hasElement ? null : textArea.textContent;
+    if (!typingStatus.isTyping && typingStatus.previousText?.length > 0) {
         console.log("typingStatus > ", typingStatus)
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
@@ -542,7 +544,7 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
         x: "0px",
         y: "0px"
     });
-    const titleChevron = createElement('title', null, null, null, 'chevron');
+    const titleChevron = createElement('title', '', null, null, 'chevron');
     const pathChevron = createSvgElement('path', {
         fill: "currentColor",
         d: "M 11 21.212 L 17.35 15 L 11 8.65 l 1.932 -1.932 L 21.215 15 l -8.282 8.282 L 11 21.212 Z"
@@ -600,13 +602,16 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
     const span = createElement('span', '');
     main.appendChild(span);
     messageBoxElement.appendChild(main);
+    const divContenteditable = main.querySelector('.message-box1-7-1-1-1-2-1-1-1');
+    divContenteditable.focus();
+
     messageBox1_2.addEventListener('scroll', async () => {
         if (messageBox1_2.scrollTop === 0) {
             const visibleFirstMessageData = getFirstMessageDate();
             console.log("visibleFirstMessageData > ", visibleFirstMessageData)
             console.log('En üstteyiz, eski mesajlar yükleniyor...');
             const older30Messages = await fetchGetOlder30Messages(visibleFirstMessageData.message.chatRoomId, visibleFirstMessageData.message.fullDateTime);
-            renderMessage(older30Messages.messages, older30Messages.lastPage, chat.contactsDTO.userProfileResponseDTO.privacySettings, false);
+            renderMessage(older30Messages.messages, chat.contactsDTO.userProfileResponseDTO.privacySettings, false);
         } else {
 
         }
@@ -807,7 +812,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
 
     divContenteditable.addEventListener("blur", () => handleTextBlur(chat, typingStatus, textArea));
     divContenteditable.addEventListener("focus", () => handleTextFocus(chat, typingStatus, textArea));
-    divContenteditable.focus();
+    // divContenteditable.focus();
     div1_7_1_1_1_1_1.addEventListener('click', () => {
         showEmojiPicker(panel, thirdChild);
     });
@@ -839,10 +844,18 @@ const isMessageBoxDomExists = (chatRoomId) => {
         return false;
     }
 }
-const renderMessage = (messages, lastPage, privacySettings, scroll) => {
-    console.log("MESSAGES RENDER MESSAGE > ", messages)
+const renderMessage = async (messageDTO, privacySettings, scroll) => {
+    debugger;
+    console.log("MESSAGES RENDER MESSAGE > ", messageDTO)
     const messageRenderDOM = document.querySelector('.message-box1-5-1-2-2');
-    const messagesArray = Array.isArray(messages) ? messages : [messages];
+    let messagesArray, lastPage;
+    if (Array.isArray(messageDTO.messages)) {
+        messagesArray = messageDTO.messages;
+        lastPage = messageDTO.lastPage;
+    } else {
+        lastPage = null;
+        messagesArray = [messageDTO.messages];
+    }
     const oldHeight = messageRenderDOM.clientHeight;
 
     const today = new Date();
@@ -856,33 +869,48 @@ const renderMessage = (messages, lastPage, privacySettings, scroll) => {
     const rtf = new Intl.RelativeTimeFormat(userLanguage, { numeric: 'auto' });
 
     // Gün başlıklarını kontrol etmek için kullanılan değişken
-    let lastRenderedDate = messageRenderDOM.querySelector('div[role="row"]') ? messageRenderDOM.querySelector('div[role="row"]').messageData.message.fullDateTime : null;
+    let lastRenderedDate = messageRenderDOM.querySelector('div[role="row"]') ? messageRenderDOM.querySelector('div[role="row"]').messageData.messageDTO.fullDateTime : null;
     const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
     const addDateHeader = (dateString) => {
+        debugger;
         const formatDate = messageBoxFormatDateTime(dateString);
         const applicationDiv = document.querySelector('.message-box1-5-1-2-2');
 
         const todayDiv = createElement("div", "message-box1-5-1-2-2-1", null, { "tabindex": "-1" });
         const todaySpan = createElement("span", "message-box1-5-1-2-2-1-1", { "minHeight": "0px" }, { "dir": "auto", "aria-label": "" }, formatDate);
         todayDiv.appendChild(todaySpan);
-        applicationDiv.prepend(todayDiv);
+        applicationDiv.append(todayDiv);
     };
+    const decryptedMessages = await Promise.all(
+        messagesArray.map(async message => {
+            try {
+                const decrypted = await decryptMessage(message, message.senderId === chatInstance.user.id);
+                return { ...message, decryptedContent: decrypted };
+            } catch (error) {
+                console.error("Mesaj çözme hatası:", error);
+                return { ...message, decryptedContent: "Şifreli mesaj çözülemedi" };
+            }
+        })
+    );
 
-    messagesArray.forEach(message => {
+
+    decryptedMessages.forEach(message => {
         const messageDate = new Date(message.fullDateTime).toDateString();
 
-        if (lastRenderedDate !== messageDate) {
+        if (lastRenderedDate) {
+            if (lastRenderedDate !== messageDate) {
+                addDateHeader(message.fullDateTime);
+                lastRenderedDate = messageDate; // Güncel tarih olarak yeni değeri ata
+            }
+        } else {
             addDateHeader(message.fullDateTime);
-            lastRenderedDate = messageDate; // Güncel tarih olarak yeni değeri ata
+            lastRenderedDate = messageDate;
         }
 
 
         const rowDOM = createElement('div', '', null, { 'role': 'row' });
-        // ToDo lastPage
-        console.log("LAST PGAE > ", lastPage)
-        rowDOM.messageData = { message: message, isLastPage: !lastPage ? lastPage : true };
-        console.log("LAST PGAE > ", lastPage)
+        rowDOM.messageData = { messageDTO: message, isLastPage: !lastPage ? lastPage : true };
         const divMessage = createElement('div', 'message1');
         // divMessage.data = message;
         const divMessage12 = createElement('div', '');
@@ -901,7 +929,7 @@ const renderMessage = (messages, lastPage, privacySettings, scroll) => {
         const divMessage1_1_1_2_1_1 = createElement('div', 'message1-1-1-2-1-1', null, { 'data-pre-plain-text': '' });
         const divMessage1_1_1_2_1_1_1 = createElement('div', 'message1-1-1-2-1-1-1');
         const spanMessage1_1_1_2_1_1_1_1 = createElement('span', 'message1-1-1-2-1-1-1-1', { 'min-height': '0px' }, { 'dir': 'ltr' });
-        const spanMessageContent = createElement('span', '', null, null, message.messageContent);
+        const spanMessageContent = createElement('span', '', null, null, message.decryptedContent);
         const span1_1 = createElement('span', '');
         const span1_1_1_2_1_1_1_2 = createElement('span', 'message1-1-1-2-1-1-1-2', null, { 'aria-hidden': 'true' });
         const span1_1_1_2_1_1_1_2_1 = createElement('span', 'message1-1-1-2-1-1-1-2-1', null, null);
@@ -1105,8 +1133,12 @@ const sendMessage = async (chat, sendButton, typingStatus) => {
     console.log("SEND MESSAGE CHAT >>> ", chat)
     if (messageContent && !chat.userChatSettings.blocked && !chat.userChatSettings.blockedMe) {
         // const messageDTO = new MessageDTO({ chatRoomId: chat.id, messageContent: messageContent, fullDateTime: new Date().toISOString, senderId: chat.user.id, recipientId: chat.contactsDTO.userProfileResponseDTO.id })
-        const message = {
-            messageContent: messageContent,
+        const encryptedData = await encryptMessage(messageContent, await importPublicKey(base64ToUint8Array(chat.contactsDTO.userProfileResponseDTO.userKey.publicKey)), await importPublicKey(base64ToUint8Array(chat.user.userKey.publicKey)));
+        const messageDTO = {
+            encryptedMessage: encryptedData.encryptedMessage,
+            encryptedKeyForRecipient: encryptedData.encryptedKeyForRecipient,
+            encryptedKeyForSender: encryptedData.encryptedKeyForSender,
+            iv: encryptedData.iv,
             fullDateTime: new Date().toISOString(),
             senderId: chat.user.id,
             recipientId: chat.contactsDTO.userProfileResponseDTO.id,
@@ -1114,25 +1146,26 @@ const sendMessage = async (chat, sendButton, typingStatus) => {
             userChatSettingsId: chat.userChatSettings?.id,
             seen: false
         };
-        console.log("BX10 > ", message)
+        console.log("BX10 > ", messageDTO)
         const chatIndex = chatInstance.chatList.findIndex(data => data.chatDTO.id == chat.id);
+
         if (chatIndex === -1) {
             const newChat = {
-                chatDTO: { id: message.chatRoomId, lastMessage: message.messageContent, lastMessageTime: message.fullDateTime, senderId: chat.user.id, recipientId: chat.contactsDTO.userProfileResponseDTO.id },
+                chatDTO: { id: messageDTO.chatRoomId, encryptedKeyForRecipient: encryptedData.encryptedKeyForRecipient, encryptedKeyForSender: encryptedData.encryptedKeyForSender, encryptedMessage: encryptedData.encryptedMessage, iv: encryptedData.iv, lastMessageTime: messageDTO.fullDateTime, senderId: chat.user.id, recipientId: chat.contactsDTO.userProfileResponseDTO.id },
                 userProfileResponseDTO: { ...chat.contactsDTO.userProfileResponseDTO },
                 userChatSettings: { ...chat.userChatSettings },
                 contactsDTO: { ...chat.contactsDTO.contact }
             }
             updateChatBox(newChat);
-            chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
+            chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", messageDTO);
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         }
         else {
-            chatInstance.chatList[chatIndex].chatDTO.lastMessage = message.messageContent;
-            chatInstance.chatList[chatIndex].chatDTO.lastMessageTime = message.fullDateTime;
-            chatInstance.chatList[chatIndex].chatDTO.recipientId = message.recipientId;
-            chatInstance.chatList[chatIndex].chatDTO.senderId = message.senderId;
-            chatInstance.chatList[chatIndex].chatDTO.lastMessageTime = message.fullDateTime;
+            chatInstance.chatList[chatIndex].chatDTO.lastMessage = messageContent;
+            chatInstance.chatList[chatIndex].chatDTO.lastMessageTime = messageDTO.fullDateTime;
+            chatInstance.chatList[chatIndex].chatDTO.recipientId = messageDTO.recipientId;
+            chatInstance.chatList[chatIndex].chatDTO.senderId = messageDTO.senderId;
+            chatInstance.chatList[chatIndex].chatDTO.lastMessageTime = messageDTO.fullDateTime;
             chatInstance.chatList[chatIndex].chatDTO.seen = false;
             chatInstance.chatList[chatIndex].chatDTO.messageId = null;
             console.log("AX12 > ", chatInstance.chatList[chatIndex])
@@ -1142,8 +1175,8 @@ const sendMessage = async (chat, sendButton, typingStatus) => {
                 const messageSpan = chatElement.querySelector('.message-span');
                 const lastMessageElement = chatElement.querySelector('.message-span-span');
                 const lastMessageTimeElement = chatElement.querySelector('.time');
-                lastMessageElement.textContent = message.messageContent;
-                lastMessageTimeElement.textContent = chatBoxFormatDateTime(message.fullDateTime);
+                lastMessageElement.textContent = messageContent;
+                lastMessageTimeElement.textContent = chatBoxLastMessageFormatDateTime(messageDTO.fullDateTime);
                 if (messageSpan.children.length === 2) {
                     messageSpan.removeChild(messageSpan.firstElementChild);
                     const messageDeliveredTickDiv = createMessageDeliveredTickElement();
@@ -1154,12 +1187,12 @@ const sendMessage = async (chat, sendButton, typingStatus) => {
                 }
             }
             updateChatBox(chatInstance.chatList[chatIndex]);
-            chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", message);
+            chatInstance.webSocketManagerChat.sendMessageToAppChannel("send-message", messageDTO);
             chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: false, friendId: chat.contactsDTO.userProfileResponseDTO.id });
 
         }
         // ToDo lastPage bakilacak renderMessage
-        renderMessage(message, null, chat.contactsDTO.userProfileResponseDTO.privacySettings, true);
+        renderMessage({ messages: messageDTO, lastPage: null }, chat.contactsDTO.userProfileResponseDTO.privacySettings, true);
         messageContentElement.removeChild(messageContentElement.firstElementChild);
         messageContentElement.appendChild(createElement('br', ''));
         updatePlaceholder(messageContentElement.parentElement.parentElement, messageContentElement.parentElement, sendButton, typingStatus)
@@ -1213,38 +1246,39 @@ function getHourAndMinute(dateTimeString) {
     return formattedTime;
 }
 
-function formatDateTime(dateTime) {
+function formatDateTime(utcDateTimeString) {
+    debugger;
     const now = new Date();
-    const date = new Date(dateTime);
-    const diffInDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+    const localDate = new Date(utcDateTimeString);
 
+    const diffInDays = Math.floor((now - localDate) / (1000 * 60 * 60 * 24));
     const userLanguage = navigator.language || 'en-US';
 
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const hours = localDate.getHours().toString().padStart(2, '0');
+    const minutes = localDate.getMinutes().toString().padStart(2, '0');
     const formattedTime = `${hours}:${minutes}`;
 
     let relativeTimeText;
     const relativeTimeFormatter = new Intl.RelativeTimeFormat(userLanguage, { numeric: 'auto' });
-
     if (diffInDays === 0) {
         relativeTimeText = relativeTimeFormatter.format(0, 'day');
     } else if (diffInDays === 1) {
         relativeTimeText = relativeTimeFormatter.format(-1, 'day');
     } else if (diffInDays < 7) {
-        relativeTimeText = new Intl.DateTimeFormat(userLanguage, { weekday: 'long' }).format(date);
-    } else if (now.getFullYear() === date.getFullYear()) {
+        relativeTimeText = new Intl.DateTimeFormat(userLanguage, {
+            weekday: 'long'
+        }).format(localDate);
+    } else if (now.getFullYear() === localDate.getFullYear()) {
         relativeTimeText = new Intl.DateTimeFormat(userLanguage, {
             month: 'long',
             day: 'numeric'
-        }).format(date);
+        }).format(localDate);
     } else {
         relativeTimeText = new Intl.DateTimeFormat(userLanguage, {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
-        }).format(date);
-
+        }).format(localDate);
     }
 
     let lastSeenPrefix = "last seen";

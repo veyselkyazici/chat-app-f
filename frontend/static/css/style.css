@@ -194,14 +194,15 @@ body>.footer {
   background-color: #111B21;
 }
 
+/* 
 .buttons {
   margin-top: 20px;
   display: flex;
   gap: 10px;
-}
+} */
 
 
-.button {
+/* .button {
   padding: 10px 20px;
   background-color: #007bff;
   color: white;
@@ -209,7 +210,7 @@ body>.footer {
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-}
+} */
 
 .button:hover {
   background-color: #0056b3;
@@ -237,19 +238,19 @@ label {
   display: none;
 }
 
-.input-icon {
+/* .input-icon {
   position: relative;
   margin-bottom: 20px;
-}
+} */
 
-.input-icon i {
+/* .input-icon i {
   position: absolute;
   top: 50%;
   left: 10px;
   transform: translateY(-50%);
   font-size: 20px;
   color: #aaa;
-}
+} */
 
 input,
 button {
@@ -264,16 +265,19 @@ button {
 
 .error-message {
   color: red;
-  font-size: 14px;
   position: absolute;
-  top: -20px;
+  top: -15px;
+  font-size: 12px;
+  text-align: left;
 }
 
 #generalError {
   bottom: 0px;
 }
 
-
+strong {
+  font-weight: bold;
+}
 
 .profile-photo-input {
   border-radius: 50%;
@@ -282,12 +286,8 @@ button {
   background-position: center;
 }
 
-.profile-photo-input:hover {
-  cursor: pointer;
-}
 
 .profile-photo-div {
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -308,12 +308,15 @@ button {
   border: 1px solid #ccc;
   padding: 10px;
   z-index: 1;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 #photoOptions li {
   cursor: pointer;
   font-size: 15px;
   list-style-type: none;
+  height: 40px;
 }
 
 #photoOptions li:hover {
@@ -321,10 +324,12 @@ button {
 }
 
 .modal-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  flex-shrink: 1;
+  white-space: normal;
+  position: relative;
+  word-wrap: break-word;
+  flex-basis: 100%;
+  flex-grow: 1;
 }
 
 
@@ -1239,7 +1244,29 @@ button {
   border-bottom-right-radius: 3px;
 }
 
-
+.modal-body-upload-photo {
+  width: 500px;
+  padding-top: 0;
+  overflow-x: hidden;
+  height: 500px;
+  padding-bottom: 0;
+  overflow-y: hidden;
+  border-top-left-radius: 3px;
+  padding-left: 0;
+  flex-direction: column;
+  flex-basis: auto;
+  box-sizing: border-box;
+  display: flex;
+  padding-right: 0;
+  flex-shrink: 0;
+  background-color: white;
+  border-bottom-left-radius: 3px;
+  box-shadow: 0 17px 50px 0 rgba(11, 20, 26, .19), 0 12px 15px 0 rgba(11, 20, 26, .24);
+  position: relative;
+  flex-grow: 0;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
 
 
 .modal1-3 {
@@ -3083,7 +3110,7 @@ button.chat-options-btn:focus {
   pointer-events: none;
   left: .5ch;
   line-height: 1.47em;
-  color: #667781;
+  color: #54656f;
   position: absolute;
   transition: opacity .08s linear;
 }
@@ -5079,4 +5106,427 @@ button:focus {
   font-size: .875rem;
   line-height: 1.4286;
   margin-right: 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+form {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+form h1 {
+  margin-bottom: 20px;
+  font-size: 22px;
+  color: #333;
+}
+
+/* Input alanları */
+.input-icon {
+  position: relative;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-icon input {
+  width: 100%;
+  padding: 10px 40px 10px 40px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.input-icon input:focus {
+  border-color: #4CAF50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.4);
+}
+
+/* İkonlar */
+.input-icon i {
+  position: absolute;
+  left: 10px;
+  font-size: 18px;
+  color: #888;
+}
+
+
+/* Butonlar */
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.button {
+  flex: 1;
+  padding: 10px 20px;
+  font-size: 14px;
+  color: #fff;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: #45a049;
+}
+
+#forgotPasswordFormButton {
+  background-color: #007BFF;
+}
+
+#forgotPasswordFormButton:hover {
+  background-color: #0056b3;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* Ana içeriği merkeze alma ve minimum yüksekliği sağlama */
+.default-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+
+
+/* Register ve Login alanı */
+.register-login {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 20px;
+}
+
+.register-login h1 {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Butonların düzenlenmesi */
+.register-login .buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.register-login .button {
+  padding: 12px 24px;
+  font-size: 16px;
+  color: #fff;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+
+.register-login .button:hover {
+  background-color: #45a049;
+}
+
+/* Footer alanı */
+.footer {
+  width: 100%;
+  padding: 10px 20px;
+  text-align: center;
+  background-color: #222;
+  color: #fff;
+  font-size: 14px;
+}
+
+
+.profile-photo-user {
+  position: relative;
+  margin-bottom: 20px;
+  align-items: center;
+  gap: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+
+/* Modal */
+.modal-header-none {
+  border-bottom: none;
+}
+
+
+/* UploadPhotoModalContent */
+.upload-photo-modal-content {
+  width: 100%;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.upload-photo-modal-content-1 {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  align-items: flex-end;
+  justify-content: center;
+  flex-direction: column;
+  display: flex;
+  background-color: #e9edef;
+  left: 0;
+  position: absolute;
+}
+
+.upload-photo-modal-content-1-1-1 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.upload-photo-modal-content-1-1-1-1-1 {
+  bottom: 0;
+  top: 0;
+  justify-content: center;
+  background-repeat: no-repeat;
+  right: 0;
+  display: flex;
+  align-items: center;
+  background-size: contain;
+  left: 0;
+  position: absolute;
+  background-position: 50% 50%;
+}
+
+.canvas1 {
+  height: inherit;
+  width: inherit;
+  z-index: 3;
+  position: absolute;
+}
+
+.canvas2 {
+  width: 100%;
+  height: 100%;
+}
+
+.photo-deneme {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  z-index: 100;
+  flex-direction: column;
+  display: flex;
+  flex-basis: 0px;
+  position: relative;
+  flex-grow: 1;
+  opacity: 1;
+}
+
+
+
+.deneme1 {
+  overflow-x: auto;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  top: 0;
+  visibility: visible;
+  position: fixed;
+  background-color: rgba(255, 255, 255, .85);
+  box-sizing: border-box;
+  z-index: 800;
+  left: 0;
+}
+
+.deneme2 {
+  min-width: 748px;
+  width: 100%;
+  min-height: 100%;
+  height: 600px;
+  justify-content: center;
+  flex-direction: column;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+.deneme3 {
+  width: 500px;
+  padding-top: 0;
+  overflow-x: hidden;
+  height: 500px;
+  padding-bottom: 0;
+  overflow-y: hidden;
+  border-top-left-radius: 3px;
+  padding-left: 0;
+  flex-direction: column;
+  flex-basis: auto;
+  box-sizing: border-box;
+  display: flex;
+  padding-right: 0;
+  flex-shrink: 0;
+  background-color: white;
+  border-bottom-left-radius: 3px;
+  box-shadow: 0 17px 50px 0 rgba(11, 20, 26, .19), 0 12px 15px 0 rgba(11, 20, 26, .24);
+  position: relative;
+  flex-grow: 0;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+.deneme4 {
+  flex-shrink: 1;
+  white-space: normal;
+  position: relative;
+  word-wrap: break-word;
+  flex-basis: 100%;
+  flex-grow: 1;
+}
+
+.deneme5 {
+  line-height: 1.43;
+  font-size: .8875rem;
+}
+
+.deneme6 {
+  width: 100%;
+  overflow-x: hidden;
+  height: 100%;
+  top: 0;
+  overflow-y: hidden;
+  visibility: visible;
+  background-color: #e9edef;
+  flex-direction: column;
+  display: flex;
+  pointer-events: auto;
+  left: 0;
+  position: absolute;
+}
+
+.deneme7 {
+  overflow-x: hidden;
+  overflow-y: hidden;
+  z-index: 100;
+  flex-direction: column;
+  display: flex;
+  flex-basis: 0px;
+  position: relative;
+  flex-grow: 1;
+  opacity: 1;
+}
+
+
+.upload-photo-header {
+  width: 100%;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+  display: flex;
+  align-items: center;
+  padding-right: 0;
+  text-align: initial;
+  flex: none;
+}
+
+.close-button {
+  width: 48px;
+  opacity: .7;
+  flex: none;
+}
+
+.close-button-1 {
+  width: fit-content;
+  color: white;
+  cursor: pointer;
+  vertical-align: top;
+}
+
+.upload-photo-title {
+  overflow-x: hidden;
+  max-height: 23px * 2;
+  margin-top: -4px;
+  overflow-y: hidden;
+  -webkit-line-clamp: 2px;
+  font-size: 1.1875rem;
+  font-weight: 500;
+  line-height: 23px;
+  -webkit-box-orient: vertical;
+  word-wrap: break-word;
+  flex-grow: 1;
+  display: -webkit-box;
+
+}
+
+.upload-photo-h1 {
+  line-height: 32px;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.modal-header {
+  height: 44px;
+  padding-top: 0;
+  padding-bottom: 0;
+  background-color: #008069;
+  color: white;
+  padding-right: 20px;
+  padding-left: 25px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex: none;
+}
+
+.canvas-1 {
+  z-index: 3;
+  width: inherit;
+  height: inherit;
+  position: absolute;
+}
+
+.canvas-2 {
+  height: 100%;
+  width: 100%;
 }

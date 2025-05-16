@@ -3,6 +3,7 @@ import AbstractView from "../AbstractView.js";
 import { clearErrorMessages, isValidEmail, showError } from "../utils/util.js";
 import { navigateTo } from '../../index.js';
 import { fetchRegister } from "../services/authService.js";
+import { generateKeyPair, deriveAESKey, encryptPrivateKey, exportPublicKey } from "../utils/e2ee.js";
 export default class extends AbstractView {
   constructor(params) {
     super(params);
@@ -127,9 +128,20 @@ async function registerUser() {
   }
 
 
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+
+  const { publicKey, privateKey } = await generateKeyPair();
+  const aesKey = await deriveAESKey(password, salt);
+  const encryptedPrivateKey = await encryptPrivateKey(privateKey, aesKey, iv);
+  const exportedPublicKey = await exportPublicKey(publicKey);
   const requestBody = {
-    email: email,
-    password: password
+    email,
+    password,
+    publicKey: Array.from(new Uint8Array(exportedPublicKey)),
+    encryptedPrivateKey: Array.from(new Uint8Array(encryptedPrivateKey)),
+    salt: Array.from(salt),
+    iv: Array.from(iv)
   };
   console.log("asdfasdfasdfasdf")
   try {

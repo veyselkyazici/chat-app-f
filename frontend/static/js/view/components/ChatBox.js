@@ -3,8 +3,9 @@ import { createMessageBox, createMessageDeliveredTickElement, removeMessageBoxAn
 import { chatInstance, UserSettingsDTO } from "../pages/Chat.js";
 import { virtualScroll, UpdateItemsDTO } from '../utils/virtualScroll.js';
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
-import { ariaSelected, createElement, createVisibilityProfilePhoto, chatBoxFormatDateTime } from "../utils/util.js";
+import { ariaSelected, createElement, createVisibilityProfilePhoto, chatBoxLastMessageFormatDateTime } from "../utils/util.js";
 import { fetchGetChatSummary, fetchGetLast30Messages, fetchDeleteChat, fetchChatUnblock, fetchChatBlock } from "../services/chatService.js"
+import { decryptMessage, getUserKey } from "../utils/e2ee.js"
 
 function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
@@ -52,14 +53,14 @@ const calculateVisibleItemCount = () => {
     const boxHeight = boxElement.clientHeight;
     return Math.ceil(boxHeight / 72) + 7;
 };
-function createChatBox(chat, index) {
+async function createChatBox(chat, index) {
     console.log("CHATQWE > ", chat.contactsDTO.userContactName)
     console.log("CHAT > ", chat)
     console.log("INDEX > ", index)
     // const time = chat.chatDTO.lastMessageTime;
     // const date = new Date(time);
     // const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const formattedTime = chatBoxFormatDateTime(chat.chatDTO.lastMessageTime);
+    const formattedTime = chatBoxLastMessageFormatDateTime(chat.chatDTO.lastMessageTime);
     const chatElementDOM = document.createElement("div");
     chatElementDOM.classList.add("chat1");
     chatElementDOM.setAttribute("role", "listitem");
@@ -120,22 +121,25 @@ function createChatBox(chat, index) {
 
     const messageDiv = createElement('div', 'message');
     lastMessageDiv.appendChild(messageDiv);
-
+    console.log("chatInstance.user.userKey.privateKey", chatInstance.user.userKey.encryptedPrivateKey)
     const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
     messageDiv.appendChild(messageSpan);
-
+    let message;
     if (chat.chatDTO.senderId === chatInstance.user.id) {
+        message = await decryptMessage(chat.chatDTO, true);
         if (chat.chatDTO.seen) {
             const messageSeenTick = chatBoxLastMessageDeliveredBlueTick();
             messageSpan.appendChild(messageSeenTick);
+
         } else {
             const messageDeliveredTickDiv = createMessageDeliveredTickElement();
             messageSpan.appendChild(messageDeliveredTickDiv);
         }
-
+    } else {
+        message = await decryptMessage(chat.chatDTO, false);
     }
 
-    const innerMessageSpan = createElement('span', 'message-span-span', { 'min-height': '0px' }, { 'dir': 'ltr', 'aria-label': '' }, chat.chatDTO.lastMessage);
+    const innerMessageSpan = createElement('span', 'message-span-span', { 'min-height': '0px' }, { 'dir': 'ltr', 'aria-label': '' }, message);
     messageSpan.appendChild(innerMessageSpan);
 
     const chatOptionsDiv = createElement('div', 'chat-options');
@@ -461,11 +465,12 @@ const toggleBlockUser = async (chatData) => {
 
     showModal(new ModalOptionsDTO({
         title: '',
-        content: blockMessage,
+        contentText: blockMessage,
         mainCallback: mainCallback,
         buttonText: isBlocked ? 'Engeli Kaldır' : 'Engelle',
         showBorders: false,
-        secondOptionButton: false
+        secondOptionButton: false,
+        headerHtml: null
     }));
 };
 const deleteChat = async (chatData, showChatOptions, chatElement) => {
@@ -490,11 +495,12 @@ const deleteChat = async (chatData, showChatOptions, chatElement) => {
     };
     showModal(new ModalOptionsDTO({
         title: '',
-        content: modalMessage,
+        contentText: modalMessage,
         mainCallback: mainCallback,
         buttonText: 'Sohbeti sil',
         showBorders: false,
-        secondOptionButton: false
+        secondOptionButton: false,
+        headerHtml: null
     }));
     const chatElements1 = document.querySelectorAll('.chat1');
     console.log("chatElements > ", chatElements1)
@@ -628,7 +634,7 @@ function updateChatBoxElement(chatElement, newChatData, newIndex) {
     chatElement.chatData = newChatData;
     nameSpan.textContent = newChatData.contactsDTO.userContactName ? newChatData.contactsDTO.userContactName : newChatData.userProfileResponseDTO.email;
     chatElement.dataset.user = newChatData.contactsDTO.userContactName ? newChatData.contactsDTO.userContactName : newChatData.userProfileResponseDTO.email;
-    timeDiv.textContent = chatBoxFormatDateTime(newChatData.chatDTO.lastMessageTime);
+    timeDiv.textContent = chatBoxLastMessageFormatDateTime(newChatData.chatDTO.lastMessageTime);
     messageSpan.textContent = newChatData.chatDTO.lastMessage;
     chatElement.style.transform = `translateY(${newIndex * 72}px)`;
     console.log("chatElement.style.transform > ", chatElement.style.transform)
@@ -829,12 +835,13 @@ function isChatExists(recipientJSON) {
     return chatInstance.chatList.some(chat => chat.chatDTO.id === recipientJSON.chatRoomId);
 }
 
-function lastMessageChange(recipientJSON, chatElement) {
-    if (chatElement.chatData.chatDTO.id === recipientJSON.chatRoomId) {
+function lastMessageChange(chatRoomId, chatElement, decryptedMessage, messageTime) {
+    debugger;
+    if (chatElement.chatData.chatDTO.id === chatRoomId) {
         const lastMessageElement = chatElement.querySelector('.message-span-span');
         const lastMessageTimeElement = chatElement.querySelector('.time');
-        lastMessageElement.textContent = recipientJSON.messageContent;
-        lastMessageTimeElement.textContent = chatBoxFormatDateTime(recipientJSON.fullDateTime);
+        lastMessageElement.textContent = decryptedMessage;
+        lastMessageTimeElement.textContent = chatBoxLastMessageFormatDateTime(messageTime);
     }
 
 }

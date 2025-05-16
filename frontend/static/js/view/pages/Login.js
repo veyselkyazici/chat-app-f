@@ -1,10 +1,12 @@
 //Login.js
 import { navigateTo } from "../../index.js";
 import AbstractView from "../AbstractView.js";
-import { clearErrorMessages, isValidEmail } from "../utils/util.js";
-import { getUserByAuthId } from "../services/userService.js";
+import { clearErrorMessages, isValidEmail, showError } from "../utils/util.js";
+import { fetchGetUserByAuthId } from "../services/userService.js";
 import { userUpdateModal } from "../components/UpdateUserProfile.js";
 import { fetchLogin } from "../services/authService.js";
+import { fetchGetUserWithUserKeyByAuthId } from "../services/userService.js";
+import { deriveAESKey, decryptPrivateKey, importPublicKey, base64ToUint8Array, getUserKey, setUserKey, encryptMessage, decryptMessage } from "../utils/e2ee.js";
 
 export default class extends AbstractView {
   constructor(params) {
@@ -99,22 +101,32 @@ const loginForm = async () => {
     showError(formElements.passwordDOM, "Parola en az 6 karakter olmalıdır");
     hasError = true;
   }
-
   if (!hasError) {
     const response = await fetchLogin(formElements, email, password);
-    console.log("response: ", response)
+    const user = await fetchGetUserWithUserKeyByAuthId(response.id)
+    const {
+      encryptedPrivateKey,
+      publicKey: exportedPublicKey,
+      salt,
+      iv,
+    } = user.userKey;
 
-    // ToDo Buraya bakılcak tekrardan
-    const user = await getUserByAuthId(response.id);
-    console.log(user)
-    console.log('user', user)
-    console.log('user.update', user.updatedAt)
-    if (user.updatedAt == null) {
-      userUpdateModal();
-    }
-    else {
-      navigateTo("/chat");
-    }
+    const aesKey = await deriveAESKey(password, new base64ToUint8Array(salt));
+    const privateKey = await decryptPrivateKey(
+      new base64ToUint8Array(encryptedPrivateKey),
+      aesKey,
+      new base64ToUint8Array(iv)
+    );
+    const publicKey = await importPublicKey(new base64ToUint8Array(exportedPublicKey));
+    setUserKey({ privateKey, publicKey });
+    console.log(getUserKey());
+    // const testData = "test mesajı";
+    // const encrypted = await encryptMessage(testData, null, publicKey);
+
+    // const decrypt = await decryptMessage(encrypted, getUserKey().privateKey, true);
+    // console.log(decrypt)
+
+    navigateTo("/chat")
   }
 }
 

@@ -485,25 +485,27 @@ async function handleContactClick(event) {
         }
     } else if (!contactData.invitationResponseDTO.invited) {
         const options = new ModalOptionsDTO({
-            content: `${contactData.userContactName} kişisini davet etmek istiyor musunuz?`,
+            contentText: `${contactData.userContactName} kişisini davet etmek istiyor musunuz?`,
             buttonText: 'Davet et',
             showBorders: false,
             mainCallback: async () => {
                 const response = await fetchSendInvitation(contactData);
                 console.log(response)
                 return response;
-            }
+            },
+            headerHtml: null
         });
         showModal(options);
     }
     else {
         const dto = new ModalOptionsDTO({
-            content: `${contactData.userContactName} kişisi zaten davet edilmiş.`,
+            contentText: `${contactData.userContactName} kişisi zaten davet edilmiş.`,
             buttonText: 'Davet et',
             mainCallback: () => {
                 return true;
             },
-            showBorders: false
+            showBorders: false,
+            headerHtml: null
         });
         showModal(dto);
     }
@@ -613,7 +615,7 @@ function handleOptionsBtnClick(event) {
             listItem.addEventListener('click', async () => {
                 const contactData = contactElement.contactData;
                 const options = new ModalOptionsDTO({
-                    content: `${contactData.userContactName} kişisini silmek istiyor musunuz?`,
+                    contentText: `${contactData.userContactName} kişisini silmek istiyor musunuz?`,
                     buttonText: 'Evet',
                     showBorders: false,
                     mainCallback: async () => {
@@ -631,7 +633,8 @@ function handleOptionsBtnClick(event) {
                         } else {
                             return false;
                         }
-                    }
+                    },
+                    headerHtml: null
                 });
                 showModal(options);
                 showChatOptions.innerHTML = '';

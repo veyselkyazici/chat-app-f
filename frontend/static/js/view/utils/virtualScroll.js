@@ -1,7 +1,7 @@
 // virtualScroll.js
 import { updateUnreadMessageCountAndSeenTick } from '../components/ChatBox.js'
 import { chatInstance } from "../pages/Chat.js";
-import { ariaSelected, ariaSelectedRemove } from '../utils/util.js';
+import { createVisibilityProfilePhoto } from '../utils/util.js';
 export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount) {
     let start = 0;
     let end = visibleItemCount;
@@ -49,6 +49,21 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
         console.log("listItem > ", listItem)
         if (listItem) {
             if (!('invitationResponseDTO' in listItem)) {
+                const profileImage = item.querySelector('.image');
+                const profileImageElement = createVisibilityProfilePhoto(listItem.userProfileResponseDTO, listItem.contactsDTO);
+                if (profileImage.firstElementChild.className === "svg-div") {
+                    if (profileImageElement.className !== "svg-div") {
+                        profileImage.firstElementChild.remove();
+                        profileImage.appendChild(profileImageElement);
+                    }
+                } else {
+                    if (profileImageElement.className === "svg-div") {
+                        profileImage.firstElementChild.remove();
+                        profileImage.appendChild(profileImageElement);
+                    } else {
+                        profileImageElement.firstElementChild.src = listItem.userProfileResponseDTO.imagee;
+                    }
+                }
                 item.chatData = listItem;
                 if (Object.keys(chatInstance.selectedChat).length > 0) {
                     const isSelected = chatInstance.selectedChat.chatData.userProfileResponseDTO.id === listItem.userProfileResponseDTO.id;
@@ -81,7 +96,22 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
             else {
                 if (!listItem.invitationResponseDTO) {
                     const nameSpan = item.querySelector(".name-span");
-                    item.contactData = listItem
+                    const profileImage = item.querySelector('.image');
+                    const profileImageElement = createVisibilityProfilePhoto(listItem.userProfileResponseDTO, listItem.contactsDTO);
+                    if (profileImage.firstElementChild.className === "svg-div") {
+                        if (profileImageElement.className !== "svg-div") {
+                            profileImage.firstElementChild.remove();
+                            profileImage.appendChild(profileImageElement);
+                        }
+                    } else {
+                        if (profileImageElement.className === "svg-div") {
+                            profileImage.firstElementChild.remove();
+                            profileImage.appendChild(profileImageElement);
+                        } else {
+                            profileImageElement.firstElementChild.src = listItem.userProfileResponseDTO.imagee;
+                        }
+                    }
+                    item.contactData = listItem;
                     console.log("CONTACT DATA > ", item.contactData)
                     const messageSpan = item.querySelector(".message-span-span");
                     nameSpan.textContent = listItem.contactsDTO.userContactName;

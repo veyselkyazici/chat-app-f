@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Yuvarlak Kırpma</title>
+    <!-- <style>
+        .x1ey2m1c {
+            bottom: 0;
+        }
+
+        .x13vifvy {
+            top: 0;
+        }
+
+        .xds687c {
+            right: 0;
+        }
+
+        .x17qophe {
+            left: 0;
+        }
+
+        .x10l6tqk {
+            position: absolute;
+        }
+
+        .xw2csxc {
+            overflow-x: auto;
+        }
+
+        .xh8yej3 {
+            width: 100%;
+        }
+
+        .x5yr21d {
+            height: 100%;
+        }
+
+        .x1odjw0f {
+            overflow-y: auto;
+        }
+
+        .x13vifvy {
+            top: 0;
+        }
+
+        .xnpuxes {
+            visibility: visible;
+        }
+
+        .xixxii4 {
+            position: fixed;
+        }
+
+        .xa03szm {
+            background-color: rgba(255, 255, 255, .85);
+        }
+
+        .x9f619 {
+            box-sizing: border-box;
+        }
+
+        .x1bpt9pm {
+            z-index: 800;
+        }
+
+        .x17qophe {
+            left: 0;
+        }
+
+        .xpb48g7 {
+            min-width: 748px;
+        }
+
+        .xh8yej3 {
+            width: 100%;
+        }
+
+        .x1us19tq {
+            min-height: 100%;
+        }
+
+        .x1jn0hjm {
+            height: 600px;
+        }
+
+        .xl56j7k {
+            justify-content: center;
+        }
+
+        .xdt5ytf {
+            flex-direction: column;
+        }
+
+        .x9f619 {
+            box-sizing: border-box;
+        }
+
+        .x78zum5 {
+            display: flex;
+        }
+
+        .x6s0dn4 {
+            align-items: center;
+        }
+
+        .xvue9z {
+            width: 500px;
+        }
+
+        .xexx8yu {
+            padding-top: 0;
+        }
+
+        .x6ikm8r {
+            overflow-x: hidden;
+        }
+
+        .x1egiwwb {
+            height: 500px;
+        }
+
+        .x18d9i69 {
+            padding-bottom: 0;
+        }
+
+        .x10wlt62 {
+            overflow-y: hidden;
+        }
+
+        .xkwfhqy {
+            border-top-left-radius: 3px;
+        }
+
+        .xkhd6sd {
+            padding-left: 0;
+        }
+
+        .xdt5ytf {
+            flex-direction: column;
+        }
+
+        .xdl72j9 {
+            flex-basis: auto;
+        }
+
+        .x9f619 {
+            box-sizing: border-box;
+        }
+
+        .x78zum5 {
+            display: flex;
+        }
+
+        .x4uap5 {
+            padding-right: 0;
+        }
+
+        .x2lah0s {
+            flex-shrink: 0;
+        }
+
+        .x1v8jjaa {
+            background-color: white;
+        }
+
+        .x1t7u3xy {
+            border-bottom-left-radius: 3px;
+        }
+
+        .x1shw4ur {
+            box-shadow: 0 17px 50px 0 rgba(11, 20, 26, .19), 0 12px 15px 0 rgba(11, 20, 26, .24);
+        }
+
+        .x1n2onr6 {
+            position: relative;
+        }
+
+        .x1c4vz4f {
+            flex-grow: 0;
+        }
+
+        .x17e6fzg {
+            border-top-right-radius: 3px;
+        }
+
+        .x15dh256 {
+            border-bottom-right-radius: 3px;
+        }
+
+        .xs83m0k {
+            flex-shrink: 1;
+        }
+
+        .xeaf4i8 {
+            white-space: normal;
+        }
+
+        .x1n2onr6 {
+            position: relative;
+        }
+
+        .x1mzt3pk {
+            word-wrap: break-word;
+        }
+
+        .x1l7klhg {
+            flex-basis: 100%;
+        }
+
+        .x1iyjqo2 {
+            flex-grow: 1;
+        }
+
+        .x1o1kx08 {
+            line-height: 1.43;
+        }
+
+        .x12lqup9 {
+            font-size: .8875rem;
+        }
+
+        .xh8yej3 {
+            width: 100%;
+        }
+
+        .x6ikm8r {
+            overflow-x: hidden;
+        }
+
+        .x5yr21d {
+            height: 100%;
+        }
+
+        .x13vifvy {
+            top: 0;
+        }
+
+        .x10wlt62 {
+            overflow-y: hidden;
+        }
+
+        .xnpuxes {
+            visibility: visible;
+        }
+
+        .xm0mufa {
+            background-color: var(--panel-background-deeper);
+        }
+
+        .xdt5ytf {
+            flex-direction: column;
+        }
+
+        .x78zum5 {
+            display: flex;
+        }
+
+        .x67bb7w {
+            pointer-events: auto;
+        }
+
+        .x17qophe {
+            left: 0;
+        }
+
+        .x10l6tqk {
+            position: absolute;
+        }
+
+        .x6ikm8r {
+            overflow-x: hidden;
+        }
+
+        .x10wlt62 {
+            overflow-y: hidden;
+        }
+
+        .xyw6214 {
+            z-index: var(--layer-1);
+        }
+
+        .xdt5ytf {
+            flex-direction: column;
+        }
+
+        .x78zum5 {
+            display: flex;
+        }
+
+        .x1r8uery {
+            flex-basis: 0px;
+        }
+
+        .x1n2onr6 {
+            position: relative;
+        }
+
+        .x1iyjqo2 {
+            flex-grow: 1;
+        }
+
+        .x1hc1fzr {
+            opacity: 1;
+        }
+
+        .xh8yej3 {
+            width: 100%;
+        }
+
+        .xl56j7k {
+            justify-content: center;
+        }
+
+        .x78zum5 {
+            display: flex;
+        }
+
+        .x6s0dn4 {
+            align-items: center;
+        }
+
+        .x1n2onr6 {
+            position: relative;
+        }
+
+        .x98rzlu {
+            flex: 1;
+        }
+
+        .xh8yej3 {
+            width: 100%;
+        }
+
+        .x5yr21d {
+            height: 100%;
+        }
+
+        .x13vifvy {
+            top: 0;
+        }
+
+        .xuk3077 {
+            align-items: flex-end;
+        }
+
+        .xl56j7k {
+            justify-content: center;
+        }
+
+        .xdt5ytf {
+            flex-direction: column;
+        }
+
+        .x78zum5 {
+            display: flex;
+        }
+
+        .x1m8r95a {
+            background-color: #e9edef;
+        }
+
+        ._ajuf {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .x1ey2m1c {
+            bottom: 0;
+        }
+
+        .x13vifvy {
+            top: 0;
+        }
+
+        .xl56j7k {
+            justify-content: center;
+        }
+
+        .xiy17q3 {
+            background-repeat: no-repeat;
+        }
+
+        .xds687c {
+            right: 0;
+        }
+
+        .x78zum5 {
+            display: flex;
+        }
+
+        .x6s0dn4 {
+            align-items: center;
+        }
+
+        .x1tbiz1a {
+            background-size: contain;
+        }
+
+        .x17qophe {
+            left: 0;
+        }
+
+        .x10l6tqk {
+            position: absolute;
+        }
+
+        .xztyhrg {
+            background-position: 50% 50%;
+        }
+
+        .x17qophe {
+            left: 0;
+        }
+
+        .x10l6tqk {
+            position: absolute;
+        }
+
+        .x3igimt {
+            height: inherit;
+        }
+
+        .x1qrby5j {
+            width: inherit;
+        }
+
+        .xzkaem6 {
+            z-index: 3;
+        }
+
+        .x1s85apg {
+            display: none;
+        }
+
+        .x10l6tqk {
+            position: absolute;
+        }
+
+        .xh8yej3 {
+            width: 100%;
+        }
+
+        .x5yr21d {
+            height: 100%;
+        }
+    </style> -->
+    <link rel="stylesheet" href="../../css/style.css">
+</head>
+
+
+<body>
+    <input id="inputPhoto" accept="image/png, image/jpeg, image/jpg" type="file">
+    <div id="canvasContainer"></div>
+    <button id="cropButton">Kırp</button>
+    <div id="result"></div>
+
+    <script>
+        const canvasContainer = document.getElementById('canvasContainer');
+        const inputPhoto = document.getElementById('inputPhoto');
+        const cropButton = document.getElementById('cropButton');
+        const resultDiv = document.getElementById('result');
+
+        let canvas, ctx;
+        let img = new Image();
+        let imgX = 0, imgY = 0, imgScale = 1;
+        let isDragging = false;
+        let startX, startY;
+        const circleRadius = 320; // Yuvarlak maskenin yarıçapı
+
+        inputPhoto.addEventListener('change', handleImageUpload);
+        cropButton.addEventListener('click', cropImage);
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                img.src = e.target.result;
+                img.onload = function () {
+                    const width = img.naturalWidth;
+                    const height = img.naturalHeight;
+                    const divWidth = 507;
+                    const aspectRatio = height / width;
+                    const divHeightt = divWidth * aspectRatio; // Sayısal değer
+                    const divHeight = `${divHeightt}px`; // Sayısal değer
+                    const top = `${((366 - divHeightt) / 2)}px`;
+
+                    const HTML = `        <span class="">
+                <div class="x10l6tqk x13vifvy xds687c x1ey2m1c x17qophe" tabindex="-1">
+                    <div data-animate-modal-backdrop="true"
+                        class="xixxii4 x13vifvy x17qophe x9f619 xh8yej3 x5yr21d x1bpt9pm xw2csxc x1odjw0f xa03szm xnpuxes copyable-area"
+                        style="opacity: 1;">
+                        <div class="x9f619 x78zum5 xdt5ytf x6s0dn4 xl56j7k xh8yej3 xpb48g7 x1jn0hjm x1us19tq"
+                            aria-label="Ayarlamak için resmi sürükleyin" role="dialog">
+                            <div class="x9f619 x78zum5 x1c4vz4f x2lah0s xdl72j9 xdt5ytf x1v8jjaa xkwfhqy x17e6fzg x15dh256 x1t7u3xy x1shw4ur x6ikm8r x10wlt62 x1n2onr6 xvue9z x1egiwwb xexx8yu x4uap5 x18d9i69 xkhd6sd"
+                                data-animate-modal-popup="true" style="opacity: 1; transform: scaleX(1) scaleY(1);">
+                                <div class="x1n2onr6 x1iyjqo2 xs83m0k x1l7klhg x1mzt3pk xeaf4i8" data-animate-modal-body="true">
+                                    <div class="x12lqup9 x1o1kx08">
+                                        <div
+                                            class="x78zum5 xdt5ytf x5yr21d x17qophe x6ikm8r x10wlt62 x67bb7w x10l6tqk x13vifvy xh8yej3 xm0mufa xnpuxes copyable-area">
+                                            <header
+                                                class="xd32934 x9f619 x78zum5 x1okw0bk x6s0dn4 xl2dz39 xoj7uri xpxdjtz xexx8yu x18d9i69 xc73u3c x9mfa4r">
+                                                <div
+                                                    class="x78zum5 x1okw0bk x6s0dn4 xh8yej3 x14wi4xw xexx8yu x4uap5 x18d9i69 xkhd6sd">
+                                                    <div class="x1okw0bk x1useyqa x1ks1olk">
+                                                        <div role="button" tabindex="0" aria-label="Kapat"
+                                                            class="x1okw0bk xoj7uri x16dsc37 x1ypdohk xeq5yr9"><span
+                                                                aria-hidden="true" data-icon="x" class=""><svg
+                                                                    viewBox="0 0 24 24" height="24" width="24"
+                                                                    preserveAspectRatio="xMidYMid meet" class=""
+                                                                    fill="currentColor" enable-background="new 0 0 24 24">
+                                                                    <title>x</title>
+                                                                    <path
+                                                                        d="M19.6004 17.2L14.3004 11.9L19.6004 6.60005L17.8004 4.80005L12.5004 10.2L7.20039 4.90005L5.40039 6.60005L10.7004 11.9L5.40039 17.2L7.20039 19L12.5004 13.7L17.8004 19L19.6004 17.2Z">
+                                                                    </path>
+                                                                </svg></span></div>
+                                                    </div>
+                                                    <div title="Ayarlamak için resmi sürükleyin"
+                                                        class="x104kibb x1iyjqo2 x4osyxg x6ikm8r x10wlt62 xlm9qay x1vczkso x1mzt3pk xo442l1 x1ua5tub x1rdy4ex xk50ysn">
+                                                        <h1 class="x1qlqyl8 x1pd3egz xcgk4ki">Ayarlamak için resmi sürükleyin
+                                                        </h1>
+                                                    </div>
+                                                    <div class="x78zum5 x1okw0bk x6s0dn4 xsgj6o6"><button
+                                                        class="xjb2p0i xk390pu xjbqb8w x972fbf xcfux6l x1qhh985 xm0m39n xexx8yu x4uap5 x18d9i69 xkhd6sd x78zum5 x6s0dn4 x1heor9g x1ypdohk"
+                                                        tabindex="0" title="Yükle" type="button" aria-label="Yükle">
+                                                        <div class="x1okw0bk x7o08j2 xw3qccf"><span aria-hidden="true"
+                                                            data-icon="return" class=""><svg viewBox="0 0 24 24"
+                                                                height="24" width="24"
+                                                                preserveAspectRatio="xMidYMid meet" class=""
+                                                                version="1.1" x="0px" y="0px">
+                                                                <title>return</title>
+                                                                <path fill="currentColor"
+                                                                    d="M19.77,11.73c0,1.64-0.5,2.95-1.48,3.89c-1.38,1.32-3.26,1.41-3.75,1.41c-0.07,0-0.11,0-0.12,0l-5.41,0v-2.1 h5.46c0.05,0,1.47,0.04,2.38-0.84c0.55-0.53,0.82-1.32,0.82-2.37c0-1.27-0.33-2.23-0.99-2.84c-0.98-0.92-2.43-0.85-2.44-0.85 l-4.23,0v3.1L4,7.07L10.01,3v2.93h4.16c0.03,0,2.29-0.13,3.95,1.42C19.21,8.38,19.77,9.85,19.77,11.73z">
+                                                                </path>
+                                                            </svg></span></div>Yükle
+                                                    </button></div>
+                                                </div>
+                                            </header>
+                                            <div
+                                                class="x1n2onr6 xyw6214 x78zum5 x1r8uery x1iyjqo2 xdt5ytf x1hc1fzr x6ikm8r x10wlt62">
+                                                <div class="x1n2onr6 x78zum5 x98rzlu x6s0dn4 xl56j7k xh8yej3">
+                                                    <div
+                                                        class="x10l6tqk xeo10n6 xoegz02 xgd8bvy x14ju556 x150wa6m x7s94mv xlqs5a9 x1v92rno x1zj97q x1ctnl55">
+                                                        <div tabindex="0" class=""
+                                                            aria-label="Fotoğraf düzenleyici tuvali araç takımı: Ok tuşları kırpma penceresini hareket ettirir. &quot;Page Up&quot; ve &quot;Page Down&quot; tuşları kırpılan alanı genişletir veya daraltır.">
+                                                        </div><button
+                                                            class="xjb2p0i xk390pu xjbqb8w x972fbf xcfux6l x1qhh985 xm0m39n xexx8yu x4uap5 x18d9i69 xkhd6sd xt16idv x1ypdohk"
+                                                            tabindex="0" type="button"
+                                                            aria-label="Kırpılacak fotoğraf alanını yakınlaştırın veya daraltın"><span
+                                                                aria-hidden="true" data-icon="plus" class=""><svg
+                                                                    viewBox="0 0 24 24" height="24" width="24"
+                                                                    preserveAspectRatio="xMidYMid meet" class="">
+                                                                    <title>plus</title>
+                                                                    <path fill="currentColor"
+                                                                        d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>
+                                                                </svg></span></button><button
+                                                                    class="xjb2p0i xk390pu xjbqb8w x972fbf xcfux6l x1qhh985 xm0m39n xexx8yu x4uap5 x18d9i69 xkhd6sd xt16idv x1ypdohk"
+                                                                    tabindex="0" type="button"
+                                                                    aria-label="Kırpılacak fotoğraf alanını uzaklaştırın veya genişletin"><span
+                                                                        aria-hidden="true" data-icon="minus" class=""><svg
+                                                                            viewBox="0 0 28 28" height="28" width="28"
+                                                                            preserveAspectRatio="xMidYMid meet" class="" version="1.1"
+                                                                            x="0px" y="0px" enable-background="new 0 0 28 28">
+                                                                    <title>minus</title>
+                                                                    <path fill="currentColor"
+                                                                        d="M8.381,14.803v-1.605h11.237v1.605C19.618,14.803,8.381,14.803,8.381,14.803z">
+                                                                    </path>
+                                                                </svg></span></button>
+                                                    </div>
+                                                    <div
+                                                        class="x10l6tqk x13vifvy x17qophe x78zum5 xdt5ytf xuk3077 xl56j7k xh8yej3 x5yr21d x1m8r95a">
+                                                        <span class="">
+                                                            <div class="_ajuf">
+                                                                <div
+                                                                    style="position: absolute; width: 506.925px; height: 366px; top: 0px; left: -3.4626px;">
+                                                                    <div
+                                                                        class="x78zum5 x6s0dn4 xl56j7k xiy17q3 xztyhrg x1tbiz1a x10l6tqk x13vifvy xds687c x1ey2m1c x17qophe">
+                                                                        <div class="_ajuf">
+                                                                            <div
+                                                                                style="position: absolute; width: 507px; height: ${divHeight}; top: ${top}; left: 0px;">
+                                                                                <canvas
+                                                                                    class="x10l6tqk xzkaem6 x1s85apg x1qrby5j x3igimt"
+                                                                                    style="display: block;"></canvas><canvas
+                                                                                        class="xhtitgo xh8yej3 x5yr21d" ></canvas>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="x1n2onr6 xzkaem6 x9f619 x78zum5 x6s0dn4 xl56j7k x5sx7kw xexx8yu x10b6aqq x5ib6vp xc73u3c">
+                                                    <span class="">
+                                                        <div class="x10l6tqk x13vifvy x1q509o1 xehw8m1 xhtitgo xzbmw64"
+                                                            style="transform: scale(1); opacity: 1;">
+                                                            <div role="button" tabindex="0" aria-label="Görseli gönder"
+                                                                class="x78zum5 x6s0dn4 xl56j7k xexx8yu x4uap5 x18d9i69 xkhd6sd x1f6kntn xk50ysn x7o08j2 xtvhhri x1rluvsa x14yjl9h xudhj91 x18nykt9 xww2gxu xu306ak x12s1jxh xkdsq27 xwwtwea x1gfkgh9 x1247r65 xng8ra">
+                                                                <span aria-hidden="true" data-icon="checkmark-large"
+                                                                    class=""><svg viewBox="0 0 30 30" height="30" width="30"
+                                                                        preserveAspectRatio="xMidYMid meet" class=""
+                                                                        version="1.1" x="0px" y="0px"
+                                                                        enable-background="new 0 0 30 30">
+                                                                        <title>checkmark-large</title>
+                                                                        <path fill="currentColor"
+                                                                            d="M9.9,21.25l-6.7-6.7L1,16.75l8.9,8.9L29,6.55l-2.2-2.2L9.9,21.25z">
+                                                                        </path>
+                                                                    </svg></span>
+                                                            </div>
+                                                        </div>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </span>
+        `;
+
+                    canvasContainer.innerHTML = HTML;
+
+                    const canvas = document.querySelectorAll('canvas');
+                    const canvas1 = canvas[0];
+                    const canvas2 = canvas[1];
+                    ctx = canvas1.getContext('2d');
+
+                    canvas1.width = width;
+                    canvas1.height = height;
+                    canvas2.width = width;
+                    canvas2.height = height;
+
+                    drawImage(canvas1);
+
+                    canvas1.addEventListener('mousedown', startDrag);
+                    canvas1.addEventListener('mousemove', (event) => onDrag(event, canvas1));
+                    canvas1.addEventListener('mouseup', stopDrag);
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function drawImage(canvas1) {
+            ctx.clearRect(0, 0, canvas1.width, canvas1.height);
+            ctx.drawImage(img, imgX, imgY, img.width * imgScale, img.height * imgScale);
+
+            ctx.beginPath();
+            ctx.arc(canvas1.width / 2, canvas1.height / 2, circleRadius, 0, Math.PI * 2);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = 'white';
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function startDrag(e) {
+            isDragging = true;
+            startX = e.clientX - imgX;
+            startY = e.clientY - imgY;
+        }
+
+        function onDrag(e, canvas1) {
+            if (!isDragging) return;
+            imgX = e.clientX - startX;
+            imgY = e.clientY - startY;
+            constrainImagePosition(canvas1);
+            drawImage(canvas1);
+        }
+
+        function stopDrag() {
+            isDragging = false;
+        }
+
+        function constrainImagePosition(canvas1) {
+            const minX = canvas1.width / 2 - circleRadius;
+            const maxX = canvas1.width / 2 + circleRadius - img.width * imgScale;
+            const minY = canvas1.height / 2 - circleRadius;
+            const maxY = canvas1.height / 2 + circleRadius - img.height * imgScale;
+
+            imgX = Math.min(Math.max(imgX, maxX), minX);
+            imgY = Math.min(Math.max(imgY, maxY), minY);
+        }
+
+        function cropImage() {
+            const croppedCanvas = document.createElement('canvas');
+            const croppedCtx = croppedCanvas.getContext('2d');
+            const cropSize = 640; // Kırpılmış görüntünün boyutu
+
+            croppedCanvas.width = cropSize;
+            croppedCanvas.height = cropSize;
+
+            // Yuvarlağın merkez koordinatları
+            const centerX = canvas1.width / 2;
+            const centerY = canvas1.height / 2;
+
+            // Yuvarlağın içindeki görüntüyü kırp
+            croppedCtx.drawImage(
+                canvas1,
+                centerX - circleRadius, // Kaynak X
+                centerY - circleRadius, // Kaynak Y
+                circleRadius * 2,       // Kaynak genişlik
+                circleRadius * 2,       // Kaynak yükseklik
+                0,                      // Hedef X
+                0,                      // Hedef Y
+                cropSize,               // Hedef genişlik
+                cropSize                // Hedef yükseklik
+            );
+
+            // Sonucu göstermek için
+            resultDiv.innerHTML = '';
+            const resultImg = document.createElement('img');
+            resultImg.src = croppedCanvas.toDataURL('image/png');
+            resultDiv.appendChild(resultImg);
+        }
+
+
+    </script>
+</body>
+
+</html>

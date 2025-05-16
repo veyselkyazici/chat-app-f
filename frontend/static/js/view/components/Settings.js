@@ -504,11 +504,11 @@ const handleLastSeenAndOnlineClick = () => {
 
     const lastSeenAndOnline1_3 = createElement('div', 'lastseen-and-online-1-3');
 
-    const strongLastSeen = createElement('strong', null, null, null, 'Son görülme');
+    const strongLastSeen = createElement('strong', '', null, null, 'Son görülme');
 
     const textAnd = document.createTextNode(' ve ');
 
-    const strongOnline = createElement('strong', null, null, null, 'çevrimiçi');
+    const strongOnline = createElement('strong', '', null, null, 'çevrimiçi');
 
     const text = document.createTextNode(' bilginizi paylaşmazsanız diğer kullanıcıların son görülme ve çevrimiçi bilgisini de göremezsiniz.');
 

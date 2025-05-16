@@ -49,7 +49,6 @@ export async function fetchSendInvitation(data) {
         }
 
         return true;
-        console.log('Updated Invitation:', updatedInvitation);
     } catch (error) {
         console.error('Error updating invitation:', error);
     }
@@ -67,9 +66,8 @@ export const fetchGetContactList = async (userId) => {
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
         }
-        console.log(response)
+        
         const result = await response.json();
-        console.log("fetchContactList: ", result)
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
@@ -90,8 +88,7 @@ export const fetchAddContact = async (dto, closeModal) => {
         });
 
         if (!response.ok) {
-            const errorMessage = await response.text();
-            toastr.error(errorMessage || 'Beklenmedik bir hata oluştu.')
+            toastr.error('Beklenmedik bir hata oluştu.')
             return;
         }
 

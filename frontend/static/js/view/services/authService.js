@@ -37,14 +37,8 @@ export const fetchLogin = async (formElements, email, password) => {
         const responseData = await response.json();
 
         if (responseData.responsecode === 200) {
-
-            var allSessionStorageItems = {};
             sessionStorage.setItem('access_token', responseData.access_token)
-            for (var i = 0; i < sessionStorage.length; i++) {
-                var key = sessionStorage.key(i);
-                var value = sessionStorage.getItem(key);
-                allSessionStorageItems[key] = value;
-            }
+            sessionStorage.setItem('id', responseData.id)
             toastr.success('Giriş Başarılı')
             return responseData;
         } else {
