@@ -129,14 +129,13 @@ export async function decryptMessage(
   // Base64 decode işlemleri
   const encryptedMessage = base64ToUint8Array(chatDTO.encryptedMessage);
   const iv = base64ToUint8Array(chatDTO.iv);
+  debugger;
   let encryptedKey;
   if (isSender) {
     encryptedKey = base64ToUint8Array(chatDTO.encryptedKeyForSender);
   } else {
     encryptedKey = base64ToUint8Array(chatDTO.encryptedKeyForRecipient);
   }
-  console.log("getSessionKey()", getSessionKey())
-  console.log("getSessionKey()", getUserKey().privateKey)
   let decryptedAesKey;
   try {
     decryptedAesKey = await window.crypto.subtle.decrypt(

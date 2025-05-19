@@ -224,7 +224,6 @@ export default class Chat extends AbstractView {
         this.initChatWebSocket();
         window.addEventListener('beforeunload', (event) => this.handleBeforeUnload(event));
         document.addEventListener('visibilitychange', this.handleVisibilityChange);
-        console.log("INIT > ", document.querySelector('.chats').clientHeight)
     }
 
     async initContactsWebSocket() {
@@ -235,8 +234,6 @@ export default class Chat extends AbstractView {
         });
     }
     handleBeforeUnload(event) {
-        // console.log("beforeunload tetiklendi!");
-        // console.log("beforeunload tetiklendi!", event);
         const messageBoxElement = document.querySelector('.message-box1');
         if (messageBoxElement) {
             const textArea = messageBoxElement.querySelector('.message-box1-7-1-1-1-2-1-1-1');
@@ -259,12 +256,9 @@ export default class Chat extends AbstractView {
     }
 
     handleVisibilityChange(event) {
-        console.log("VISIBILITY CHANGE")
         if (document.visibilityState === 'hidden') {
-            console.log("HIDDEN")
             this.webSocketManagerChat.notifyOnlineStatus(false);
         } else if (document.visibilityState === 'visible') {
-            console.log("VISIBLE")
             this.webSocketManagerChat.notifyOnlineStatus(true);
         }
     }
@@ -274,7 +268,6 @@ export default class Chat extends AbstractView {
         const updatePrivacy = `/user/${this.user.id}/queue/update-privacy-response`;
         this.webSocketManagerContacts.subscribeToChannel(addContact, async (addContactMessage) => {
             const newContact = JSON.parse(addContactMessage.body);
-            console.log(newContact)
             let contactIdList = this.contactList.filter(contact => contact.id);
 
             const indexToInsert = contactIdList.findIndex(contact => {
@@ -289,12 +282,10 @@ export default class Chat extends AbstractView {
                 ...contactIdList,
                 ...this.contactList.filter(contact => !contact.id)
             ];
-            console.log(this.contactList)
         });
 
         this.webSocketManagerContacts.subscribeToChannel(addInvitation, async (addInvitationMessage) => {
             const newInvitation = JSON.parse(addInvitationMessage.body);
-            console.log(newInvitation)
             let invitationIdList = this.contactList.filter(invitation => !invitation.id);
             const indexToInsert = invitationIdList.findIndex(invitation => {
                 return invitation.userContactName.localeCompare(newInvitation.userContactName, undefined, { sensitivity: 'base' }) > 0;
@@ -308,7 +299,6 @@ export default class Chat extends AbstractView {
                 ...this.contactList.filter(invitation => invitation.id),
                 ...invitationIdList
             ];
-            console.log(this.contactList)
         });
 
         this.webSocketManagerContacts.subscribeToChannel(updatePrivacy, async (updatePrivacyMessage) => {
@@ -316,9 +306,6 @@ export default class Chat extends AbstractView {
 
             const findContact = this.contactList.find(contact => contact.userProfileResponseDTO.id === updatePrivacy.id);
             const findChat = this.chatList.find(chat => chat.userProfileResponseDTO.id === updatePrivacy.id);
-            console.log("FIND CHAT > ", findChat)
-            console.log("FIND CONTACT > ", findContact)
-            console.log("FIND CONTACT > ", updatePrivacy)
 
             let oldPrivacySettings = null;
             let newPrivacySettings;
@@ -343,28 +330,20 @@ export default class Chat extends AbstractView {
                     }
                 }
             }
-            console.log("newPrivacySettings > ", newPrivacySettings)
-            console.log("UPDATE PRIVACY > ", updatePrivacy)
-            console.log("UPDATE PRIVACY > ", oldPrivacySettings)
             if (oldPrivacySettings && newPrivacySettings) {
-                console.log("SSSSSSSSSSSSSSSSS")
                 if (updatePrivacy.privacySettings.onlineStatusVisibility !== oldPrivacySettings.onlineStatusVisibility) {
-                    console.log("ONLINE STATUS");
                     handleOnlineStatusVisibilityChange(this.user, newPrivacySettings);
                 }
 
                 if ((updatePrivacy.privacySettings.profilePhotoVisibility !== oldPrivacySettings.profilePhotoVisibility)) {
-                    console.log("PROFILE STATUS");
                     handleProfilePhotoVisibilityChange(newPrivacySettings.contactsDTO);
                 }
 
                 if (updatePrivacy.privacySettings.lastSeenVisibility !== oldPrivacySettings.lastSeenVisibility) {
-                    console.log("LASTSEEN STATUS");
                     handleLastSeenVisibilityChange(this.user, newPrivacySettings);
                 }
 
                 if (updatePrivacy.privacySettings.aboutVisibility !== oldPrivacySettings.aboutVisibility) {
-                    console.log("ABOUT STATUS");
                     handleAboutVisibilityChange(newPrivacySettings.contactsDTO);
                 }
             }
@@ -395,23 +374,7 @@ export default class Chat extends AbstractView {
 
         this.webSocketManagerChat.subscribeToChannel(error, async (errorMessageDTO) => {
             const errorMessage = JSON.parse(errorMessageDTO.body);
-            const user = { name: "Veysel", age: "26" };
-            console.log("USER >", typeof user);
-            const userStringfy = JSON.stringify(user);
-            console.log("USERSTRINGFY >", typeof userStringfy);
-            console.log(userStringfy);
-            console.log(user);
-            const userParse = JSON.parse(userStringfy);
-            console.log("USERPARSE >", typeof userParse);
-            console.log(userParse);
-
-
-
-
-            console.log(typeof errorMessage);
             toastr.error(errorMessage.message);
-
-
         });
 
         this.webSocketManagerChat.subscribeToChannel(chatBlock, async (block) => {
@@ -454,7 +417,6 @@ export default class Chat extends AbstractView {
         this.webSocketManagerChat.subscribeToChannel(readMessagesChannel, (readMessages) => {
             const readMessagesJSON = JSON.parse(readMessages.body);
             const firstReadMessage = readMessagesJSON[0];
-            console.log("senderMessageJSON > ", readMessagesJSON);
             const messageBoxElement = document.querySelector('.message-box1');
             const chatBoxElements = [...document.querySelectorAll('.chat1')];
             const findChatElement = chatBoxElements.find(chatElement => chatElement.chatData.chatDTO.id === firstReadMessage.chatRoomId);
@@ -475,11 +437,8 @@ export default class Chat extends AbstractView {
         this.webSocketManagerChat.subscribeToChannel(recipientMessageChannel, async (recipientMessage) => {
             const recipientJSON = JSON.parse(recipientMessage.body);
             const decryptedMessage = await decryptMessage(recipientJSON);
-            console.log("RECIPENT > ", recipientJSON)
             const chat = this.chatList.find(chat => chat.chatDTO.id === recipientJSON.chatRoomId);
             if (!chat) {
-                console.log("IFFFFFFFFFFFFFFFFFF")
-                console.log("RECIPENT > ", recipientJSON)
                 await createChatBoxWithFirstMessage(recipientJSON)
             } else {
                 chat.userChatSettings.unreadMessageCount = recipientJSON.unreadMessageCount;
@@ -523,20 +482,12 @@ export default class Chat extends AbstractView {
 
             }
         })
-        // ToDo
-        // chatInstance.webSocketManagerChat.subscribeToChannel(readConfirmationSenderChannel, async (message) => {
-        //     console.log("Read confirmation received:", message.body);
-
-        // });
         this.webSocketManagerChat.subscribeToChannel(typingChannel, async (typingMessage) => {
             const status = JSON.parse(typingMessage.body);
             const visibleChats = [...document.querySelectorAll(".chat1")];
-            console.log("STATUS > ", status)
             if (visibleChats) {
-                console.log("CHATDOMS >>>>>> ", visibleChats)
                 const chat = visibleChats.find(el => el.chatData.chatDTO.id === status.chatRoomId);
                 if (chat && !chat.chatData.userChatSettings.blocked && !chat.chatData.userChatSettings.blockedMe) {
-                    console.log("CHAT > ", chat)
                     const messageSpan = chat.querySelector(".message-span");
                     const messageSpanSpan = chat.querySelector(".message-span-span");
 
@@ -573,10 +524,11 @@ export default class Chat extends AbstractView {
             }
             if (!getUserKey()) {
                 try {
+                    debugger;
                     const storedSessionKey = sessionStorage.getItem('sessionKey');
                     const storedEncryptedPrivateKey = localStorage.getItem('encryptedPrivateKey');
                     const storedIv = localStorage.getItem('encryptionIv');
-
+                    const storedPublicKey = sessionStorage.getItem("publicKey");
                     if (storedSessionKey && storedEncryptedPrivateKey && storedIv) {
                         const sessionKey = base64ToUint8Array(storedSessionKey);
                         setSessionKey(sessionKey);
@@ -594,9 +546,8 @@ export default class Chat extends AbstractView {
                             ["decrypt"]
                         );
 
-                        setUserKey({ privateKey });
-                        console.log("getUserKey> ", getUserKey())
-                        console.log("getUserKey> ", sessionStorage.getItem("publicKey"))
+                        const publicKey = await importPublicKey(new base64ToUint8Array(storedPublicKey));
+                        setUserKey({ privateKey, publicKey });
                     }
                 } catch (error) {
                     console.error('Session restore error:', error);
@@ -712,7 +663,6 @@ export default class Chat extends AbstractView {
 const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
     const messageBoxElement = document.querySelector('.message-box1');
     if (messageBoxElement && messageBoxElement.data.contactsDTO.userProfileResponseDTO.id === newContactPrivacy.contactsDTO.userProfileResponseDTO.id) {
-        console.log("AAAAAAAAAAAAAAAAAAAASDFASDF1")
         const statusElement = messageBoxElement.querySelector('.online-status');
         if (user.privacySettings.lastSeenVisibility === 'EVERYONE' || (newContactPrivacy.contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.lastSeenVisibility === 'CONTACTS')) {
             if (newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'EVERYONE') {
@@ -743,10 +693,8 @@ const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
 }
 
 const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
-    console.log('Online Status Visibility changed > ', newContactPrivacy);
     const messageBoxElement = document.querySelector('.message-box1');
     if (messageBoxElement && messageBoxElement.data.contactsDTO.userProfileResponseDTO.id === newContactPrivacy.contactsDTO.userProfileResponseDTO.id) {
-        console.log("AAAAAAAAAAAAAAAAAAAASDFASDF1")
         const statusElement = messageBoxElement.querySelector('.online-status');
         if (user.privacySettings.onlineStatusVisibility === 'EVERYONE' || (newContactPrivacy.contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.onlineStatusVisibility === 'CONTACTS')) {
             if (newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'EVERYONE') {
@@ -790,9 +738,7 @@ const handleProfilePhotoVisibilityChange = (newValue) => {
         changesVisibilityProfilePhoto(bool, imageElement);
     }
     const messageBoxElement = document.querySelector('.message-box1');
-    console.log("MESSAGE BOX DATA > ", messageBoxElement.data)
     if (messageBoxElement && messageBoxElement.data.contactsDTO.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id) {
-        console.log("MESSAGE BOX DATA > ", messageBoxElement.data)
         const imageElement = messageBoxElement.querySelector('.message-box1-2-1-1');
         changesVisibilityProfilePhoto(bool, imageElement);
     }

@@ -48,7 +48,6 @@ export const fetchGetLast30Messages = async (chatRoomId, userId) => {
         }
 
         const result = await response.json();
-        console.log("KARDESIM TEMIZLE ARTIK SURAYI > ", result);
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
@@ -200,7 +199,6 @@ export const fetchChatPinned = async (chatSummaryDTO) => {
 
         const result = await response.json();
         toastr.success(result.message);
-        console.log(result);
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
@@ -231,7 +229,6 @@ export const fetchChatUnPinned = async (chatSummaryDTO) => {
 
         const result = await response.json();
         toastr.success(result.message);
-        console.log(result);
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
@@ -287,7 +284,6 @@ export const fetchGetChatSummaries = async (userId) => {
         }
 
         const result = await response.json();
-        console.log(result);
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
@@ -338,7 +334,6 @@ export const fetchGetOlder30Messages = async (chatRoomId, before) => {
         }
 
         const result = await response.json();
-        console.log(result);
         return result;
     } catch (error) {
         console.error('Hata:', error.message);
@@ -359,7 +354,6 @@ export async function checkUserOnlineStatus(userId) {
             throw new Error('Kullanıcı durumu kontrol edilemedi');
         }
         const isOnline = await response.json();
-        console.log("IS ONLINE > ", isOnline)
         return isOnline;
     } catch (error) {
         console.error('Hata:', error.message);

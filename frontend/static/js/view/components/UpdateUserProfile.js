@@ -179,7 +179,6 @@ function goHome() {
         toastr.error('Hakkımda boş olamaz');
         hashError = true;
     }
-    console.log("hasherror", hashError)
     if (hashError) {
         return !hashError;
     }
@@ -217,7 +216,6 @@ function toggleEditSurname() {
         if (surnameInput.value) {
             surnameInput.readOnly = true;
             editButton.textContent = '✎';
-            console.log(surnameInput.value)
             updateUserSurname(surnameInput.value);
         }
         else {
@@ -237,7 +235,6 @@ function toggleEditPhone() {
         if (phoneInput.value) {
             phoneInput.readOnly = true;
             editButton.textContent = '✎';
-            console.log(phoneInput.value);
             const phoneRemoveHyphens = removeHyphens(phoneInput.value);
             const phoneAddZero = addZero(phoneRemoveHyphens);
             updateUserPhone(phoneAddZero);
@@ -521,7 +518,6 @@ async function cropImage(canvas1, userId, originalFile) {
             imgElement.setAttribute('src', responseText);
             profilePhotoUrlElement.appendChild(imgElement);
             profilePhotoInput.appendChild(profilePhotoUrlElement);
-            console.log('Photo uploaded successfully:', responseText);
         } catch (error) {
             console.error('Error uploading photo:', error);
         }
@@ -534,7 +530,6 @@ function removePhoto() {
 }
 
 function getUserProfilePhotoUrl() {
-    console.log("getUserProfilePhotoUrlMethod")
     return null;
 }
 

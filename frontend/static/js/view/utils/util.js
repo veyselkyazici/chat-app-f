@@ -70,18 +70,15 @@ function formatPhoneNumberOnBackspace(input) {
 }
 
 function isUserLoggedIn() {
-  console.log("token")
   var token = sessionStorage.getItem('accessToken');
   return token != null && token !== undefined;
 }
 
 function redirectToIndex() {
-  console.log("AAAAAAAAAAAAAAAAAAA");
   window.location.href = '/index.html';
 }
 
 function onPageLoad() {
-  console.log("ONLOAD");
   if (!isUserLoggedIn()) {
     redirectToIndex();
   }
@@ -235,8 +232,6 @@ function chatBoxLastMessageFormatDateTime(dateTime) {
       dateStyle: 'short'
     }).format(date);
   }
-
-  console.log("formattedDate > ", formattedDate);
   return formattedDate;
 }
 

@@ -171,10 +171,8 @@ function createButton(iconHTML, titleText, subTitleText, imgSrc, dataIcon, click
 
 
 const handleProfileClick = () => {
-    console.log("PROFIL TIKLANDI")
 }
 const handleAccountClick = () => {
-    console.log("HESAP TIKLANDI")
 }
 
 const handleSettingsBackBtnClick = () => {
@@ -339,7 +337,6 @@ const handlePrivacyClick = () => {
     });
 }
 const handleNotificationsClick = () => {
-    console.log("BİLDİRİMLER TIKLANDI")
 }
 function handleLogoutClick() {
     chatInstance.logout();
@@ -524,7 +521,6 @@ const handleLastSeenAndOnlineClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        console.log("GERİ")
         handlePrivacyClick();
     });
 }
@@ -593,7 +589,6 @@ const handleProfilePhotoClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        console.log("GERİ")
         handlePrivacyClick();
     });
 }
@@ -664,7 +659,6 @@ const handleAboutMeClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        console.log("GERİ")
         handlePrivacyClick();
     });
 }
@@ -730,7 +724,6 @@ const handleGroupsClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        console.log("GERİ")
         handlePrivacyClick();
     });
 }
@@ -739,7 +732,6 @@ const handleBlockedContactsClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        console.log("GERİ")
         handlePrivacyClick();
     });
 }
@@ -832,8 +824,6 @@ const updateRadioButtonState = (radioButton, isChecked) => {
 const handleRadioButtonClick = async (radioButton, optionName) => {
     const ariaLabel = radioButton.getAttribute('aria-label');
     let visibilityOption = mapAriaLabelToEnum(ariaLabel);
-    console.log("RADIO BUTTON > ", radioButton)
-    console.log("OPTION NAME  > ", optionName)
     if (!visibilityOption) {
         visibilityOption = chatInstance.user.privacySettings[PrivacySettings.LAST_SEEN_VISIBILITY];
     }
@@ -855,8 +845,6 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
         ...chatInstance.user.privacySettings,
         [optionName]: visibilityOption
     };
-    console.log("SETTINGS > ", updatedPrivacySettingsDTO);
-    console.log("SETTINGS CHAT INSTANCE > ", chatInstance.user);
     if (optionName === PrivacySettings.LAST_SEEN_VISIBILITY) {
         const radioGroups = document.querySelectorAll('[role="radiogroup"]');
         if (radioGroups.length > 1) {

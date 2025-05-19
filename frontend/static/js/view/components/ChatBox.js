@@ -12,7 +12,6 @@ function handleChats() {
 
     let visibleItemCount = calculateVisibleItemCount();
     for (let i = 0; i < visibleItemCount && i < chatInstance.chatList.length; i++) {
-        console.log(i)
         createChatBox(chatInstance.chatList[i], i);
     }
     const updateItemsDTO = new UpdateItemsDTO({
@@ -23,30 +22,6 @@ function handleChats() {
     });
 
     virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount);
-
-    // window.addEventListener('resize', () => {
-    //     const newVisibleItemCount = calculateVisibleItemCount();
-    //     console.log("newVisibleItemCount > ", newVisibleItemCount)
-    //     if (newVisibleItemCount !== visibleItemCount) {
-    //         if (newVisibleItemCount < visibleItemCount) {
-    //             for (let i = visibleItemCount - 1; i >= newVisibleItemCount; i--) {
-    //                 const itemToRemove = document.querySelector(`.chat1[style*="z-index: ${i}"]`);
-    //                 if (itemToRemove) {
-    //                     removeEventListeners(itemToRemove);
-    //                     itemToRemove.remove();
-    //                 }
-    //             }
-    //         } else {
-    //             for (let i = visibleItemCount; i < newVisibleItemCount && i < chatInstance.chatList.length; i++) {
-    //                 createChatBox(chatInstance.chatList[i], i);
-    //             }
-    //         }
-
-    //         visibleItemCount = newVisibleItemCount;
-
-    //         virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount);
-    //     }
-    // });
 }
 const calculateVisibleItemCount = () => {
     const boxElement = document.querySelector(".chats");
@@ -54,12 +29,6 @@ const calculateVisibleItemCount = () => {
     return Math.ceil(boxHeight / 72) + 7;
 };
 async function createChatBox(chat, index) {
-    console.log("CHATQWE > ", chat.contactsDTO.userContactName)
-    console.log("CHAT > ", chat)
-    console.log("INDEX > ", index)
-    // const time = chat.chatDTO.lastMessageTime;
-    // const date = new Date(time);
-    // const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const formattedTime = chatBoxLastMessageFormatDateTime(chat.chatDTO.lastMessageTime);
     const chatElementDOM = document.createElement("div");
     chatElementDOM.classList.add("chat1");
@@ -70,7 +39,6 @@ async function createChatBox(chat, index) {
     chatElementDOM.style.zIndex = index;
     chatElementDOM.chatData = chat;
     chatElementDOM.dataset.user = chat.contactsDTO.userContactName != null ? chat.contactsDTO.userContactName : chat.userProfileResponseDTO.email;
-    console.log("CHAT BOX >>>>>> ", chat);
 
     const chatBox = createElement('div', 'chat-box');
 
@@ -121,7 +89,6 @@ async function createChatBox(chat, index) {
 
     const messageDiv = createElement('div', 'message');
     lastMessageDiv.appendChild(messageDiv);
-    console.log("chatInstance.user.userKey.privateKey", chatInstance.user.userKey.encryptedPrivateKey)
     const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
     messageDiv.appendChild(messageSpan);
     let message;
@@ -162,18 +129,10 @@ async function createChatBox(chat, index) {
 
     const chatListContentElement = document.querySelector(".chat-list-content");
     chatListContentElement.style.height = chatInstance.chatList.length * 72 + "px";
-    console.log("CHAT ELEMENT DOM > ", chatElementDOM)
     addEventListeners(chatElementDOM);
-    // if (index === 0) {
-    //     chatListContentElement.prepend(chatElementDOM);
-    // } else {
-    //     chatListContentElement.appendChild(chatElementDOM);
-
-    // }
     chatListContentElement.appendChild(chatElementDOM);
 }
 function createUnreadMessageCount(chat) {
-    console.log("chat.userChatSettings.unreadMessageCount > ", chat.userChatSettings.unreadMessageCount)
     const unreadMessageCountDiv = createElement('div', 'unread-message-count-div');
     const unreadMessageCountSpan = createElement('span', 'unread-message-count-span', {}, { 'aria-label': `${chat.userChatSettings.unreadMessageCount} okunmamış mesaj` }, chat.userChatSettings.unreadMessageCount);
     unreadMessageCountDiv.appendChild(unreadMessageCountSpan);
@@ -191,7 +150,6 @@ function updateChatBox(chat) {
 
 function moveChatToTop(chatRoomId) {
     const chatIndex = chatInstance.chatList.findIndex(chat => chat.chatDTO.id === chatRoomId);
-    console.log("CHAT INDEX MOVE TO TOP > ", chatIndex)
     if (chatIndex !== -1) {
         let chat = null;
         if (chatInstance.chatList.length !== 1) {
@@ -200,8 +158,6 @@ function moveChatToTop(chatRoomId) {
         } else {
             chat = chatInstance.chatList[0];
         }
-
-        console.log("CHAT LIST MOVE CHAT TO TOP > ", chatInstance.chatList)
         const chatElements = document.querySelectorAll('.chat1');
         const chatElement = Array.from(chatElements).find(el => el.chatData.chatDTO.id === chatRoomId);
         if (chatElement) {
@@ -241,22 +197,15 @@ const isChatListLengthGreaterThanVisibleItemCount = () => {
 }
 function updateChatsTranslateY() {
     const chatElements = document.querySelectorAll('.chat1');
-    console.log("chatElements > ", chatElements)
     chatElements.forEach((chatElement) => {
-        console.log("chatElement > ", chatElement)
         const currentTranslateY = parseInt(chatElement.style.transform.replace("translateY(", "").replace("px)", ""));
-        // chatElement.style.transform = `translateY(${(currentTranslateY + 72)}px)`;
-
-
         chatElement.style.transform = `translateY(${currentTranslateY + 72}px)`;
         chatElement.zIndex = currentTranslateY / 72;
-
         chatElement.style.zIndex = +chatElement.style.zIndex + 1;
     });
 }
 function handleMouseover(event) {
     const chatElementDOM = event.currentTarget;
-    console.log(chatElementDOM.chatData)
     const chatOptionsSpan = chatElementDOM.querySelectorAll('.chat-options > span')[1];
     if (chatOptionsSpan) {
 
@@ -296,7 +245,6 @@ function handleOptionsBtnClick(event) {
     const target = event.currentTarget;
     const chatData = target.chatData;
     const chatElement = target.closest('.chat1');
-    console.log(chatElement)
     const spans = document.querySelectorAll('.app span');
     const showChatOptions = spans[1];
 
@@ -304,14 +252,11 @@ function handleOptionsBtnClick(event) {
         const existingOptionsDiv = showChatOptions.querySelector('.options1');
 
         if (existingOptionsDiv) {
-            console.log("Seçenekler kapatılıyor");
             existingOptionsDiv.remove();
         } else {
-            console.log("Seçenekler açılıyor");
             const chatOptionsDiv = document.createElement("div");
 
             const rect = target.getBoundingClientRect();
-            console.log(rect);
             chatOptionsDiv.classList.add('options1');
             chatOptionsDiv.setAttribute('role', 'application');
             chatOptionsDiv.style.transformOrigin = 'left top';
@@ -320,7 +265,6 @@ function handleOptionsBtnClick(event) {
             chatOptionsDiv.style.transform = 'scale(1)';
             chatOptionsDiv.style.opacity = '1';
             closeOptionsDivOnClickOutside();
-            // const archiveLabel = chatData.userChatSettings.archived ? 'Sohbeti arşivden çıkar' : 'Sohbeti arşivle';
             const archiveLabel = chatData.userChatSettings.archived ? 'Arşivden çıkar' : 'Sohbeti arşivle';
             const blockLabel = chatData.userChatSettings.blocked ? 'Engeli kaldır' : 'Engelle';
             const pinLabel = chatData.userChatSettings.pinned ? 'Sohbeti sabitlemeyi kaldır' : 'Sohbeti sabitle';
@@ -400,9 +344,7 @@ const updateChatInstance = (chatId, blockedStatus) => {
     }
 };
 const toggleBlockUser = async (chatData) => {
-    console.log("CHAT DATA TOOGLE BLOCK USER > ", chatData)
     const isBlocked = chatData.userChatSettings.blocked;
-    console.log("isBlocked > ", isBlocked)
     const blockMessage = isBlocked
         ? `${chatData.userProfileResponseDTO.email} kişinin Engeli kaldırılsın mı?`
         : `${chatData.userProfileResponseDTO.email} kişi Engellensin mi?`;
@@ -475,12 +417,9 @@ const toggleBlockUser = async (chatData) => {
 };
 const deleteChat = async (chatData, showChatOptions, chatElement) => {
     showChatOptions.removeChild(showChatOptions.firstElementChild);
-    console.log("CHAT DATA TOOGLE BLOCK USER > ", chatData)
-    console.log("CHAT DATA TOOGLE BLOCK USER > ", chatElement)
     const modalMessage = `${chatData.userProfileResponseDTO.email} kişisiyle olan sohbetiniz silinsin mi?`
     const mainCallback = async () => {
         try {
-            console.log("chatData.userChatSettings > ", chatData.userChatSettings)
             const response = await fetchDeleteChat(chatData.userChatSettings);
             if (response) {
                 removeChat(chatElement);
@@ -503,21 +442,17 @@ const deleteChat = async (chatData, showChatOptions, chatElement) => {
         headerHtml: null
     }));
     const chatElements1 = document.querySelectorAll('.chat1');
-    console.log("chatElements > ", chatElements1)
 };
 
 function removeChat(chatElement) {
     const chatElements1 = document.querySelectorAll('.chat1');
-    console.log("chatElements1 > ", chatElements1)
     const deletedChatTranslateY = parseInt(chatElement.style.transform.replace("translateY(", "").replace("px)", ""));
     removeEventListeners(chatElement);
     const removeIndex = chatInstance.chatList.findIndex(chat =>
         (chat.chatDTO.id && chat.chatDTO.id === chatElement.chatData.chatDTO.id)
     );
 
-    console.log("REMOVE INDEX > ", removeIndex)
     if (removeIndex !== -1) {
-        console.log("REMOVE INDEX > ", chatInstance.chatList[removeIndex])
         chatInstance.chatList.splice(removeIndex, 1);
     }
     const chatListElement = document.querySelector(".chat-list-content");
@@ -542,7 +477,6 @@ function removeChat(chatElement) {
 
 function updateTranslateYAfterDelete(deletedChatTranslateY) {
     const chatElements = document.querySelectorAll('.chat1');
-    console.log("chatElements > ", chatElements)
     let maxTranslateY = -1;
     let minTranslateY = Infinity;
 
@@ -561,7 +495,6 @@ function updateTranslateYAfterDelete(deletedChatTranslateY) {
 
     });
     const chatElements1 = document.querySelectorAll('.chat1');
-    console.log("chatElements > ", chatElements1)
     return {
         maxIndex: maxTranslateY / 72,
         minIndex: minTranslateY / 72
@@ -570,7 +503,6 @@ function updateTranslateYAfterDelete(deletedChatTranslateY) {
 
 function translateYChatsDown(targetChatElementTranslateY) {
     const chatElements = document.querySelectorAll('.chat1');
-    console.log("chatElements > ", chatElements)
     let maxTranslateY = -1;
     let minTranslateY = Infinity;
 
@@ -591,7 +523,6 @@ function translateYChatsDown(targetChatElementTranslateY) {
 
     });
     const chatElements1 = document.querySelectorAll('.chat1');
-    console.log("chatElements > ", chatElements1)
     return {
         maxIndex: maxTranslateY / 72,
         minIndex: minTranslateY / 72
@@ -637,7 +568,6 @@ function updateChatBoxElement(chatElement, newChatData, newIndex) {
     timeDiv.textContent = chatBoxLastMessageFormatDateTime(newChatData.chatDTO.lastMessageTime);
     messageSpan.textContent = newChatData.chatDTO.lastMessage;
     chatElement.style.transform = `translateY(${newIndex * 72}px)`;
-    console.log("chatElement.style.transform > ", chatElement.style.transform)
     chatElement.style.zIndex = chatInstance.chatList.length - newIndex;
 }
 function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
@@ -679,7 +609,6 @@ function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
 }
 const togglePinnedChat = async (chatData, showChatOptions) => {
     showChatOptions.removeChild(showChatOptions.firstElementChild);
-    console.log("CHAT DATA TOOGLE BLOCK USER > ", chatData)
     const isPinned = chatData.userChatSettings.pinned;
 
     try {
@@ -730,7 +659,6 @@ async function handleChatClick(event) {
     chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${chatInstance.user.id}/queue/read-confirmation-recipient`);
     const readConfirmationRecipientChannel = `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`;
     chatInstance.webSocketManagerChat.subscribeToChannel(readConfirmationRecipientChannel, async (message) => {
-        console.log("Read confirmation received:", message.body);
         removeUnreadMessageCountElement(chatElement);
         if (!isMessageBoxDomExists(chatElement.chatData.chatDTO.id))
             await fetchMessages(chatElement.chatData);
@@ -792,7 +720,6 @@ function addEventListeners(chatElementDOM) {
 
 async function createChatBoxWithFirstMessage(recipientJSON) {
     const result = await fetchGetChatSummary(recipientJSON.recipientId, recipientJSON.senderId, recipientJSON.chatRoomId);
-    console.log("RESULT > ", result)
     chatInstance.chatList.unshift(result);
     const paneSideElement = document.querySelector("#pane-side");
     const scrollTop = paneSideElement.scrollTop;
@@ -813,7 +740,6 @@ async function createChatBoxWithFirstMessage(recipientJSON) {
 
 function findMaxTranslateYChatElement() {
     const chatElements = document.querySelectorAll('.chat1');
-    console.log("chatElements > ", chatElements)
     let maxTranslateY = -1;
     let chatElementMaxTranslateY = null;
 

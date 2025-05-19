@@ -24,7 +24,6 @@ export const fetchLogin = async (formElements, email, password) => {
         email: email,
         password: password
     };
-    console.log(formElements)
     try {
         const response = await fetch(`${AUTH_SERVICE_URL}/login`, {
             method: "POST",

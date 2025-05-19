@@ -8,7 +8,6 @@ import { deleteContactOrInvitation, fetchSendInvitation } from '../services/cont
 import { fetchGetLast30Messages } from '../services/chatService.js';
 
 function createContactHTML(user, index) {
-    console.log("CREATE CONTACT HTML USER > ", user)
     const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
 
     const newHeight = chatInstance.contactList.length * 72;
@@ -23,7 +22,6 @@ function createContactHTML(user, index) {
     contactElementDOM.style.height = "72px";
     contactElementDOM.style.transform = `translateY(${index * 72}px)`;
     contactElementDOM.contactData = user;
-    console.log("USER > ", user);
     if (user.contactsDTO) {
         const chatBox = createContactsHTML(user);
         contactElementDOM.dataset.user = user.contactsDTO.userContactName;
@@ -53,7 +51,6 @@ const createContactsHTML = (user) => {
     const imageContainer = createElement('div', 'image', { height: '49px', width: '49px' });
     chatLeftImage.appendChild(imageContainer);
 
-    console.log("USER > ", user)
     const photo = createVisibilityProfilePhoto(user.userProfileResponseDTO, user.contactsDTO);
 
     imageContainer.appendChild(photo);
@@ -79,8 +76,6 @@ const createContactsHTML = (user) => {
     const messageContainer = createElement('div', 'message');
     lastMessage.appendChild(messageContainer);
 
-    console.log("CREATE CONTACT HTML USER > ", user)
-
     if (user.userProfileResponseDTO.privacySettings.aboutVisibility === 'EVERYONE' || (user.contactsDTO.relatedUserHasAddedUser && user.userProfileResponseDTO.privacySettings.aboutVisibility === 'CONTACTS')) {
         const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
         messageContainer.appendChild(messageSpan);
@@ -101,7 +96,6 @@ const createContactsHTML = (user) => {
 }
 const createInvitationsHTML = (user) => {
     const chatBox = createElement('div', 'chat-box');
-    console.log("USERRRRRRRRRRRRRRRRRRRR> ", user)
     const chatRow = createElement('div', '', {}, { 'tabindex': '-1', 'aria-selected': 'false', 'role': 'row' });
     chatBox.appendChild(chatRow);
 
@@ -167,7 +161,6 @@ const createInvitationsHTML = (user) => {
     chatOptions.appendChild(span3);
 
     if (user.invitationResponseDTO && !user.invitationResponseDTO.invited) {
-        console.log("AAAAAAAAAAAAAAA")
         const nameSpan = createElement('span', 'name-span', {}, { 'dir': 'auto', 'title': user.invitationResponseDTO.contactName, 'aria-label': '' }, user.invitationResponseDTO.contactName);
         nameContainer.appendChild(nameSpan);
         const invitationBtnContainer = createElement('div', 'invitation-btn');
@@ -185,7 +178,6 @@ const createInvitationsHTML = (user) => {
         invitationButton.appendChild(buttonDiv1);
         invitationBtnContainer.appendChild(invitationButton);
     } else {
-        console.log("BBBBBBBBBBBBBBB")
         const nameSpan = createElement('span', 'name-span', {}, { 'dir': 'auto', 'title': user.contactsDTO.userContactName, 'aria-label': '' }, user.contactsDTO.userContactName);
         nameContainer.appendChild(nameSpan);
     }
@@ -225,7 +217,6 @@ function handleContacts() {
 
 
 function addEventListeners(contactElement) {
-    console.log(contactElement.contactData)
     contactElement.addEventListener('click', handleContactClick);
     contactElement.addEventListener('mouseenter', handleMouseover);
     contactElement.addEventListener('mouseleave', handleMouseout);
@@ -434,10 +425,8 @@ function createContactListViewHTML() {
 async function handleContactClick(event) {
     const contactElementDOM = event.currentTarget;
     const contactData = contactElementDOM.contactData;
-    console.log("CONTACTDATA > ", contactData)
     if (contactData.contactsDTO) {
         const chatBoxElement = findChatRoomElement(contactData.contactsDTO.userId, contactData.contactsDTO.userContactId);
-        console.log("CHATBOXELEMENT > ", chatBoxElement)
         const innerDiv = chatBoxElement?.querySelector('.chat-box > div');
         if (chatBoxElement && innerDiv?.getAttribute('aria-selected') === 'true') {
             const contactListRenderDiv = document.querySelector('.a1-1-1');
@@ -451,7 +440,6 @@ async function handleContactClick(event) {
         let chatRequestDTO;
         if (!findChat) {
             const createChatRoomAndUserChatSettings = await fetchCreateChatRoomIfNotExists(chatInstance.user.id, contactData.contactsDTO.userContactId);
-            console.log("ABCDE > ", createChatRoomAndUserChatSettings)
             chatRequestDTO = {
                 contactsDTO: {
                     contact: { ...contactData.contactsDTO },
@@ -490,7 +478,6 @@ async function handleContactClick(event) {
             showBorders: false,
             mainCallback: async () => {
                 const response = await fetchSendInvitation(contactData);
-                console.log(response)
                 return response;
             },
             headerHtml: null

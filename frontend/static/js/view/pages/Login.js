@@ -124,9 +124,9 @@ const loginForm = async () => {
 
     localStorage.setItem('encryptedPrivateKey', base64Encode(encryptedPrivateKeyWithSession));
     localStorage.setItem('encryptionIv', base64Encode(newIv));
-    sessionStorage.setItem('sessionKey', base64Encode(newSessionKey));
     const publicKey = await importPublicKey(new base64ToUint8Array(exportedPublicKey));
-    sessionStorage.setItem('publicKey', base64Encode(exportedPublicKey));
+    sessionStorage.setItem('publicKey', exportedPublicKey); 
+    sessionStorage.setItem('sessionKey', base64Encode(newSessionKey));
     setUserKey({ privateKey, publicKey });
     navigateTo("/chat")
   }

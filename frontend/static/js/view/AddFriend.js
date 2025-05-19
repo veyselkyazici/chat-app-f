@@ -36,7 +36,6 @@ function checkForm () {
     }
 
     if(!email) {
-        console.log("email")
         toastr.error('Email boş olamaz')
         hashError = true;
     }
@@ -49,12 +48,9 @@ function checkForm () {
         }
         fetchAddToFriendRequest(requestDTO)
     }
-
-    console.log(email);
 }
 const sendFriendRequest = 'http://localhost:8080/api/v1/friendships/add-to-friends';
 const fetchAddToFriendRequest = async (requestBody) => {
-    console.log(requestBody)
     try {
         const response = await fetch(sendFriendRequest, {
             method: 'POST',
@@ -66,7 +62,6 @@ const fetchAddToFriendRequest = async (requestBody) => {
         });
         const result = await response.json();
         if (result.statusCode === 200) {
-            console.log("RESULT: ", result)
             toastr.success(result.message)
         } else {
             toastr.error(result.message);

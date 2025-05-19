@@ -9,8 +9,6 @@ export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount)
     const onScroll = () => {
         const scrollTop = paneSideElement.scrollTop;
         const newStart = Math.max(Math.floor(scrollTop / 72) - 2, 0);
-        // const newStart1 = Math.max(Math.floor(scrollTop / 72) - 1, 0);
-        // console.log("NEWSTART > ", newStart1)
         const newEnd = newStart + visibleItemCount;
 
         if (newStart !== start || newEnd !== end) {
@@ -29,8 +27,6 @@ export function virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount)
 // ToDo profilePhoto halledilecek
 // ToDo invitationlar yapilacak
 export function updateItems(updateItemsDTO, newStart, newEnd) {
-
-    console.log("UPDATE ITEM DTO > ", updateItemsDTO, " newStart > ", newStart, " newEnd > ", newEnd)
     const itemsToUpdate = updateItemsDTO.itemsToUpdate.filter(item => {
         const translateY = parseInt(item.style.transform.replace("translateY(", "").replace("px)", ""));
         const index = translateY / 72;
@@ -46,7 +42,6 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
         const index = Math.floor(translateY / 72);
         const newIndex = (index < newStart) ? (newEnd - 1 - idx) : (newStart + idx);
         const listItem = updateItemsDTO.list[newIndex];
-        console.log("listItem > ", listItem)
         if (listItem) {
             if (!('invitationResponseDTO' in listItem)) {
                 const profileImage = item.querySelector('.image');
@@ -77,7 +72,6 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
                     }
                 }
                 const time = listItem.chatDTO.lastMessageTime;
-                console.log(time)
                 const date = new Date(time);
                 const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const nameSpan = item.querySelector(".name-span");
@@ -112,7 +106,6 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
                         }
                     }
                     item.contactData = listItem;
-                    console.log("CONTACT DATA > ", item.contactData)
                     const messageSpan = item.querySelector(".message-span-span");
                     nameSpan.textContent = listItem.contactsDTO.userContactName;
                     if (messageSpan) {

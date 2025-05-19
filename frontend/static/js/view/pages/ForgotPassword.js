@@ -71,7 +71,6 @@ let forgotPasswordId;
 async function sendOtp(event) {
     event.preventDefault();
     const email = document.getElementById("sendOtpFormEmail").value;
-    console.log(email)
     clearErrorMessages();
     let hasError = false;
 
@@ -108,8 +107,6 @@ async function verifyOtp(event) {
     event.preventDefault();
     const email = document.getElementById("sendOtpFormEmail").value;
     const otp = document.getElementById("verifyOtpFormOtp").value;
-
-    console.log(email);
 
     let hasError;
 
@@ -172,8 +169,6 @@ async function resetPassword(event) {
         forgotPasswordId: forgotPasswordId,
         newPassword: password
     }
-
-    console.log(requestBody)
     try {
         const response = await fetchResetPassword(forgotPasswordId, password);
         if (response.ok) {

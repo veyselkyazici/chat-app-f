@@ -40,7 +40,6 @@ async function addFriendView() {
 
 function handleSearchInput(event) {
     const searchString = event.target.value;
-    console.log("Aranan ifade:", searchString);
     if (searchString === '') {
         clearAddFriendsList();
     } else {
@@ -70,7 +69,6 @@ const fetchSearchUsers = async (searchString) => {
         }
         const result = await response.json();
         if (result) {
-            console.log("RESULT: ", result)
             renderSearchResults(result);
 
         } else {
@@ -109,13 +107,11 @@ function renderSearchResults(searchResults) {
         const addFriendBtns = chatItem.querySelector('.add-btn');
 
         addFriendBtns.addEventListener('click', function () {
-            console.log(user.id, "----", user.email)
             const friendRequest = {
                 token: sessionStorage.getItem('access_token'),
                 friendId: user.id,
                 friendEmail: user.email
             };
-            console.log(friendRequest)
             sendFriendRequest(friendRequest)
         });
 
@@ -139,7 +135,6 @@ const fetchSendFriendRequest = async (id) => {
         }
         const result = await response.json();
         if (result) {
-            console.log("RESULT: ", result)
 
         } else {
             toastr.error('Kullanıcı arama başarısız');
@@ -152,9 +147,6 @@ const fetchSendFriendRequest = async (id) => {
 const friendRequestUrl = "add-friend";
 
 function sendFriendRequest(friendRequest) {
-    console.log("friend request: ", friendRequest)
-    console.log(friendRequestUrl)
-    console.log(chatInstance.webSocketManagerFriendships)
     chatInstance.webSocketManagerFriendships.sendMessageToAppChannel(friendRequestUrl, friendRequest);
 }
 export { addFriendView };

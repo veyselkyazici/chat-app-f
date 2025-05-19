@@ -143,15 +143,11 @@ async function registerUser() {
     salt: Array.from(salt),
     iv: Array.from(iv)
   };
-  console.log("asdfasdfasdfasdf")
   try {
     const response = await fetchRegister(requestBody);
     const responseData = await response.json();
     if (response.ok) {
-      console.log("Registration successful:", responseData);
       toastr.success('Kayıt İşlemi Başarılı');
-      const showModalContet = `Başarıyla Kayıt Oldunuz`;
-      // showModal(null, showModalContet, redirectToLogin, undefined, false);
       navigateTo("/login");
     } else {
       formElements.generalErrorDOM.textContent = responseData.message;

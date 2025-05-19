@@ -11,16 +11,13 @@ class WebSocketManager {
             this.sockJs = new SockJS(this.webSocketUrl);
             this.stompClient = Stomp.over(this.sockJs);
             this.stompClient.connect({ userId: this.userId }, () => {
-                console.log('Connected to WebSocket');
                 successCallback();
                 this.notifyOnlineStatus(true);
             }, (error) => {
-                console.error('WebSocket connection error:', error);
                 errorCallback(error);
                 this.notifyOnlineStatus(false);
             });
         } catch (error) {
-            console.error('WebSocket connection error:', error);
             errorCallback(error);
         }
     }
@@ -37,14 +34,11 @@ class WebSocketManager {
 
 
     subscribeToChannel(channel, callback) {
-        console.log("SUBSCRIBE TO CHANNEL");
         if (this.stompClient && !this.subscriptions.has(channel)) {
-            console.log("SUBSCRIBE TO CHANNEL IFFFFFFFFFFFFFFFF");
             const subscription = this.stompClient.subscribe(channel, callback);
             this.subscriptions.set(channel, subscription);
         }
         for (const [key, value] of this.subscriptions) {
-            console.log(`Key: ${key}, Value: ${value}`);
         }
     }
 
@@ -70,7 +64,6 @@ class WebSocketManager {
     async notifyOnlineStatus(isOnline) {
         if (isOnline) {
             this.sendMessageToAppChannel('user-online', { userId: this.userId, online: true });
-            console.log("ONLINE USERID> ", this.userId)
         } else {
             await fetchUpdateUserLastSeen(this.userId)
             this.sendMessageToAppChannel('user-offline', { userId: this.userId, online: false });

@@ -44,7 +44,6 @@ const addContactModal = (options) => {
     const nameDOM = document.querySelector('#contactName');
     const customModal = document.getElementById('customModal');
     const closeModal = () => {
-        console.log("AAAAAAAAAAA")
         customModal.remove();
     };
 
@@ -69,7 +68,6 @@ const addContact = (emailDOM, nameDOM, closeModal) => {
     }
 
     if (isValid) {
-        console.log(chatInstance.user)
         const dto = new AddContactRequestDTO({
             userId: chatInstance.user.id,
             userContactName: name,
@@ -78,10 +76,6 @@ const addContact = (emailDOM, nameDOM, closeModal) => {
         fetchAddContact(dto, closeModal);
 
     }
-
-    console.log("Email:", email);
-    console.log("Name:", name);
-    console.log("DENEME");
 };
 
 

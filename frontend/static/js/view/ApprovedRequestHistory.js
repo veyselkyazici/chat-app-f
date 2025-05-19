@@ -31,8 +31,6 @@ async function createApprovedRequestHistory(fetchFriendRequestReplyData) {
         visibleElements(chatListHeaderElement, chatListContentElement, chatContentElement);
         removeElements(incomingFriendRequestsElement)
     });
-
-    console.log(fetchFriendRequestReplyData)
 }
 
 async function fetchFriendRequestReply() {
@@ -49,10 +47,8 @@ async function fetchFriendRequestReply() {
             body: JSON.stringify(requestBody)
         });
         const data = await response.json();
-        console.log(data)
         return data;
     } catch (error) {
-        console.log(error)
     }
 }
 

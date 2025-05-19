@@ -10,7 +10,6 @@ async function createIncomingFriendRequests() {
     const chatContentElement = document.querySelector('.chat-content');
 
     const friendRequests = await fetchFriendRequests();
-    console.log("friendrequests: ", friendRequests)
 
     const incomingFriendRequestsHTML = `
     <div class="incoming-friend-requests" id="incoming-friend-requests">

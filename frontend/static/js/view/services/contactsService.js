@@ -1,8 +1,6 @@
 const CONTACTS_SERVICE_URL = "http://localhost:8080/api/v1/contacts";
 const INVITATION_SERVICE_URL = "http://localhost:8080/api/v1/invitation";
 export async function deleteContactOrInvitation(id, type) {
-    console.log(id)
-    console.log(type)
     const url = type === 'contact' ? `${CONTACTS_SERVICE_URL}/${id}` : `${INVITATION_SERVICE_URL}/${id}`;
     try {
         const response = await fetch(url, {
@@ -76,7 +74,6 @@ export const fetchGetContactList = async (userId) => {
 };
 
 export const fetchAddContact = async (dto, closeModal) => {
-    console.log(dto)
     try {
         const response = await fetch(`${CONTACTS_SERVICE_URL}/add-contact`, {
             method: 'POST',

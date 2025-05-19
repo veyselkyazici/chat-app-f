@@ -12,8 +12,6 @@ let selection = null;
 const emojiRegex = /([\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF}|\u{1F700}-\u{1F77F}|\u{1F780}-\u{1F7FF}|\u{1F800}-\u{1F8FF}|\u{1F900}-\u{1F9FF}|\u{1FA00}-\u{1FA6F}|\u{1FA70}-\u{1FAFF}])/gu;
 
 async function createMessageBox(chat) {
-    console.log("MESSAGE BOX > ", chat);
-    console.log("MESSAGE BOX > ", chat.messagesDTO.lastPage);
     let typingStatus = { isTyping: false, previousText: "" };
     const messageBoxElement = await createMessageBoxHTML(chat, typingStatus);
     // ToDo lastPage bakilacak renderMessage
@@ -52,7 +50,6 @@ const typingStatusSubscribe = (chat, messageBoxElement) => {
     });
 }
 const typingsStatus = async (status, chat, messageBoxElement) => {
-    console.log("typingStatusSubscribe > ", status);
     const statusSpan = messageBoxElement.querySelector('.online-status-1');
     if (statusSpan) {
         messageBoxElement.removeChild(statusSpan.parentElement);
@@ -75,7 +72,6 @@ const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
 
 const onlineStatus = async (statusMessage, chat, messageBoxElement) => {
     const status = JSON.parse(statusMessage.body);
-    console.log("handleOnlineStatus > ", status);
     const statusSpan = messageBoxElement.querySelector('.online-status-1');
 
     if (statusSpan) {
@@ -105,7 +101,6 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
     const hasElement = textArea.querySelector('.message-box1-7-1-1-1-2-1-1-1-2') !== null;
     typingStatus.previousText = hasElement ? null : textArea.textContent;
     if (!typingStatus.isTyping && typingStatus.previousText?.length > 0) {
-        console.log("typingStatus > ", typingStatus)
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
     }
@@ -116,11 +111,6 @@ function handlePaste(event) {
 
 function handleTextInput(textArea, sendButton, chat, typingStatus, event) {
     const currentText = textArea.textContent;
-    console.log("CHAT > ", chat)
-    console.log("CURRENT TEXT > ", chat)
-    console.log("CURRENT TEXT > ", typingStatus)
-    console.log("CURRENT TEXT > ", currentText)
-    console.log("CURRENT TEXT > ", currentText.length)
     if (currentText && !typingStatus.isTyping) {
         chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", { userId: chat.user.id, chatRoomId: chat.id, typing: true, friendId: chat.contactsDTO.userProfileResponseDTO.id });
         typingStatus.isTyping = true;
@@ -133,7 +123,6 @@ function handleTextInput(textArea, sendButton, chat, typingStatus, event) {
     updatePlaceholder(textArea, sendButton, typingStatus);
     updateCaretPosition(event);
     if (event.inputType === 'deleteContentBackward') {
-        console.log("ABCDE")
         handleDeleteContentBackward(event);
     } else {
         input(event.data, textArea);
@@ -164,7 +153,6 @@ function handleDeleteContentBackward(event) {
 }
 
 function handleTextKeyDown(event) {
-    console.log("AZSASDFASDF")
     keydown(event, event.target);
 }
 
@@ -421,11 +409,9 @@ function generateEmojiHTML() {
     </div>`;
 }
 const createMessageBoxHTML = async (chat, typingStatus) => {
-    console.log("MESSAGE BOX 123 > ", chat)
     const messageBoxElement = document.querySelector('.message-box');
     const main = createElement('div', 'message-box1', null, { id: 'main' });
     main.data = chat;
-    console.log("MAIN DATA > ", main.data)
     const divMessageBox1_1 = createElement('div', 'message-box1-1', { opacity: '0.4' });
     main.appendChild(divMessageBox1_1);
     const header = createElement('header', 'message-box1-2');
@@ -608,8 +594,6 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
     messageBox1_2.addEventListener('scroll', async () => {
         if (messageBox1_2.scrollTop === 0) {
             const visibleFirstMessageData = getFirstMessageDate();
-            console.log("visibleFirstMessageData > ", visibleFirstMessageData)
-            console.log('En üstteyiz, eski mesajlar yükleniyor...');
             const older30Messages = await fetchGetOlder30Messages(visibleFirstMessageData.message.chatRoomId, visibleFirstMessageData.message.fullDateTime);
             renderMessage(older30Messages.messages, chat.contactsDTO.userProfileResponseDTO.privacySettings, false);
         } else {
@@ -822,7 +806,6 @@ const onlineInfo = async (chat, messageBoxDiv2) => {
     if (!chat.userChatSettings.blocked && !chat.userChatSettings.blockedMe) {
         const contactsOnlineStatusElement = await isOnline(chat.user, chat.contactsDTO);
         if (contactsOnlineStatusElement) {
-            console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxx > ", contactsOnlineStatusElement)
             onlineVisibilitySubscribe(chat, messageBoxDiv2);
             messageBoxDiv2.appendChild(contactsOnlineStatusElement);
         }
@@ -845,7 +828,6 @@ const isMessageBoxDomExists = (chatRoomId) => {
     }
 }
 const renderMessage = async (messageDTO, privacySettings, scroll) => {
-    console.log("MESSAGES RENDER MESSAGE > ", messageDTO)
     const messageRenderDOM = document.querySelector('.message-box1-5-1-2-2');
     let messagesArray, lastPage;
     if (Array.isArray(messageDTO.messages)) {
@@ -1042,11 +1024,8 @@ const scrollToBottom = () => {
     messageRenderDOM.scrollTop = messageRenderDOM.scrollHeight;
 };
 const isOnline = async (user, contactsDTO) => {
-    console.log("USER > ", user)
-    console.log("CONTACT > ", contactsDTO)
     if ((user.privacySettings.lastSeenVisibility !== 'NOBODY' || user.privacySettings.onlineStatusVisibility !== 'NOBODY') && (contactsDTO.userProfileResponseDTO.lastSeenVisibility !== 'NOBODY' || contactsDTO.userProfileResponseDTO.onlineStatusVisibility !== 'NOBODY')) {
         const friendStatus = await checkUserOnlineStatus(contactsDTO.contact.userContactId);
-        console.log("FRIEND STATUS > ", friendStatus)
         if (friendStatus.online) {
             return isOnlineStatus(user, contactsDTO);
         } else {
@@ -1056,10 +1035,8 @@ const isOnline = async (user, contactsDTO) => {
     return;
 }
 const isOnlineStatus = (user, contactsDTO) => {
-    console.log("CONTACTSSSSSSSSSSSS > ", contactsDTO)
     if ((contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'EVERYONE' || (contactsDTO.contact.relatedUserHasAddedUser && contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'CONTACTS')) && (user.privacySettings.onlineStatusVisibility === 'EVERYONE' || (contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.onlineStatusVisibility === 'CONTACTS'))) {
         const statusDiv = createElement('div', 'online-status');
-        console.log("FRIEND STATUS > ")
         const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, 'çevrimiçi');
         statusDiv.appendChild(statusSpan);
         return statusDiv;
@@ -1068,7 +1045,6 @@ const isOnlineStatus = (user, contactsDTO) => {
 }
 const lastSeenStatus = (user, contactsDTO, lastSeen) => {
     if ((contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.relatedUserHasAddedUser && contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'CONTACTS')) && (user.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.lastSeenVisibility === 'CONTACTS'))) {
-        console.log("AAAAAAAAAAAAAAA  lastSeen > ", lastSeen)
         const statusDiv = createElement('div', 'online-status');
         const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, formatDateTime(lastSeen));
         statusDiv.appendChild(statusSpan);
@@ -1077,33 +1053,24 @@ const lastSeenStatus = (user, contactsDTO, lastSeen) => {
     return;
 }
 const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = (oldPrivacySettings, newPrivacySettings) => {
-
-    console.log("NEW PRIVACY > ", newPrivacySettings.privacySettings.onlineStatusVisibility)
-    console.log("OLD PRIVACY > ", oldPrivacySettings)
     const messageBoxElement = document.querySelector('.message-box1');
-    console.log("MESSAGE BOX SET DATA > ", messageBoxElement.data)
     let online;
     let lastSeen;
     if (messageBoxElement) {
         if ((newPrivacySettings.privacySettings.onlineStatusVisibility !== oldPrivacySettings.privacySettings.onlineStatusVisibility) && (newPrivacySettings.privacySettings.onlineStatusVisibility === 'EVERYONE' || ((newPrivacySettings.privacySettings.onlineStatusVisibility === 'CONTACTS' && messageBoxElement.data.contactsDTO.contact.userHasAddedRelatedUser) && (messageBoxElement.data.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'EVERYONE' || (messageBoxElement.data.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'CONTACTS' && messageBoxElement.data.contactsDTO.contact.relatedUserHasAddedUser))))) {
-            console.log("ONLINE TRUE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             online = true;
         } else {
             online = false;
-            console.log("ONLINE FALSE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         }
 
         if ((newPrivacySettings.privacySettings.lastSeenVisibility !== oldPrivacySettings.privacySettings.lastSeenVisibility) && (newPrivacySettings.privacySettings.lastSeenVisibility === 'EVERYONE' || ((newPrivacySettings.privacySettings.lastSeenVisibility === 'CONTACTS' && messageBoxElement.data.contactsDTO.contact.userHasAddedRelatedUser) && (messageBoxElement.data.contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'EVERYONE' || (messageBoxElement.data.contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'CONTACTS' && messageBoxElement.data.contactsDTO.contact.relatedUserHasAddedUser))))) {
             lastSeen = true;
-            console.log("LASTSEEN TRUE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         } else {
-            console.log("LASTSEEN FALSE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
             lastSeen = false;
         }
         if (lastSeen || online) {
             const messageBoxDiv2 = messageBoxElement.querySelector('.message-box1-2-2');
             onlineVisibilitySubscribe(messageBoxElement.data, messageBoxDiv2);
-            console.log("CIFT TRUE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         }
     }
 }
@@ -1128,7 +1095,6 @@ function messageBoxElementMessagesReadTick(messages, privacySettings) {
 const sendMessage = async (chat, sendButton, typingStatus) => {
     const messageContentElement = document.querySelector('.message-box1-7-1-1-1-2-1-1-1-1');
     const messageContent = messageContentElement.textContent.trim();
-    console.log("SEND MESSAGE CHAT >>> ", chat)
     if (messageContent && !chat.userChatSettings.blocked && !chat.userChatSettings.blockedMe) {
         // const messageDTO = new MessageDTO({ chatRoomId: chat.id, messageContent: messageContent, fullDateTime: new Date().toISOString, senderId: chat.user.id, recipientId: chat.contactsDTO.userProfileResponseDTO.id })
         const encryptedData = await encryptMessage(messageContent, await importPublicKey(base64ToUint8Array(chat.contactsDTO.userProfileResponseDTO.userKey.publicKey)), await importPublicKey(base64ToUint8Array(chat.user.userKey.publicKey)));
@@ -1144,7 +1110,6 @@ const sendMessage = async (chat, sendButton, typingStatus) => {
             userChatSettingsId: chat.userChatSettings?.id,
             seen: false
         };
-        console.log("BX10 > ", messageDTO)
         const chatIndex = chatInstance.chatList.findIndex(data => data.chatDTO.id == chat.id);
 
         if (chatIndex === -1) {
@@ -1166,7 +1131,6 @@ const sendMessage = async (chat, sendButton, typingStatus) => {
             chatInstance.chatList[chatIndex].chatDTO.lastMessageTime = messageDTO.fullDateTime;
             chatInstance.chatList[chatIndex].chatDTO.seen = false;
             chatInstance.chatList[chatIndex].chatDTO.messageId = null;
-            console.log("AX12 > ", chatInstance.chatList[chatIndex])
             const chatElements = [...document.querySelectorAll('.chat1')];
             const chatElement = chatElements.find(chatElement => chatElement.chatData.chatDTO.id === chatInstance.chatList[chatIndex].chatDTO.id)
             if (chatElement) {
@@ -1194,7 +1158,6 @@ const sendMessage = async (chat, sendButton, typingStatus) => {
         messageContentElement.removeChild(messageContentElement.firstElementChild);
         messageContentElement.appendChild(createElement('br', ''));
         updatePlaceholder(messageContentElement.parentElement.parentElement, messageContentElement.parentElement, sendButton, typingStatus)
-        console.log("CHAT INSTANCE CHAT LIST > ", chatInstance.chatList)
     } else {
         if (chat.userChatSettings.blocked) {
             toastr.error('Bu kişi engellenmiş. Mesaj gönderilemez.');
@@ -1316,13 +1279,10 @@ function handleOptionsBtnClick(event, chat) {
         const existingOptionsDiv = showChatOptions.querySelector('.options1');
 
         if (existingOptionsDiv) {
-            console.log("Seçenekler kapatılıyor");
             existingOptionsDiv.remove();
         } else {
-            console.log("Seçenekler açılıyor");
             const chatOptionsDiv = document.createElement("div");
             const rect = target.getBoundingClientRect();
-            console.log(rect);
             chatOptionsDiv.classList.add('options1');
             chatOptionsDiv.setAttribute('role', 'application');
             chatOptionsDiv.style.transformOrigin = 'right top';

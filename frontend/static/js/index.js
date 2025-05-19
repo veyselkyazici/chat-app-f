@@ -35,9 +35,7 @@ const router = async () => {
         match = { route: routes[0], result: [location.pathname] };
     }
 
-    // Doğrulama gereken route için kontrol
     if (match.route.authRequired && !(await isAuthenticated())) {
-        console.log('Kullanıcı doğrulanmadı, login sayfasına yönlendiriliyor.');
         return navigateTo('/login');
     }
 
