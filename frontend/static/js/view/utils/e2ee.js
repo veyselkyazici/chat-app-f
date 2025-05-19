@@ -1,5 +1,6 @@
 // e2ee.js
 let userKey = null;
+let sessionKey = null;
 
 // 
 export async function generateKeyPair() {
@@ -57,7 +58,7 @@ export async function decryptPrivateKey(encrypted, aesKey, iv) {
     "pkcs8",
     decrypted,
     { name: "RSA-OAEP", hash: "SHA-256" },
-    false,
+    true,
     ["decrypt"]
   );
 }
@@ -134,7 +135,8 @@ export async function decryptMessage(
   } else {
     encryptedKey = base64ToUint8Array(chatDTO.encryptedKeyForRecipient);
   }
-
+  console.log("getSessionKey()", getSessionKey())
+  console.log("getSessionKey()", getUserKey().privateKey)
   let decryptedAesKey;
   try {
     decryptedAesKey = await window.crypto.subtle.decrypt(
@@ -168,6 +170,10 @@ export async function decryptMessage(
 
 }
 
+export function generateSessionKey() {
+  return window.crypto.getRandomValues(new Uint8Array(32));
+}
+
 export function base64Encode(uint8Array) {
   return btoa(Array.from(uint8Array).reduce((s, byte) => s + String.fromCharCode(byte), ''));
 }
@@ -182,4 +188,54 @@ export function setUserKey(key) {
 
 export function getUserKey() {
   return userKey;
+}
+
+export function setSessionKey(key) {
+  sessionKey = key;
+}
+
+export function getSessionKey() {
+  return sessionKey;
+}
+
+
+export async function encryptWithSessionKey(data) {
+  if (!sessionKey) throw new Error("Session key not available");
+
+  const key = await window.crypto.subtle.importKey(
+    "raw",
+    sessionKey,
+    { name: "AES-GCM" },
+    false,
+    ["encrypt"]
+  );
+
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    data
+  );
+
+  return { encryptedData: new Uint8Array(encrypted), iv };
+}
+
+export async function decryptWithSessionKey(encryptedData, iv) {
+  if (!sessionKey) throw new Error("Session key not available");
+
+  const key = await window.crypto.subtle.importKey(
+    "raw",
+    sessionKey,
+    { name: "AES-GCM" },
+    false,
+    ["decrypt"]
+  );
+
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: "AES-GCM", iv },
+    key,
+    encryptedData
+  );
+
+  return new Uint8Array(decrypted);
 }

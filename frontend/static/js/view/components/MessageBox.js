@@ -845,7 +845,6 @@ const isMessageBoxDomExists = (chatRoomId) => {
     }
 }
 const renderMessage = async (messageDTO, privacySettings, scroll) => {
-    debugger;
     console.log("MESSAGES RENDER MESSAGE > ", messageDTO)
     const messageRenderDOM = document.querySelector('.message-box1-5-1-2-2');
     let messagesArray, lastPage;
@@ -873,7 +872,6 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
     const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
     const addDateHeader = (dateString) => {
-        debugger;
         const formatDate = messageBoxFormatDateTime(dateString);
         const applicationDiv = document.querySelector('.message-box1-5-1-2-2');
 
@@ -1247,7 +1245,6 @@ function getHourAndMinute(dateTimeString) {
 }
 
 function formatDateTime(utcDateTimeString) {
-    debugger;
     const now = new Date();
     const localDate = new Date(utcDateTimeString);
 

@@ -11,11 +11,11 @@ import { hideElements, createElement, createSvgElement } from '../utils/util.js'
 import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBox } from "../components/ChatBox.js";
 import { isOnlineStatus, isMessageBoxDomExists, renderMessage, messageBoxElementMessagesReadTick, createMessageDeliveredTickElement, onlineInfo } from "../components/MessageBox.js";
 import { navigateTo } from "../../index.js";
-import { fetchGetUserWithPrivacySettingsByToken, fetchGetUserByAuthId, fetchGetUserWithUserKeyByAuthId } from "../services/userService.js"
+import { fetchGetUserWithUserKeyByAuthId } from "../services/userService.js"
 import { fetchGetContactList } from "../services/contactsService.js"
 import { fetchGetChatSummaries } from "../services/chatService.js"
 import { userUpdateModal } from "../components/UpdateUserProfile.js"
-import { deriveAESKey, decryptPrivateKey, importPublicKey, base64ToUint8Array, getUserKey, setUserKey, decryptMessage } from "../utils/e2ee.js";
+import { importPublicKey, base64ToUint8Array, getUserKey, setUserKey, decryptMessage, setSessionKey, decryptWithSessionKey } from "../utils/e2ee.js";
 
 
 export let webSocketManagerContacts;
@@ -473,7 +473,6 @@ export default class Chat extends AbstractView {
         });
 
         this.webSocketManagerChat.subscribeToChannel(recipientMessageChannel, async (recipientMessage) => {
-            debugger;
             const recipientJSON = JSON.parse(recipientMessage.body);
             const decryptedMessage = await decryptMessage(recipientJSON);
             console.log("RECIPENT > ", recipientJSON)
@@ -573,38 +572,42 @@ export default class Chat extends AbstractView {
                 userUpdateModal(this.user, false);
             }
             if (!getUserKey()) {
-                const {
-                    encryptedPrivateKey,
-                    publicKey: exportedPublicKey,
-                    salt,
-                    iv,
-                } = this.user.userKey;
-                const aesKey = await deriveAESKey(password, new base64ToUint8Array(salt));
-                const privateKey = await decryptPrivateKey(
-                    new base64ToUint8Array(encryptedPrivateKey),
-                    aesKey,
-                    new base64ToUint8Array(iv)
-                );
-                const publicKey = await importPublicKey(new base64ToUint8Array(exportedPublicKey));
-                setUserKey({ privateKey, publicKey });
-            }
+                try {
+                    const storedSessionKey = sessionStorage.getItem('sessionKey');
+                    const storedEncryptedPrivateKey = localStorage.getItem('encryptedPrivateKey');
+                    const storedIv = localStorage.getItem('encryptionIv');
 
+                    if (storedSessionKey && storedEncryptedPrivateKey && storedIv) {
+                        const sessionKey = base64ToUint8Array(storedSessionKey);
+                        setSessionKey(sessionKey);
+
+                        const decryptedPrivateKey = await decryptWithSessionKey(
+                            base64ToUint8Array(storedEncryptedPrivateKey),
+                            base64ToUint8Array(storedIv)
+                        );
+
+                        const privateKey = await window.crypto.subtle.importKey(
+                            "pkcs8",
+                            decryptedPrivateKey,
+                            { name: "RSA-OAEP", hash: "SHA-256" },
+                            false,
+                            ["decrypt"]
+                        );
+
+                        setUserKey({ privateKey });
+                        console.log("getUserKey> ", getUserKey())
+                        console.log("getUserKey> ", sessionStorage.getItem("publicKey"))
+                    }
+                } catch (error) {
+                    console.error('Session restore error:', error);
+                    navigateTo('/login');
+                }
+            }
             this.contactList = await fetchGetContactList(this.user.id);
-            console.log("CONTACT LIST > ", this.contactList)
             this.chatList = await fetchGetChatSummaries(this.user.id);
-            // for (let i = 1; i <= 81; i++) {
-            //     const newData = JSON.parse(JSON.stringify(this.data)); // data nesnesinin derin bir kopyasını oluşturur
-            //     newData.messages[0].messageContent = i;
-            //     newData.id = i;
-            //     newData.friendEmail = i;
-            //     newData.lastMessage = i;
-            //     newData.lastMessageTime = i;
-            //     this.chatList.push(newData)
-            // }
-            console.log("CHAT LIST >>> ", this.chatList)
             handleChats();
         } else {
-            // User olusturulmada herhangi bir problem olursa veya user bulunamadıysa
+            navigateTo("/login");
         }
 
     }

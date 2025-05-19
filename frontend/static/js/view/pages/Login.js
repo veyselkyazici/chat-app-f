@@ -2,11 +2,9 @@
 import { navigateTo } from "../../index.js";
 import AbstractView from "../AbstractView.js";
 import { clearErrorMessages, isValidEmail, showError } from "../utils/util.js";
-import { fetchGetUserByAuthId } from "../services/userService.js";
-import { userUpdateModal } from "../components/UpdateUserProfile.js";
 import { fetchLogin } from "../services/authService.js";
 import { fetchGetUserWithUserKeyByAuthId } from "../services/userService.js";
-import { deriveAESKey, decryptPrivateKey, importPublicKey, base64ToUint8Array, getUserKey, setUserKey, encryptMessage, decryptMessage } from "../utils/e2ee.js";
+import { deriveAESKey, decryptPrivateKey, importPublicKey, base64ToUint8Array, setUserKey, setSessionKey, encryptWithSessionKey, generateSessionKey, base64Encode } from "../utils/e2ee.js";
 
 export default class extends AbstractView {
   constructor(params) {
@@ -117,15 +115,19 @@ const loginForm = async () => {
       aesKey,
       new base64ToUint8Array(iv)
     );
+
+    const newSessionKey = generateSessionKey();
+    setSessionKey(newSessionKey);
+
+    const { encryptedData: encryptedPrivateKeyWithSession, iv: newIv } =
+      await encryptWithSessionKey(await window.crypto.subtle.exportKey("pkcs8", privateKey));
+
+    localStorage.setItem('encryptedPrivateKey', base64Encode(encryptedPrivateKeyWithSession));
+    localStorage.setItem('encryptionIv', base64Encode(newIv));
+    sessionStorage.setItem('sessionKey', base64Encode(newSessionKey));
     const publicKey = await importPublicKey(new base64ToUint8Array(exportedPublicKey));
+    sessionStorage.setItem('publicKey', base64Encode(exportedPublicKey));
     setUserKey({ privateKey, publicKey });
-    console.log(getUserKey());
-    // const testData = "test mesajı";
-    // const encrypted = await encryptMessage(testData, null, publicKey);
-
-    // const decrypt = await decryptMessage(encrypted, getUserKey().privateKey, true);
-    // console.log(decrypt)
-
     navigateTo("/chat")
   }
 }

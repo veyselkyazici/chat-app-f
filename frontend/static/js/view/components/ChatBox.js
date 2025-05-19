@@ -836,7 +836,6 @@ function isChatExists(recipientJSON) {
 }
 
 function lastMessageChange(chatRoomId, chatElement, decryptedMessage, messageTime) {
-    debugger;
     if (chatElement.chatData.chatDTO.id === chatRoomId) {
         const lastMessageElement = chatElement.querySelector('.message-span-span');
         const lastMessageTimeElement = chatElement.querySelector('.time');
