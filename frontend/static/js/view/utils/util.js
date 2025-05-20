@@ -1,4 +1,4 @@
-import { chatInstance } from "../pages/Chat.js";
+
 
 function changeContent(newContent) {
   var contentElement = document.querySelector('.chat-content');
@@ -143,6 +143,7 @@ const createElement = (elementType, className, styles = {}, attributes = {}, tex
 
   return element;
 }
+
 const createSvgElement = (elementType, attributes = {}) => {
   const element = document.createElementNS("http://www.w3.org/2000/svg", elementType);
   for (let key in attributes) {
@@ -150,28 +151,6 @@ const createSvgElement = (elementType, attributes = {}) => {
   }
   return element;
 };
-
-const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
-  if (Object.keys(selectedChat).length > 0 && selectedChat.chatData?.userProfileResponseDTO.id !== chatElementDOM.chatData.userProfileResponseDTO.id) {
-    const parentDiv = document.querySelector('.chat-list-content'); // Ana div'i seçin
-    const selectedDiv = parentDiv.querySelector('[aria-selected="true"]');
-    selectedDiv.setAttribute('aria-selected', 'false');
-
-    selectedDiv.querySelector(".chat").classList.remove('selected-chat');
-
-  }
-  chatElementDOM.querySelector(".chat").classList.add('selected-chat');
-  innerDiv.setAttribute('aria-selected', 'true');
-  Object.assign(selectedChat, chatElementDOM);
-}
-
-const ariaSelectedRemove = (selectedChat) => {
-  if (selectedChat) {
-    const previouslySelectedInnerDiv = selectedChat.querySelector('.chat-box > div');
-    selectedChat.querySelector(".chat").classList.remove('selected-chat');
-    previouslySelectedInnerDiv.setAttribute('aria-selected', 'false');
-  }
-}
 
 const createVisibilityProfilePhoto = (userProfileResponseDTO, contacts) => {
   if ((userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'EVERYONE' || (contacts.relatedUserHasAddedUser && userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'CONTACTS')) && (userProfileResponseDTO.imagee)) {
@@ -244,8 +223,8 @@ function messageBoxFormatDateTime(dateTime) {
 
   const isSameDay = (d1, d2) => {
     return d1.getFullYear() === d2.getFullYear() &&
-           d1.getMonth() === d2.getMonth() &&
-           d1.getDate() === d2.getDate();
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
   };
 
   const isYesterday = (d) => {
@@ -265,7 +244,7 @@ function messageBoxFormatDateTime(dateTime) {
   } else {
     const diffTime = Math.abs(now - date);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 7) {
       formattedDate = new Intl.DateTimeFormat(userLanguage, {
         weekday: 'long'
@@ -282,4 +261,35 @@ function messageBoxFormatDateTime(dateTime) {
   return formattedDate;
 }
 
-export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace, onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements, removeHeaderAndFooter, createElement, createSvgElement, ariaSelected, ariaSelectedRemove, createVisibilityProfilePhoto, chatBoxLastMessageFormatDateTime, messageBoxFormatDateTime, createProfileImage, createDefaultImage };
+function backButton(removeElement) {
+  const divBackBtn = createElement("div", "back-btn");
+  const divBackBtn1 = createElement("div", "back-btn-1", null, { role: "button", "aria-label": "Geri", tabIndex: "0" }, null, () => handleBackBtnClick(removeElement));
+
+  const spanBackIcon = document.createElement("span", "", null, { "data-icon": "back" });
+
+  const svgBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svgBack.setAttribute("viewBox", "0 0 24 24");
+  svgBack.setAttribute("height", "24");
+  svgBack.setAttribute("width", "24");
+  svgBack.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  svgBack.setAttribute("version", "1.1");
+
+  const titleBack = createElement("title", "back");
+
+  const pathBack = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  pathBack.setAttribute("fill", "currentColor");
+  pathBack.setAttribute("d", "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z");
+
+  svgBack.appendChild(titleBack);
+  svgBack.appendChild(pathBack);
+  spanBackIcon.appendChild(svgBack);
+  divBackBtn1.appendChild(spanBackIcon);
+  divBackBtn.appendChild(divBackBtn1);
+  return divBackBtn;
+}
+
+function handleBackBtnClick(removeElement) {
+  removeElement.remove();
+}
+
+export { changeContent, showError, clearErrorMessages, hideHeaderAndFooter, isValidEmail, formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace, onPageLoad, isUserLoggedIn, redirectToIndex, addBackspaceEventListener, visibleElements, hideElements, removeElements, removeHeaderAndFooter, createElement, createSvgElement, createVisibilityProfilePhoto, chatBoxLastMessageFormatDateTime, messageBoxFormatDateTime, createProfileImage, createDefaultImage, backButton, handleBackBtnClick };

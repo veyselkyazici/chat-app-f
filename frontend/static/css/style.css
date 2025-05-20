@@ -358,11 +358,6 @@ strong {
   cursor: pointer;
 }
 
-
-
-
-
-
 .chat-container {
   position: relative;
   top: 0;
@@ -435,9 +430,6 @@ body,
   margin: 0;
   overflow: hidden;
 }
-
-
-
 
 .chats {
   display: flex;
@@ -1779,13 +1771,6 @@ button.chat-options-btn:focus {
   height: 100%;
   overflow: hidden;
   pointer-events: none;
-}
-
-@media screen and (min-width: 1024px) and (max-width: 1300px) {
-  .a1-1 {
-    flex: 0 0 40%;
-    max-width: 40%;
-  }
 }
 
 .a1-1 {
@@ -3972,13 +3957,6 @@ button.chat-options-btn:focus {
   animation-name: x15aousm-B;
 }
 
-/* @media screen and (min-width: 1300px) {
-  .contact-information:not(._as6h) {
-    flex: 0 0 30%;
-    max-width: 30%;
-  }
-}
-
 
 /** Settings */
 
@@ -4601,12 +4579,12 @@ button.chat-options-btn:focus {
   color: #ea0038;
 }
 
-.settings-back-btn {
+.back-btn {
   width: 54px;
   flex: none;
 }
 
-.settings-back-btn-1 {
+.back-btn-1 {
   width: fit-content;
   color: #54656f;
   cursor: pointer;

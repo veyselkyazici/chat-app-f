@@ -45,7 +45,9 @@ export default class extends AbstractView {
 
         `;
   }
-
+  async init() {
+    await this.addEventListeners();
+  }
   async addEventListeners() {
     const registerFormButton = document.getElementById("registerFormButton");
     if (registerFormButton) {

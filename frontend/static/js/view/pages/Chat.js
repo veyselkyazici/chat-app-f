@@ -26,74 +26,15 @@ export default class Chat extends AbstractView {
     constructor(params) {
         super(params);
         chatInstance = this;
-        this.setTitle("Chat");/* 
-        this.renderChat()
-        this.addEventListeners() */
-        this.data = {
-            friendEmail: "asdfasdfasdf@wwwwww.com",
-            friendId: "03e49ab6-81b0-4609-84e1-5ceadc4c29b7",
-            id: 0,
-            image: null,
-            lastMessage: 0,
-            lastMessageTime: 0,
-            messages: [
-                {
-                    chatRoomId: "7c6f47eb-dad2-44b3-a036-ffbf92343ae2_03e49ab6-81b0-4609-84e1-5ceadc4c29b7",
-                    fullDateTime: "2024-05-08T22:22:22.968Z",
-                    id: "663bfb1ebb15cc42647f6bce",
-                    messageContent: "1",
-                    recipientId: "03e49ab6-81b0-4609-84e1-5ceadc4c29b7",
-                    seen: false,
-                    senderId: "7c6f47eb-dad2-44b3-a036-ffbf92343ae2"
-                }
-            ],
-            userId: "7c6f47eb-dad2-44b3-a036-ffbf92343ae2"
-        };
+        this.setTitle("Chat");
         this.visibleItemCount = 0;
-        this.selectedChat = {};
+        this.selectedChat = null;
         this.user = {};
         this.chatList = [];
         this.contactList = [];
         this.fetchFriendRequestReplyData = [];
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
-        this.init();
     }
-    /* async renderChat () {
-        const chatHtml = `<div class="chat-container">
-        <div class="left-side">
-            <header class="chat-list-header">
-                <div class="user-photo">
-                    <div class="user-profile-photo" role="button" style="height: 40px; width: 40px; cursor: pointer;">
-                        <img class="user-image" tabindex="0" src="/static/image/default-user-profile-photo.png"
-                            alt="Varsayılan Fotoğraf" id="profilePhoto" />
-                    </div>
-                </div>
-                <div class="options-div">
-                    <div class="options">
-                        <div class="friend-list-btn option" tabindex="0" role="button"
-                            title="Yeni Sohbet Başlat" aria-label="Yeni Sohbet Başlat"><span class="friend-list-icon option material-symbols-outlined">
-                            chat_add_on
-                            </span></div>
-                        <div class="fa-solid fa-plus add-friendd option" tabindex="0" role="button" title="Arkadaş Ekle"
-                            aria-label="Arkadaş Ekle"></div>
-                        <div class="fa-solid fa-user-plus friend-approval option" tabindex="0" role="button" title="Gelen İstekler" aria-label="Gelen İstekler"><div class="notification-badge" style="display: none;"></div></div>
-                        <div class="fa-solid fa-bell friend-request-reply-notification option" tabindex="0" role="button"
-                        title="Bildirimler" aria-label="Bildirimler"><div class="notification-badge" style="display: none;"></div></div>
-                        <div class="fa-solid fa-gear settings option" tabindex="0" role="button" title="Seçenekler"
-                            aria-label="Seçenekler"></div>
-                    </div>
-                </div>
-            </header>
-            <div class="chat-content">
-
-            </div>
-        </div>
-        <div class="chat-box" id="chatWindow">
-            <div class="start-message">Arkadaş Seçerek Sohbet Etmeye Başlayabilirsiniz.</div>
-        </div>
-    </div>`
-    document.querySelector("#content").innerHTML = chatHtml;
-    } */
 
     async getHtml() {
         return `
@@ -128,19 +69,19 @@ export default class Chat extends AbstractView {
                                 chat_add_on
                             </span>
                         </div>
-                        <div class="fa-solid fa-plus add-friendd option" tabindex="0" role="button" title="Arkadaş Ekle"
-                            aria-label="Arkadaş Ekle">
+                        <div class="add-friendd option" tabindex="0" role="button" title="Arkadaş Ekle"
+                            aria-label="Arkadaş Ekle"><i class="fa-solid fa-plus"></i>
                         </div>
-                        <div class="fa-solid fa-user-plus friend-approval option" tabindex="0" role="button"
-                            title="Gelen İstekler" aria-label="Gelen İstekler">
+                        <div class="friend-approval option" tabindex="0" role="button"
+                            title="Gelen İstekler" aria-label="Gelen İstekler"> <i class="fa-solid fa-user-plus"></i>
                             <div class="notification-badge" style="display: none;"></div>
                         </div>
-                        <div class="fa-solid fa-bell friend-request-reply-notification option" tabindex="0"
-                            role="button" title="Bildirimler" aria-label="Bildirimler">
+                        <div class="friend-request-reply-notification option" tabindex="0"
+                            role="button" title="Bildirimler" aria-label="Bildirimler"> <i class="fa-solid fa-bell"></i>
                             <div class="notification-badge" style="display: none;"></div>
                         </div>
-                        <div class="fa-solid fa-gear settings-btn option" tabindex="0" role="button" title="Seçenekler"
-                            aria-label="Seçenekler"></div>
+                        <div class="settings-btn option" tabindex="0" role="button" title="Seçenekler"
+                            aria-label="Seçenekler"> <i class="fa-solid fa-gear"></i></div>
                     </div>
                 </div>
             </header>
@@ -217,6 +158,7 @@ export default class Chat extends AbstractView {
     }
 
     async init() {
+        await this.addEventListeners();
         await this.initialData();
         this.webSocketManagerContacts = new WebSocketManager('http://localhost:9030/ws', this.user.id);
         this.webSocketManagerChat = new WebSocketManager('http://localhost:9040/ws', this.user.id);
@@ -524,7 +466,6 @@ export default class Chat extends AbstractView {
             }
             if (!getUserKey()) {
                 try {
-                    debugger;
                     const storedSessionKey = sessionStorage.getItem('sessionKey');
                     const storedEncryptedPrivateKey = localStorage.getItem('encryptedPrivateKey');
                     const storedIv = localStorage.getItem('encryptionIv');
@@ -556,14 +497,14 @@ export default class Chat extends AbstractView {
             }
             this.contactList = await fetchGetContactList(this.user.id);
             this.chatList = await fetchGetChatSummaries(this.user.id);
-            handleChats();
+            await handleChats();
         } else {
             navigateTo("/login");
         }
 
     }
 
-    addEventListeners() {
+    async addEventListeners() {
         const chatListContentElement = document.querySelector(".chat-list-content")
         const addFriendButtonElement = document.querySelector(".add-friendd");
         const chatListHeaderElement = document.querySelector(".chat-list-header");

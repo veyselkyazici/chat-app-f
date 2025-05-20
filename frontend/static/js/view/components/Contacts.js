@@ -1,9 +1,10 @@
 // Contacts.js
 import { createMessageBox, removeMessageBoxAndUnsubscribe, fetchCreateChatRoomIfNotExists } from './MessageBox.js';
+import { ariaSelected, ariaSelectedRemove, } from './ChatBox.js';
 import { chatInstance } from "../pages/Chat.js";
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
 import { virtualScroll, UpdateItemsDTO } from '../utils/virtualScroll.js';
-import { ariaSelected, ariaSelectedRemove, createElement, createSvgElement, createVisibilityProfilePhoto } from '../utils/util.js';
+import { createElement, createSvgElement, createVisibilityProfilePhoto, backButton, handleBackBtnClick } from '../utils/util.js';
 import { deleteContactOrInvitation, fetchSendInvitation } from '../services/contactsService.js';
 import { fetchGetLast30Messages } from '../services/chatService.js';
 
@@ -230,6 +231,7 @@ function removeEventListeners(contactElement) {
 
 
 function createContactListViewHTML() {
+    const span_a1_1_1 = document.querySelector(".a1-1-1");
     const contactListHeight = `${chatInstance.contactList.length * 72}px`
 
     const contactsSideDiv = createElement('div', 'a1-1-1-1', { height: '100%', transform: 'translateX(0%)' });
@@ -248,34 +250,8 @@ function createContactListViewHTML() {
 
     const div2 = createElement('div', 'a1-1-1-1-1-1-1-1-1');
     div1.appendChild(div2);
-
-    const backButton = createElement('div', 'a1-1-1-1-1-1-1-1-1-1', {}, { role: 'button', 'aria-label': 'Geri', tabindex: '0' });
-    div2.appendChild(backButton);
-
-    const span = createElement('span', '', {}, { 'data-icon': 'back' });
-    backButton.appendChild(span);
-
-    const svg = createSvgElement('svg', {
-        viewBox: '0 0 24 24',
-        height: '24',
-        width: '24',
-        'preserveAspectRatio': 'xMidYMid meet',
-        version: '1.1',
-        x: '0px',
-        y: '0px',
-        'enable-background': 'new 0 0 24 24',
-    });
-    span.appendChild(svg);
-
-    const title = createSvgElement('title');
-    title.textContent = 'back';
-    svg.appendChild(title);
-
-    const path = createSvgElement('path', {
-        fill: 'currentColor',
-        d: 'M12,4l1.4,1.4L7.8,11H20v2H7.8l5.6,5.6L12,20l-8-8L12,4z',
-    });
-    svg.appendChild(path);
+    const backButtonn = backButton(contactsSideDiv, handleBackBtnClick);
+    div2.appendChild(backButtonn);
 
     const newChatDiv = createElement('div', 'a1-1-1-1-1-1-1-1-2', { title: 'Yeni sohbet' });
     div1.appendChild(newChatDiv);
@@ -386,7 +362,7 @@ function createContactListViewHTML() {
     innerDiv.appendChild(a1_1_1_1_1_1_3_2_1_1);
     contactsSideDiv_1_1.appendChild(a1_1_1_1_1_1_3);
 
-    const span_a1_1_1 = document.querySelector(".a1-1-1");
+
 
     span_a1_1_1.appendChild(contactsSideDiv);
 
@@ -402,26 +378,7 @@ function createContactListViewHTML() {
     searchButtonDiv.addEventListener("click", function () {
         mainDiv.classList.toggle("_ai07");
     });
-    backButton.addEventListener("click", function () {
-        span_a1_1_1.innerHTML = "";
-    })
 }
-
-// const sendInvitation = async (event) => {
-//     const contactElement = event.currentTarget.closest('.contact1');
-//     const contactData = contactElement.contactData; // Contact data'sını doğru şekilde al
-
-//     const options = new ModalOptionsDTO({
-//         content: `${contactData.userContactName} kişisini davet etmek istiyor musunuz?`,
-//         buttonText: 'Davet et',
-//         showBorders: false,
-//         mainCallback: async () => {
-//             const response = await fetchSendInvitation(contactData);
-//             return response.ok;
-//         }
-//     });
-//     showModal(options);
-// }
 async function handleContactClick(event) {
     const contactElementDOM = event.currentTarget;
     const contactData = contactElementDOM.contactData;
@@ -435,7 +392,7 @@ async function handleContactClick(event) {
             }
             return;
         }
-        chatBoxElement != null ? ariaSelected(chatBoxElement, chatInstance.selectedChatElement, innerDiv) : ariaSelectedRemove(chatInstance.selectedChatElement);
+        chatBoxElement != null ? ariaSelected(chatBoxElement, chatInstance.selectedChat, innerDiv) : ariaSelectedRemove(chatInstance.selectedChat);
         let findChat = findChatRoom(chatInstance.user.id, contactData.contactsDTO.userContactId);
         let chatRequestDTO;
         if (!findChat) {
@@ -465,8 +422,8 @@ async function handleContactClick(event) {
 
         }
         // ToDo Profile.js ten sonra eğer o varken başka bir chat e clickleniyorsa o da remove edilecek
-        removeMessageBoxAndUnsubscribe();
-        createMessageBox(chatRequestDTO);
+        await removeMessageBoxAndUnsubscribe();
+        await createMessageBox(chatRequestDTO);
         const contactListRenderDiv = document.querySelector('.a1-1-1');
         if (contactListRenderDiv) {
             contactListRenderDiv.removeChild(contactListRenderDiv.firstElementChild);

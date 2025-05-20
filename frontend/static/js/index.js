@@ -7,6 +7,7 @@ import ForgotPassord from './view/pages/ForgotPassword.js';
 import Chat from './view/pages/Chat.js';
 import { ChatLayout } from './view/layouts/ChatLayout.js';
 import { DefaultLayout } from './view/layouts/DefaultLayout.js';
+import { createElement } from './view/utils/util.js'
 
 const routes = [
     { path: '/', view: Home, layout: DefaultLayout },
@@ -38,16 +39,41 @@ const router = async () => {
     if (match.route.authRequired && !(await isAuthenticated())) {
         return navigateTo('/login');
     }
-
     const view = new match.route.view();
-    const html = await view.getHtml();
+    // let html;
+    // if (match.route.view === Chat) {
+    //     if (window.matchMedia('(max-width: 768px)').matches) {
+    //         html = await view.getHtmlMobil();
+    //         const createMessageBox = createElement('div', 'message-box', { id: "chatWindow" });
 
+
+
+    //         const container = document.querySelector('.chat-container');
+    //         container.classList.remove('chat-container');
+    //         container.classList.add('chat-container-mobile');
+    //         container.appendChild(createMessageBox);
+
+    //     } else {
+    //         html = await view.getHtml();
+    //     }
+
+    // } else {
+    //     html = await view.getHtml();
+    // }
+    
+    const html = await view.getHtml();
     const layoutHtml = match.route.layout(html);
     document.querySelector('#app').innerHTML = layoutHtml;
 
-    if (typeof view.addEventListeners === 'function') {
-        view.addEventListeners();
+
+    if (typeof view.init === 'function') {
+        await view.init();
     }
+
+
+    // if (typeof view.addEventListeners === 'function') {
+    //     view.addEventListeners();
+    // }
 };
 
 window.addEventListener('popstate', router);

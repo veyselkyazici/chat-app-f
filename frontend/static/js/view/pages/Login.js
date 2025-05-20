@@ -39,7 +39,9 @@ export default class extends AbstractView {
     </form>
         `;
   }
-
+  async init() {
+    await this.addEventListeners();
+  }
   async addEventListeners() {
     const loginFormButton = document.getElementById("loginFormButton");
     if (loginFormButton) {
@@ -125,7 +127,7 @@ const loginForm = async () => {
     localStorage.setItem('encryptedPrivateKey', base64Encode(encryptedPrivateKeyWithSession));
     localStorage.setItem('encryptionIv', base64Encode(newIv));
     const publicKey = await importPublicKey(new base64ToUint8Array(exportedPublicKey));
-    sessionStorage.setItem('publicKey', exportedPublicKey); 
+    sessionStorage.setItem('publicKey', exportedPublicKey);
     sessionStorage.setItem('sessionKey', base64Encode(newSessionKey));
     setUserKey({ privateKey, publicKey });
     navigateTo("/chat")

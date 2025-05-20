@@ -1,10 +1,11 @@
-//Register.js
+//ForgotPassord.js
 import AbstractView from "../AbstractView.js";
 import { clearErrorMessages, isValidEmail } from "../utils/util.js";
 import { fetchCreateForgotPassword, fetchCheckOTP, fetchResetPassword } from "../services/authService.js"
 export default class extends AbstractView {
     constructor(params) {
         super(params);
+        this.forgotPasswordId = "";
         this.setTitle("ForgotPassord");
     }
 
@@ -50,7 +51,9 @@ export default class extends AbstractView {
 </form>
         `;
     }
-
+    async init() {
+        await this.addEventListeners();
+    }
     async addEventListeners() {
         const sendOtpForm = document.getElementById("sendOtpForm");
         const verifyOtpForm = document.getElementById("verifyOtpForm");
@@ -65,119 +68,115 @@ export default class extends AbstractView {
             resetPasswordFormPassword.addEventListener("submit", event => resetPassword(event));
         }
     }
-}
 
-let forgotPasswordId;
-async function sendOtp(event) {
-    event.preventDefault();
-    const email = document.getElementById("sendOtpFormEmail").value;
-    clearErrorMessages();
-    let hasError = false;
+    async sendOtp(event) {
+        event.preventDefault();
+        const email = document.getElementById("sendOtpFormEmail").value;
+        clearErrorMessages();
+        let hasError = false;
 
-    // Validation
-    if (!email) {
-        showError(sendOtpFormElements.emailDOM, "E-posta boş olamaz");
-        hasError = true;
-    }
-
-    if (!isValidEmail(email)) {
-        showError(sendOtpFormElements.emailDOM, "Geçerli bir e-posta adresi girin");
-        hasError = true;
-    }
-
-    if (hasError) {
-        return;
-    }
-
-    try {
-        const response = await createForgotPassword(email);
-        if (response.ok) {
-            sendOtpForm.style.display = "none";
-            verifyOtpForm.style.display = "block";
-        } else {
-            showError(sendOtpFormElements.emailDOM, await response.json().then(data => data.message));
-        }
-    } catch (error) {
-        console.error("An error occurred:", error);
-    }
-}
-
-
-async function verifyOtp(event) {
-    event.preventDefault();
-    const email = document.getElementById("sendOtpFormEmail").value;
-    const otp = document.getElementById("verifyOtpFormOtp").value;
-
-    let hasError;
-
-    if (!otp) {
-        showError(verifyOtpFormElements.otpDOM, "Doğrulama kodu boş olamaz")
-        hasError = true;
-    }
-
-    if (hasError) {
-        return;
-    }
-
-    const data = await fetchCheckOTP(email, otp);
-    if (data.statusCode === 200) {
-        forgotPasswordId = data.data.forgotPasswordId;
-        verifyOtpForm.style.display = "none";
-        resetPasswordForm.style.display = "block";
-    } else {
-        showError(verifyOtpFormElements.otpDOM, data.message);
-    }
-}
-
-async function resetPassword(event) {
-    event.preventDefault();
-    const password = document.getElementById("resetPasswordFormPassword").value;
-    const confirmPassword = document.getElementById("resetPasswordFormConfirmPassword").value;
-
-    let hasError;
-
-    if (!password) {
-        showError(resetPasswordFormElements.passwordDOM, "Parola boş olamaz.");
-        hasError = true;
-    }
-
-    if (password.length < 6) {
-        showError(resetPasswordFormElements.passwordDOM, "Parola en az 6 karakter olmalıdır.");
-        hasError = true;
-    }
-
-    if (password.length > 32) {
-        showError(resetPasswordFormElements.passwordDOM, "Parola en fazla 32 karakter olmalıdır.");
-        hasError = true;
-    }
-
-    if (!confirmPassword) {
-        showError(resetPasswordFormElements.confirmPasswordDOM, "Parola doğrulaması boş olamaz");
-        hasError = true;
-    }
-    if (password && confirmPassword && password !== confirmPassword) {
-        showError(resetPasswordFormElements.confirmPasswordDOM, "Parolalar eşleşmiyor");
-        showError(resetPasswordFormElements.passwordDOM, "Parolalar eşleşmiyor");
-        hasError = true;
-    }
-
-    if (hasError) {
-        return;
-    }
-
-    const requestBody = {
-        forgotPasswordId: forgotPasswordId,
-        newPassword: password
-    }
-    try {
-        const response = await fetchResetPassword(forgotPasswordId, password);
-        if (response.ok) {
-            toastr.success("Şifreniz Değiştirildi");
-        } else {
-            console.error("Password reset failed");
+        // Validation
+        if (!email) {
+            showError(sendOtpFormElements.emailDOM, "E-posta boş olamaz");
+            hasError = true;
         }
 
-    } catch (error) {
-        console.error("An error occurred:", error);
+        if (!isValidEmail(email)) {
+            showError(sendOtpFormElements.emailDOM, "Geçerli bir e-posta adresi girin");
+            hasError = true;
+        }
+
+        if (hasError) {
+            return;
+        }
+
+        try {
+            const response = await fetchCreateForgotPassword(email);
+            if (response.ok) {
+                sendOtpForm.style.display = "none";
+                verifyOtpForm.style.display = "block";
+            } else {
+                showError(sendOtpFormElements.emailDOM, await response.json().then(data => data.message));
+            }
+        } catch (error) {
+            console.error("An error occurred:", error);
+        }
+    }
+
+
+    async verifyOtp(event) {
+        event.preventDefault();
+        const email = document.getElementById("sendOtpFormEmail").value;
+        const otp = document.getElementById("verifyOtpFormOtp").value;
+
+        let hasError;
+
+        if (!otp) {
+            showError(verifyOtpFormElements.otpDOM, "Doğrulama kodu boş olamaz")
+            hasError = true;
+        }
+
+        if (hasError) {
+            return;
+        }
+
+        const data = await fetchCheckOTP(email, otp);
+        if (data.statusCode === 200) {
+            this.forgotPasswordId = data.data.forgotPasswordId;
+            verifyOtpForm.style.display = "none";
+            resetPasswordForm.style.display = "block";
+        } else {
+            showError(verifyOtpFormElements.otpDOM, data.message);
+        }
+    }
+
+    async resetPassword(event) {
+        event.preventDefault();
+        const password = document.getElementById("resetPasswordFormPassword").value;
+        const confirmPassword = document.getElementById("resetPasswordFormConfirmPassword").value;
+
+        let hasError;
+
+        if (!password) {
+            showError(resetPasswordFormElements.passwordDOM, "Parola boş olamaz.");
+            hasError = true;
+        }
+
+        if (password.length < 6) {
+            showError(resetPasswordFormElements.passwordDOM, "Parola en az 6 karakter olmalıdır.");
+            hasError = true;
+        }
+
+        if (password.length > 32) {
+            showError(resetPasswordFormElements.passwordDOM, "Parola en fazla 32 karakter olmalıdır.");
+            hasError = true;
+        }
+
+        if (!confirmPassword) {
+            showError(resetPasswordFormElements.confirmPasswordDOM, "Parola doğrulaması boş olamaz");
+            hasError = true;
+        }
+        if (password && confirmPassword && password !== confirmPassword) {
+            showError(resetPasswordFormElements.confirmPasswordDOM, "Parolalar eşleşmiyor");
+            showError(resetPasswordFormElements.passwordDOM, "Parolalar eşleşmiyor");
+            hasError = true;
+        }
+
+        if (hasError) {
+            return;
+        }
+        try {
+            const response = await fetchResetPassword(this.forgotPasswordId, password);
+            if (response.ok) {
+                toastr.success("Şifreniz Değiştirildi");
+            } else {
+                console.error("Password reset failed");
+            }
+
+        } catch (error) {
+            console.error("An error occurred:", error);
+        }
     }
 }
+
+

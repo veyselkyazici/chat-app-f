@@ -1,10 +1,10 @@
 // MessageBox.js
 import { chatInstance } from "../pages/Chat.js";
+import { checkUserOnlineStatus, fetchCreateChatRoomIfNotExists, fetchGetOlder30Messages } from "../services/chatService.js";
+import { base64ToUint8Array, decryptMessage, encryptMessage, importPublicKey } from "../utils/e2ee.js";
 import { chatBoxLastMessageFormatDateTime, createElement, createSvgElement, createVisibilityProfilePhoto, messageBoxFormatDateTime } from "../utils/util.js";
-import { updateChatBox, closeOptionsDivOnClickOutside, toggleBlockUser } from "./ChatBox.js";
+import { closeOptionsDivOnClickOutside, toggleBlockUser, updateChatBox, ariaSelectedRemove } from "./ChatBox.js";
 import { createContactInformation } from "./ContactInformation.js";
-import { fetchCreateChatRoomIfNotExists, fetchGetOlder30Messages, checkUserOnlineStatus } from "../services/chatService.js"
-import { encryptMessage, decryptMessage, base64ToUint8Array, importPublicKey } from "../utils/e2ee.js"
 let caretPosition = 0;
 let caretNode = null;
 let range = null;
@@ -1257,16 +1257,16 @@ function formatDateTime(utcDateTimeString) {
 }
 
 
-const removeMessageBoxAndUnsubscribe = () => {
+const removeMessageBoxAndUnsubscribe = async () => {
     const messageBoxElement = document.querySelector('.message-box');
-    const messageBox = messageBoxElement.querySelector('.message-box1');
-    const startMessageElement = messageBoxElement.querySelector('.start-message')
+    const messageBox = messageBoxElement?.querySelector('.message-box1');
+    // const startMessageElement = messageBoxElement.querySelector('.start-message')
     if (messageBox) {
         messageBoxElement.removeChild(messageBox);
         chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${messageBox.data.contactsDTO.userProfileResponseDTO.id}/queue/online-status`);
         chatInstance.webSocketManagerChat.unsubscribeFromChannel(`/user/${chatInstance.user.id}/queue/message-box-typing`);
     } else {
-        messageBoxElement.removeChild(startMessageElement);
+        // messageBoxElement.removeChild(startMessageElement);
     }
 }
 function handleOptionsBtnClick(event, chat) {
@@ -1383,7 +1383,11 @@ function handleOptionsBtnClick(event, chat) {
     }
 }
 
-
+async function handleBackBtnClickMessageBox(removeElement) {
+    ariaSelectedRemove(chatInstance.selectedChat);
+    await removeMessageBoxAndUnsubscribe();
+    removeElement.remove();
+}
 
 class DeleteMessageDTO {
     constructor({
@@ -1413,5 +1417,5 @@ class ContactInformationDTO {
         this.contactId = contactId
     }
 }
-export { createMessageBox, ifVisibilitySettingsChangeWhileMessageBoxIsOpen, isMessageBoxDomExists, isOnlineStatus, lastSeenStatus, messageBoxElementMessagesReadTick, removeMessageBoxAndUnsubscribe, renderMessage, createMessageDeliveredTickElement, fetchCreateChatRoomIfNotExists, onlineInfo, blockInput, unBlockInput };
+export { blockInput, createMessageBox, createMessageDeliveredTickElement, fetchCreateChatRoomIfNotExists, ifVisibilitySettingsChangeWhileMessageBoxIsOpen, isMessageBoxDomExists, isOnlineStatus, lastSeenStatus, messageBoxElementMessagesReadTick, onlineInfo, removeMessageBoxAndUnsubscribe, renderMessage, unBlockInput };
 

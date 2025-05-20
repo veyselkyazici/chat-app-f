@@ -1,18 +1,18 @@
 // ChatBox.js
-import { createMessageBox, createMessageDeliveredTickElement, removeMessageBoxAndUnsubscribe, isMessageBoxDomExists, onlineInfo, blockInput, unBlockInput } from "./MessageBox.js";
 import { chatInstance, UserSettingsDTO } from "../pages/Chat.js";
-import { virtualScroll, UpdateItemsDTO } from '../utils/virtualScroll.js';
-import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
-import { ariaSelected, createElement, createVisibilityProfilePhoto, chatBoxLastMessageFormatDateTime } from "../utils/util.js";
-import { fetchGetChatSummary, fetchGetLast30Messages, fetchDeleteChat, fetchChatUnblock, fetchChatBlock } from "../services/chatService.js"
-import { decryptMessage, getUserKey } from "../utils/e2ee.js"
+import { fetchChatBlock, fetchChatUnblock, fetchDeleteChat, fetchGetChatSummary, fetchGetLast30Messages } from "../services/chatService.js";
+import { decryptMessage } from "../utils/e2ee.js";
+import { ModalOptionsDTO, showModal } from '../utils/showModal.js';
+import { chatBoxLastMessageFormatDateTime, createElement, createVisibilityProfilePhoto } from "../utils/util.js";
+import { UpdateItemsDTO, virtualScroll } from '../utils/virtualScroll.js';
+import { blockInput, createMessageBox, createMessageDeliveredTickElement, isMessageBoxDomExists, onlineInfo, removeMessageBoxAndUnsubscribe, unBlockInput } from "./MessageBox.js";
 
-function handleChats() {
+async function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
 
     let visibleItemCount = calculateVisibleItemCount();
     for (let i = 0; i < visibleItemCount && i < chatInstance.chatList.length; i++) {
-        createChatBox(chatInstance.chatList[i], i);
+        await createChatBox(chatInstance.chatList[i], i);
     }
     const updateItemsDTO = new UpdateItemsDTO({
         list: chatInstance.chatList,
@@ -702,8 +702,8 @@ async function fetchMessages(chatData) {
     };
 
     chatData.messages = messages;
-    removeMessageBoxAndUnsubscribe();
-    createMessageBox(chatDTO);
+    await removeMessageBoxAndUnsubscribe();
+    await createMessageBox(chatDTO);
 }
 
 function removeEventListeners(chatElementDOM) {
@@ -805,7 +805,26 @@ function chatBoxLastMessageDeliveredBlueTick() {
     return messageDeliveredTickDiv;
 }
 
+const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
+    if (selectedChat && selectedChat.chatData?.userProfileResponseDTO.id !== chatElementDOM.chatData.userProfileResponseDTO.id) {
+        const parentDiv = document.querySelector('.chat-list-content'); // Ana div'i seçin
+        const selectedDiv = parentDiv.querySelector('[aria-selected="true"]');
+        selectedDiv.setAttribute('aria-selected', 'false');
+
+        selectedDiv.querySelector(".chat").classList.remove('selected-chat');
+
+    }
+    chatElementDOM.querySelector(".chat").classList.add('selected-chat');
+    innerDiv.setAttribute('aria-selected', 'true');
+    chatInstance.selectedChat = chatElementDOM;
+}
+
+const ariaSelectedRemove = (selectedChat) => {
+    const previouslySelectedInnerDiv = selectedChat.querySelector('.chat-box > div');
+    selectedChat.querySelector(".chat").classList.remove('selected-chat');
+    previouslySelectedInnerDiv.setAttribute('aria-selected', 'false');
+    chatInstance.selectedChat = null;
+}
 
 
-
-export { createChatBox, updateChatBox, moveChatToTop, handleChats, createChatBoxWithFirstMessage, isChatExists, lastMessageChange, updateChatsTranslateY, isChatListLengthGreaterThanVisibleItemCount, createUnreadMessageCount, updateUnreadMessageCountAndSeenTick, closeOptionsDivOnClickOutside, toggleBlockUser, updateChatInstance };
+export { closeOptionsDivOnClickOutside, createChatBox, createChatBoxWithFirstMessage, createUnreadMessageCount, handleChats, isChatExists, isChatListLengthGreaterThanVisibleItemCount, lastMessageChange, moveChatToTop, toggleBlockUser, updateChatBox, updateChatInstance, updateChatsTranslateY, updateUnreadMessageCountAndSeenTick, ariaSelected, ariaSelectedRemove };

@@ -126,10 +126,8 @@ export async function decryptMessage(
   chatDTO,
   isSender = false
 ) {
-  // Base64 decode işlemleri
   const encryptedMessage = base64ToUint8Array(chatDTO.encryptedMessage);
   const iv = base64ToUint8Array(chatDTO.iv);
-  debugger;
   let encryptedKey;
   if (isSender) {
     encryptedKey = base64ToUint8Array(chatDTO.encryptedKeyForSender);

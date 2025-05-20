@@ -1,5 +1,5 @@
 
-import { createElement } from "../utils/util.js";
+import { backButton, createElement, handleBackBtnClick } from "../utils/util.js";
 import { chatInstance } from "../pages/Chat.js";
 import { ifVisibilitySettingsChangeWhileMessageBoxIsOpen } from "./MessageBox.js";
 import { fetchUpdatePrivacy } from "../services/userService.js"
@@ -18,30 +18,31 @@ function createSettingsHtml() {
     const header = createElement("header", "settings-1-1-1");
 
     const divSettingsHeader = createElement("div", "settings-1-1-1-1");
+    const divBackBtnn = backButton(settingsDiv, handleBackBtnClick);
 
-    const divBackBtn = createElement("div", "settings-back-btn");
-    const divBackBtn1 = createElement("div", "settings-back-btn-1", null, { role: "button", "aria-label": "Geri", tabIndex: "0" }, null, handleSettingsBackBtnClick);
+    // const divBackBtn = createElement("div", "settings-back-btn");
+    // const divBackBtn1 = createElement("div", "settings-back-btn-1", null, { role: "button", "aria-label": "Geri", tabIndex: "0" }, null, handleSettingsBackBtnClick);
 
-    const spanBackIcon = document.createElement("span", "", null, { "data-icon": "back" });
+    // const spanBackIcon = document.createElement("span", "", null, { "data-icon": "back" });
 
-    const svgBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svgBack.setAttribute("viewBox", "0 0 24 24");
-    svgBack.setAttribute("height", "24");
-    svgBack.setAttribute("width", "24");
-    svgBack.setAttribute("preserveAspectRatio", "xMidYMid meet");
-    svgBack.setAttribute("version", "1.1");
+    // const svgBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    // svgBack.setAttribute("viewBox", "0 0 24 24");
+    // svgBack.setAttribute("height", "24");
+    // svgBack.setAttribute("width", "24");
+    // svgBack.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    // svgBack.setAttribute("version", "1.1");
 
-    const titleBack = createElement("title", "back");
+    // const titleBack = createElement("title", "back");
 
-    const pathBack = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    pathBack.setAttribute("fill", "currentColor");
-    pathBack.setAttribute("d", "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z");
+    // const pathBack = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    // pathBack.setAttribute("fill", "currentColor");
+    // pathBack.setAttribute("d", "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z");
 
-    svgBack.appendChild(titleBack);
-    svgBack.appendChild(pathBack);
-    spanBackIcon.appendChild(svgBack);
-    divBackBtn1.appendChild(spanBackIcon);
-    divBackBtn.appendChild(divBackBtn1);
+    // svgBack.appendChild(titleBack);
+    // svgBack.appendChild(pathBack);
+    // spanBackIcon.appendChild(svgBack);
+    // divBackBtn1.appendChild(spanBackIcon);
+    // divBackBtn.appendChild(divBackBtn1);
 
     const divTitle = createElement("div", "settings-1-1-1-1-1", null, { title: "Ayarlar" });
 
@@ -49,7 +50,7 @@ function createSettingsHtml() {
 
     divTitle.appendChild(h1Title);
 
-    divSettingsHeader.appendChild(divBackBtn);
+    divSettingsHeader.appendChild(divBackBtnn);
     divSettingsHeader.appendChild(divTitle);
     header.appendChild(divSettingsHeader);
 
@@ -64,7 +65,7 @@ function createSettingsHtml() {
     const divListItems = createElement("div", "settings-1-1-2-1-1-1-1");
 
     const divListItemsInnerDiv = createElement("div", "settings-1-1-2-1-1-1-1-1");
-
+    // ToDo profileUrl gelecek
     divListItemsInnerDiv.appendChild(createButton("", chatInstance.user.firstName, chatInstance.user.about, "https://media-ist1-1.cdn.whatsapp.net/v/t61.24694-24/95075216_213302013300004_3915533723724724065_n.jpg?ccb=11-4&oh=01_Q5AaIDmuzX_bRwkwWkXfTl7f9rz7YHF2k-0-xKau2lQHHQbh&oe=66E2266C&_nc_sid=5e03e0&_nc_cat=101", null, handleProfileClick));
     divListItemsInnerDiv.appendChild(createButton('<svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"></path></svg>', "Hesap", "", "", "account-circle", handleAccountClick));
     divListItemsInnerDiv.appendChild(createButton('<svg viewBox="0 0 28 35" height="23" width="23" preserveAspectRatio="xMidYMid meet" fill="none"><path d="M 14 1.10204 C 18.5689 1.10204 22.2727 4.80587 22.2727 9.37477 L 22.272 12.179 L 22.3565 12.1816 C 24.9401 12.2949 27 14.4253 27 17.0369 L 27 29.4665 C 27 32.1506 24.8241 34.3265 22.14 34.3265 L 5.86 34.3265 C 3.1759 34.3265 1 32.1506 1 29.4665 L 1 17.0369 C 1 14.3971 3.10461 12.2489 5.72743 12.1786 L 5.72727 9.37477 C 5.72727 4.80587 9.4311 1.10204 14 1.10204 Z M 14 19.5601 C 12.0419 19.5601 10.4545 21.2129 10.4545 23.2517 C 10.4545 25.2905 12.0419 26.9433 14 26.9433 C 15.9581 26.9433 17.5455 25.2905 17.5455 23.2517 C 17.5455 21.2129 15.9581 19.5601 14 19.5601 Z M 14 4.79365 C 11.4617 4.79365 9.39069 6.79417 9.27759 9.30454 L 9.27273 9.52092 L 9.272 12.176 L 18.727 12.176 L 18.7273 9.52092 C 18.7273 6.91012 16.6108 4.79365 14 4.79365 Z" fill="currentColor"></path></svg>', "Gizlilik", "", "", "security-lock", handlePrivacyClick));
