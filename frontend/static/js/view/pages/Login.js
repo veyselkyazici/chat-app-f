@@ -5,6 +5,7 @@ import { clearErrorMessages, isValidEmail, showError } from "../utils/util.js";
 import { fetchLogin } from "../services/authService.js";
 import { fetchGetUserWithUserKeyByAuthId } from "../services/userService.js";
 import { deriveAESKey, decryptPrivateKey, importPublicKey, base64ToUint8Array, setUserKey, setSessionKey, encryptWithSessionKey, generateSessionKey, base64Encode } from "../utils/e2ee.js";
+import { LoginRequestDTO } from "../dtos/auth/request/LoginRequestDTO.js";
 
 export default class extends AbstractView {
   constructor(params) {
@@ -45,7 +46,7 @@ export default class extends AbstractView {
   async addEventListeners() {
     const loginFormButton = document.getElementById("loginFormButton");
     if (loginFormButton) {
-      loginFormButton.addEventListener("click", loginForm);
+      loginFormButton.addEventListener("click", () => this.loginForm());
     }
     const forgotPasswordFormButton = document.getElementById("forgotPasswordFormButton");
     if (forgotPasswordFormButton) {
@@ -54,83 +55,70 @@ export default class extends AbstractView {
       });
     }
   }
-}
 
-function getLoginFormInputValues() {
-  const formElements = {
-    emailDOM: document.getElementById("loginEmail"),
-    passwordDOM: document.getElementById("loginPassword"),
-    generalErrorDOM: document.getElementById("generalError")
-  };
-  return {
-    formElements: formElements,
-    email: formElements.emailDOM.value.trim(),
-    password: formElements.passwordDOM.value.trim()
-  };
-}
+  loginForm = async () => {
+    debugger;
+    const formElements = {
+      email: document.getElementById("loginEmail"),
+      password: document.getElementById("loginPassword"),
+      generalError: document.getElementById("generalError")
+    };
+    const loginRequestDTO = new LoginRequestDTO(formElements.email.value.trim(), formElements.password.value.trim());
+    clearErrorMessages();
 
 
+    const validationErrors = loginRequestDTO.validate();
+    if (validationErrors.length > 0) {
+      validationErrors.forEach(error => {
+        if (error.field !== 'general') {
+          showError(formElements[`${error.field}`], error.message);
+        } else {
+          formElements.generalError.textContent = error.message;
+        }
+      });
+      return;
+    }
 
+    const response = await fetchLogin(loginRequestDTO);
+    const responseData = await response.json();
+    if (responseData.success) {
+      sessionStorage.setItem('access_token', responseData.data.access_token)
+      sessionStorage.setItem('id', responseData.data.id)
 
-const loginForm = async () => {
-  const { formElements, email, password } = getLoginFormInputValues();
-  clearErrorMessages();
+      const user = await fetchGetUserWithUserKeyByAuthId(responseData.data.id)
+      const {
+        encryptedPrivateKey,
+        publicKey: exportedPublicKey,
+        salt,
+        iv,
+      } = user.userKey;
 
-  let hasError = false;
+      const aesKey = await deriveAESKey(loginRequestDTO.password, new base64ToUint8Array(salt));
+      const privateKey = await decryptPrivateKey(
+        new base64ToUint8Array(encryptedPrivateKey),
+        aesKey,
+        new base64ToUint8Array(iv)
+      );
 
-  if (!email) {
-    toastr.error('E-posta boş olamaz');
-    showError(formElements.emailDOM, "E-posta boş olamaz");
-    hasError = true;
-  }
+      const newSessionKey = generateSessionKey();
+      setSessionKey(newSessionKey);
 
-  if (!isValidEmail(email)) {
-    toastr.error('Geçerli bir e-posta adresi girin');
-    showError(formElements.emailDOM, "Geçerli bir e-posta adresi girin");
-    hasError = true;
-  }
+      const { encryptedData: encryptedPrivateKeyWithSession, iv: newIv } =
+        await encryptWithSessionKey(await window.crypto.subtle.exportKey("pkcs8", privateKey));
 
-  if (!password) {
-    toastr.error('Parola boş olamaz');
-    showError(formElements.passwordDOM, "Parola boş olamaz");
-    hasError = true;
-  }
-
-  if (password.length < 6) {
-    toastr.error('Parola en az 6 karakter olmalıdır');
-    showError(formElements.passwordDOM, "Parola en az 6 karakter olmalıdır");
-    hasError = true;
-  }
-  if (!hasError) {
-    const response = await fetchLogin(formElements, email, password);
-    const user = await fetchGetUserWithUserKeyByAuthId(response.id)
-    const {
-      encryptedPrivateKey,
-      publicKey: exportedPublicKey,
-      salt,
-      iv,
-    } = user.userKey;
-
-    const aesKey = await deriveAESKey(password, new base64ToUint8Array(salt));
-    const privateKey = await decryptPrivateKey(
-      new base64ToUint8Array(encryptedPrivateKey),
-      aesKey,
-      new base64ToUint8Array(iv)
-    );
-
-    const newSessionKey = generateSessionKey();
-    setSessionKey(newSessionKey);
-
-    const { encryptedData: encryptedPrivateKeyWithSession, iv: newIv } =
-      await encryptWithSessionKey(await window.crypto.subtle.exportKey("pkcs8", privateKey));
-
-    localStorage.setItem('encryptedPrivateKey', base64Encode(encryptedPrivateKeyWithSession));
-    localStorage.setItem('encryptionIv', base64Encode(newIv));
-    const publicKey = await importPublicKey(new base64ToUint8Array(exportedPublicKey));
-    sessionStorage.setItem('publicKey', exportedPublicKey);
-    sessionStorage.setItem('sessionKey', base64Encode(newSessionKey));
-    setUserKey({ privateKey, publicKey });
-    navigateTo("/chat")
+      localStorage.setItem('encryptedPrivateKey', base64Encode(encryptedPrivateKeyWithSession));
+      localStorage.setItem('encryptionIv', base64Encode(newIv));
+      const publicKey = await importPublicKey(new base64ToUint8Array(exportedPublicKey));
+      sessionStorage.setItem('publicKey', exportedPublicKey);
+      sessionStorage.setItem('sessionKey', base64Encode(newSessionKey));
+      setUserKey({ privateKey, publicKey });
+      toastr.success(responseData.message)
+      navigateTo("/chat")
+    } else {
+      console.error("Login failed", responseData);
+      toastr.error(responseData.message);
+      formElements.generalError.textContent = responseData.message;
+    }
   }
 }
 
