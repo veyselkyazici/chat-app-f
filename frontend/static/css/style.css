@@ -273,6 +273,7 @@ button {
 
 #generalError {
   bottom: 0px;
+  top: 5px;
 }
 
 strong {
@@ -1260,6 +1261,28 @@ button {
   border-bottom-right-radius: 3px;
 }
 
+.modal1_4_parent {
+  flex-shrink: 1;
+  white-space: normal;
+  position: relative;
+  overflow-wrap: break-word;
+  flex-basis: 100%;
+  flex-grow: 1;
+}
+
+.modal1_5_parent {
+  width: 100%;
+  overflow-x: hidden;
+  height: 100%;
+  top: 0px;
+  overflow-y: hidden;
+  visibility: visible;
+  flex-direction: column;
+  display: flex;
+  pointer-events: auto;
+  left: 0px;
+  position: absolute;
+}
 
 .modal1-3 {
   min-width: 748px;
@@ -5507,4 +5530,83 @@ form h1 {
 .canvas-2 {
   height: 100%;
   width: 100%;
+}
+
+.upload-photo-modal-content-zoom {
+  width: 28px;
+  line-height: 0;
+  position: absolute;
+  z-index: 4;
+  right: 7px;
+  border-top-right-radius: 2px;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+  box-shadow: 0 1px 3px rgba(11, 20, 26, .16);
+  background-color: white;
+}
+
+.upload-photo-modal-content-zoom1 {
+  width: 28px;
+  line-height: 0;
+  position: absolute;
+  z-index: 4;
+  right: 7px;
+  width: 28px;
+  border-top-right-radius: 2px;
+  right: 7px;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+  box-shadow: 0 1px 3px rgba(11, 20, 26, .16);
+}
+
+.upload-photo-modal-content-zoom2 {
+  color: #8696a0;
+  font-size: 100%;
+  width: 28px;
+  padding-top: 0px;
+  border-top-width: 0px;
+  border-bottom-width: 0px;
+  height: 28px;
+  padding-bottom: 0px;
+  border-left-width: 0px;
+  justify-content: center;
+  padding-left: 0px;
+  background-color: transparent;
+  font-family: inherit;
+  border-right-width: 0px;
+  display: flex;
+  align-items: center;
+  padding-right: 0px;
+  border-top-right-radius: inherit;
+  cursor: pointer;
+  border-top-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+  border-bottom-left-radius: inherit;
+}
+
+.upload-photo-modal-content-zoom3 {
+  color: #8696a0;
+  font-size: 100%;
+  width: 28px;
+  padding-top: 0px;
+  border-top-width: 0px;
+  border-bottom-width: 0px;
+  height: 28px;
+  padding-bottom: 0px;
+  border-left-width: 0px;
+  justify-content: center;
+  padding-left: 0px;
+  background-color: transparent;
+  font-family: inherit;
+  border-right-width: 0px;
+  display: flex;
+  align-items: center;
+  padding-right: 0px;
+  border-top-right-radius: inherit;
+  cursor: pointer;
+  border-top-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+  border-bottom-left-radius: inherit;
 }

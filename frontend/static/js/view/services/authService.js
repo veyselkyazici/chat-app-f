@@ -19,32 +19,16 @@ export const isAuthenticated = async () => {
     }
 };
 
-export const fetchLogin = async (formElements, email, password) => {
-    const requestBody = {
-        email: email,
-        password: password
-    };
+export const fetchLogin = async (loginRequestDTO) => {
     try {
         const response = await fetch(`${AUTH_SERVICE_URL}/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(loginRequestDTO)
         });
-
-        const responseData = await response.json();
-
-        if (responseData.responsecode === 200) {
-            sessionStorage.setItem('access_token', responseData.access_token)
-            sessionStorage.setItem('id', responseData.id)
-            toastr.success('Giriş Başarılı')
-            return responseData;
-        } else {
-            console.error("Login failed", responseData);
-            toastr.error(responseData.message);
-            formElements.generalErrorDOM.textContent = responseData.message;
-        }
+        return response;
     } catch (error) {
         console.error("An error occurred:", error);
     }

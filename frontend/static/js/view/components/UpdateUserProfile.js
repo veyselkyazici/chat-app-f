@@ -1,7 +1,8 @@
 
 import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
-import { formatPhoneNumber, removeHyphens, addZero, formatPhoneNumberOnBackspace, createElement, createSvgElement } from '../utils/util.js';
-import { updateUserName, updateUserSurname, updateUserAbout, updateUserPhone, fetchUploadPhoto } from '../services/userService.js';
+import { createElement, createSvgElement } from '../utils/util.js';
+import { updateUserName, updateUserAbout, fetchUploadPhoto } from '../services/userService.js';
+import { UpdateUserDTO } from '../dtos/user/request/UpdateUserDTO.js';
 
 async function userUpdateModal(user, bool) {
     const updateProfileForm = createElement('form', '');
@@ -52,42 +53,13 @@ async function userUpdateModal(user, bool) {
     const nameIElement = createElement('i', 'fa-solid fa-user');
     const nameInput = createElement('input', '', null, { name: 'name', value: '', placeholder: 'Name', readonly: true, id: "nameInput" });
     nameInput.value = user.firstName;
-    const nameEditButton = createElement('div', 'editButton', null, { id: 'editButtonName' }, "✎", toggleEditName);
+    const nameEditButton = createElement('div', 'editButton', null, { id: 'editButtonName' }, "✎", () => toggleEditName(user));
     const errorMessageElement = createElement('div', 'error-message');
 
     nameElement.appendChild(nameIElement);
     nameElement.appendChild(nameInput);
     nameElement.appendChild(nameEditButton);
     nameElement.appendChild(errorMessageElement);
-
-
-
-    // const surnameElement = createElement('div', 'input-icon');
-    // const surnameIElement = createElement('i', 'fa-solid fa-user');
-    // const surnameInput = createElement('input', '', null, { name: 'surname', value: '', placeholder: 'Surname', readonly: true, id: "surnameInput" });
-    // const surnameEditButton = createElement('div', 'editButton', null, { id: 'editButtonSurname' }, "✎", toggleEditSurname);
-    // const surnameErrorMessageElement = createElement('div', 'error-message');
-
-
-    // surnameElement.appendChild(surnameIElement);
-    // surnameElement.appendChild(surnameInput);
-    // surnameElement.appendChild(surnameEditButton);
-    // surnameElement.appendChild(surnameErrorMessageElement);
-
-
-    // const phoneElement = createElement('div', 'input-icon');
-    // const phoneIElement = createElement('i', 'fa-solid fa-user');
-    // const phoneInput = createElement('input', '', null, { name: 'phone', value: '', placeholder: 'Phone: 5XX-XXX-XXXX', readonly: true, id: "phoneInput" }, null, formatPhoneNumber);
-    // const phoneEditButton = createElement('div', 'editButton', null, { id: 'editButtonPhone' }, "✎", toggleEditPhone);
-    // const phoneErrorMessageElement = createElement('div', 'error-message');
-
-
-    // phoneElement.appendChild(phoneIElement);
-    // phoneElement.appendChild(phoneInput);
-    // phoneElement.appendChild(phoneEditButton);
-    // phoneElement.appendChild(phoneErrorMessageElement);
-
-
 
     const aboutElement = createElement('div', 'input-icon');
     const aboutIElement = createElement('i', 'fa-solid fa-user');
@@ -105,8 +77,6 @@ async function userUpdateModal(user, bool) {
 
     updateProfileForm.appendChild(profilePhotoUserElement);
     updateProfileForm.appendChild(nameElement);
-    // updateProfileForm.appendChild(surnameElement);
-    // updateProfileForm.appendChild(phoneElement);
     updateProfileForm.appendChild(aboutElement);
     if (bool) {
         showModal(new ModalOptionsDTO({
@@ -134,58 +104,20 @@ async function userUpdateModal(user, bool) {
     }
 
     profilePhotoInput.addEventListener('click', (event) => toggleOptions(event, user.image));
-
-    // document.getElementById("editButtonName").addEventListener("click", toggleEditName);
-    // document.getElementById("editButtonSurname").addEventListener("click", toggleEditSurname);
-    // document.getElementById("editButtonPhone").addEventListener("click", toggleEditPhone);
-    // document.getElementById("editButtonAbout").addEventListener("click", toggleEditAbout);
-    // document.getElementById("photoOptions").addEventListener("click", toggleOptions);
-    // document.getElementById("profilePhotoInput").addEventListener("click", toggleOptions);
-    // document.getElementById('phoneInput').addEventListener('input', function (event) {
-    //     formatPhoneNumber(event.target);
-    // });
-    // document.getElementById('phoneInput').addEventListener('keydown', function (event) {
-    //     if (event.key === 'Backspace' || event.key === 'Delete') {
-    //         formatPhoneNumberOnBackspace(event.target);
-    //     }
-    // });
     inputFile.addEventListener('change', (event) => uploadPhoto(event, user.id));
 }
 
 
 function goHome() {
     const name = document.getElementById("nameInput").value.trim();
-    // const surname = document.getElementById("surnameInput").value.trim();
-    // const phoneNumber = document.getElementById("phoneInput").value.trim();
-    const about = document.getElementById("aboutInput").value.trim();
-    let hashError = false;
-
     if (!name) {
         toastr.error('İsim boş olamaz');
-        hashError = true;
+        return false;
     }
-
-    // if (!surname) {
-    //     toastr.error('Soyad boş olamaz');
-    //     hashError = true;
-    // }
-
-    // if (!phoneNumber) {
-    //     toastr.error('Telefon numarası boş olamaz');
-    //     hashError = true;
-    // }
-
-    if (!about) {
-        toastr.error('Hakkımda boş olamaz');
-        hashError = true;
-    }
-    if (hashError) {
-        return !hashError;
-    }
-
+    return true;
 }
 
-function toggleEditName() {
+function toggleEditName(user) {
     const nameInput = document.getElementById('nameInput');
     const editButton = document.getElementById('editButtonName');
     if (nameInput.readOnly) {
@@ -193,54 +125,22 @@ function toggleEditName() {
         editButton.textContent = '✔';
         nameInput.focus();
     } else {
-        if (nameInput.value) {
+        if (nameInput.value && (user.firstName !== nameInput.value)) {
             nameInput.readOnly = true;
             editButton.textContent = '✎';
-            updateUserName(nameInput.value);
+            const updateUserDTO = new UpdateUserDTO(user.id, nameInput.value);
+            const validationErrors = updateUserDTO.validate();
+            if (validationErrors.length > 0) {
+                validationErrors.forEach(error => {
+                    toastr.error(error.message);
+                });
+            } else {
+                updateUserName(updateUserDTO);
+            }
+
         }
         else {
-            toastr.error('İsim boş olamaz');
-        }
-    }
-}
-
-
-function toggleEditSurname() {
-    const surnameInput = document.getElementById('surnameInput');
-    const editButton = document.getElementById('editButtonSurname');
-    if (surnameInput.readOnly) {
-        surnameInput.readOnly = false;
-        editButton.textContent = '✔';
-        surnameInput.focus();
-    } else {
-        if (surnameInput.value) {
-            surnameInput.readOnly = true;
-            editButton.textContent = '✎';
-            updateUserSurname(surnameInput.value);
-        }
-        else {
-            toastr.error('Soyad boş olamaz');
-        }
-    }
-}
-
-function toggleEditPhone() {
-    const phoneInput = document.getElementById('phoneInput');
-    const editButton = document.getElementById('editButtonPhone');
-    if (phoneInput.readOnly) {
-        phoneInput.readOnly = false;
-        editButton.textContent = '✔';
-        phoneInput.focus();
-    } else {
-        if (phoneInput.value) {
-            phoneInput.readOnly = true;
-            editButton.textContent = '✎';
-            const phoneRemoveHyphens = removeHyphens(phoneInput.value);
-            const phoneAddZero = addZero(phoneRemoveHyphens);
-            updateUserPhone(phoneAddZero);
-        }
-        else {
-            toastr.error('Soyad boş olamaz');
+            toastr.error('Name cannot be empty');
         }
     }
 }
@@ -253,9 +153,22 @@ function toggleEditAbout() {
         editButton.textContent = '✔';
         aboutInput.focus();
     } else {
-        aboutInput.readOnly = true;
-        editButton.textContent = '✎';
-        updateUserAbout(aboutInput.value);
+        if (aboutInput.value) {
+            aboutInput.readOnly = true;
+            editButton.textContent = '✎';
+            const updateUserDTO = new UpdateUserDTO(user.id, aboutInput.value);
+            const validationErrors = updateUserDTO.validate();
+            if (validationErrors.length > 0) {
+                validationErrors.forEach(error => {
+                    toastr.error(error.message);
+                });
+            } else {
+                updateUserAbout(updateUserDTO);
+            }
+        } else {
+            toastr.error("About cannot be empty");
+        }
+
     }
 }
 
@@ -311,8 +224,7 @@ const handleOutsideClick = (event) => {
         document.removeEventListener('click', handleOutsideClick);
     }
 };
-function viewPhoto() {
-}
+
 let canvas, ctx;
 let img = new Image();
 let imgX = 0, imgY = 0, imgScale = 1;
@@ -339,6 +251,39 @@ function uploadPhoto(event, userId) {
             const deneme6 = createElement('div', 'deneme6');
             const deneme7 = createElement('div', 'deneme7');
             const uploadPhotoModalContent = createElement('div', 'upload-photo-modal-content');
+            const uploadPhotoModalContentZoom = createElement('div', 'upload-photo-modal-content-zoom');
+
+            const uploadPhotoModalContentZoom1 = createElement('div', 'upload-photo-modal-content-zoom1');
+            uploadPhotoModalContentZoom.appendChild(uploadPhotoModalContentZoom1);
+
+            const uploadPhotoModalContentZoom2 = createElement('button', 'upload-photo-modal-content-zoom2', {}, { tabIndex: '0', type: 'button' });
+            uploadPhotoModalContentZoom.appendChild(uploadPhotoModalContentZoom2);
+            const uploadPhotoModalContentZoom2_span = createElement('span', '', {}, { 'aria-hidden': 'true', 'data-icon': 'plus' });
+
+            const uploadPhotoModalContentZoom2_span_svg = createSvgElement('svg', { class: 'svg-element', viewBox: '0 0 24 24', height: '24', width: '24', preserveAspectRatio: 'xMidYMid meet' });
+            const uploadPhotoModalContentZoom2_span_svg_title = document.createElement('title');
+            uploadPhotoModalContentZoom2_span_svg_title.textContent = 'plus';
+            const uploadPhotoModalContentZoom2_span_svg_path = createSvgElement('path', { fill: 'currentColor', d: 'M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z' });
+            uploadPhotoModalContentZoom2_span_svg.appendChild(uploadPhotoModalContentZoom2_span_svg_title);
+            uploadPhotoModalContentZoom2_span_svg.appendChild(uploadPhotoModalContentZoom2_span_svg_path);
+            uploadPhotoModalContentZoom2_span.appendChild(uploadPhotoModalContentZoom2_span_svg);
+            uploadPhotoModalContentZoom2.appendChild(uploadPhotoModalContentZoom2_span);
+
+
+            const uploadPhotoModalContentZoom3 = createElement('button', 'upload-photo-modal-content-zoom3', { tabIndex: '0', type: 'button' });
+            uploadPhotoModalContentZoom.appendChild(uploadPhotoModalContentZoom3);
+            const uploadPhotoModalContentZoom3_span = createElement('span', '', {}, { 'aria-hidden': 'true', 'data-icon': 'minus' });
+
+            const uploadPhotoModalContentZoom3_span_svg = createSvgElement('svg', { class: 'svg-element', viewBox: '0 0 28 28', height: '28', width: '28', preserveAspectRatio: 'xMidYMid meet', version: '1.1', x: '0px', y: '0px', 'enable-background': 'new 0 0 28 28' });
+            const uploadPhotoModalContentZoom3_span_svg_title = document.createElement('title');
+            uploadPhotoModalContentZoom3_span_svg_title.textContent = 'minus';
+            const uploadPhotoModalContentZoom3_span_svg_path = createSvgElement('path', { fill: 'currentColor', d: 'M8.381,14.803v-1.605h11.237v1.605C19.618,14.803,8.381,14.803,8.381,14.803z' });
+            uploadPhotoModalContentZoom3_span_svg.appendChild(uploadPhotoModalContentZoom3_span_svg_title);
+            uploadPhotoModalContentZoom3_span_svg.appendChild(uploadPhotoModalContentZoom3_span_svg_path);
+            uploadPhotoModalContentZoom3_span.appendChild(uploadPhotoModalContentZoom3_span_svg);
+            uploadPhotoModalContentZoom3.appendChild(uploadPhotoModalContentZoom3_span);
+            uploadPhotoModalContent.appendChild(uploadPhotoModalContentZoom);
+
             const uploadPhotoModalContent_1 = createElement('div', 'upload-photo-modal-content-1');
             const uploadPhotoModalContent_1_1 = createElement('span', '');
             const uploadPhotoModalContent_1_1_1 = createElement('div', 'upload-photo-modal-content-1-1-1');
