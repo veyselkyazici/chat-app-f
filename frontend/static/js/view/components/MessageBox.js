@@ -57,11 +57,11 @@ const typingsStatus = async (status, chat, messageBoxElement) => {
     if (status.typing) {
         const statusDiv = createElement('div', 'online-status');
         const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, 'yaziyor...');
-        statusDiv.appendChild(statusSpan);
-        messageBoxElement.appendChild(statusDiv);
+        statusDiv.append(statusSpan);
+        messageBoxElement.append(statusDiv);
     } else {
         const onlineElement = await isOnline(chat.user, chat.contactsDTO);
-        messageBoxElement.appendChild(onlineElement);
+        messageBoxElement.append(onlineElement);
     }
 }
 const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
@@ -80,11 +80,11 @@ const onlineStatus = async (statusMessage, chat, messageBoxElement) => {
 
     if (status.online) {
         const onlineElement = isOnlineStatus(chat.user, chat.contactsDTO);
-        messageBoxElement.appendChild(onlineElement);
+        messageBoxElement.append(onlineElement);
     } else {
         const statusDiv = lastSeenStatus(chat.user, chat.contactsDTO, status.lastSeen);
         if (statusDiv) {
-            messageBoxElement.appendChild(statusDiv);
+            messageBoxElement.append(statusDiv);
         }
     }
 };
@@ -138,7 +138,7 @@ function handleDeleteContentBackward(event) {
             const textNode = document.createTextNode(combinedContent);
             const newSpan = document.createElement('span');
             newSpan.className = 'message-box1-7-1-1-1-2-1-1-1-1';
-            newSpan.appendChild(textNode);
+            newSpan.append(textNode);
 
             const parent = caretNode.parentNode.parentNode;
             parent.replaceChild(newSpan, caretNode.parentNode);
@@ -232,7 +232,7 @@ const input = (data, textArea) => {
                     const textSpan = document.createElement('span');
                     textSpan.className = 'message-box1-7-1-1-1-2-1-1-1-1';
                     textSpan.textContent = data;
-                    pElement.appendChild(textSpan);
+                    pElement.append(textSpan);
                     setStartRange(textSpan, caretPosition);
                 }
             }
@@ -247,7 +247,7 @@ const insertEmoji = (emoji) => {
     const emojiInnerSpan = document.createElement('span');
     emojiInnerSpan.className = 'message-emoji-span-1';
     emojiInnerSpan.textContent = emoji;
-    emojiOuterSpan.appendChild(emojiInnerSpan);
+    emojiOuterSpan.append(emojiInnerSpan);
     if (caretNode && caretNode.nodeType === Node.TEXT_NODE) {
         const text = caretNode.textContent;
         const before = text.slice(0, caretPosition);
@@ -284,7 +284,7 @@ const insertEmoji = (emoji) => {
             }
             // 1234😀
             else if (parentSpan.nextSibling === null) { // saginda bir şey yoksa
-                const ABC = parentSpan.parentNode.appendChild(emojiOuterSpan)
+                const ABC = parentSpan.parentNode.append(emojiOuterSpan)
                 caretNode = ABC;
             }
             else if (parentSpan.className === "message-box1-7-1-1-1-2-1-1-1-1" && parentSpan.nextSibling.className === "message-emoji-span") { // solunda yazi saginda emoji varsa
@@ -300,7 +300,7 @@ const insertEmoji = (emoji) => {
             const deneme = parentSpan.parentNode.insertBefore(emojiOuterSpan, parentSpan.nextSibling);
             caretNode = deneme;
         } else if (parentSpan.nextSibling === null) {
-            const deneme = parentSpan.parentNode.appendChild(emojiOuterSpan)
+            const deneme = parentSpan.parentNode.append(emojiOuterSpan)
             caretNode = deneme;
         }
     }
@@ -325,7 +325,7 @@ const updatePlaceholder = (textArea, sendButton, typingStatus) => {
             placeholder = document.createElement('div');
             placeholder.className = placeholderClass;
             placeholder.textContent = placeholderText;
-            textArea.appendChild(placeholder);
+            textArea.append(placeholder);
         }
         setSendButtonState(sendButton, false, typingStatus);
     } else {
@@ -413,7 +413,7 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
     const main = createElement('div', 'message-box1', null, { id: 'main' });
     main.data = chat;
     const divMessageBox1_1 = createElement('div', 'message-box1-1', { opacity: '0.4' });
-    main.appendChild(divMessageBox1_1);
+    main.append(divMessageBox1_1);
     const header = createElement('header', 'message-box1-2');
 
     const messageBoxDiv1 = createElement('div', 'message-box1-2-1', {}, { title: "Profil Detayları", role: "button" }, null, () => createContactInformation(new ContactInformationDTO({
@@ -426,8 +426,8 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
 
     const profileImgContainer = createElement('div', 'message-box1-2-1-1', { height: '40px', width: '40px' });
     const imgElement = createVisibilityProfilePhoto(chat.contactsDTO.userProfileResponseDTO, chat.contactsDTO.contact, chat.user);
-    profileImgContainer.appendChild(imgElement);
-    messageBoxDiv1.appendChild(profileImgContainer);
+    profileImgContainer.append(imgElement);
+    messageBoxDiv1.append(profileImgContainer);
 
     const messageBoxDiv2 = createElement('div', 'message-box1-2-2', {}, { role: 'button' }, null, () => createContactInformation(new ContactInformationDTO({
         name: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.contact.userContactName : chat.contactsDTO.userProfileResponseDTO.email,
@@ -442,10 +442,10 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
 
     const nameContainer = createElement('div', 'message-box1-2-2-1-1-1');
     const nameSpan = createElement('span', 'message-box1-2-2-1-1-1-1', {}, { dir: 'auto', 'aria-label': '' }, chat.contactsDTO.contact.userContactName ? chat.contactsDTO.contact.userContactName : chat.contactsDTO.userProfileResponseDTO.email);
-    nameContainer.appendChild(nameSpan);
-    innerMessageBoxDiv2.appendChild(nameContainer);
-    innerMessageBoxDiv1.appendChild(innerMessageBoxDiv2);
-    messageBoxDiv2.appendChild(innerMessageBoxDiv1);
+    nameContainer.append(nameSpan);
+    innerMessageBoxDiv2.append(nameContainer);
+    innerMessageBoxDiv1.append(innerMessageBoxDiv2);
+    messageBoxDiv2.append(innerMessageBoxDiv1);
 
     const messageBoxDiv3 = createElement('div', 'message-box1-2-3');
 
@@ -483,34 +483,34 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
         fill: "currentColor",
         d: "M12,7c1.104,0,2-0.896,2-2c0-1.105-0.895-2-2-2c-1.104,0-2,0.894-2,2 C10,6.105,10.895,7,12,7z M12,9c-1.104,0-2,0.894-2,2c0,1.104,0.895,2,2,2c1.104,0,2-0.896,2-2C13.999,9.895,13.104,9,12,9z M12,15 c-1.104,0-2,0.894-2,2c0,1.104,0.895,2,2,2c1.104,0,2-0.896,2-2C13.999,15.894,13.104,15,12,15z"
     });
-    svgOptions.appendChild(optionsPath);
-    optionsIcon.appendChild(svgOptions);
-    optionsButton.appendChild(optionsIcon);
-    optionsDiv_2_3_1_3_1_1.appendChild(optionsButton);
-    optionsDiv_2_3_1_3_1_1.appendChild(optionsDiv_2_3_1_3_1_1_1);
-    optionsDiv1_2_3_1_3_1.appendChild(optionsDiv_2_3_1_3_1_1);
-    searchButtonContainer.appendChild(optionsDiv1_2_3_1_3_1);
-    messageBoxDiv3.appendChild(searchButtonContainer);
+    svgOptions.append(optionsPath);
+    optionsIcon.append(svgOptions);
+    optionsButton.append(optionsIcon);
+    optionsDiv_2_3_1_3_1_1.append(optionsButton);
+    optionsDiv_2_3_1_3_1_1.append(optionsDiv_2_3_1_3_1_1_1);
+    optionsDiv1_2_3_1_3_1.append(optionsDiv_2_3_1_3_1_1);
+    searchButtonContainer.append(optionsDiv1_2_3_1_3_1);
+    messageBoxDiv3.append(searchButtonContainer);
 
-    header.appendChild(messageBoxDiv1);
-    header.appendChild(messageBoxDiv2);
-    header.appendChild(messageBoxDiv3);
-    main.appendChild(header);
+    header.append(messageBoxDiv1);
+    header.append(messageBoxDiv2);
+    header.append(messageBoxDiv3);
+    main.append(header);
 
     await onlineInfo(chat, messageBoxDiv2);
 
 
     const spanMessageBox1_3 = createElement('span', 'message-box1-3');
     const divMessageBox1_4 = createElement('div', 'message-box1-4');
-    main.appendChild(spanMessageBox1_3);
-    main.appendChild(divMessageBox1_4);
+    main.append(spanMessageBox1_3);
+    main.append(divMessageBox1_4);
 
     const messageBox = createElement("div", "message-box1-5");
 
     const messageBox1 = createElement("div", "message-box1-5-1");
 
     const span1 = createElement("span", '');
-    messageBox1.appendChild(span1);
+    messageBox1.append(span1);
 
     const messageBox1_1 = createElement("div", "message-box1-5-1-1");
 
@@ -536,48 +536,48 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
         d: "M 11 21.212 L 17.35 15 L 11 8.65 l 1.932 -1.932 L 21.215 15 l -8.282 8.282 L 11 21.212 Z"
     });
 
-    svgChevron.appendChild(titleChevron);
-    svgChevron.appendChild(pathChevron);
-    svgSpan.appendChild(svgChevron);
+    svgChevron.append(titleChevron);
+    svgChevron.append(pathChevron);
+    svgSpan.append(svgChevron);
 
-    buttonDiv.appendChild(innerSpan);
-    buttonDiv.appendChild(svgSpan);
+    buttonDiv.append(innerSpan);
+    buttonDiv.append(svgSpan);
 
-    spanMessageBox1_5_1_1_1.appendChild(buttonDiv);
+    spanMessageBox1_5_1_1_1.append(buttonDiv);
 
-    messageBox1_1.appendChild(spanMessageBox1_5_1_1_1);
-    messageBox1.appendChild(messageBox1_1);
+    messageBox1_1.append(spanMessageBox1_5_1_1_1);
+    messageBox1.append(messageBox1_1);
 
     const messageBox1_2 = createElement("div", "message-box1-5-1-2", null, { "tabindex": "0" });
 
     const messageBox1_2_1 = createElement("div", "message-box1-5-1-2-1");
-    messageBox1_2.appendChild(messageBox1_2_1);
+    messageBox1_2.append(messageBox1_2_1);
 
     const oldMessagesDiv = createElement("div", "message-box1-5-1-2-1-3");
 
     const oldMessagesTextDiv = createElement("div", "message-box1-5-1-2-1-3-1", null, null, "Telefonunuzdaki eski mesajları almak için buraya tıklayın.");
 
-    oldMessagesDiv.appendChild(oldMessagesTextDiv);
-    messageBox1_2.appendChild(oldMessagesDiv);
+    oldMessagesDiv.append(oldMessagesTextDiv);
+    messageBox1_2.append(oldMessagesDiv);
 
     const applicationDiv = createElement("div", "message-box1-5-1-2-2", null, { "tabindex": "-1", "role": "application" });
     // const todayDiv = createElement("div", "message-box1-5-1-2-2-1", null, { "tabindex": "-1" });
 
     // const todaySpan = createElement("span", "message-box1-5-1-2-2-1-1", { "minHeight": "0px" }, { "dir": "auto", "aria-label": "" }, "BUGÜN");
 
-    // todayDiv.appendChild(todaySpan);
-    // applicationDiv.appendChild(todayDiv);
+    // todayDiv.append(todaySpan);
+    // applicationDiv.append(todayDiv);
 
 
-    messageBox1_2.appendChild(applicationDiv);
-    messageBox1.appendChild(messageBox1_2);
-    messageBox.appendChild(messageBox1);
-    main.appendChild(messageBox);
+    messageBox1_2.append(applicationDiv);
+    messageBox1.append(messageBox1_2);
+    messageBox.append(messageBox1);
+    main.append(messageBox);
 
 
 
     const divMessageBox1_6 = createElement('div', 'message-box1-6', { height: '0px' });
-    main.appendChild(divMessageBox1_6);
+    main.append(divMessageBox1_6);
     const footer = createElement('footer', 'message-box1-7');
     if (chat.userChatSettings.blocked) {
         blockInput(chat.contactsDTO.contact.userContactName, main, footer);
@@ -586,8 +586,8 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
     }
 
     const span = createElement('span', '');
-    main.appendChild(span);
-    messageBoxElement.appendChild(main);
+    main.append(span);
+    messageBoxElement.append(main);
     const divContenteditable = main.querySelector('.message-box1-7-1-1-1-2-1-1-1');
     divContenteditable.focus();
 
@@ -604,8 +604,8 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
 };
 const blockInput = (userName, main, footer) => {
     const blockMessageInputDiv = createElement('div', 'block-message-input', null, null, `Engellenmiş ${userName} kişisine mesaj gönderemezsiniz.`);
-    footer.appendChild(blockMessageInputDiv);
-    main.appendChild(footer);
+    footer.append(blockMessageInputDiv);
+    main.append(footer);
 }
 const unBlockInput = (chat, main, footer, typingStatus) => {
     const div1 = createElement('div', 'message-box1-7-1');
@@ -615,7 +615,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
 
 
     const nullSpan = createElement('span', '');
-    div1_1.appendChild(nullSpan);
+    div1_1.append(nullSpan);
     const innerSpan1 = createElement('span', '');
 
     const div1_1_1 = createElement('div', 'message-box1-7-1-1-1');
@@ -631,7 +631,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
 
 
     const div1_7_1_1_1_1_1_1_1 = createElement('div', 'message-box1-7-1-1-1-1-1-1-1');
-    button1.appendChild(div1_7_1_1_1_1_1_1_1);
+    button1.append(div1_7_1_1_1_1_1_1_1);
     const closedSpan = createElement('span', '', null, { 'data-icon': 'x' });
 
     const closedSVG = createSvgElement('svg', {
@@ -649,11 +649,11 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
 
 
 
-    closedSVG.appendChild(title1);
-    closedSVG.appendChild(pathClosed);
-    closedSpan.appendChild(closedSVG);
-    div1_7_1_1_1_1_1_1_1.appendChild(closedSpan);
-    button1.appendChild(div1_7_1_1_1_1_1_1_1);
+    closedSVG.append(title1);
+    closedSVG.append(pathClosed);
+    closedSpan.append(closedSVG);
+    div1_7_1_1_1_1_1_1_1.append(closedSpan);
+    button1.append(div1_7_1_1_1_1_1_1_1);
 
     const button2 = createElement('button', 'message-box1-7-1-1-1-1-1-2', { "transform": 'translateX(0px)' }, { 'tabindex': '-1', 'data-tab': '10', 'aria-label': 'Emoji panelini aç' });
 
@@ -681,16 +681,16 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
 
 
 
-    div1_1_1_1.appendChild(div1_7_1_1_1_1_1);
-    div1_1_1.appendChild(div1_1_1_1);
-    innerSpan1.appendChild(div1_1_1);
-    div1_7_1_1_1_1_1.appendChild(button1);
-    smileySVG.appendChild(smileyTitle);
-    smileySVG.appendChild(pathSmiley);
-    smileyIcon.appendChild(smileySVG);
-    nullDiv.appendChild(smileyIcon)
-    button2.appendChild(nullDiv);
-    div1_7_1_1_1_1_1.appendChild(button2)
+    div1_1_1_1.append(div1_7_1_1_1_1_1);
+    div1_1_1.append(div1_1_1_1);
+    innerSpan1.append(div1_1_1);
+    div1_7_1_1_1_1_1.append(button1);
+    smileySVG.append(smileyTitle);
+    smileySVG.append(pathSmiley);
+    smileyIcon.append(smileySVG);
+    nullDiv.append(smileyIcon)
+    button2.append(nullDiv);
+    div1_7_1_1_1_1_1.append(button2)
 
     const div1_1_2 = createElement('div', 'message-box1-7-1-1-1-2');
 
@@ -706,21 +706,21 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     const inputPTag = createElement('p', 'message-box1-7-1-1-1-2-1-1-1-1');
 
     const br = createElement('br', '');
-    inputPTag.appendChild(br);
+    inputPTag.append(br);
 
-    divContenteditable.appendChild(inputPTag);
+    divContenteditable.append(inputPTag);
 
     const divPlaceHolder = createElement('div', 'message-box1-7-1-1-1-2-1-1-1-2', null, null, 'Bir mesaj yazın');
 
-    textArea.appendChild(divContenteditable);
-    textArea.appendChild(divPlaceHolder);
-    inputDiv.appendChild(textArea);
-    div1_1_2.appendChild(inputDiv);
+    textArea.append(divContenteditable);
+    textArea.append(divPlaceHolder);
+    inputDiv.append(textArea);
+    div1_1_2.append(inputDiv);
 
 
-    div1_1_1.appendChild(div1_1_2);
-    div1_1.appendChild(innerSpan1);
-    div1.appendChild(div1_1);
+    div1_1_1.append(div1_1_2);
+    div1_1.append(innerSpan1);
+    div1.append(div1_1);
 
 
 
@@ -746,17 +746,17 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
 
 
 
-    sendBtnSVG.appendChild(sendBtnTitle);
-    sendBtnSVG.appendChild(sendBtnPath);
-    sendBtnSpan.appendChild(sendBtnSVG);
-    sendButton.appendChild(sendBtnSpan);
+    sendBtnSVG.append(sendBtnTitle);
+    sendBtnSVG.append(sendBtnPath);
+    sendBtnSpan.append(sendBtnSVG);
+    sendButton.append(sendBtnSpan);
 
 
-    divSendButton.appendChild(sendButton);
-    div1_1_2.appendChild(divSendButton);
-    footer.appendChild(div1);
+    divSendButton.append(sendButton);
+    div1_1_2.append(divSendButton);
+    footer.append(div1);
     const div2 = createElement('div', 'message-box1-7-2');
-    footer.appendChild(div2);
+    footer.append(div2);
     textArea.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
@@ -766,7 +766,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
         }
     })
     const div2_1 = createElement('div', 'message-box1-7-2-1');
-    div2.appendChild(div2_1);
+    div2.append(div2_1);
 
     let thirdChild;
     for (let i = 0; i < 6; i++) {
@@ -774,18 +774,18 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
         if (i === 3) {
             thirdChild = emptyDiv;
         }
-        div2_1.appendChild(emptyDiv);
+        div2_1.append(emptyDiv);
     }
 
     const div3 = createElement('div', 'message-box1-7-3');
-    footer.appendChild(div3);
+    footer.append(div3);
 
     const div4 = createElement('div', 'message-box1-7-4');
-    footer.appendChild(div4);
+    footer.append(div4);
 
     const div5 = createElement('div', 'message-box1-7-5');
-    footer.appendChild(div5);
-    main.appendChild(footer);
+    footer.append(div5);
+    main.append(footer);
 
     const panel = main.querySelector('.message-box1-6');
 
@@ -807,7 +807,7 @@ const onlineInfo = async (chat, messageBoxDiv2) => {
         const contactsOnlineStatusElement = await isOnline(chat.user, chat.contactsDTO);
         if (contactsOnlineStatusElement) {
             onlineVisibilitySubscribe(chat, messageBoxDiv2);
-            messageBoxDiv2.appendChild(contactsOnlineStatusElement);
+            messageBoxDiv2.append(contactsOnlineStatusElement);
         }
         typingStatusSubscribe(chat, messageBoxDiv2);
     }
@@ -859,7 +859,7 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
 
         const todayDiv = createElement("div", "message-box1-5-1-2-2-1", null, { "tabindex": "-1" });
         const todaySpan = createElement("span", "message-box1-5-1-2-2-1-1", { "minHeight": "0px" }, { "dir": "auto", "aria-label": "" }, formatDate);
-        todayDiv.appendChild(todaySpan);
+        todayDiv.append(todaySpan);
         applicationDiv.append(todayDiv);
     };
     const decryptedMessages = await Promise.all(
@@ -900,7 +900,7 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
         const spanTail = createElement('span', '', null, { 'aria-hidden': ' true' });
 
 
-        divMessage12.appendChild(spanFirst);
+        divMessage12.append(spanFirst);
         const span = createElement('span', '', null, { 'aria-label': 'Siz:' });
         const div = createElement('div', '');
 
@@ -914,15 +914,15 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
         const span1_1_1_2_1_1_1_2 = createElement('span', 'message1-1-1-2-1-1-1-2', null, { 'aria-hidden': 'true' });
         const span1_1_1_2_1_1_1_2_1 = createElement('span', 'message1-1-1-2-1-1-1-2-1', null, null);
         const span1_1_1_2_1_1_1_2_2 = createElement('span', 'message1-1-1-2-1-1-1-2-2', null, null, messageFormatDate);
-        span1_1_1_2_1_1_1_2.appendChild(span1_1_1_2_1_1_1_2_1);
-        span1_1_1_2_1_1_1_2.appendChild(span1_1_1_2_1_1_1_2_2);
-        span1_1.appendChild(span1_1_1_2_1_1_1_2);
+        span1_1_1_2_1_1_1_2.append(span1_1_1_2_1_1_1_2_1);
+        span1_1_1_2_1_1_1_2.append(span1_1_1_2_1_1_1_2_2);
+        span1_1.append(span1_1_1_2_1_1_1_2);
 
-        spanMessage1_1_1_2_1_1_1_1.appendChild(spanMessageContent);
-        divMessage1_1_1_2_1_1_1.appendChild(spanMessage1_1_1_2_1_1_1_1);
-        divMessage1_1_1_2_1_1_1.appendChild(span1_1);
-        divMessage1_1_1_2_1_1.appendChild(divMessage1_1_1_2_1_1_1);
-        divMessage1_1_1_2_1.appendChild(divMessage1_1_1_2_1_1);
+        spanMessage1_1_1_2_1_1_1_1.append(spanMessageContent);
+        divMessage1_1_1_2_1_1_1.append(spanMessage1_1_1_2_1_1_1_1);
+        divMessage1_1_1_2_1_1_1.append(span1_1);
+        divMessage1_1_1_2_1_1.append(divMessage1_1_1_2_1_1_1);
+        divMessage1_1_1_2_1.append(divMessage1_1_1_2_1_1);
 
         const divMessage1_1_1_2_1_2 = createElement('div', 'message1-1-1-2-1-2');
         const divMessage1_1_1_2_1_2_1 = createElement('div', 'message1-1-1-2-1-2-1', null, { 'role': 'button' });
@@ -950,11 +950,11 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
         if (message.senderId === chatInstance.user.id) {
 
             const messageDeliveredTickDiv = createMessageDeliveredTickElement();
-            divMessage1_1_1_2_1_2_1_2.appendChild(messageDeliveredTickDiv);
+            divMessage1_1_1_2_1_2_1_2.append(messageDeliveredTickDiv);
 
-            // span1_1_1_2_1_2_1_1.appendChild(divMessage1_1_1_2_1_2_1_2);
-            divMessage1_1_1_2_1_2_1.appendChild(span1_1_1_2_1_2_1_1);
-            divMessage1_1_1_2_1_2_1.appendChild(divMessage1_1_1_2_1_2_1_2);
+            // span1_1_1_2_1_2_1_1.append(divMessage1_1_1_2_1_2_1_2);
+            divMessage1_1_1_2_1_2_1.append(span1_1_1_2_1_2_1_1);
+            divMessage1_1_1_2_1_2_1.append(divMessage1_1_1_2_1_2_1_2);
             if (message.seen && chatInstance.user.privacySettings.readReceipts && privacySettings.readReceipts) {
                 const messageTickSpan = divMessage1_1_1_2_1_2_1.querySelector('.message-delivered-tick-span');
                 messageTickSpan.className = 'message-seen-tick-span';
@@ -962,15 +962,15 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
             }
 
 
-            // msgCheckSVG.appendChild(title);
-            // msgCheckSVG.appendChild(msgCheckSVGPath);
-            // span2.appendChild(msgCheckSVG);
-            // divMessage1_1_1_2_1_2_1_2.appendChild(span2);
+            // msgCheckSVG.append(title);
+            // msgCheckSVG.append(msgCheckSVGPath);
+            // span2.append(msgCheckSVG);
+            // divMessage1_1_1_2_1_2_1_2.append(span2);
             divMessage12.className = "message-out";
             spanTail.setAttribute('data-icon', 'tail-out')
             spanTail.className = 'span-tail';
         } else {
-            divMessage1_1_1_2_1_2_1.appendChild(span1_1_1_2_1_2_1_1);
+            divMessage1_1_1_2_1_2_1.append(span1_1_1_2_1_2_1_1);
             divMessage12.className = "message-in";
             spanTail.setAttribute('data-icon', 'tail-in')
             spanTail.className = 'span-tail';
@@ -978,27 +978,27 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
 
 
 
-        divMessage1_1_1_2_1_2.appendChild(divMessage1_1_1_2_1_2_1);
-        divMessage1_1_1_2_1.appendChild(divMessage1_1_1_2_1_2);
-        div.appendChild(divMessage1_1_1_2_1);
-        divMessage1_1_1_2.appendChild(span);
-        divMessage1_1_1_2.appendChild(div);
+        divMessage1_1_1_2_1_2.append(divMessage1_1_1_2_1_2_1);
+        divMessage1_1_1_2_1.append(divMessage1_1_1_2_1_2);
+        div.append(divMessage1_1_1_2_1);
+        divMessage1_1_1_2.append(span);
+        divMessage1_1_1_2.append(div);
 
         const messageOptionsSpan = createElement('span', 'message-options');
         const divMessage1_1_1_2_2 = createElement('div', 'message1-1-1-2-2');
-        divMessage1_1_1_2.appendChild(messageOptionsSpan);
-        divMessage1_1_1_2.appendChild(divMessage1_1_1_2_2);
+        divMessage1_1_1_2.append(messageOptionsSpan);
+        divMessage1_1_1_2.append(divMessage1_1_1_2_2);
 
-        divMessage1_1_1.appendChild(spanTail);
-        divMessage1_1_1.appendChild(divMessage1_1_1_2);
-        divMessage12.appendChild(divMessage1_1_1);
-        divMessage.appendChild(divMessage12);
-        rowDOM.appendChild(divMessage);
+        divMessage1_1_1.append(spanTail);
+        divMessage1_1_1.append(divMessage1_1_1_2);
+        divMessage12.append(divMessage1_1_1);
+        divMessage.append(divMessage12);
+        rowDOM.append(divMessage);
 
         const divDOM = rowDOM.querySelector('.message1-1-1-2');
-        divDOM.appendChild(div);
+        divDOM.append(div);
         if (scroll) {
-            messageRenderDOM.appendChild(rowDOM);
+            messageRenderDOM.append(rowDOM);
         } else {
             messageRenderDOM.prepend(rowDOM);
         }
@@ -1038,7 +1038,7 @@ const isOnlineStatus = (user, contactsDTO) => {
     if ((contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'EVERYONE' || (contactsDTO.contact.relatedUserHasAddedUser && contactsDTO.userProfileResponseDTO.privacySettings.onlineStatusVisibility === 'CONTACTS')) && (user.privacySettings.onlineStatusVisibility === 'EVERYONE' || (contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.onlineStatusVisibility === 'CONTACTS'))) {
         const statusDiv = createElement('div', 'online-status');
         const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, 'çevrimiçi');
-        statusDiv.appendChild(statusSpan);
+        statusDiv.append(statusSpan);
         return statusDiv;
     }
     return;
@@ -1047,7 +1047,7 @@ const lastSeenStatus = (user, contactsDTO, lastSeen) => {
     if ((contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.relatedUserHasAddedUser && contactsDTO.userProfileResponseDTO.privacySettings.lastSeenVisibility === 'CONTACTS')) && (user.privacySettings.lastSeenVisibility === 'EVERYONE' || (contactsDTO.contact.userHasAddedRelatedUser && user.privacySettings.lastSeenVisibility === 'CONTACTS'))) {
         const statusDiv = createElement('div', 'online-status');
         const statusSpan = createElement('div', 'online-status-1', { 'min-height': '0px' }, { 'aria-label': '', title: '' }, formatDateTime(lastSeen));
-        statusDiv.appendChild(statusSpan);
+        statusDiv.append(statusSpan);
         return statusDiv;
     }
     return;
@@ -1156,7 +1156,7 @@ const sendMessage = async (chat, sendButton, typingStatus) => {
         // ToDo lastPage bakilacak renderMessage
         renderMessage({ messages: messageDTO, lastPage: null }, chat.contactsDTO.userProfileResponseDTO.privacySettings, true);
         messageContentElement.removeChild(messageContentElement.firstElementChild);
-        messageContentElement.appendChild(createElement('br', ''));
+        messageContentElement.append(createElement('br', ''));
         updatePlaceholder(messageContentElement.parentElement.parentElement, messageContentElement.parentElement, sendButton, typingStatus)
     } else {
         if (chat.userChatSettings.blocked) {
@@ -1195,10 +1195,10 @@ function createMessageDeliveredTickElement() {
     messageDeliveredTickPath.setAttribute("fill", "currentColor");
     messageDeliveredTickPath.setAttribute("d", "M17.394,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-0.427-0.388c-0.171-0.167-0.431-0.15-0.578,0.038L7.792,13.13 c-0.147,0.188-0.128,0.478,0.043,0.645l1.575,1.51c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C17.616,5.456,17.582,5.182,17.394,5.035z M12.502,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-2.614-2.556c-0.171-0.167-0.447-0.164-0.614,0.007l-0.505,0.516 c-0.167,0.171-0.164,0.447,0.007,0.614l3.887,3.8c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C12.724,5.456,12.69,5.182,12.502,5.035z");
 
-    messageDeliveredTickSvg.appendChild(messageDeliveredTickTitle);
-    messageDeliveredTickSvg.appendChild(messageDeliveredTickPath);
-    messageDeliveredTickSpan.appendChild(messageDeliveredTickSvg);
-    messageDeliveredTickDiv.appendChild(messageDeliveredTickSpan);
+    messageDeliveredTickSvg.append(messageDeliveredTickTitle);
+    messageDeliveredTickSvg.append(messageDeliveredTickPath);
+    messageDeliveredTickSpan.append(messageDeliveredTickSvg);
+    messageDeliveredTickDiv.append(messageDeliveredTickSpan);
     return messageDeliveredTickDiv;
 }
 function getHourAndMinute(dateTimeString) {
@@ -1337,19 +1337,19 @@ function handleOptionsBtnClick(event, chat) {
             // const markUnreadLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${markUnreadLabel}` }, markUnreadLabel);
 
 
-            contactInformationLiElement.appendChild(contactInformationDivElement);
-            blockLiElement.appendChild(blockLiDivElement);
-            // pinLiElement.appendChild(pinLiDivElement);
-            deleteLiElement.appendChild(deleteLiDivElement);
-            // markUnreadLiElement.appendChild(markUnreadLiDivElement);
-            divElement.appendChild(contactInformationLiElement);
-            divElement.appendChild(blockLiElement);
-            // divElement.appendChild(pinLiElement);
-            divElement.appendChild(deleteLiElement);
-            // divElement.appendChild(markUnreadLiElement);
-            ulElement.appendChild(divElement);
+            contactInformationLiElement.append(contactInformationDivElement);
+            blockLiElement.append(blockLiDivElement);
+            // pinLiElement.append(pinLiDivElement);
+            deleteLiElement.append(deleteLiDivElement);
+            // markUnreadLiElement.append(markUnreadLiDivElement);
+            divElement.append(contactInformationLiElement);
+            divElement.append(blockLiElement);
+            // divElement.append(pinLiElement);
+            divElement.append(deleteLiElement);
+            // divElement.append(markUnreadLiElement);
+            ulElement.append(divElement);
 
-            chatOptionsDiv.appendChild(ulElement);
+            chatOptionsDiv.append(ulElement);
             // const chatOptionsLiItemHTML = `
             //     <ul class="ul1">
             //         <div>
@@ -1372,7 +1372,7 @@ function handleOptionsBtnClick(event, chat) {
             //     </ul>
             // `;
             // chatOptionsDiv.innerHTML = chatOptionsLiItemHTML;
-            showChatOptions.appendChild(chatOptionsDiv);
+            showChatOptions.append(chatOptionsDiv);
             document.addEventListener('click', closeOptionsDivOnClickOutside);
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') {

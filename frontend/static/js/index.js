@@ -51,7 +51,7 @@ const router = async () => {
     //         const container = document.querySelector('.chat-container');
     //         container.classList.remove('chat-container');
     //         container.classList.add('chat-container-mobile');
-    //         container.appendChild(createMessageBox);
+    //         container.append(createMessageBox);
 
     //     } else {
     //         html = await view.getHtml();

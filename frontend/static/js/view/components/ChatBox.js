@@ -43,99 +43,99 @@ async function createChatBox(chat, index) {
     const chatBox = createElement('div', 'chat-box');
 
     const rowDiv = createElement('div', '', {}, { 'tabindex': '-1', 'aria-selected': 'false', 'role': 'row' });
-    chatBox.appendChild(rowDiv);
+    chatBox.append(rowDiv);
 
     const chatDiv = createElement('div', 'chat cursor');
-    rowDiv.appendChild(chatDiv);
+    rowDiv.append(chatDiv);
 
     const chatImageDiv = createElement('div', 'chat-image');
-    chatDiv.appendChild(chatImageDiv);
+    chatDiv.append(chatImageDiv);
 
     const chatLeftImageDiv = createElement('div', 'chat-left-image');
-    chatImageDiv.appendChild(chatLeftImageDiv);
+    chatImageDiv.append(chatLeftImageDiv);
 
     const innerDiv = createElement('div', '');
-    chatLeftImageDiv.appendChild(innerDiv);
+    chatLeftImageDiv.append(innerDiv);
 
     const imageDiv = createElement('div', 'image', { 'height': '49px', 'width': '49px' });
-    innerDiv.appendChild(imageDiv);
+    innerDiv.append(imageDiv);
 
     const imgElement = createVisibilityProfilePhoto(chat.userProfileResponseDTO, chat.contactsDTO, chatInstance.user);
 
-    imageDiv.appendChild(imgElement);
+    imageDiv.append(imgElement);
 
     const chatInfoDiv = createElement('div', 'chat-info');
-    chatDiv.appendChild(chatInfoDiv);
+    chatDiv.append(chatInfoDiv);
 
     const chatNameAndTimeDiv = createElement('div', 'chat-name-and-last-message-time');
-    chatInfoDiv.appendChild(chatNameAndTimeDiv);
+    chatInfoDiv.append(chatNameAndTimeDiv);
 
     const chatNameDiv = createElement('div', 'chat-name');
-    chatNameAndTimeDiv.appendChild(chatNameDiv);
+    chatNameAndTimeDiv.append(chatNameDiv);
 
     const nameDiv = createElement('div', 'name');
-    chatNameDiv.appendChild(nameDiv);
+    chatNameDiv.append(nameDiv);
 
     const contactName = chat.contactsDTO.userContactName != null ? chat.contactsDTO.userContactName : chat.userProfileResponseDTO.email;
 
     const nameSpan = createElement('span', 'name-span', { 'min-height': '0px' }, { 'dir': 'auto', 'title': contactName, 'aria-label': '' }, contactName);
-    nameDiv.appendChild(nameSpan);
+    nameDiv.append(nameSpan);
 
     const timeDiv = createElement('div', 'time', {}, {}, formattedTime);
-    chatNameAndTimeDiv.appendChild(timeDiv);
+    chatNameAndTimeDiv.append(timeDiv);
 
     const lastMessageDiv = createElement('div', 'last-message');
-    chatInfoDiv.appendChild(lastMessageDiv);
+    chatInfoDiv.append(lastMessageDiv);
 
     const messageDiv = createElement('div', 'message');
-    lastMessageDiv.appendChild(messageDiv);
+    lastMessageDiv.append(messageDiv);
     const messageSpan = createElement('span', 'message-span', {}, { 'title': '' });
-    messageDiv.appendChild(messageSpan);
+    messageDiv.append(messageSpan);
     let message;
     if (chat.chatDTO.senderId === chatInstance.user.id) {
         message = await decryptMessage(chat.chatDTO, true);
         if (chat.chatDTO.seen) {
             const messageSeenTick = chatBoxLastMessageDeliveredBlueTick();
-            messageSpan.appendChild(messageSeenTick);
+            messageSpan.append(messageSeenTick);
 
         } else {
             const messageDeliveredTickDiv = createMessageDeliveredTickElement();
-            messageSpan.appendChild(messageDeliveredTickDiv);
+            messageSpan.append(messageDeliveredTickDiv);
         }
     } else {
         message = await decryptMessage(chat.chatDTO, false);
     }
 
     const innerMessageSpan = createElement('span', 'message-span-span', { 'min-height': '0px' }, { 'dir': 'ltr', 'aria-label': '' }, message);
-    messageSpan.appendChild(innerMessageSpan);
+    messageSpan.append(innerMessageSpan);
 
     const chatOptionsDiv = createElement('div', 'chat-options');
-    lastMessageDiv.appendChild(chatOptionsDiv);
+    lastMessageDiv.append(chatOptionsDiv);
 
     const optionSpan1 = createElement('span', '');
     const optionSpan2 = createElement('span', '');
     const optionSpan3 = createElement('span', '');
 
     if (chat.userChatSettings.unreadMessageCount !== 0) {
-        optionSpan1.appendChild(createUnreadMessageCount(chat));
+        optionSpan1.append(createUnreadMessageCount(chat));
     }
 
-    chatOptionsDiv.appendChild(optionSpan1);
-    chatOptionsDiv.appendChild(optionSpan2);
-    chatOptionsDiv.appendChild(optionSpan3);
-    chatElementDOM.appendChild(chatBox);
+    chatOptionsDiv.append(optionSpan1);
+    chatOptionsDiv.append(optionSpan2);
+    chatOptionsDiv.append(optionSpan3);
+    chatElementDOM.append(chatBox);
 
 
 
     const chatListContentElement = document.querySelector(".chat-list-content");
     chatListContentElement.style.height = chatInstance.chatList.length * 72 + "px";
     addEventListeners(chatElementDOM);
-    chatListContentElement.appendChild(chatElementDOM);
+    chatListContentElement.append(chatElementDOM);
 }
 function createUnreadMessageCount(chat) {
     const unreadMessageCountDiv = createElement('div', 'unread-message-count-div');
     const unreadMessageCountSpan = createElement('span', 'unread-message-count-span', {}, { 'aria-label': `${chat.userChatSettings.unreadMessageCount} okunmamış mesaj` }, chat.userChatSettings.unreadMessageCount);
-    unreadMessageCountDiv.appendChild(unreadMessageCountSpan);
+    unreadMessageCountDiv.append(unreadMessageCountSpan);
     return unreadMessageCountDiv;
 }
 
@@ -224,7 +224,7 @@ function handleMouseover(event) {
         </svg>
     </span>`
         chatOptionsButton.innerHTML = spanHTML;
-        chatOptionsSpan.appendChild(chatOptionsButton);
+        chatOptionsSpan.append(chatOptionsButton);
         chatOptionsButton.addEventListener("click", (event) => {
             event.stopPropagation();
             handleOptionsBtnClick(event);
@@ -299,17 +299,17 @@ function handleOptionsBtnClick(event) {
             const markUnreadLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${markUnreadLabel}` }, markUnreadLabel);
 
 
-            blockLiElement.appendChild(blockLiDivElement);
-            pinLiElement.appendChild(pinLiDivElement);
-            deleteLiElement.appendChild(deleteLiDivElement);
-            markUnreadLiElement.appendChild(markUnreadLiDivElement);
-            divElement.appendChild(blockLiElement);
-            divElement.appendChild(pinLiElement);
-            divElement.appendChild(deleteLiElement);
-            divElement.appendChild(markUnreadLiElement);
-            ulElement.appendChild(divElement);
+            blockLiElement.append(blockLiDivElement);
+            pinLiElement.append(pinLiDivElement);
+            deleteLiElement.append(deleteLiDivElement);
+            markUnreadLiElement.append(markUnreadLiDivElement);
+            divElement.append(blockLiElement);
+            divElement.append(pinLiElement);
+            divElement.append(deleteLiElement);
+            divElement.append(markUnreadLiElement);
+            ulElement.append(divElement);
 
-            chatOptionsDiv.appendChild(ulElement);
+            chatOptionsDiv.append(ulElement);
             // const chatOptionsLiItemHTML = `
             //     <ul class="ul1">
             //         <div>
@@ -332,7 +332,7 @@ function handleOptionsBtnClick(event) {
             //     </ul>
             // `;
             // chatOptionsDiv.innerHTML = chatOptionsLiItemHTML;
-            showChatOptions.appendChild(chatOptionsDiv);
+            showChatOptions.append(chatOptionsDiv);
             document.addEventListener('click', closeOptionsDivOnClickOutside);
         }
     }
@@ -404,16 +404,27 @@ const toggleBlockUser = async (chatData) => {
         }
     };
 
-
-    showModal(new ModalOptionsDTO({
+    new Modal({
         title: '',
         contentText: blockMessage,
         mainCallback: mainCallback,
         buttonText: isBlocked ? 'Engeli Kaldır' : 'Engelle',
         showBorders: false,
         secondOptionButton: false,
-        headerHtml: null
-    }));
+        headerHtml: null,
+        closeOnBackdrop: true,
+        closeOnEscape: true
+    });
+    // showModal(new ModalOptionsDTO({
+    //     title: '',
+    //     contentText: blockMessage,
+    //     mainCallback: mainCallback,
+    //     buttonText: isBlocked ? 'Engeli Kaldır' : 'Engelle',
+    //     showBorders: false,
+    //     secondOptionButton: false,
+    //     headerHtml: null
+    // }));
+
 };
 const deleteChat = async (chatData, showChatOptions, chatElement) => {
     showChatOptions.removeChild(showChatOptions.firstElementChild);
@@ -432,20 +443,29 @@ const deleteChat = async (chatData, showChatOptions, chatElement) => {
             return false;
         }
     };
-    showModal(new ModalOptionsDTO({
+    // showModal(new ModalOptionsDTO({
+    //     title: '',
+    //     contentText: modalMessage,
+    //     mainCallback: mainCallback,
+    //     buttonText: 'Sohbeti sil',
+    //     showBorders: false,
+    //     secondOptionButton: false,
+    //     headerHtml: null
+    // }));
+    new Modal({
         title: '',
         contentText: modalMessage,
         mainCallback: mainCallback,
         buttonText: 'Sohbeti sil',
         showBorders: false,
         secondOptionButton: false,
-        headerHtml: null
-    }));
-    const chatElements1 = document.querySelectorAll('.chat1');
+        headerHtml: null,
+        closeOnBackdrop: true,
+        closeOnEscape: true
+    });
 };
 
 function removeChat(chatElement) {
-    const chatElements1 = document.querySelectorAll('.chat1');
     const deletedChatTranslateY = parseInt(chatElement.style.transform.replace("translateY(", "").replace("px)", ""));
     removeEventListeners(chatElement);
     const removeIndex = chatInstance.chatList.findIndex(chat =>
@@ -581,7 +601,7 @@ function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
         } else {
             const chatOptionsFirstSpan = chatElement.querySelector('.chat-options').firstElementChild;
             const ureadMessageCountElement = createUnreadMessageCount(chatData);
-            chatOptionsFirstSpan.appendChild(ureadMessageCountElement);
+            chatOptionsFirstSpan.append(ureadMessageCountElement);
         }
     } else {
         const unreadMessageCountElement = chatElement.querySelector('.unread-message-count-div');
@@ -671,7 +691,7 @@ async function handleChatClick(event) {
 }
 
 async function markMessagesAsReadAndFetchMessages(chatElement) {
-
+    debugger;
     const dto = {
         recipientId: chatInstance.user.id,
         userChatSettingsId: chatElement.chatData.userChatSettings.id,
@@ -798,10 +818,10 @@ function chatBoxLastMessageDeliveredBlueTick() {
     messageDeliveredTickPath.setAttribute("fill", "currentColor");
     messageDeliveredTickPath.setAttribute("d", "M17.394,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-0.427-0.388c-0.171-0.167-0.431-0.15-0.578,0.038L7.792,13.13 c-0.147,0.188-0.128,0.478,0.043,0.645l1.575,1.51c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C17.616,5.456,17.582,5.182,17.394,5.035z M12.502,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-2.614-2.556c-0.171-0.167-0.447-0.164-0.614,0.007l-0.505,0.516 c-0.167,0.171-0.164,0.447,0.007,0.614l3.887,3.8c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C12.724,5.456,12.69,5.182,12.502,5.035z");
 
-    messageDeliveredTickSvg.appendChild(messageDeliveredTickTitle);
-    messageDeliveredTickSvg.appendChild(messageDeliveredTickPath);
-    messageDeliveredTickSpan.appendChild(messageDeliveredTickSvg);
-    messageDeliveredTickDiv.appendChild(messageDeliveredTickSpan);
+    messageDeliveredTickSvg.append(messageDeliveredTickTitle);
+    messageDeliveredTickSvg.append(messageDeliveredTickPath);
+    messageDeliveredTickSpan.append(messageDeliveredTickSvg);
+    messageDeliveredTickDiv.append(messageDeliveredTickSpan);
     return messageDeliveredTickDiv;
 }
 

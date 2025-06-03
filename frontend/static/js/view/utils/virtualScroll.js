@@ -49,12 +49,12 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
                 if (profileImage.firstElementChild.className === "svg-div") {
                     if (profileImageElement.className !== "svg-div") {
                         profileImage.firstElementChild.remove();
-                        profileImage.appendChild(profileImageElement);
+                        profileImage.append(profileImageElement);
                     }
                 } else {
                     if (profileImageElement.className === "svg-div") {
                         profileImage.firstElementChild.remove();
-                        profileImage.appendChild(profileImageElement);
+                        profileImage.append(profileImageElement);
                     } else {
                         profileImageElement.firstElementChild.src = listItem.userProfileResponseDTO.imagee;
                     }
@@ -95,12 +95,12 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
                     if (profileImage.firstElementChild.className === "svg-div") {
                         if (profileImageElement.className !== "svg-div") {
                             profileImage.firstElementChild.remove();
-                            profileImage.appendChild(profileImageElement);
+                            profileImage.append(profileImageElement);
                         }
                     } else {
                         if (profileImageElement.className === "svg-div") {
                             profileImage.firstElementChild.remove();
-                            profileImage.appendChild(profileImageElement);
+                            profileImage.append(profileImageElement);
                         } else {
                             profileImageElement.firstElementChild.src = listItem.userProfileResponseDTO.imagee;
                         }

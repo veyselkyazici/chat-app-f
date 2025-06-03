@@ -102,7 +102,7 @@ function renderSearchResults(searchResults) {
         <div class="add-friend-last-message">${user.firstName} ${user.lastName}</div>
       </div>`;
 
-        chatList.appendChild(chatItem);
+        chatList.append(chatItem);
 
         const addFriendBtns = chatItem.querySelector('.add-btn');
 

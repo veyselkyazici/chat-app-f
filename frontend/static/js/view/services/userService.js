@@ -216,13 +216,7 @@ export async function fetchUploadPhoto(formData, userId) {
             },
             body: formData,
         });
-
-        if (!response.ok) {
-            const errorMessage = await response.text();
-            throw new Error(`Error: ${response.status} - ${errorMessage}`);
-        }
-
-        return await response.text(); 
+        return await response.json();
     } catch (error) {
         console.error('Error in uploadPhoto:', error);
         throw error;

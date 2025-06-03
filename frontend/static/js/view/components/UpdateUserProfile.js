@@ -1,8 +1,9 @@
 
-import { showModal, ModalOptionsDTO } from '../utils/showModal.js';
+import { showModal, ModalOptionsDTO, Modal } from '../utils/showModal.js';
 import { createElement, createSvgElement } from '../utils/util.js';
 import { updateUserName, updateUserAbout, fetchUploadPhoto } from '../services/userService.js';
 import { UpdateUserDTO } from '../dtos/user/request/UpdateUserDTO.js';
+import { chatInstance, webSocketManagerChat } from '../pages/Chat.js';
 
 async function userUpdateModal(user, bool) {
     const updateProfileForm = createElement('form', '');
@@ -13,15 +14,15 @@ async function userUpdateModal(user, bool) {
     const profilePhotoInput = createElement('div', 'profile-photo-input', null, { role: 'button' });
     profilePhotoInput.id = "profilePhotoInput";
     const inputFile = createElement('input', '', { display: "none" }, { type: "file", id: 'imageInput', accept: "image/png, image/jpeg, image/jpg" }, '');
-    updateProfileForm.appendChild(inputFile);
+    updateProfileForm.append(inputFile);
     if (user.image) {
         const profilePhotoUrlElement = createElement('div', 'image', { height: '200px', width: '200px' });
         const imgElement = createElement('img', '');
         imgElement.id = 'profilePhoto';
         imgElement.setAttribute('alt', 'Profil Fotoğrafı');
         imgElement.setAttribute('src', user.image);
-        profilePhotoUrlElement.appendChild(imgElement);
-        profilePhotoInput.appendChild(profilePhotoUrlElement);
+        profilePhotoUrlElement.append(imgElement);
+        profilePhotoInput.append(profilePhotoUrlElement);
     } else {
         const defaultProfilePhotoElement = createElement('div', 'image', { height: '200px', width: '200px' });
         const svgDiv = createElement('div', 'svg-div');
@@ -35,19 +36,19 @@ async function userUpdateModal(user, bool) {
         const pathPrimary1 = createSvgElement('path', { fill: '#FFFFFF', class: 'primary', d: 'M173.561,171.615c-0.601-0.915-1.287-1.907-2.065-2.955c-0.777-1.049-1.645-2.155-2.608-3.299 c-0.964-1.144-2.024-2.326-3.184-3.527c-1.741-1.802-3.71-3.646-5.924-5.47c-2.952-2.431-6.339-4.824-10.204-7.026 c-1.877-1.07-3.873-2.092-5.98-3.055c-0.062-0.028-0.118-0.059-0.18-0.087c-9.792-4.44-22.106-7.529-37.416-7.529 s-27.624,3.089-37.416,7.529c-0.338,0.153-0.653,0.318-0.985,0.474c-1.431,0.674-2.806,1.376-4.128,2.101 c-0.716,0.393-1.417,0.792-2.101,1.197c-3.421,2.027-6.475,4.191-9.15,6.395c-2.213,1.823-4.182,3.668-5.924,5.47 c-1.161,1.201-2.22,2.384-3.184,3.527c-0.964,1.144-1.832,2.25-2.609,3.299c-0.778,1.049-1.464,2.04-2.065,2.955 c-0.557,0.848-1.033,1.622-1.447,2.324c-0.033,0.056-0.073,0.119-0.104,0.174c-0.435,0.744-0.79,1.392-1.07,1.926 c-0.559,1.068-0.818,1.678-0.818,1.678v0.398c18.285,17.927,43.322,28.985,70.945,28.985c27.678,0,52.761-11.103,71.055-29.095 v-0.289c0,0-0.619-1.45-1.992-3.778C174.594,173.238,174.117,172.463,173.561,171.615z' });
         const pathPrimary2 = createSvgElement('path', { fill: '#FFFFFF', class: 'primary', d: 'M106.002,125.5c2.645,0,5.212-0.253,7.68-0.737c1.234-0.242,2.443-0.542,3.624-0.896 c1.772-0.532,3.482-1.188,5.12-1.958c2.184-1.027,4.242-2.258,6.15-3.67c2.863-2.119,5.39-4.646,7.509-7.509 c0.706-0.954,1.367-1.945,1.98-2.971c0.919-1.539,1.729-3.155,2.422-4.84c0.462-1.123,0.872-2.277,1.226-3.458 c0.177-0.591,0.341-1.188,0.49-1.792c0.299-1.208,0.542-2.443,0.725-3.701c0.275-1.887,0.417-3.827,0.417-5.811 c0-1.984-0.142-3.925-0.417-5.811c-0.184-1.258-0.426-2.493-0.725-3.701c-0.15-0.604-0.313-1.202-0.49-1.793 c-0.354-1.181-0.764-2.335-1.226-3.458c-0.693-1.685-1.504-3.301-2.422-4.84c-0.613-1.026-1.274-2.017-1.98-2.971 c-2.119-2.863-4.646-5.39-7.509-7.509c-1.909-1.412-3.966-2.643-6.15-3.67c-1.638-0.77-3.348-1.426-5.12-1.958 c-1.181-0.355-2.39-0.655-3.624-0.896c-2.468-0.484-5.035-0.737-7.68-0.737c-21.162,0-37.345,16.183-37.345,37.345 C68.657,109.317,84.84,125.5,106.002,125.5z' });
 
-        svgElement.appendChild(titleElement);
-        svgElement.appendChild(pathBackground);
-        groupElement.appendChild(pathPrimary1);
-        groupElement.appendChild(pathPrimary2);
-        svgElement.appendChild(groupElement);
-        svgSpan.appendChild(svgElement);
-        svgDiv.appendChild(svgSpan);
-        defaultProfilePhotoElement.appendChild(svgDiv);
-        profilePhotoInput.appendChild(defaultProfilePhotoElement);
+        svgElement.append(titleElement);
+        svgElement.append(pathBackground);
+        groupElement.append(pathPrimary1);
+        groupElement.append(pathPrimary2);
+        svgElement.append(groupElement);
+        svgSpan.append(svgElement);
+        svgDiv.append(svgSpan);
+        defaultProfilePhotoElement.append(svgDiv);
+        profilePhotoInput.append(defaultProfilePhotoElement);
     }
 
-    profilePhotoElement.appendChild(profilePhotoInput);
-    profilePhotoUserElement.appendChild(profilePhotoElement);
+    profilePhotoElement.append(profilePhotoInput);
+    profilePhotoUserElement.append(profilePhotoElement);
 
     const nameElement = createElement('div', 'input-icon');
     const nameIElement = createElement('i', 'fa-solid fa-user');
@@ -56,10 +57,10 @@ async function userUpdateModal(user, bool) {
     const nameEditButton = createElement('div', 'editButton', null, { id: 'editButtonName' }, "✎", () => toggleEditName(user));
     const errorMessageElement = createElement('div', 'error-message');
 
-    nameElement.appendChild(nameIElement);
-    nameElement.appendChild(nameInput);
-    nameElement.appendChild(nameEditButton);
-    nameElement.appendChild(errorMessageElement);
+    nameElement.append(nameIElement);
+    nameElement.append(nameInput);
+    nameElement.append(nameEditButton);
+    nameElement.append(errorMessageElement);
 
     const aboutElement = createElement('div', 'input-icon');
     const aboutIElement = createElement('i', 'fa-solid fa-user');
@@ -69,17 +70,28 @@ async function userUpdateModal(user, bool) {
     const aboutErrorMessageElement = createElement('div', 'error-message');
 
 
-    aboutElement.appendChild(aboutIElement);
-    aboutElement.appendChild(aboutInput);
-    aboutElement.appendChild(aboutEditButton);
-    aboutElement.appendChild(aboutErrorMessageElement);
+    aboutElement.append(aboutIElement);
+    aboutElement.append(aboutInput);
+    aboutElement.append(aboutEditButton);
+    aboutElement.append(aboutErrorMessageElement);
 
 
-    updateProfileForm.appendChild(profilePhotoUserElement);
-    updateProfileForm.appendChild(nameElement);
-    updateProfileForm.appendChild(aboutElement);
+    updateProfileForm.append(profilePhotoUserElement);
+    updateProfileForm.append(nameElement);
+    updateProfileForm.append(aboutElement);
     if (bool) {
-        showModal(new ModalOptionsDTO({
+        // showModal(new ModalOptionsDTO({
+        //     title: '',
+        //     contentHtml: updateProfileForm,
+        //     mainCallback: null,
+        //     buttonText: '',
+        //     showBorders: false,
+        //     secondOptionButton: false,
+        //     cancelButton: true,
+        //     headerHtml: null,
+        // }));
+
+        new Modal({
             title: '',
             contentHtml: updateProfileForm,
             mainCallback: null,
@@ -88,9 +100,22 @@ async function userUpdateModal(user, bool) {
             secondOptionButton: false,
             cancelButton: true,
             headerHtml: null,
-        }));
+            closeOnBackdrop: true,
+            closeOnEscape: true
+        });
     } else {
-        showModal(new ModalOptionsDTO({
+        // showModal(new ModalOptionsDTO({
+        //     title: '',
+        //     contentHtml: updateProfileForm,
+        //     mainCallback: goHome,
+        //     buttonText: 'Devam Et',
+        //     showBorders: false,
+        //     secondOptionButton: false,
+        //     cancelButton: false,
+        //     headerHtml: null,
+        //     modalOkButtonId: 'updateUserProfile'
+        // }));
+        new Modal({
             title: '',
             contentHtml: updateProfileForm,
             mainCallback: goHome,
@@ -99,8 +124,10 @@ async function userUpdateModal(user, bool) {
             secondOptionButton: false,
             cancelButton: false,
             headerHtml: null,
-            modalOkButtonId: 'updateUserProfile'
-        }));
+            modalOkButtonId: 'updateUserProfile',
+            closeOnBackdrop: true,
+            closeOnEscape: true
+        });
     }
 
     profilePhotoInput.addEventListener('click', (event) => toggleOptions(event, user.image));
@@ -190,27 +217,28 @@ const toggleOptions = (event, deneme) => {
 
             const removePhotoOption = createElement("li", "", {}, { tabIndex: "0" }, "Fotoğrafı kaldır", removePhoto);
 
-            photoOptions.appendChild(viewPhotoOption);
-            photoOptions.appendChild(uploadPhotoOption);
-            photoOptions.appendChild(removePhotoOption);
+            photoOptions.append(viewPhotoOption);
+            photoOptions.append(uploadPhotoOption);
+            photoOptions.append(removePhotoOption);
 
             const profilePhotoInput = document.getElementById("profilePhotoInput");
-            profilePhotoInput.appendChild(photoOptions);
+            profilePhotoInput.append(photoOptions);
 
         } else {
             const photoOptions = createElement("ul", "photo-options", null, { id: "photoOptions" });
 
             uploadPhotoOption = createElement("li", "", {}, { tabIndex: "0" }, "Fotoğraf yükle");
 
-            photoOptions.appendChild(uploadPhotoOption);
+            photoOptions.append(uploadPhotoOption);
 
             const profilePhotoInput = document.getElementById("profilePhotoInput");
-            profilePhotoInput.appendChild(photoOptions);
+            profilePhotoInput.append(photoOptions);
         }
         uploadPhotoOption.addEventListener('click', () => {
-            imageInput.click(); // Trigger hidden input
+            document.querySelector('#imageInput').click();
         });
         document.addEventListener('click', handleOutsideClick);
+        document.querySelector('#imageInput').value = '';
     }
 
 };
@@ -230,22 +258,57 @@ let img = new Image();
 let imgX = 0, imgY = 0, imgScale = 1;
 let isDragging = false;
 let startX, startY;
-const circleRadius = 320;
+let circleRadius = 0;
 function uploadPhoto(event, userId) {
     const file = event.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = function (e) {
         img.src = e.target.result;
         img.onload = function () {
-            const width = img.naturalWidth;
-            const height = img.naturalHeight;
-            const divWidth = 507;
-            const aspectRatio = height / width;
-            const divHeightt = divWidth * aspectRatio; // Sayısal değer
-            const divHeight = `${divHeightt}px`; // Sayısal değer
-            const top = `${((366 - divHeightt) / 2)}px`;
+            const parentWidth = 506.925;
+            const parentHeight = 366;
+            const imageWidth = img.naturalWidth;
+            const imageHeight = img.naturalHeight;
+
+            if (imageWidth < 192 || imageHeight < 192) {
+                const warningText = createElement('div', 'warning-text', {}, {}, 'Bu fotoğraf çok küçük. Lütfen yüksekliği ve genişliği en az 192 piksel olan bir fotoğraf seçin.');
+                // showModal(new ModalOptionsDTO({
+                //     title: '',
+                //     contentHtml: warningText,
+                //     buttonText: 'Tamam',
+                //     showBorders: false,
+                //     secondOptionButton: false,
+                //     cancelButton: false,
+                // }));
+                new Modal({
+                    title: '',
+                    contentHtml: warningText,
+                    buttonText: 'Tamam',
+                    showBorders: false,
+                    secondOptionButton: false,
+                    cancelButton: false,
+                    closeOnBackdrop: true,
+                    closeOnEscape: true
+                });
+                document.querySelector('#imageInput').value = '';
+                return;
+            }
+
+            const parentRatio = parentWidth / parentHeight;
+            const imageRatio = imageWidth / imageHeight;
+            let width, height, left, top;
+            if (imageRatio > parentRatio) {
+                width = parentHeight * imageRatio;
+                height = parentHeight;
+                left = (parentWidth - width) / 2;
+                top = 0;
+            } else {
+                height = parentWidth / imageRatio;
+                width = parentWidth;
+                top = (parentHeight - height) / 2;
+                left = 0;
+            }
 
             const deneme5 = createElement('div', 'deneme5');
             const deneme6 = createElement('div', 'deneme6');
@@ -254,59 +317,79 @@ function uploadPhoto(event, userId) {
             const uploadPhotoModalContentZoom = createElement('div', 'upload-photo-modal-content-zoom');
 
             const uploadPhotoModalContentZoom1 = createElement('div', 'upload-photo-modal-content-zoom1');
-            uploadPhotoModalContentZoom.appendChild(uploadPhotoModalContentZoom1);
+            uploadPhotoModalContentZoom.append(uploadPhotoModalContentZoom1);
 
             const uploadPhotoModalContentZoom2 = createElement('button', 'upload-photo-modal-content-zoom2', {}, { tabIndex: '0', type: 'button' });
-            uploadPhotoModalContentZoom.appendChild(uploadPhotoModalContentZoom2);
+            uploadPhotoModalContentZoom.append(uploadPhotoModalContentZoom2);
             const uploadPhotoModalContentZoom2_span = createElement('span', '', {}, { 'aria-hidden': 'true', 'data-icon': 'plus' });
 
             const uploadPhotoModalContentZoom2_span_svg = createSvgElement('svg', { class: 'svg-element', viewBox: '0 0 24 24', height: '24', width: '24', preserveAspectRatio: 'xMidYMid meet' });
             const uploadPhotoModalContentZoom2_span_svg_title = document.createElement('title');
             uploadPhotoModalContentZoom2_span_svg_title.textContent = 'plus';
             const uploadPhotoModalContentZoom2_span_svg_path = createSvgElement('path', { fill: 'currentColor', d: 'M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z' });
-            uploadPhotoModalContentZoom2_span_svg.appendChild(uploadPhotoModalContentZoom2_span_svg_title);
-            uploadPhotoModalContentZoom2_span_svg.appendChild(uploadPhotoModalContentZoom2_span_svg_path);
-            uploadPhotoModalContentZoom2_span.appendChild(uploadPhotoModalContentZoom2_span_svg);
-            uploadPhotoModalContentZoom2.appendChild(uploadPhotoModalContentZoom2_span);
+            uploadPhotoModalContentZoom2_span_svg.append(uploadPhotoModalContentZoom2_span_svg_title);
+            uploadPhotoModalContentZoom2_span_svg.append(uploadPhotoModalContentZoom2_span_svg_path);
+            uploadPhotoModalContentZoom2_span.append(uploadPhotoModalContentZoom2_span_svg);
+            uploadPhotoModalContentZoom2.append(uploadPhotoModalContentZoom2_span);
 
 
             const uploadPhotoModalContentZoom3 = createElement('button', 'upload-photo-modal-content-zoom3', { tabIndex: '0', type: 'button' });
-            uploadPhotoModalContentZoom.appendChild(uploadPhotoModalContentZoom3);
+            uploadPhotoModalContentZoom.append(uploadPhotoModalContentZoom3);
             const uploadPhotoModalContentZoom3_span = createElement('span', '', {}, { 'aria-hidden': 'true', 'data-icon': 'minus' });
 
             const uploadPhotoModalContentZoom3_span_svg = createSvgElement('svg', { class: 'svg-element', viewBox: '0 0 28 28', height: '28', width: '28', preserveAspectRatio: 'xMidYMid meet', version: '1.1', x: '0px', y: '0px', 'enable-background': 'new 0 0 28 28' });
             const uploadPhotoModalContentZoom3_span_svg_title = document.createElement('title');
             uploadPhotoModalContentZoom3_span_svg_title.textContent = 'minus';
             const uploadPhotoModalContentZoom3_span_svg_path = createSvgElement('path', { fill: 'currentColor', d: 'M8.381,14.803v-1.605h11.237v1.605C19.618,14.803,8.381,14.803,8.381,14.803z' });
-            uploadPhotoModalContentZoom3_span_svg.appendChild(uploadPhotoModalContentZoom3_span_svg_title);
-            uploadPhotoModalContentZoom3_span_svg.appendChild(uploadPhotoModalContentZoom3_span_svg_path);
-            uploadPhotoModalContentZoom3_span.appendChild(uploadPhotoModalContentZoom3_span_svg);
-            uploadPhotoModalContentZoom3.appendChild(uploadPhotoModalContentZoom3_span);
-            uploadPhotoModalContent.appendChild(uploadPhotoModalContentZoom);
+            uploadPhotoModalContentZoom3_span_svg.append(uploadPhotoModalContentZoom3_span_svg_title);
+            uploadPhotoModalContentZoom3_span_svg.append(uploadPhotoModalContentZoom3_span_svg_path);
+            uploadPhotoModalContentZoom3_span.append(uploadPhotoModalContentZoom3_span_svg);
+            uploadPhotoModalContentZoom3.append(uploadPhotoModalContentZoom3_span);
+            uploadPhotoModalContent.append(uploadPhotoModalContentZoom);
+
+
+
 
             const uploadPhotoModalContent_1 = createElement('div', 'upload-photo-modal-content-1');
             const uploadPhotoModalContent_1_1 = createElement('span', '');
             const uploadPhotoModalContent_1_1_1 = createElement('div', 'upload-photo-modal-content-1-1-1');
-            const uploadPhotoModalContent_1_1_1_1 = createElement('div', 'upload-photo-modal-content-1-1-1-1', { position: 'absolute', width: '506.925px', height: '366px', top: '0px', left: '-3.4626px' });
+            const uploadPhotoModalContent_1_1_1_1 = createElement('div', 'upload-photo-modal-content-1-1-1-1', { position: 'absolute', width: `${parentWidth}px`, height: `${parentHeight}px`, top: '0px', left: '-3.4626px' });
             const uploadPhotoModalContent_1_1_1_1_1 = createElement('div', 'upload-photo-modal-content-1-1-1-1-1');
             const uploadPhotoModalContent_1_1_1_1_1_1 = createElement('div', 'upload-photo-modal-content-1-1-1-1-1-1');
-            const uploadPhotoModalContent_1_1_1_1_1_1_1 = createElement('div', 'upload-photo-modal-content-1-1-1-1-1-1-1', { position: 'absolute', width: '507px', height: `${divHeight}`, top: `${top}`, left: '0px' });
+            const uploadPhotoModalContent_1_1_1_1_1_1_1 = createElement('div', 'upload-photo-modal-content-1-1-1-1-1-1-1', { position: 'absolute', width: `${width}px`, height: `${height}px`, top: `${top}px`, left: `${left}px` });
             const canvas1 = createElement('canvas', 'canvas-1', { display: 'block' });
             const canvas2 = createElement('canvas', 'canvas-2');
-            uploadPhotoModalContent_1_1_1_1_1_1_1.appendChild(canvas1);
-            uploadPhotoModalContent_1_1_1_1_1_1_1.appendChild(canvas2);
-            uploadPhotoModalContent_1_1_1_1_1_1.appendChild(uploadPhotoModalContent_1_1_1_1_1_1_1);
-            uploadPhotoModalContent_1_1_1_1_1.appendChild(uploadPhotoModalContent_1_1_1_1_1_1);
-            uploadPhotoModalContent_1_1_1_1.appendChild(uploadPhotoModalContent_1_1_1_1_1);
-            uploadPhotoModalContent_1_1_1.appendChild(uploadPhotoModalContent_1_1_1_1);
-            uploadPhotoModalContent_1_1.appendChild(uploadPhotoModalContent_1_1_1);
-            uploadPhotoModalContent_1.appendChild(uploadPhotoModalContent_1_1);
-            uploadPhotoModalContent.appendChild(uploadPhotoModalContent_1);
-            deneme7.appendChild(uploadPhotoModalContent);
-            deneme6.appendChild(deneme7);
-            deneme5.appendChild(deneme6);
+            uploadPhotoModalContent_1_1_1_1_1_1_1.append(canvas1);
+            uploadPhotoModalContent_1_1_1_1_1_1_1.append(canvas2);
+            uploadPhotoModalContent_1_1_1_1_1_1.append(uploadPhotoModalContent_1_1_1_1_1_1_1);
+            uploadPhotoModalContent_1_1_1_1_1.append(uploadPhotoModalContent_1_1_1_1_1_1);
+            uploadPhotoModalContent_1_1_1_1.append(uploadPhotoModalContent_1_1_1_1_1);
+            uploadPhotoModalContent_1_1_1.append(uploadPhotoModalContent_1_1_1_1);
+            uploadPhotoModalContent_1_1.append(uploadPhotoModalContent_1_1_1);
+            uploadPhotoModalContent_1.append(uploadPhotoModalContent_1_1);
+            uploadPhotoModalContent.append(uploadPhotoModalContent_1);
+            deneme7.append(uploadPhotoModalContent);
+            deneme6.append(deneme7);
+            deneme5.append(deneme6);
 
+            // uploadPhotoModalContentZoom2.addEventListener('click', () => zoomIn(canvas1));
+            // uploadPhotoModalContentZoom3.addEventListener('click', () => zoomOut(canvas1));
+            // canvas1.addEventListener('wheel', (e) => handleScrollZoom(e, canvas1));
 
+            uploadPhotoModalContentZoom2.addEventListener('click', () => {
+                zoomImage(1.1, canvas1); // 1.1x yakınlaştır
+            });
+
+            // Uzaklaştırma (-) butonu
+            uploadPhotoModalContentZoom3.addEventListener('click', () => {
+                zoomImage(0.9, canvas1); // 0.9x uzaklaştır
+            });
+
+            canvas1.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9; // Yukarı kaydır = yakınlaştır, Aşağı kaydır = uzaklaştır
+                zoomImage(zoomFactor, canvas1);
+            });
             const uploadPhotoHeader = createElement('div', 'upload-photo-header');
             const uploadPhotoCloseButton = createElement('div', 'close-button');
             const uploadPhotoCloseButton_1 = createElement('div', 'close-button-1', null, { ariaLabel: 'Kapat', tabIndex: '0', role: 'button' });
@@ -327,17 +410,32 @@ function uploadPhoto(event, userId) {
             const uploadPhotoTitle = createElement('div', 'upload-photo-title', null, { title: 'Ayarlamak için resmi sürükleyin' });
             const uploadPhotoH1 = createElement('div', 'upload-photo-h1', null, null, 'Ayarlamak için resmi sürükleyin');
 
-            uploadPhotoTitle.appendChild(uploadPhotoH1);
-            uploadPhotoCloseSvg.appendChild(uploadPhotoCloseTitle);
-            uploadPhotoCloseSvg.appendChild(uploadPhotoClosePath);
-            uploadPhotoSpan.appendChild(uploadPhotoCloseSvg);
-            uploadPhotoCloseButton_1.appendChild(uploadPhotoSpan);
-            uploadPhotoCloseButton.appendChild(uploadPhotoCloseButton_1);
-            uploadPhotoHeader.appendChild(uploadPhotoCloseButton);
-            uploadPhotoHeader.appendChild(uploadPhotoTitle);
+            uploadPhotoTitle.append(uploadPhotoH1);
+            uploadPhotoCloseSvg.append(uploadPhotoCloseTitle);
+            uploadPhotoCloseSvg.append(uploadPhotoClosePath);
+            uploadPhotoSpan.append(uploadPhotoCloseSvg);
+            uploadPhotoCloseButton_1.append(uploadPhotoSpan);
+            uploadPhotoCloseButton.append(uploadPhotoCloseButton_1);
+            uploadPhotoHeader.append(uploadPhotoCloseButton);
+            uploadPhotoHeader.append(uploadPhotoTitle);
             // canvasContainer.innerHTML = HTML;
             // document.querySelector('.modal1').remove();
-            showModal(new ModalOptionsDTO({
+            // showModal(new ModalOptionsDTO({
+            //     title: '',
+            //     contentHtml: deneme5,
+            //     mainCallback: async () => {
+            //         cropImage(canvas1, userId, file);
+            //         return true;
+            //     },
+            //     buttonText: 'Yükle',
+            //     showBorders: false,
+            //     secondOptionButton: false,
+            //     cancelButton: false,
+            //     modalBodyCSS: 'modal-body-upload-photo',
+            //     headerHtml: uploadPhotoHeader,
+            //     modalOkButtonId: 'uploadPhoto'
+            // }));
+            new Modal({
                 title: '',
                 contentHtml: deneme5,
                 mainCallback: async () => {
@@ -350,18 +448,28 @@ function uploadPhoto(event, userId) {
                 cancelButton: false,
                 modalBodyCSS: 'modal-body-upload-photo',
                 headerHtml: uploadPhotoHeader,
-                modalOkButtonId: 'uploadPhoto'
-            }));
+                modalOkButtonId: 'uploadPhoto',
+                closeOnBackdrop: true,
+                closeOnEscape: true
+            })
+
             uploadPhotoCloseButton_1.addEventListener('click', function () {
                 document.querySelector('#imageInput').value = '';
                 deneme5.closest('.modal1').remove();
             });
             ctx = canvas1.getContext('2d');
 
-            canvas1.width = width;
-            canvas1.height = height;
-            canvas2.width = width;
-            canvas2.height = height;
+            canvas1.width = imageWidth;
+            canvas1.height = imageHeight;
+            canvas2.width = imageWidth;
+            canvas2.height = imageHeight;
+            if (canvas1.width > canvas1.height) {
+                circleRadius = (329.4 / (2 * (parentHeight / canvas1.height)))
+            } else if (canvas1.width < canvas1.height) {
+                circleRadius = (329.4 / (2 * (parentWidth / canvas1.width)))
+            } else {
+                circleRadius = (329.4 / (2 * (parentWidth / canvas1.width)))
+            }
 
             drawImage(canvas1);
 
@@ -444,15 +552,14 @@ async function cropImage(canvas1, userId, originalFile) {
         cropSize
     );
     const originalFileName = originalFile.name;
-    const fileExtension = originalFileName.split('.').pop().toLowerCase();
-    const mimeType = `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`;
 
     croppedCanvas.toBlob(async (blob) => {
         const formData = new FormData();
         formData.append('file', blob, originalFileName);
 
         try {
-            const responseText = await fetchUploadPhoto(formData, userId);
+            debugger;
+            const responseURL = await fetchUploadPhoto(formData, userId);
             const profilePhotoInput = document.querySelector('.profile-photo-input');
             profilePhotoInput.firstElementChild.remove();
 
@@ -460,16 +567,41 @@ async function cropImage(canvas1, userId, originalFile) {
             const imgElement = createElement('img', '');
             imgElement.id = 'profilePhoto';
             imgElement.setAttribute('alt', 'Profil Fotoğrafı');
-            imgElement.setAttribute('src', responseText);
-            profilePhotoUrlElement.appendChild(imgElement);
-            profilePhotoInput.appendChild(profilePhotoUrlElement);
+            imgElement.setAttribute('src', responseURL);
+            profilePhotoUrlElement.append(imgElement);
+            profilePhotoInput.append(profilePhotoUrlElement);
+            chatInstance.user.imagee = responseURL;
+            chatInstance.webSocketManagerContacts.sendMessageToAppChannel("updated-profile-photo-send-message", { userId: userId, url: chatInstance.user.id.imagee });
+
         } catch (error) {
             console.error('Error uploading photo:', error);
         }
     }, 'image/png');
 }
 
+function zoomImage(scaleFactor, canvas1) {
+    const newScale = imgScale * scaleFactor;
+    const newWidth = img.width * newScale;
+    const newHeight = img.height * newScale;
 
+    if (newWidth < circleRadius * 2 || newHeight < circleRadius * 2) {
+        return;
+    }
+
+    const canvasCenterX = canvas1.width / 2;
+    const canvasCenterY = canvas1.height / 2;
+
+    const offsetX = (canvasCenterX - imgX) / imgScale;
+    const offsetY = (canvasCenterY - imgY) / imgScale;
+
+    imgScale = newScale;
+
+    imgX = canvasCenterX - offsetX * imgScale;
+    imgY = canvasCenterY - offsetY * imgScale;
+
+    constrainImagePosition(canvas1);
+    drawImage(canvas1);
+}
 
 function removePhoto() {
 }
