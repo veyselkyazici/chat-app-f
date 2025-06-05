@@ -225,10 +225,11 @@ export default class Chat extends AbstractView {
         });
 
         this.webSocketManagerContacts.subscribeToChannel(addInvitation, async (addInvitationMessage) => {
+            debugger;
             const newInvitation = JSON.parse(addInvitationMessage.body);
-            let invitationIdList = this.contactList.filter(invitation => !invitation.id);
+            let invitationIdList = this.contactList.filter(invitation => invitation.invitationResponseDTO);
             const indexToInsert = invitationIdList.findIndex(invitation => {
-                return invitation.userContactName.localeCompare(newInvitation.userContactName, undefined, { sensitivity: 'base' }) > 0;
+                return invitation.invitationResponseDTO.contactName.localeCompare(newInvitation.invitationResponseDTO.contactName, undefined, { sensitivity: 'base' }) > 0;
             });
             if (indexToInsert === -1) {
                 invitationIdList.push(newInvitation);
@@ -236,13 +237,13 @@ export default class Chat extends AbstractView {
                 invitationIdList.splice(indexToInsert, 0, newInvitation);
             }
             this.contactList = [
-                ...this.contactList.filter(invitation => invitation.id),
+                ...this.contactList.filter(contact => contact.contactsDTO),
                 ...invitationIdList
             ];
+            console.log(this.contactList)
         });
 
         this.webSocketManagerContacts.subscribeToChannel(updatePrivacy, async (updatePrivacyMessage) => {
-            debugger;
             const updatePrivacy = JSON.parse(updatePrivacyMessage.body);
 
             const findContact = this.contactList.find(contact => contact.userProfileResponseDTO.id === updatePrivacy.id);
@@ -292,7 +293,6 @@ export default class Chat extends AbstractView {
         });
 
         this.webSocketManagerContacts.subscribeToChannel(updatedProfilePhoto, async (updatedProfilePhotoMessage) => {
-            debugger;
             const updatePrivacy = JSON.parse(updatedProfilePhotoMessage.body);
 
             const findContact = this.contactList.find(contact => contact.userProfileResponseDTO.id === updatePrivacy.id);

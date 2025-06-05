@@ -1,6 +1,7 @@
 const CONTACTS_SERVICE_URL = "http://localhost:8080/api/v1/contacts";
 const INVITATION_SERVICE_URL = "http://localhost:8080/api/v1/invitation";
 export async function deleteContactOrInvitation(id, type) {
+    debugger;
     const url = type === 'contact' ? `${CONTACTS_SERVICE_URL}/${id}` : `${INVITATION_SERVICE_URL}/${id}`;
     try {
         const response = await fetch(url, {

@@ -564,6 +564,7 @@ function handleOptionsBtnClick(event) {
                 listItem.classList.remove('background-color');
             });
             listItem.addEventListener('click', async () => {
+                debugger;
                 const contactData = contactElement.contactData;
                 // const options = new ModalOptionsDTO({
                 //     contentText: `${contactData.userContactName} kişisini silmek istiyor musunuz?`,
@@ -590,18 +591,19 @@ function handleOptionsBtnClick(event) {
                 //     closeOnEscape: true,
                 // });
                 // showModal(options);
+                debugger;
                 new Modal({
-                    contentText: `${contactData.userContactName} kişisini silmek istiyor musunuz?`,
+                    contentText: `${contactData.contactsDTO.userContactName} kişisini silmek istiyor musunuz?`,
                     buttonText: 'Evet',
                     showBorders: false,
                     mainCallback: async () => {
                         let response, idType;
-                        if (contactData.id) {
+                        if (contactData.userProfileResponseDTO) {
                             idType = 'contact';
-                            response = await deleteContactOrInvitation(contactData.id, idType);
+                            response = await deleteContactOrInvitation(contactData.contactsDTO.id, idType);
                         } else {
                             idType = 'invitation';
-                            response = await deleteContactOrInvitation(contactData.invitationId, idType);
+                            response = await deleteContactOrInvitation(contactData.invitationResponseDTO.id, idType);
                         }
                         if (response) {
                             removeContact(contactElement, contactData);
@@ -621,14 +623,23 @@ function handleOptionsBtnClick(event) {
     }
 }
 function removeContact(contactElement, contactData) {
-
+    debugger
     const deletedContactTranslateY = parseInt(contactElement.style.transform.replace("translateY(", "").replace("px)", ""));
     removeEventListeners(contactElement);
-
-    const removeIndex = chatInstance.contactList.findIndex(contact =>
-        (contact.id && contact.id === contactData.id) ||
-        (contact.invitationId && contact.invitationId === contactData.invitationId)
-    );
+    let removeIndex;
+    if (contactData.contactsDTO) {
+        removeIndex = chatInstance.contactList.findIndex(item =>
+            item.contactsDTO &&
+            item.userProfileResponseDTO.id === contactData.userProfileResponseDTO.id
+        );
+    } else {
+        removeIndex = chatInstance.contactList.findIndex(item =>
+            item.contactsDTO === null &&
+            item.invitationResponseDTO &&
+            contactData.invitationResponseDTO &&
+            item.invitationResponseDTO.id === contactData.invitationResponseDTO.id
+        );
+    }
 
     if (removeIndex !== -1) {
         chatInstance.contactList.splice(removeIndex, 1);

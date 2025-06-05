@@ -691,7 +691,6 @@ async function handleChatClick(event) {
 }
 
 async function markMessagesAsReadAndFetchMessages(chatElement) {
-    debugger;
     const dto = {
         recipientId: chatInstance.user.id,
         userChatSettingsId: chatElement.chatData.userChatSettings.id,
