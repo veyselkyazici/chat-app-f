@@ -77,11 +77,11 @@ export default class extends AbstractView {
       });
       return;
     }
+    debugger;
+    const responseData = await fetchLogin(loginRequestDTO);
 
-    const response = await fetchLogin(loginRequestDTO);
-    const responseData = await response.json();
     if (responseData.success) {
-      sessionStorage.setItem('access_token', responseData.data.access_token);
+      sessionStorage.setItem('access_token', responseData.data.accessToken);
       sessionStorage.setItem('id', responseData.data.id);
       const user = await fetchGetUserWithUserKeyByAuthId(responseData.data.id);
       const {
@@ -113,8 +113,6 @@ export default class extends AbstractView {
       toastr.success(responseData.message)
       navigateTo("/chat")
     } else {
-      console.error("Login failed", responseData);
-      toastr.error(responseData.message);
       formElements.generalError.textContent = responseData.message;
     }
   }

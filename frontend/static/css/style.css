@@ -1487,8 +1487,42 @@ button {
   flex-direction: column;
   border-bottom: 1px solid white;
 } */
+.view-photo-child {
+  width: 100%;
+  overflow-x: hidden;
+  height: 100%;
+  overflow-y: hidden;
+  transform-origin: left top;
+  background-repeat: no-repeat;
 
+}
 
+.modal1-33 {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.modal1-44 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.view-user-image {
+  width: 100%;
+  height: 100%;
+}
 
 
 .image {

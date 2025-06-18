@@ -7,7 +7,7 @@ import { ModalOptionsDTO } from "../utils/showModal.js";
 import { createIncomingFriendRequests } from "../IncomingFriendRequests.js";
 import { createApprovedRequestHistory } from "../ApprovedRequestHistory.js";
 import WebSocketManager from "../../websocket.js";
-import { hideElements, createElement, createSvgElement } from '../utils/util.js';
+import { hideElements, createElement, createSvgElement, createProfileImage } from '../utils/util.js';
 import { handleChats, createChatBoxWithFirstMessage, lastMessageChange, updateChatBox } from "../components/ChatBox.js";
 import { isOnlineStatus, isMessageBoxDomExists, renderMessage, messageBoxElementMessagesReadTick, createMessageDeliveredTickElement, onlineInfo } from "../components/MessageBox.js";
 import { navigateTo } from "../../index.js";
@@ -17,6 +17,8 @@ import { fetchGetChatSummaries } from "../services/chatService.js"
 import { userUpdateModal } from "../components/UpdateUserProfile.js"
 import { importPublicKey, base64ToUint8Array, getUserKey, setUserKey, decryptMessage, setSessionKey, decryptWithSessionKey } from "../utils/e2ee.js";
 
+import { ChatSummaryDTO } from '../dtos/chat/response/ChatSummaryDTO.js'
+import { FeignClientUserProfileResponseDTO } from "../dtos/contact/response/FeignClientUserProfileResponseDTO.js";
 
 export let webSocketManagerContacts;
 export let webSocketManagerChat;
@@ -202,12 +204,26 @@ export default class Chat extends AbstractView {
     }
     subscribeToFriendshipChannels() {
         const addContact = `/user/${this.user.id}/queue/add-contact`;
+        const addContactUser = `/user/${this.user.id}/queue/add-contact-user`;
         const addInvitation = `/user/${this.user.id}/queue/add-invitation`;
         const updatePrivacy = `/user/${this.user.id}/queue/updated-privacy-response`;
         const updatedProfilePhoto = `/user/${this.user.id}/queue/updated-profile-photo-message`;
 
         this.webSocketManagerContacts.subscribeToChannel(addContact, async (addContactMessage) => {
             const newContact = JSON.parse(addContactMessage.body);
+            const chatElements = [...document.querySelectorAll('.chat1')];
+            const chatElement = chatElements.find(chat => chat.chatData.userProfileResponseDTO.id === newContact.userProfileResponseDTO.id);
+            if (chatElement) {
+                const nameSpan = chatElement.querySelector('.name-span');
+                nameSpan.textContent = newContact.contactsDTO.userContactName;
+                chatElement.chatData.contactsDTO.userContactName = newContact.contactsDTO.userContactName;
+                const findChat = chatInstance.chatList.find(chat => chat.userProfileResponseDTO.id === newContact.userProfileResponseDTO.id)
+                if (findChat) {
+                    findChat.contactsDTO.userHasAddedRelatedUser = true;
+                    findChat.contactsDTO.userContactName = newContact.contactsDTO.userContactName;
+                }
+            }
+
             let contactIdList = this.contactList.filter(contact => contact.id);
 
             const indexToInsert = contactIdList.findIndex(contact => {
@@ -222,10 +238,41 @@ export default class Chat extends AbstractView {
                 ...contactIdList,
                 ...this.contactList.filter(contact => !contact.id)
             ];
+
+        });
+        // Eklenen kisi icin calisacak chat veya contact mevcut ise ekleyen kisinin privacy settingslerine gore profil photo  duzenlemeler yapilacak
+        this.webSocketManagerContacts.subscribeToChannel(addContactUser, async (addContactMessage) => {
+            const newContact = JSON.parse(addContactMessage.body);
+            const findContact = this.contactList.find(contact => contact.userProfileResponseDTO.id === newContact.contactsDTO.userId);
+            const findChat = this.chatList.find(chat => chat.userProfileResponseDTO.id === newContact.contactsDTO.userId);
+
+            if (findChat) {
+                findChat.contactsDTO.relatedUserHasAddedUser = newContact.contactsDTO.userHasAddedRelatedUser;
+                findChat.userProfileResponseDTO.imagee = newContact.userProfileResponseDTO.imagee;
+                if (newContact.userProfileResponseDTO.imagee) {
+                    handleProfilePhotoVisibilityChange({
+                        contact: { ...findChat.contactsDTO },
+                        userProfileResponseDTO: { ...findChat.userProfileResponseDTO }
+
+                    }, findChat.userProfileResponseDTO.imagee);
+                }
+
+            }
+            if (findContact) {
+                findContact.contactsDTO.relatedUserHasAddedUser = newContact.contactsDTO.userHasAddedRelatedUser;
+                findContact.userProfileResponseDTO.imagee = newContact.userProfileResponseDTO.imagee;
+                if (newContact.userProfileResponseDTO.imagee) {
+                    handleProfilePhotoVisibilityChange({
+                        contact: { ...findContact.contactsDTO },
+                        userProfileResponseDTO: { ...findContact.userProfileResponseDTO }
+
+                    }, findContact.userProfileResponseDTO.imagee);
+                }
+            }
+
         });
 
         this.webSocketManagerContacts.subscribeToChannel(addInvitation, async (addInvitationMessage) => {
-            debugger;
             const newInvitation = JSON.parse(addInvitationMessage.body);
             let invitationIdList = this.contactList.filter(invitation => invitation.invitationResponseDTO);
             const indexToInsert = invitationIdList.findIndex(invitation => {
@@ -242,7 +289,7 @@ export default class Chat extends AbstractView {
             ];
             console.log(this.contactList)
         });
-
+        // ToDo
         this.webSocketManagerContacts.subscribeToChannel(updatePrivacy, async (updatePrivacyMessage) => {
             const updatePrivacy = JSON.parse(updatePrivacyMessage.body);
 
@@ -252,68 +299,74 @@ export default class Chat extends AbstractView {
             let oldPrivacySettings = null;
             let newPrivacySettings;
 
-            if (findChat) {
-                oldPrivacySettings = findChat.userProfileResponseDTO.privacySettings;
-                findChat.userProfileResponseDTO = updatePrivacy;
-                newPrivacySettings = {
-                    contactsDTO: {
-                        contact: { ...findChat.contactsDTO },
-                        userProfileResponseDTO: { ...findChat.userProfileResponseDTO }
+            if (findChat || findContact) {
+                if (findChat) {
+                    oldPrivacySettings = findChat.userProfileResponseDTO.privacySettings;
+                    findChat.userProfileResponseDTO = updatePrivacy;
+                    newPrivacySettings = {
+                        contactsDTO: {
+                            contact: { ...findChat.contactsDTO },
+                            userProfileResponseDTO: { ...findChat.userProfileResponseDTO }
+                        }
+                    }
+                    if (oldPrivacySettings && newPrivacySettings) {
+                        if ((updatePrivacy.privacySettings.profilePhotoVisibility !== oldPrivacySettings.profilePhotoVisibility)) {
+                            handleProfilePhotoVisibilityChange(newPrivacySettings.contactsDTO, updatePrivacy.imagee);
+                        }
+                        if (updatePrivacy.privacySettings.onlineStatusVisibility !== oldPrivacySettings.onlineStatusVisibility) {
+                            handleOnlineStatusVisibilityChange(this.user, newPrivacySettings);
+                        }
+                        if (updatePrivacy.privacySettings.lastSeenVisibility !== oldPrivacySettings.lastSeenVisibility) {
+                            handleLastSeenVisibilityChange(this.user, newPrivacySettings);
+                        }
+                    }
+                }
+                if (findContact) {
+                    oldPrivacySettings = findContact.userProfileResponseDTO.privacySettings;
+                    findContact.userProfileResponseDTO = updatePrivacy;
+                    newPrivacySettings = {
+                        contactsDTO: {
+                            contact: { ...findContact.contactsDTO },
+                            userProfileResponseDTO: { ...findContact.userProfileResponseDTO }
+                        }
+                    }
+                    if (oldPrivacySettings && newPrivacySettings) {
+                        if (updatePrivacy.privacySettings.aboutVisibility !== oldPrivacySettings.aboutVisibility) {
+                            handleAboutVisibilityChange(newPrivacySettings.contactsDTO);
+                        }
                     }
                 }
             }
-            if (findContact) {
-                oldPrivacySettings = findContact.userProfileResponseDTO.privacySettings;
-                findContact.userProfileResponseDTO = updatePrivacy;
-                newPrivacySettings = {
-                    contactsDTO: {
-                        contact: { ...findContact.contactsDTO },
-                        userProfileResponseDTO: { ...findContact.userProfileResponseDTO }
-                    }
-                }
-            }
-            if (oldPrivacySettings && newPrivacySettings) {
-                if (updatePrivacy.privacySettings.onlineStatusVisibility !== oldPrivacySettings.onlineStatusVisibility) {
-                    handleOnlineStatusVisibilityChange(this.user, newPrivacySettings);
-                }
-
-                if ((updatePrivacy.privacySettings.profilePhotoVisibility !== oldPrivacySettings.profilePhotoVisibility)) {
-                    handleProfilePhotoVisibilityChange(newPrivacySettings.contactsDTO);
-                }
-
-                if (updatePrivacy.privacySettings.lastSeenVisibility !== oldPrivacySettings.lastSeenVisibility) {
-                    handleLastSeenVisibilityChange(this.user, newPrivacySettings);
-                }
-
-                if (updatePrivacy.privacySettings.aboutVisibility !== oldPrivacySettings.aboutVisibility) {
-                    handleAboutVisibilityChange(newPrivacySettings.contactsDTO);
-                }
-            }
-
         });
-
+        // ToDo
         this.webSocketManagerContacts.subscribeToChannel(updatedProfilePhoto, async (updatedProfilePhotoMessage) => {
-            const updatePrivacy = JSON.parse(updatedProfilePhotoMessage.body);
 
-            const findContact = this.contactList.find(contact => contact.userProfileResponseDTO.id === updatePrivacy.id);
-            const findChat = this.chatList.find(chat => chat.userProfileResponseDTO.id === updatePrivacy.id);
+            const updatedProfilePhotoDTO = JSON.parse(updatedProfilePhotoMessage.body);
 
-            let oldPrivacySettings = null;
+            const findContact = this.contactList.find(contact => contact.userProfileResponseDTO.id === updatedProfilePhotoDTO.userId);
+            const findChat = this.chatList.find(chat => chat.userProfileResponseDTO.id === updatedProfilePhotoDTO.userId);
+
             let newPrivacySettings;
 
             if (findChat) {
-                oldPrivacySettings = findChat.userProfileResponseDTO.privacySettings;
-                findChat.userProfileResponseDTO = updatePrivacy;
+                findChat.userProfileResponseDTO.imagee = updatedProfilePhotoDTO.url;
                 newPrivacySettings = {
                     contactsDTO: {
                         contact: { ...findChat.contactsDTO },
                         userProfileResponseDTO: { ...findChat.userProfileResponseDTO }
                     }
                 }
+                if (updatedProfilePhotoDTO.url) {
+                    handleProfilePhotoVisibilityChange({
+                        contact: { ...findChat.contactsDTO },
+                        userProfileResponseDTO: { ...findChat.userProfileResponseDTO }
+
+                    }, findChat.userProfileResponseDTO.imagee);
+                }
+
             }
             if (findContact) {
-                oldPrivacySettings = findContact.userProfileResponseDTO.privacySettings;
-                findContact.userProfileResponseDTO = updatePrivacy;
+                findContact.userProfileResponseDTO.imagee = updatedProfilePhotoDTO.url;
                 newPrivacySettings = {
                     contactsDTO: {
                         contact: { ...findContact.contactsDTO },
@@ -526,8 +579,19 @@ export default class Chat extends AbstractView {
                     navigateTo('/login');
                 }
             }
-            this.contactList = await fetchGetContactList(this.user.id);
-            this.chatList = await fetchGetChatSummaries(this.user.id);
+            if (this.user.imagee) {
+                const image = createProfileImage(this.user);
+                const userProfilePhotoElement = document.querySelector('.user-profile-photo');
+                userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
+                userProfilePhotoElement.append(image);
+            }
+
+            this.contactList = (await fetchGetContactList(this.user.id))
+                .map(item => new FeignClientUserProfileResponseDTO(item));
+            this.chatList = (await fetchGetChatSummaries(this.user.id))
+                .map(item => new ChatSummaryDTO(item));
+            console.log(this.chatList)
+            console.log(this.contactList)
             await handleChats();
         } else {
             navigateTo("/login");
@@ -591,7 +655,7 @@ export default class Chat extends AbstractView {
 
         if (settingsBtnElement) {
             settingsBtnElement.addEventListener("click", () => {
-                createSettingsHtml();
+                createSettingsHtml(this.user);
             })
         }
 
@@ -695,32 +759,36 @@ const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
 
     }
 }
-const handleProfilePhotoVisibilityChange = (newValue) => {
+const handleProfilePhotoVisibilityChange = (newValue, image) => {
+
     const visibleChatsElements = [...document.querySelectorAll('.chat1')];
     const visibleChatElement = visibleChatsElements.find(chat => chat.chatData.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id);
-    const bool = (newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'EVERYONE') || (newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'CONTACTS' && newValue.contact.userHasAddedRelatedUser);
+    const bool = (newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'EVERYONE') || (newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility === 'CONTACTS' && newValue.contact.relatedUserHasAddedUser);
     if (visibleChatElement) {
+        debugger;
         const imageElement = visibleChatElement.querySelector('.image');
-        changesVisibilityProfilePhoto(bool, imageElement);
+        changesVisibilityProfilePhoto(bool, imageElement, image);
     }
     if (document.querySelector('.a1-1-1-1-1-1-3')) {
         const visibleContactsElements = [...document.querySelectorAll('.contact1')];
         const visibleContactElement = visibleContactsElements.find(chat => chat.contactData.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id);
         const imageElement = visibleContactElement?.querySelector('.image');
-        changesVisibilityProfilePhoto(bool, imageElement);
+        changesVisibilityProfilePhoto(bool, imageElement, image);
     }
     const messageBoxElement = document.querySelector('.message-box1');
     if (messageBoxElement && messageBoxElement.data.contactsDTO.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id) {
         const imageElement = messageBoxElement.querySelector('.message-box1-2-1-1');
-        changesVisibilityProfilePhoto(bool, imageElement);
+        changesVisibilityProfilePhoto(bool, imageElement, image);
     }
 }
-const changesVisibilityProfilePhoto = (bool, imageElement) => {
+const changesVisibilityProfilePhoto = (bool, imageElement, image) => {
     if (bool && imageElement) {
         if (imageElement.firstElementChild.className === 'svg-div') {
             imageElement.removeChild(imageElement.firstElementChild);
-            const imgElement = createElement('img', 'user-image', {}, { 'src': 'static/image/img.jpeg', 'alt': '', 'draggable': 'false', 'tabindex': '-1' });
+            const imgElement = createElement('img', 'user-image', {}, { 'src': `${image}`, 'alt': '', 'draggable': 'false', 'tabindex': '-1' });
             imageElement.append(imgElement);
+        } else {
+            imageElement.firstElementChild.src = image;
         }
     } else {
         if (imageElement?.firstElementChild.className === 'user-image') {

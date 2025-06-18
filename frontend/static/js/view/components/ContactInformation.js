@@ -1,4 +1,5 @@
 import { createElement } from "../utils/util.js";
+import { viewPhoto } from "../components/UpdateUserProfile.js";
 function createContactInformation(contact) {
   const style = document.createElement('style');
   style.textContent = `
@@ -76,9 +77,19 @@ function createContactInformation(contact) {
   const profileSectionDivPhotoAndName = createElement('div', 'section');
   const profileSectionPhoto = createElement('div', 'profile-section-photo');
   const profileSectionPhotoButton = createElement('div', 'profile-section-photo-button', { height: '200px', width: '200px', cursor: 'pointer' }, { role: 'button' });
-  const profileSectionPhotoButtonImg = createElement('img', 'profile-section-photo-button-img', { visibility: 'visible' }, { alt: '', draggable: 'false', tabindex: '-1' });
+  debugger;
+  if (contact.image) {
+    const profileSectionPhotoButtonImg = createElement('img', 'profile-section-photo-button-img', { visibility: 'visible' }, { alt: '', draggable: 'false', tabindex: '-1' });
+    profileSectionPhotoButtonImg.src = contact.image;
+    profileSectionPhotoButton.append(profileSectionPhotoButtonImg);
+    profileSectionPhotoButton.addEventListener('click', () => viewPhoto(contact.image));
+  } else {
+    const profileSectionPhotoButtonImg = createElement('img', 'profile-section-photo-button-img', { visibility: 'visible' }, { alt: '', draggable: 'false', tabindex: '-1' });
+    profileSectionPhotoButton.append(profileSectionPhotoButtonImg);
+  }
 
-  profileSectionPhotoButton.append(profileSectionPhotoButtonImg);
+
+
   profileSectionPhoto.append(profileSectionPhotoButton);
   profileSectionDivPhotoAndName.append(profileSectionPhoto);
 

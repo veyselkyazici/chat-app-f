@@ -4,7 +4,7 @@ import { clearErrorMessages, showError } from "../utils/util.js";
 import { navigateTo } from '../../index.js';
 import { fetchRegister } from "../services/authService.js";
 import { RegisterRequestDTO } from "../dtos/auth/request/RegisterRequestDTO.js";
-import { encryptPrivateKey, exportPublicKey, deriveAESKey, generateKeyPair } from "../utils/e2ee.js";
+import { encryptPrivateKey, exportPublicKey, deriveAESKey, generateKeyPair, base64Encode } from "../utils/e2ee.js";
 
 export default class extends AbstractView {
   constructor(params) {
@@ -76,20 +76,23 @@ export default class extends AbstractView {
     }
 
     try {
+      debugger;
       const salt = crypto.getRandomValues(new Uint8Array(16));
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const { publicKey, privateKey } = await generateKeyPair();
+      const privateKeyRaw = await window.crypto.subtle.exportKey("pkcs8", privateKey);
+      const privateKeyBase64 = base64Encode(new Uint8Array(privateKeyRaw));
       const aesKey = await deriveAESKey(formElements.password.value.trim(), salt);
       const encryptedPrivateKey = await encryptPrivateKey(privateKey, aesKey, iv);
       const exportedPublicKey = await exportPublicKey(publicKey);
-
       const registerRequestDTO = new RegisterRequestDTO(
         formElements.email.value.trim(),
         formElements.password.value.trim(),
         Array.from(new Uint8Array(exportedPublicKey)),
         Array.from(new Uint8Array(encryptedPrivateKey)),
         Array.from(salt),
-        Array.from(iv)
+        Array.from(iv),
+        privateKeyBase64
       );
 
       const validationErrors = registerRequestDTO.validate();

@@ -1,9 +1,9 @@
 
-import { showModal, ModalOptionsDTO, Modal } from '../utils/showModal.js';
-import { createElement, createSvgElement } from '../utils/util.js';
+import { Modal } from '../utils/showModal.js';
+import { createElement, createSvgElement, createProfileImage } from '../utils/util.js';
 import { updateUserName, updateUserAbout, fetchUploadPhoto } from '../services/userService.js';
 import { UpdateUserDTO } from '../dtos/user/request/UpdateUserDTO.js';
-import { chatInstance, webSocketManagerChat } from '../pages/Chat.js';
+import { chatInstance } from '../pages/Chat.js';
 
 async function userUpdateModal(user, bool) {
     const updateProfileForm = createElement('form', '');
@@ -15,12 +15,12 @@ async function userUpdateModal(user, bool) {
     profilePhotoInput.id = "profilePhotoInput";
     const inputFile = createElement('input', '', { display: "none" }, { type: "file", id: 'imageInput', accept: "image/png, image/jpeg, image/jpg" }, '');
     updateProfileForm.append(inputFile);
-    if (user.image) {
+    if (user.imagee) {
         const profilePhotoUrlElement = createElement('div', 'image', { height: '200px', width: '200px' });
         const imgElement = createElement('img', '');
         imgElement.id = 'profilePhoto';
         imgElement.setAttribute('alt', 'Profil Fotoğrafı');
-        imgElement.setAttribute('src', user.image);
+        imgElement.setAttribute('src', user.imagee);
         profilePhotoUrlElement.append(imgElement);
         profilePhotoInput.append(profilePhotoUrlElement);
     } else {
@@ -79,17 +79,8 @@ async function userUpdateModal(user, bool) {
     updateProfileForm.append(profilePhotoUserElement);
     updateProfileForm.append(nameElement);
     updateProfileForm.append(aboutElement);
+    debugger;
     if (bool) {
-        // showModal(new ModalOptionsDTO({
-        //     title: '',
-        //     contentHtml: updateProfileForm,
-        //     mainCallback: null,
-        //     buttonText: '',
-        //     showBorders: false,
-        //     secondOptionButton: false,
-        //     cancelButton: true,
-        //     headerHtml: null,
-        // }));
 
         new Modal({
             title: '',
@@ -99,22 +90,12 @@ async function userUpdateModal(user, bool) {
             showBorders: false,
             secondOptionButton: false,
             cancelButton: true,
+            cancelButtonId: 'userUpdate',
             headerHtml: null,
             closeOnBackdrop: true,
             closeOnEscape: true
         });
     } else {
-        // showModal(new ModalOptionsDTO({
-        //     title: '',
-        //     contentHtml: updateProfileForm,
-        //     mainCallback: goHome,
-        //     buttonText: 'Devam Et',
-        //     showBorders: false,
-        //     secondOptionButton: false,
-        //     cancelButton: false,
-        //     headerHtml: null,
-        //     modalOkButtonId: 'updateUserProfile'
-        // }));
         new Modal({
             title: '',
             contentHtml: updateProfileForm,
@@ -123,14 +104,13 @@ async function userUpdateModal(user, bool) {
             showBorders: false,
             secondOptionButton: false,
             cancelButton: false,
+            cancelButtonId: 'firstUserUpdate',
             headerHtml: null,
             modalOkButtonId: 'updateUserProfile',
-            closeOnBackdrop: true,
-            closeOnEscape: true
         });
     }
 
-    profilePhotoInput.addEventListener('click', (event) => toggleOptions(event, user.image));
+    profilePhotoInput.addEventListener('click', (event) => toggleOptions(event, user.imagee));
     inputFile.addEventListener('change', (event) => uploadPhoto(event, user.id));
 }
 
@@ -199,7 +179,7 @@ function toggleEditAbout() {
     }
 }
 
-const toggleOptions = (event, deneme) => {
+const toggleOptions = (event, image) => {
     event.preventDefault();
     const existingOptions = document.getElementById("photoOptions");
 
@@ -208,14 +188,14 @@ const toggleOptions = (event, deneme) => {
         document.removeEventListener('click', handleOutsideClick);
     } else {
         let uploadPhotoOption;
-        if (deneme) {
+        if (image) {
             const photoOptions = createElement("ul", "photo-options", null, { id: "photoOptions" });
 
-            const viewPhotoOption = createElement("li", "", {}, { tabIndex: "0" }, "Fotoğrafı görüntüle", viewPhoto);
+            const viewPhotoOption = createElement("li", "", {}, { tabIndex: "0" }, "Fotoğrafı görüntüle", () => viewPhoto(image));
 
             uploadPhotoOption = createElement("li", "", {}, { tabIndex: "0" }, "Fotoğraf yükle");
 
-            const removePhotoOption = createElement("li", "", {}, { tabIndex: "0" }, "Fotoğrafı kaldır", removePhoto);
+            const removePhotoOption = createElement("li", "", {}, { tabIndex: "0" }, "Fotoğrafı kaldır", () => removePhoto(image));
 
             photoOptions.append(viewPhotoOption);
             photoOptions.append(uploadPhotoOption);
@@ -243,6 +223,31 @@ const toggleOptions = (event, deneme) => {
 
 };
 
+const viewPhoto = (image) => {
+    const viewPhotoElement = createElement('div', 'view-photo', { height: '640px', width: '640px' });
+    const viewPhotoChildElement = createElement('div', 'view-photo-child', {
+        transform: 'translateX(0px) translateY(0px) scale(1)',
+        transition: 'transform 500ms cubic-bezier(0.1, 0.82, 0.25, 1), border-radius 500ms cubic-bezier(0.1, 0.82, 0.25, 1)', 'border - radius': '0 % '
+    });
+    const imageElement = createElement('img', 'view-user-image', {}, { 'alt': '', 'draggable': 'false', 'tabindex': '-1' });
+    imageElement.src = image;
+
+    viewPhotoChildElement.append(imageElement);
+    viewPhotoElement.append(viewPhotoChildElement);
+    new Modal({
+        title: '',
+        contentHtml: viewPhotoElement,
+        cancelButtonId: 'viewPhoto',
+        buttonText: '',
+        showBorders: false,
+        secondOptionButton: false,
+        cancelButton: true,
+        cancelButtonId: 'viewPhoto',
+        closeOnBackdrop: true,
+        closeOnEscape: true,
+        viewPhoto: true
+    })
+}
 const handleOutsideClick = (event) => {
     const photoOptions = document.getElementById("photoOptions");
     const profilePhotoInput = document.getElementById("profilePhotoInput");
@@ -288,6 +293,7 @@ function uploadPhoto(event, userId) {
                     showBorders: false,
                     secondOptionButton: false,
                     cancelButton: false,
+                    cancelButtonId: 'uploadPhotoError',
                     closeOnBackdrop: true,
                     closeOnEscape: true
                 });
@@ -418,23 +424,6 @@ function uploadPhoto(event, userId) {
             uploadPhotoCloseButton.append(uploadPhotoCloseButton_1);
             uploadPhotoHeader.append(uploadPhotoCloseButton);
             uploadPhotoHeader.append(uploadPhotoTitle);
-            // canvasContainer.innerHTML = HTML;
-            // document.querySelector('.modal1').remove();
-            // showModal(new ModalOptionsDTO({
-            //     title: '',
-            //     contentHtml: deneme5,
-            //     mainCallback: async () => {
-            //         cropImage(canvas1, userId, file);
-            //         return true;
-            //     },
-            //     buttonText: 'Yükle',
-            //     showBorders: false,
-            //     secondOptionButton: false,
-            //     cancelButton: false,
-            //     modalBodyCSS: 'modal-body-upload-photo',
-            //     headerHtml: uploadPhotoHeader,
-            //     modalOkButtonId: 'uploadPhoto'
-            // }));
             new Modal({
                 title: '',
                 contentHtml: deneme5,
@@ -446,6 +435,7 @@ function uploadPhoto(event, userId) {
                 showBorders: false,
                 secondOptionButton: false,
                 cancelButton: false,
+                cancelButtonId: 'uploadPhoto',
                 modalBodyCSS: 'modal-body-upload-photo',
                 headerHtml: uploadPhotoHeader,
                 modalOkButtonId: 'uploadPhoto',
@@ -534,18 +524,21 @@ async function cropImage(canvas1, userId, originalFile) {
     croppedCanvas.width = cropSize;
     croppedCanvas.height = cropSize;
 
-    const maskCenterX = canvas1.width / 2;
-    const maskCenterY = canvas1.height / 2;
+    const squareLeft = canvas1.width / 2 - circleRadius;
+    const squareTop = canvas1.height / 2 - circleRadius;
+    const squareSize = circleRadius * 2;
 
-    const startX = (maskCenterX - cropSize / 2 - imgX) / imgScale;
-    const startY = (maskCenterY - cropSize / 2 - imgY) / imgScale;
+    const startX = (squareLeft - imgX) / imgScale;
+    const startY = (squareTop - imgY) / imgScale;
+    const cropWidth = squareSize / imgScale;
+    const cropHeight = squareSize / imgScale;
 
     croppedCtx.drawImage(
         img,
         startX,
         startY,
-        cropSize / imgScale,
-        cropSize / imgScale,
+        cropWidth,
+        cropHeight,
         0,
         0,
         cropSize,
@@ -558,20 +551,24 @@ async function cropImage(canvas1, userId, originalFile) {
         formData.append('file', blob, originalFileName);
 
         try {
-            debugger;
-            const responseURL = await fetchUploadPhoto(formData, userId);
+            const response = await fetchUploadPhoto(formData, userId);
             const profilePhotoInput = document.querySelector('.profile-photo-input');
             profilePhotoInput.firstElementChild.remove();
-
             const profilePhotoUrlElement = createElement('div', 'image', { height: '200px', width: '200px' });
             const imgElement = createElement('img', '');
             imgElement.id = 'profilePhoto';
+            debugger;
             imgElement.setAttribute('alt', 'Profil Fotoğrafı');
-            imgElement.setAttribute('src', responseURL);
+            imgElement.setAttribute('src', response.data.url);
             profilePhotoUrlElement.append(imgElement);
             profilePhotoInput.append(profilePhotoUrlElement);
-            chatInstance.user.imagee = responseURL;
-            chatInstance.webSocketManagerContacts.sendMessageToAppChannel("updated-profile-photo-send-message", { userId: userId, url: chatInstance.user.id.imagee });
+            chatInstance.user.imagee = response.data.url;
+
+            const image = createProfileImage({ imagee: response.data.url });
+            const userProfilePhotoElement = document.querySelector('.user-profile-photo');
+            userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
+            userProfilePhotoElement.append(image);
+            chatInstance.webSocketManagerContacts.sendMessageToAppChannel("updated-profile-photo-send-message", { userId: userId, url: chatInstance.user.imagee });
 
         } catch (error) {
             console.error('Error uploading photo:', error);
@@ -603,7 +600,7 @@ function zoomImage(scaleFactor, canvas1) {
     drawImage(canvas1);
 }
 
-function removePhoto() {
+async function removePhoto() {
 }
 
 function getUserProfilePhotoUrl() {
@@ -615,4 +612,4 @@ function getUserProfilePhotoUrl() {
 
 
 
-export { userUpdateModal };
+export { userUpdateModal, viewPhoto };

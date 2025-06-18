@@ -2,10 +2,11 @@
 import { chatInstance, UserSettingsDTO } from "../pages/Chat.js";
 import { fetchChatBlock, fetchChatUnblock, fetchDeleteChat, fetchGetChatSummary, fetchGetLast30Messages } from "../services/chatService.js";
 import { decryptMessage } from "../utils/e2ee.js";
-import { ModalOptionsDTO, showModal } from '../utils/showModal.js';
+import { ModalOptionsDTO, showModal, Modal } from '../utils/showModal.js';
 import { chatBoxLastMessageFormatDateTime, createElement, createVisibilityProfilePhoto } from "../utils/util.js";
 import { UpdateItemsDTO, virtualScroll } from '../utils/virtualScroll.js';
 import { blockInput, createMessageBox, createMessageDeliveredTickElement, isMessageBoxDomExists, onlineInfo, removeMessageBoxAndUnsubscribe, unBlockInput } from "./MessageBox.js";
+import { addContactModal } from "../components/AddContact.js";
 
 async function handleChats() {
     const paneSideElement = document.querySelector("#pane-side");
@@ -247,13 +248,15 @@ function handleOptionsBtnClick(event) {
     const chatElement = target.closest('.chat1');
     const spans = document.querySelectorAll('.app span');
     const showChatOptions = spans[1];
-
     if (showChatOptions) {
         const existingOptionsDiv = showChatOptions.querySelector('.options1');
 
         if (existingOptionsDiv) {
             existingOptionsDiv.remove();
         } else {
+            const ulElement = createElement('ul', 'ul1');
+            const divElement = createElement('div', '');
+
             const chatOptionsDiv = document.createElement("div");
 
             const rect = target.getBoundingClientRect();
@@ -268,6 +271,20 @@ function handleOptionsBtnClick(event) {
             const archiveLabel = chatData.userChatSettings.archived ? 'Arşivden çıkar' : 'Sohbeti arşivle';
             const blockLabel = chatData.userChatSettings.blocked ? 'Engeli kaldır' : 'Engelle';
             const pinLabel = chatData.userChatSettings.pinned ? 'Sohbeti sabitlemeyi kaldır' : 'Sohbeti sabitle';
+            if (!chatData.contactsDTO.userHasAddedRelatedUser) {
+                const modalDTO = new ModalOptionsDTO({
+                    title: 'Kişi ekle',
+                    buttonText: 'Ekle',
+                    showBorders: false,
+                })
+                const addContact = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
+                const addContactLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': 'Kişi ekle' }, 'Kişi ekle', () =>
+                    addContactModal(modalDTO, chatData.userProfileResponseDTO.email));
+                addContact.append(addContactLiDivElement);
+                divElement.append(addContact);
+            }
+
+
             // ToDo
             const markUnreadLabel = 'Okunmadı olarak işaretle';
             const deleteChatLabel = 'Sohbeti sil';
@@ -280,8 +297,7 @@ function handleOptionsBtnClick(event) {
                 userChatSettings: { ...chatData.userChatSettings }
             });
 
-            const ulElement = createElement('ul', 'ul1');
-            const divElement = createElement('div', '');
+
 
             // const archiveLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
             // const archiveLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${archiveLabel}` }, archiveLabel);
@@ -294,6 +310,8 @@ function handleOptionsBtnClick(event) {
 
             const deleteLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
             const deleteLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${deleteChatLabel}` }, deleteChatLabel, () => deleteChat(chatData, showChatOptions, chatElement));
+
+
 
             const markUnreadLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
             const markUnreadLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${markUnreadLabel}` }, markUnreadLabel);
@@ -412,6 +430,8 @@ const toggleBlockUser = async (chatData) => {
         showBorders: false,
         secondOptionButton: false,
         headerHtml: null,
+        cancelButton: true,
+        cancelButtonId: 'blockUser',
         closeOnBackdrop: true,
         closeOnEscape: true
     });
@@ -460,6 +480,8 @@ const deleteChat = async (chatData, showChatOptions, chatElement) => {
         showBorders: false,
         secondOptionButton: false,
         headerHtml: null,
+        cancelButton: true,
+        cancelButtonId: 'deleteChat',
         closeOnBackdrop: true,
         closeOnEscape: true
     });

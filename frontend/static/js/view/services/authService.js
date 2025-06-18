@@ -1,4 +1,5 @@
-const AUTH_SERVICE_URL = "http://localhost:9000/api/v1/auth";
+import { LoginResponseDTO } from "../dtos/auth/response/LoginResponseDTO.js";
+const AUTH_SERVICE_URL = "http://localhost:8080/api/v1/auth";
 export const isAuthenticated = async () => {
     const token = sessionStorage.getItem('access_token');
     if (!token) return false;
@@ -11,7 +12,6 @@ export const isAuthenticated = async () => {
                 Authorization: token,
             },
         });
-
         return response.ok;
     } catch (error) {
         console.error('Token doğrulama hatası:', error);
@@ -28,7 +28,7 @@ export const fetchLogin = async (loginRequestDTO) => {
             },
             body: JSON.stringify(loginRequestDTO)
         });
-        return response;
+        return await response.json();
     } catch (error) {
         console.error("An error occurred:", error);
     }

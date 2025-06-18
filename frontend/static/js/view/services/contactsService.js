@@ -1,7 +1,6 @@
 const CONTACTS_SERVICE_URL = "http://localhost:8080/api/v1/contacts";
 const INVITATION_SERVICE_URL = "http://localhost:8080/api/v1/invitation";
 export async function deleteContactOrInvitation(id, type) {
-    debugger;
     const url = type === 'contact' ? `${CONTACTS_SERVICE_URL}/${id}` : `${INVITATION_SERVICE_URL}/${id}`;
     try {
         const response = await fetch(url, {
@@ -65,7 +64,7 @@ export const fetchGetContactList = async (userId) => {
         if (!response.ok) {
             throw new Error('Kullanıcı bulunamadı');
         }
-        
+
         const result = await response.json();
         return result;
     } catch (error) {
@@ -84,7 +83,6 @@ export const fetchAddContact = async (dto, closeModal) => {
             },
             body: JSON.stringify(dto),
         });
-
         if (!response.ok) {
             toastr.error('Beklenmedik bir hata oluştu.')
             return;
@@ -92,6 +90,7 @@ export const fetchAddContact = async (dto, closeModal) => {
 
         toastr.success('Kullanıcı başarıyla eklendi!');
         closeModal();
+        return response;
     } catch (error) {
         toastr.error('İşlem sırasında bir hata oluştu.');
         throw error;

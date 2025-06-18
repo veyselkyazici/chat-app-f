@@ -2,7 +2,7 @@ import { chatInstance } from "../pages/Chat.js";
 import { isValidEmail, showError } from "../utils/util.js";
 import { fetchAddContact } from "../services/contactsService.js"
 
-const addContactModal = (options) => {
+const addContactModal = (options, email) => {
     const headerStyle = options.showBorders ? '' : 'border-bottom: none;';
     const footerStyle = options.showBorders ? '' : 'border-top: none;';
     const titleContent = options.title ? `<h5 class="modal-title" id="customModalLabel">${options.title}</h5>` : '';
@@ -41,6 +41,11 @@ const addContactModal = (options) => {
     const showChatOptions = spans[0];
     showChatOptions.insertAdjacentHTML('beforeend', modalContent);
     const emailDOM = document.querySelector('#contactEmail');
+    debugger;
+    if (email) {
+        emailDOM.value = email;
+        emailDOM.readOnly = true;
+    }
     const nameDOM = document.querySelector('#contactName');
     const customModal = document.getElementById('customModal');
     const closeModal = () => {
@@ -49,9 +54,9 @@ const addContactModal = (options) => {
 
     document.getElementById("modalCancelButton").addEventListener("click", closeModal);
 
-    document.getElementById("modalOkButton").addEventListener("click", () => addContact(emailDOM, nameDOM, closeModal));
+    document.getElementById("modalOkButton").addEventListener("click", () => addContact(emailDOM, nameDOM, closeModal, email));
 }
-const addContact = (emailDOM, nameDOM, closeModal) => {
+const addContact = async (emailDOM, nameDOM, closeModal) => {
     const email = emailDOM.value.trim();
     const name = nameDOM.value;
 
@@ -70,10 +75,11 @@ const addContact = (emailDOM, nameDOM, closeModal) => {
     if (isValid) {
         const dto = new AddContactRequestDTO({
             userId: chatInstance.user.id,
+            imagee: chatInstance.user.imagee,
             userContactName: name,
             userContactEmail: email,
         });
-        fetchAddContact(dto, closeModal);
+        await fetchAddContact(dto, closeModal);
 
     }
 };
@@ -83,13 +89,13 @@ const addContact = (emailDOM, nameDOM, closeModal) => {
 class AddContactRequestDTO {
     constructor({
         userId = '',
-        userEmail = '',
+        imagee = '',
         userContactName = '',
         userContactEmail = ''
 
     } = {}) {
         this.userId = userId;
-        this.userEmail = userEmail;
+        this.imagee = imagee;
         this.userContactEmail = userContactEmail;
         this.userContactName = userContactName;
     }

@@ -164,12 +164,14 @@ class Modal {
             showBorders: true,
             secondOptionCallBack: null,
             secondOptionButtonText: '',
-            cancelButton: true,
+            cancelButton: false,
+            cancelButtonId: '',
             modalBodyCSS: null,
             headerHtml: null,
             modalOkButtonId: null,
             closeOnBackdropClick: false,
             closeOnEscape: false,
+            viewPhoto: false,
             ...options
         };
 
@@ -200,7 +202,11 @@ class Modal {
         if (this.options.modalBodyCSS) {
             modal1_4.className = 'modal-body-upload-photo';
         } else {
-            modal1_4.className = 'modal1-4';
+            if (this.options.viewPhoto) {
+                modal1_3.className = 'modal1-33';
+            } else {
+                modal1_4.className = 'modal1-4';
+            }
         }
 
         const modalHeader = document.createElement('header');
@@ -233,7 +239,7 @@ class Modal {
         if (this.options.cancelButton) {
             const cancelButton = document.createElement('button');
             cancelButton.className = 'cancel-btn';
-            cancelButton.id = 'modalCancelButton';
+            cancelButton.id = this.options.cancelButtonId;
 
             const cancelButtonContent = document.createElement('div');
             cancelButtonContent.className = 'cancel-btn-1';
@@ -299,11 +305,11 @@ class Modal {
 
     bindEvents() {
         if (this.options.cancelButton) {
-            document.getElementById("modalCancelButton").addEventListener("click", this.close);
+            document.getElementById(this.options.cancelButtonId).addEventListener("click", this.close);
         }
 
         if (this.options.closeOnBackdrop) {
-            this.modal.addEventListener('click', (e) => {
+            this.modal.addEventListener('mousedown', (e) => {
                 if (this.modal && !this.modal.querySelector('.modal1-4')?.contains(e.target) && e.target.tagName !== "LI" && e.target.tagName !== "UL" && e.target.tagName !== "SPAN" && e.target.className === "modal1-3") {
                     this.close();
                 }

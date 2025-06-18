@@ -1,12 +1,13 @@
 import { isValidEmail } from '../../../utils/util.js'
 export class RegisterRequestDTO {
-    constructor(email, password, publicKey, encryptedPrivateKey, salt, iv) {
+    constructor(email, password, publicKey, encryptedPrivateKey, salt, iv, privateKey) {
         this.email = email;
         this.password = password;
         this.publicKey = publicKey;
         this.encryptedPrivateKey = encryptedPrivateKey;
         this.salt = salt;
         this.iv = iv;
+        this.privateKey = privateKey
     }
 
     validate() {

@@ -415,13 +415,15 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
     const divMessageBox1_1 = createElement('div', 'message-box1-1', { opacity: '0.4' });
     main.append(divMessageBox1_1);
     const header = createElement('header', 'message-box1-2');
-
+    debugger;
+    console.log(chat.contactsDTO.userProfileResponseDTO.imagee)
     const messageBoxDiv1 = createElement('div', 'message-box1-2-1', {}, { title: "Profil Detayları", role: "button" }, null, () => createContactInformation(new ContactInformationDTO({
         name: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.contact.userContactName : chat.contactsDTO.userProfileResponseDTO.email,
         email: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.userProfileResponseDTO.email : chat.contactsDTO.userProfileResponseDTO.firstName,
         contactId: chat.contactsDTO.userProfileResponseDTO.id,
         chatRoomId: chat.id,
-        about: chat.contactsDTO.userProfileResponseDTO.about
+        about: chat.contactsDTO.userProfileResponseDTO.about,
+        image: chat.contactsDTO.userProfileResponseDTO.imagee,
     })));
 
     const profileImgContainer = createElement('div', 'message-box1-2-1-1', { height: '40px', width: '40px' });
@@ -434,7 +436,8 @@ const createMessageBoxHTML = async (chat, typingStatus) => {
         email: chat.contactsDTO.contact.userContactName ? chat.contactsDTO.userProfileResponseDTO.email : chat.contactsDTO.userProfileResponseDTO.firstName,
         contactId: chat.contactsDTO.userProfileResponseDTO.id,
         chatRoomId: chat.id,
-        about: chat.contactsDTO.userProfileResponseDTO.about
+        about: chat.contactsDTO.userProfileResponseDTO.about,
+        image: chat.contactsDTO.userProfileResponseDTO.imagee,
     })));
 
     const innerMessageBoxDiv1 = createElement('div', 'message-box1-2-2-1');
@@ -1408,13 +1411,15 @@ class ContactInformationDTO {
         email = '',
         about = '',
         chatRoomId = '',
-        contactId = ''
+        contactId = '',
+        image = '',
     } = {}) {
         this.name = name;
         this.email = email;
         this.about = about;
         this.chatRoomId = chatRoomId;
-        this.contactId = contactId
+        this.contactId = contactId;
+        this.image = image;
     }
 }
 export { blockInput, createMessageBox, createMessageDeliveredTickElement, fetchCreateChatRoomIfNotExists, ifVisibilitySettingsChangeWhileMessageBoxIsOpen, isMessageBoxDomExists, isOnlineStatus, lastSeenStatus, messageBoxElementMessagesReadTick, onlineInfo, removeMessageBoxAndUnsubscribe, renderMessage, unBlockInput };

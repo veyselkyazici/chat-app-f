@@ -3,7 +3,8 @@ import { backButton, createElement, handleBackBtnClick } from "../utils/util.js"
 import { chatInstance } from "../pages/Chat.js";
 import { ifVisibilitySettingsChangeWhileMessageBoxIsOpen } from "./MessageBox.js";
 import { fetchUpdatePrivacy } from "../services/userService.js"
-function createSettingsHtml() {
+import { userUpdateModal } from "./UpdateUserProfile.js"
+function createSettingsHtml(user) {
     const span = document.querySelector(".a1-1-1");
     const existingSettingsDiv = span.querySelector(".settings");
     if (existingSettingsDiv) {
@@ -19,30 +20,6 @@ function createSettingsHtml() {
 
     const divSettingsHeader = createElement("div", "settings-1-1-1-1");
     const divBackBtnn = backButton(settingsDiv, handleBackBtnClick);
-
-    // const divBackBtn = createElement("div", "settings-back-btn");
-    // const divBackBtn1 = createElement("div", "settings-back-btn-1", null, { role: "button", "aria-label": "Geri", tabIndex: "0" }, null, handleSettingsBackBtnClick);
-
-    // const spanBackIcon = document.createElement("span", "", null, { "data-icon": "back" });
-
-    // const svgBack = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    // svgBack.setAttribute("viewBox", "0 0 24 24");
-    // svgBack.setAttribute("height", "24");
-    // svgBack.setAttribute("width", "24");
-    // svgBack.setAttribute("preserveAspectRatio", "xMidYMid meet");
-    // svgBack.setAttribute("version", "1.1");
-
-    // const titleBack = createElement("title", "back");
-
-    // const pathBack = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    // pathBack.setAttribute("fill", "currentColor");
-    // pathBack.setAttribute("d", "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z");
-
-    // svgBack.append(titleBack);
-    // svgBack.append(pathBack);
-    // spanBackIcon.append(svgBack);
-    // divBackBtn1.append(spanBackIcon);
-    // divBackBtn.append(divBackBtn1);
 
     const divTitle = createElement("div", "settings-1-1-1-1-1", null, { title: "Ayarlar" });
 
@@ -66,11 +43,12 @@ function createSettingsHtml() {
 
     const divListItemsInnerDiv = createElement("div", "settings-1-1-2-1-1-1-1-1");
     // ToDo profileUrl gelecek
-    divListItemsInnerDiv.append(createButton("", chatInstance.user.firstName, chatInstance.user.about, "https://media-ist1-1.cdn.whatsapp.net/v/t61.24694-24/95075216_213302013300004_3915533723724724065_n.jpg?ccb=11-4&oh=01_Q5AaIDmuzX_bRwkwWkXfTl7f9rz7YHF2k-0-xKau2lQHHQbh&oe=66E2266C&_nc_sid=5e03e0&_nc_cat=101", null, handleProfileClick));
-    divListItemsInnerDiv.append(createButton('<svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"></path></svg>', "Hesap", "", "", "account-circle", handleAccountClick));
-    divListItemsInnerDiv.append(createButton('<svg viewBox="0 0 28 35" height="23" width="23" preserveAspectRatio="xMidYMid meet" fill="none"><path d="M 14 1.10204 C 18.5689 1.10204 22.2727 4.80587 22.2727 9.37477 L 22.272 12.179 L 22.3565 12.1816 C 24.9401 12.2949 27 14.4253 27 17.0369 L 27 29.4665 C 27 32.1506 24.8241 34.3265 22.14 34.3265 L 5.86 34.3265 C 3.1759 34.3265 1 32.1506 1 29.4665 L 1 17.0369 C 1 14.3971 3.10461 12.2489 5.72743 12.1786 L 5.72727 9.37477 C 5.72727 4.80587 9.4311 1.10204 14 1.10204 Z M 14 19.5601 C 12.0419 19.5601 10.4545 21.2129 10.4545 23.2517 C 10.4545 25.2905 12.0419 26.9433 14 26.9433 C 15.9581 26.9433 17.5455 25.2905 17.5455 23.2517 C 17.5455 21.2129 15.9581 19.5601 14 19.5601 Z M 14 4.79365 C 11.4617 4.79365 9.39069 6.79417 9.27759 9.30454 L 9.27273 9.52092 L 9.272 12.176 L 18.727 12.176 L 18.7273 9.52092 C 18.7273 6.91012 16.6108 4.79365 14 4.79365 Z" fill="currentColor"></path></svg>', "Gizlilik", "", "", "security-lock", handlePrivacyClick));
-    divListItemsInnerDiv.append(createButton('<svg viewBox="0 0 24 24" height="27" width="27" preserveAspectRatio="xMidYMid meet" fill="none" x="0px" y="0px"><path d="M 12 21.7 c 0.9 0 1.7 -0.8 1.7 -1.7 h -3.4 C 10.3 20.9 11.1 21.7 12 21.7 Z M 17.6 16.5 v -4.7 c 0 -2.7 -1.8 -4.8 -4.3 -5.4 V 5.8 c 0 -0.7 -0.6 -1.3 -1.3 -1.3 s -1.3 0.6 -1.3 1.3 v 0.6 C 8.2 7 6.4 9.1 6.4 11.8 v 4.7 l -1.7 1.7 v 0.9 h 14.6 v -0.9 L 17.6 16.5 Z" fill="currentColor"></path></svg>', "Bildirimler", "", "", "settings-notifications", handleNotificationsClick));
-    divListItemsInnerDiv.append(createButton('<svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" fill="none" x="0px" y="0px"><path d="M 16.6 8.1 l 1.2 -1.2 l 5.1 5.1 l -5.1 5.1 l -1.2 -1.2 l 3 -3 H 8.7 v -1.8 h 10.9 L 16.6 8.1 Z M 3.8 19.9 h 9.1 c 1 0 1.8 -0.8 1.8 -1.8 v -1.4 h -1.8 v 1.4 H 3.8 V 5.8 h 9.1 v 1.4 h 1.8 V 5.8 c 0 -1 -0.8 -1.8 -1.8 -1.8 H 3.8 C 2.8 4 2 4.8 2 5.8 v 12.4 C 2 19.1 2.8 19.9 3.8 19.9 Z" fill="currentColor"></path></svg>', "Çıkış yap", "", "", "exit", handleLogoutClick));
+    divListItemsInnerDiv.append(createButton("", chatInstance.user.firstName, chatInstance.user.about, user.imagee, null, () => userUpdateModal(user, true)));
+    divListItemsInnerDiv.append(createButton('<svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z" fill="currentColor"></path></svg>', "Hesap", "", "", "account-circle", () => handleAccountClick(user)));
+    divListItemsInnerDiv.append(createButton('<svg viewBox="0 0 28 35" height="23" width="23" preserveAspectRatio="xMidYMid meet" fill="none"><path d="M 14 1.10204 C 18.5689 1.10204 22.2727 4.80587 22.2727 9.37477 L 22.272 12.179 L 22.3565 12.1816 C 24.9401 12.2949 27 14.4253 27 17.0369 L 27 29.4665 C 27 32.1506 24.8241 34.3265 22.14 34.3265 L 5.86 34.3265 C 3.1759 34.3265 1 32.1506 1 29.4665 L 1 17.0369 C 1 14.3971 3.10461 12.2489 5.72743 12.1786 L 5.72727 9.37477 C 5.72727 4.80587 9.4311 1.10204 14 1.10204 Z M 14 19.5601 C 12.0419 19.5601 10.4545 21.2129 10.4545 23.2517 C 10.4545 25.2905 12.0419 26.9433 14 26.9433 C 15.9581 26.9433 17.5455 25.2905 17.5455 23.2517 C 17.5455 21.2129 15.9581 19.5601 14 19.5601 Z M 14 4.79365 C 11.4617 4.79365 9.39069 6.79417 9.27759 9.30454 L 9.27273 9.52092 L 9.272 12.176 L 18.727 12.176 L 18.7273 9.52092 C 18.7273 6.91012 16.6108 4.79365 14 4.79365 Z" fill="currentColor"></path></svg>', "Gizlilik", "", "", "security-lock", () => handlePrivacyClick(user)));
+    divListItemsInnerDiv.append(createButton('<svg viewBox="0 0 24 24" height="27" width="27" preserveAspectRatio="xMidYMid meet" fill="none" x="0px" y="0px"><path d="M 12 21.7 c 0.9 0 1.7 -0.8 1.7 -1.7 h -3.4 C 10.3 20.9 11.1 21.7 12 21.7 Z M 17.6 16.5 v -4.7 c 0 -2.7 -1.8 -4.8 -4.3 -5.4 V 5.8 c 0 -0.7 -0.6 -1.3 -1.3 -1.3 s -1.3 0.6 -1.3 1.3 v 0.6 C 8.2 7 6.4 9.1 6.4 11.8 v 4.7 l -1.7 1.7 v 0.9 h 14.6 v -0.9 L 17.6 16.5 Z" fill="currentColor"></path></svg>', "Bildirimler", "", "", "settings-notifications", () => handleNotificationsClick(user)));
+    divListItemsInnerDiv.append(createButton('<svg viewBox="0 0 24 24" height="27" width="27" preserveAspectRatio="xMidYMid meet" fill="none" x="0px" y="0px"><path d="M 12 21.7 c 0.9 0 1.7 -0.8 1.7 -1.7 h -3.4 C 10.3 20.9 11.1 21.7 12 21.7 Z M 17.6 16.5 v -4.7 c 0 -2.7 -1.8 -4.8 -4.3 -5.4 V 5.8 c 0 -0.7 -0.6 -1.3 -1.3 -1.3 s -1.3 0.6 -1.3 1.3 v 0.6 C 8.2 7 6.4 9.1 6.4 11.8 v 4.7 l -1.7 1.7 v 0.9 h 14.6 v -0.9 L 17.6 16.5 Z" fill="currentColor"></path></svg>', "Bildirimler", "", "", "settings-notifications", () => handleChangePassword(user)));
+    divListItemsInnerDiv.append(createButton('<svg viewBox="0 0 24 24" height="24" width="24" preserveAspectRatio="xMidYMid meet" fill="none" x="0px" y="0px"><path d="M 16.6 8.1 l 1.2 -1.2 l 5.1 5.1 l -5.1 5.1 l -1.2 -1.2 l 3 -3 H 8.7 v -1.8 h 10.9 L 16.6 8.1 Z M 3.8 19.9 h 9.1 c 1 0 1.8 -0.8 1.8 -1.8 v -1.4 h -1.8 v 1.4 H 3.8 V 5.8 h 9.1 v 1.4 h 1.8 V 5.8 c 0 -1 -0.8 -1.8 -1.8 -1.8 H 3.8 C 2.8 4 2 4.8 2 5.8 v 12.4 C 2 19.1 2.8 19.9 3.8 19.9 Z" fill="currentColor"></path></svg>', "Çıkış yap", "", "", "exit", () => handleLogoutClick(user)));
 
     divListItems.append(divListItemsInnerDiv);
     divListBox.append(divListItems);
@@ -170,9 +148,6 @@ function createButton(iconHTML, titleText, subTitleText, imgSrc, dataIcon, click
 }
 
 
-
-const handleProfileClick = () => {
-}
 const handleAccountClick = () => {
 }
 
@@ -182,7 +157,7 @@ const handleSettingsBackBtnClick = () => {
 }
 
 
-const handlePrivacyClick = () => {
+const handlePrivacyClick = (user) => {
     const divSettings1 = document.querySelector(".settings-1-1");
     divSettings1.classList.add('privacy-background')
     divSettings1.replaceChildren();
@@ -229,13 +204,13 @@ const handlePrivacyClick = () => {
     divPrivacy2_1.append(divPrivacy2_1_1);
     divPrivacy2.append(divPrivacy2_1);
 
-    const divPrivacy2_1_2 = createElement('div', 'privacy-2-1-2', null, { tabIndex: '0', role: 'button' }, null, handleLastSeenAndOnlineClick);
+    const divPrivacy2_1_2 = createElement('div', 'privacy-2-1-2', null, { tabIndex: '0', role: 'button' }, null, () => handleLastSeenAndOnlineClick(user));
     const divPrivacy2_1_2_1 = createElement('div', 'privacy-2-1-2-1');
     const divPrivacy2_1_2_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_1_2_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Son görülme ve çevrimiçi');
     const divPrivacy2_1_2_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
-    const spanPrivacy2_1_2_1_1_2 = createElement('span', '', null, null, `${mapEnumToAriaLabel(chatInstance.user.privacySettings.lastSeenVisibility
-    )}, ${mapEnumToAriaLabel(chatInstance.user.privacySettings.onlineStatusVisibility
+    const spanPrivacy2_1_2_1_1_2 = createElement('span', '', null, null, `${mapEnumToAriaLabel(user.privacySettings.lastSeenVisibility
+    )}, ${mapEnumToAriaLabel(user.privacySettings.onlineStatusVisibility
     )}`);
     divPrivacy2_1_2_1_1_2.append(spanPrivacy2_1_2_1_1_2);
     divPrivacy2_1_2_1_1.append(divPrivacy2_1_2_1_1_1);
@@ -267,12 +242,12 @@ const handlePrivacyClick = () => {
     divPrivacy2_1.append(divPrivacy2_1_2);
     // Aynı işlemi diğer div'ler için de tekrar et
     // Profil fotoğrafı
-    const divPrivacy2_1_3 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, handleProfilePhotoClick);
+    const divPrivacy2_1_3 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, () => handleProfilePhotoClick(user));
     const divPrivacy2_1_3_1 = createElement('div', 'privacy-2-1-2-1');
     const divPrivacy2_1_3_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_1_3_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Profil fotoğrafı');
     const divPrivacy2_1_3_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
-    const spanPrivacy2_1_3_1_1_2 = createElement('span', '', null, null, mapEnumToAriaLabel(chatInstance.user.privacySettings.profilePhotoVisibility));
+    const spanPrivacy2_1_3_1_1_2 = createElement('span', '', null, null, mapEnumToAriaLabel(user.privacySettings.profilePhotoVisibility));
     divPrivacy2_1_3_1_1_2.append(spanPrivacy2_1_3_1_1_2);
     divPrivacy2_1_3_1_1.append(divPrivacy2_1_3_1_1_1);
     divPrivacy2_1_3_1_1.append(divPrivacy2_1_3_1_1_2);
@@ -283,12 +258,12 @@ const handlePrivacyClick = () => {
     divPrivacy2_1_3.append(divPrivacy2_1_3_1);
     divPrivacy2_1.append(divPrivacy2_1_3);
     divPrivacy2_1_3_1.append(divPrivacy2_1_3_1_2);
-    const divPrivacy2_1_4 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, handleAboutMeClick);
+    const divPrivacy2_1_4 = createElement('div', 'privacy-2-1-2', null, { tabindex: '0', role: 'button' }, null, () => handleAboutMeClick(user));
     const divPrivacy2_1_4_1 = createElement('div', 'privacy-2-1-2-1');
     const divPrivacy2_1_4_1_1 = createElement('div', 'privacy-2-1-2-1-1', null, { dir: 'auto' });
     const divPrivacy2_1_4_1_1_1 = createElement('div', 'privacy-2-1-2-1-1-1', null, null, 'Hakkımda');
     const divPrivacy2_1_4_1_1_2 = createElement('div', 'privacy-2-1-2-1-1-2');
-    const spanPrivacy2_1_4_1_1_2 = createElement('span', '', null, null, mapEnumToAriaLabel(chatInstance.user.privacySettings.aboutVisibility));
+    const spanPrivacy2_1_4_1_1_2 = createElement('span', '', null, null, mapEnumToAriaLabel(user.privacySettings.aboutVisibility));
     divPrivacy2_1_4_1_1_2.append(spanPrivacy2_1_4_1_1_2);
     divPrivacy2_1_4_1_1.append(divPrivacy2_1_4_1_1_1);
     divPrivacy2_1_4_1_1.append(divPrivacy2_1_4_1_1_2);
@@ -301,7 +276,7 @@ const handlePrivacyClick = () => {
 
 
     // Okundu bilgisi
-    if (chatInstance.user.privacySettings.readReceipts) {
+    if (user.privacySettings.readReceipts) {
         const divPrivacy2_1_6 = readReceiptsTrue();
         divPrivacy2_1.append(divPrivacy2_1_6);
     } else {
@@ -334,10 +309,13 @@ const handlePrivacyClick = () => {
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
         divSettings1.remove();
-        createSettingsHtml();
+        createSettingsHtml(chatInstance.user);
     });
 }
 const handleNotificationsClick = () => {
+}
+
+const handleChangePassword = (user) => {
 }
 function handleLogoutClick() {
     chatInstance.logout();
@@ -421,7 +399,7 @@ const readReceiptsFalse = () => {
     divPrivacy2_1_6_1.append(divPrivacy2_1_6_1_2);
     return divPrivacy2_1_6;
 }
-const handleLastSeenAndOnlineClick = () => {
+const handleLastSeenAndOnlineClick = (user) => {
     const divSettings1 = document.querySelector(".settings-1-1");
     divSettings1.replaceChildren();
     const header = createElement("header", "settings-1-1-1");
@@ -473,9 +451,9 @@ const handleLastSeenAndOnlineClick = () => {
 
 
 
-    const buttonEveryone = createRadioButton('Herkes', 'Herkes', 'lastSeenVisibility');
-    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim', 'lastSeenVisibility');
-    const buttonNobody = createRadioButton('Hiç kimse', 'Hiç kimse', 'lastSeenVisibility');
+    const buttonEveryone = createRadioButton('Herkes', 'Herkes', 'lastSeenVisibility', user);
+    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim', 'lastSeenVisibility', user);
+    const buttonNobody = createRadioButton('Hiç kimse', 'Hiç kimse', 'lastSeenVisibility', user);
     radioGroup.append(buttonEveryone);
     radioGroup.append(buttonMyContacts);
     radioGroup.append(buttonNobody);
@@ -522,11 +500,11 @@ const handleLastSeenAndOnlineClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        handlePrivacyClick();
+        handlePrivacyClick(chatInstance.user);
     });
 }
 
-const handleProfilePhotoClick = () => {
+const handleProfilePhotoClick = (user) => {
     const divSettings1 = document.querySelector(".settings-1-1");
     divSettings1.replaceChildren();
     const header = createElement("header", "settings-1-1-1");
@@ -576,9 +554,9 @@ const handleProfilePhotoClick = () => {
     const radioGroup = createElement('div', '', null, { role: 'radiogroup', 'aria-label': 'Profil Fotoğrafımı kimler görebilir' });
 
 
-    const buttonEveryone = createRadioButton('Herkes', 'Herkes', 'profilePhotoVisibility');
-    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim', 'profilePhotoVisibility');
-    const buttonNobody = createRadioButton('Hiç kimse', 'Hiç kimse', 'profilePhotoVisibility');
+    const buttonEveryone = createRadioButton('Herkes', 'Herkes', 'profilePhotoVisibility', user);
+    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim', 'profilePhotoVisibility', user);
+    const buttonNobody = createRadioButton('Hiç kimse', 'Hiç kimse', 'profilePhotoVisibility', user);
     radioGroup.append(buttonEveryone);
     radioGroup.append(buttonMyContacts);
     radioGroup.append(buttonNobody);
@@ -590,11 +568,11 @@ const handleProfilePhotoClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        handlePrivacyClick();
+        handlePrivacyClick(chatInstance.user);
     });
 }
 
-const handleAboutMeClick = () => {
+const handleAboutMeClick = (user) => {
     const divSettings1 = document.querySelector(".settings-1-1");
     divSettings1.replaceChildren();
     const header = createElement("header", "settings-1-1-1");
@@ -646,9 +624,9 @@ const handleAboutMeClick = () => {
 
 
 
-    const buttonEveryone = createRadioButton('Herkes', 'Herkes', 'aboutVisibility');
-    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim', 'aboutVisibility');
-    const buttonNobody = createRadioButton('Hiç kimse', 'Hiç kimse', 'aboutVisibility');
+    const buttonEveryone = createRadioButton('Herkes', 'Herkes', 'aboutVisibility', user);
+    const buttonMyContacts = createRadioButton('Kişilerim', 'Kişilerim', 'aboutVisibility', user);
+    const buttonNobody = createRadioButton('Hiç kimse', 'Hiç kimse', 'aboutVisibility', user);
     radioGroup.append(buttonEveryone);
     radioGroup.append(buttonMyContacts);
     radioGroup.append(buttonNobody);
@@ -660,7 +638,7 @@ const handleAboutMeClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        handlePrivacyClick();
+        handlePrivacyClick(chatInstance.user);
     });
 }
 
@@ -733,11 +711,11 @@ const handleBlockedContactsClick = () => {
 
     const backBtnElement = document.querySelector(".settings-back-btn-1");
     backBtnElement.addEventListener("click", () => {
-        handlePrivacyClick();
+        handlePrivacyClick(chatInstance.user);
     });
 }
 
-function createRadioButton(ariaLabel, textContent, optionName) {
+function createRadioButton(ariaLabel, textContent, optionName, user) {
     const button = createElement('button', 'lastseen-and-online-1-2', null, { tabIndex: '-1', role: 'button' });
     button.type = 'button';
 
@@ -746,7 +724,7 @@ function createRadioButton(ariaLabel, textContent, optionName) {
     const iconWrapper = createElement('div', 'lastseen-and-online-1-2-1-1');
     const iconSpan = createElement('span', 'lastseen-and-online-1-2-1-1-1');
 
-    const radioButton = createRadioIcon(ariaLabel, optionName);
+    const radioButton = createRadioIcon(ariaLabel, optionName, user);
     iconSpan.append(radioButton);
     iconWrapper.append(iconSpan);
 
@@ -758,16 +736,16 @@ function createRadioButton(ariaLabel, textContent, optionName) {
     innerDiv.append(textWrapper);
     button.append(innerDiv);
 
-    button.addEventListener('click', () => handleRadioButtonClick(radioButton, optionName));
+    button.addEventListener('click', () => handleRadioButtonClick(radioButton, optionName, user));
 
     return button;
 }
 
-function createRadioIcon(ariaLabel, optionName) {
-    let isSelected = chatInstance.user.privacySettings[optionName] === mapAriaLabelToEnum(ariaLabel);
+function createRadioIcon(ariaLabel, optionName, user) {
+    let isSelected = user.privacySettings[optionName] === mapAriaLabelToEnum(ariaLabel);
 
     if (optionName === 'onlineStatusVisibility' && ariaLabel !== 'Herkes') {
-        isSelected = chatInstance.user.privacySettings[optionName] !== VisibilityOption.EVERYONE;
+        isSelected = user.privacySettings[optionName] !== VisibilityOption.EVERYONE;
     }
 
     const radioButton = createElement('button', 'lastseen-and-online-1-2-1-1-1-1', null, {
@@ -775,7 +753,7 @@ function createRadioIcon(ariaLabel, optionName) {
         'aria-checked': isSelected ? 'true' : 'false',
         'aria-label': ariaLabel
     });
-
+    radioButton.data = ariaLabel;
     const spanHidden = createElement('span', '', null, {
         'aria-hidden': true,
         'data-icon': isSelected ? 'checkbox-round-radio-checked' : 'checkbox-round-passive'
@@ -822,11 +800,10 @@ const updateRadioButtonState = (radioButton, isChecked) => {
         : 'M10,0.25c-5.385,0-9.75,4.365-9.75,9.75s4.365,9.75,9.75,9.75s9.75-4.365,9.75-9.75S15.385,0.25,10,0.25z M10,17.963c-4.398,0-7.962-3.565-7.962-7.963S5.603,2.037,10,2.037S17.963,5.602,17.963,10 S14.398,17.963,10,17.963z');
 };
 
-const handleRadioButtonClick = async (radioButton, optionName) => {
-    const ariaLabel = radioButton.getAttribute('aria-label');
-    let visibilityOption = mapAriaLabelToEnum(ariaLabel);
+const handleRadioButtonClick = async (radioButton, optionName, user) => {
+    let visibilityOption = mapAriaLabelToEnum(radioButton.data);
     if (!visibilityOption) {
-        visibilityOption = chatInstance.user.privacySettings[PrivacySettings.LAST_SEEN_VISIBILITY];
+        visibilityOption = user.privacySettings[PrivacySettings.LAST_SEEN_VISIBILITY];
     }
 
     const radioGroup = radioButton.closest('div[role="radiogroup"]');
@@ -843,7 +820,7 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
     updateRadioButtonState(radioButton, true);
 
     let updatedPrivacySettingsDTO = {
-        ...chatInstance.user.privacySettings,
+        ...user.privacySettings,
         [optionName]: visibilityOption
     };
     if (optionName === PrivacySettings.LAST_SEEN_VISIBILITY) {
@@ -857,12 +834,12 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
         }
     }
 
-    const result = await fetchUpdatePrivacy(chatInstance.user.id, updatedPrivacySettingsDTO);
+    const result = await fetchUpdatePrivacy(user.id, updatedPrivacySettingsDTO);
     if (result) {
         if (document.querySelector('.message-box1')) {
-            ifVisibilitySettingsChangeWhileMessageBoxIsOpen(chatInstance.user, result);
+            ifVisibilitySettingsChangeWhileMessageBoxIsOpen(user, result);
         }
-        chatInstance.user = { ...chatInstance.user, ...result };
+        chatInstance.user = { user, ...result };
         chatInstance.webSocketManagerContacts.sendMessageToAppChannel('updated-privacy-send-message', result);
     }
 };

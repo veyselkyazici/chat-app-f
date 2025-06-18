@@ -564,7 +564,6 @@ function handleOptionsBtnClick(event) {
                 listItem.classList.remove('background-color');
             });
             listItem.addEventListener('click', async () => {
-                debugger;
                 const contactData = contactElement.contactData;
                 // const options = new ModalOptionsDTO({
                 //     contentText: `${contactData.userContactName} kişisini silmek istiyor musunuz?`,
@@ -591,7 +590,6 @@ function handleOptionsBtnClick(event) {
                 //     closeOnEscape: true,
                 // });
                 // showModal(options);
-                debugger;
                 new Modal({
                     contentText: `${contactData.contactsDTO.userContactName} kişisini silmek istiyor musunuz?`,
                     buttonText: 'Evet',
@@ -613,6 +611,8 @@ function handleOptionsBtnClick(event) {
                         }
                     },
                     headerHtml: null,
+                    cancelButton: true,
+                    cancelButtonId: 'deleteContact',
                     closeOnBackdropClick: true,
                     closeOnEscape: true,
                 })
@@ -623,7 +623,6 @@ function handleOptionsBtnClick(event) {
     }
 }
 function removeContact(contactElement, contactData) {
-    debugger
     const deletedContactTranslateY = parseInt(contactElement.style.transform.replace("translateY(", "").replace("px)", ""));
     removeEventListeners(contactElement);
     let removeIndex;
@@ -643,26 +642,39 @@ function removeContact(contactElement, contactData) {
 
     if (removeIndex !== -1) {
         chatInstance.contactList.splice(removeIndex, 1);
-    }
-    const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
-    const newHeight = chatInstance.contactList.length * 72;
-    contactListElement.style.height = `${newHeight}px`;
-    const { maxIndex, minIndex } = updateTranslateYAfterDelete(deletedContactTranslateY);
+        const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
+        const newHeight = chatInstance.contactList.length * 72;
+        contactListElement.style.height = `${newHeight}px`;
+        const { maxIndex, minIndex } = updateTranslateYAfterDelete(deletedContactTranslateY);
 
-    const contactElements = document.querySelectorAll('.contact1')
-    if (contactElements.length < chatInstance.contactList.length) {
+        const contactElements = document.querySelectorAll('.contact1')
+        if (contactElements.length < chatInstance.contactList.length) {
 
-        let newContactData = chatInstance.contactList[maxIndex];
+            let newContactData = chatInstance.contactList[maxIndex];
 
-        if (newContactData) {
-            updateContactElement(contactElement, newContactData, maxIndex);
+            if (newContactData) {
+                updateContactElement(contactElement, newContactData, maxIndex);
+            } else {
+                newContactData = chatInstance.contactList[minIndex - 1];
+                updateContactElement(contactElement, newContactData, minIndex - 1);
+            }
         } else {
-            newContactData = chatInstance.contactList[minIndex - 1];
-            updateContactElement(contactElement, newContactData, minIndex - 1);
+            contactElement.remove();
         }
-    } else {
-        contactElement.remove();
+        const findChat = chatInstance.chatList.find(chat => chat.contactsDTO.id === contactData.contactsDTO.id)
+        const chatElements = [...document.querySelectorAll('.chat1')];
+        const chatElement = chatElements.find(chat => chat.chatData.contactsDTO.id === contactData.contactsDTO.id);
+        if (findChat) {
+            findChat.contactsDTO.userHasAddedRelatedUser = false;
+            findChat.contactsDTO.userContactName = null;
+        }
+        if (chatElement) {
+            const nameSpan = chatElement.querySelector('.name-span');
+            nameSpan.textContent = findChat.userProfileResponseDTO.email;
+        }
+
     }
+
 }
 
 function updateTranslateYAfterDelete(deletedContactTranslateY) {
