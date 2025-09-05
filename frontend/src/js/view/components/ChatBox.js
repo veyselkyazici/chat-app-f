@@ -18,7 +18,11 @@ import {
   removeMessageBoxAndUnsubscribe,
   unBlockInput,
 } from "./MessageBox.js";
-import { decryptMessage } from "../utils/e2ee.js";
+import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
+import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
+import { ContactsDTO } from "../dtos/contact/response/ContactsDTO.js";
+import { UserProfileResponseDTO } from "../dtos/user/response/UserProfileResponseDTO.js";
+import { UserChatSettingsDTO } from "../dtos/chat/response/UserChatSettingsDTO.js";
 
 async function handleChats(chatList) {
   const paneSideElement = document.querySelector("#pane-side");
@@ -135,7 +139,7 @@ async function createChatBox(chat, index) {
   messageDiv.append(messageSpan);
   const bool = chat.chatDTO.messages[0].senderId === chatInstance.user.id;
   if (bool) {
-    if (chat.chatDTO.messages[0].seen) {
+    if (chat.chatDTO.messages[0].isSeen) {
       const messageSeenTick = chatBoxLastMessageDeliveredBlueTick();
       messageSpan.append(messageSeenTick);
     } else {
@@ -149,7 +153,7 @@ async function createChatBox(chat, index) {
     "message-span-span",
     { "min-height": "0px" },
     { dir: "ltr", "aria-label": "" },
-    chat.chatDTO.messages[0].encryptedMessage
+    chat.chatDTO.messages[0].decryptedMessage
   );
   messageSpan.append(innerMessageSpan);
 
@@ -224,22 +228,28 @@ function moveChatToTop(chatRoomId) {
           .replace("translateY(", "")
           .replace("px)", "")
       );
-      const { maxIndex, minIndex } = translateYChatsDown(targetChatElement);
-
-      // if (isChatListLengthGreaterThanVisibleItemCount()) {
-      //     let newChatData = chatInstance.chatList[maxIndex];
-      //     if (newChatData) {
-      //         updateChatBoxElement(chatElement, newChatData, maxIndex);
-      //         updateChatsTranslateY();
-      //     } else {
-      //         newChatData = chatInstance.chatList[minIndex - 1];
-      //         updateChatBoxElement(chatElement, newChatData, minIndex - 1);
-      //     }
-      // } else {
-      //     updateChatsTranslateY();
-      //     chatElement.style.transform = `translateY(${0}px)`;
-      //     // createChatBox(chat, 0);
+      // if (
+      //   chatElement.chatData.chatDTO.messages[0].senderId ===
+      //   chatInstance.user.id
+      // ) {
+      //   const messageTickElement = chatElement.chatData.chatDTO.messages[0]
+      //     .isSeen
+      //     ? chatBoxLastMessageDeliveredBlueTick()
+      //     : createMessageDeliveredTickElement();
+      //   const messageElement = chatElement.querySelector(".message-span");
+      //   if (messageElement.childElementCount > 1) {
+      //     messageElement.firstElementChild.remove();
+      //     messageElement.prepend(messageTickElement);
+      //   } else {
+      //     messageElement.prepend(messageTickElement);
+      //   }
       // }
+      updateUnreadMessageCountAndSeenTick(chatElement, chat);
+      chatElement.querySelector(".message-span-span").textContent =
+        chat.chatDTO.messages[0].decryptedMessage;
+      chatElement.querySelector(".time").textContent =
+        chatBoxLastMessageFormatDateTime(chat.chatDTO.messages[0].fullDateTime);
+      translateYChatsDown(targetChatElement);
     } else {
       if (isChatListLengthGreaterThanVisibleItemCount()) {
         // Chat liste visible item dan büyükse
@@ -287,7 +297,7 @@ function handleMouseover(event) {
     const chatOptionsButton = document.createElement("button");
     chatOptionsButton.className = "chat-options-btn";
     chatOptionsButton.setAttribute("aria-label", "Open chat context menu");
-    chatOptionsButton.setAttribute("aria-hidden", "true");
+    // chatOptionsButton.setAttribute("aria-hidden", "true");
     chatOptionsButton.tabIndex = 0;
     chatOptionsButton.chatData = chatElementDOM.chatData;
 
@@ -344,13 +354,13 @@ function handleOptionsBtnClick(event) {
       chatOptionsDiv.style.transform = "scale(1)";
       chatOptionsDiv.style.opacity = "1";
       closeOptionsDivOnClickOutside();
-      const archiveLabel = chatData.userChatSettings.archived
+      const archiveLabel = chatData.userChatSettings.isArchived
         ? "Arşivden çıkar"
         : "Sohbeti arşivle";
-      const blockLabel = chatData.userChatSettings.blocked
+      const blockLabel = chatData.userChatSettings.isBlocked
         ? "Unblock"
         : "Block";
-      const pinLabel = chatData.userChatSettings.pinned
+      const pinLabel = chatData.userChatSettings.isPinned
         ? "Sohbeti sabitlemeyi kaldır"
         : "Sohbeti sabitle";
       if (!chatData.contactsDTO.userHasAddedRelatedUser) {
@@ -466,14 +476,14 @@ const updateChatInstance = (chatId, blockedStatus) => {
     (chat) => chat.chatDTO.id === chatId
   );
   if (chatIndex !== -1) {
-    chatInstance.chatList[chatIndex].userChatSettings.blocked = blockedStatus;
+    chatInstance.chatList[chatIndex].userChatSettings.isBlocked = blockedStatus;
   }
 };
 const toggleBlockUser = async (chatData) => {
-  const isBlocked = chatData.userChatSettings.blocked;
+  const isBlocked = chatData.userChatSettings.isBlocked;
   const blockMessage = isBlocked
-    ? `${chatData.userProfileResponseDTO.email} unblock`
-    : `${chatData.userProfileResponseDTO.email} block`;
+    ? `Do you want to unblock ${chatData.userProfileResponseDTO.email}?`
+    : `Do you want to block ${chatData.userProfileResponseDTO.email}?`;
 
   const mainCallback = async () => {
     try {
@@ -492,28 +502,16 @@ const toggleBlockUser = async (chatData) => {
             messageBoxElement.querySelector(".message-box1");
           messageBoxFooter.innerHTML = "";
           let typingStatus = { isTyping: false, previousText: "" };
-          const chatDTO = {
-            contactsDTO: {
-              contact: { ...chatData.contactsDTO },
-              userProfileResponseDTO: { ...chatData.userProfileResponseDTO },
-            },
-            user: chatInstance.user,
-            userChatSettings: chatData.userChatSettings,
-            id: chatData.chatDTO.id,
-          };
-          unBlockInput(chatDTO, messageBoxMain, messageBoxFooter, typingStatus);
+          unBlockInput(
+            chatData,
+            messageBoxMain,
+            messageBoxFooter,
+            typingStatus
+          );
           if (statusSpan) {
             statusSpan.remove();
           }
-          const chat = {
-            user: { ...chatInstance.user },
-            contactsDTO: {
-              contact: { ...chatData.contactsDTO },
-              userProfileResponseDTO: { ...chatData.userProfileResponseDTO },
-            },
-            userChatSettings: { ...chatData.userChatSettings },
-          };
-          await onlineInfo(chat, messageBoxOnlineStatus);
+          await onlineInfo(chatData, messageBoxOnlineStatus);
         }
       } else {
         result = await chatService.chatBlock(chatData);
@@ -527,7 +525,9 @@ const toggleBlockUser = async (chatData) => {
             messageBoxElement.querySelector(".message-box1");
           messageBoxFooter.innerHTML = "";
           blockInput(
-            chatData.contactsDTO.userContactName,
+            chatData.contactsDTO.userContactName
+              ? chatData.contactsDTO.userContactName
+              : chatData.userProfileResponseDTO.email,
             messageBoxMain,
             messageBoxFooter
           );
@@ -542,8 +542,30 @@ const toggleBlockUser = async (chatData) => {
           );
         }
       }
-      toastr.success(result.message);
-      return true;
+      if (result.status === 200) {
+        const parentSpan = document.querySelector(".block-text-div-div-span");
+        if (parentSpan) {
+          parentSpan.childNodes.forEach((node) => {
+            if (node.nodeType === 3) {
+              node.textContent = " " + (!isBlocked ? "unblock" : "block");
+            }
+          });
+        }
+
+        toastr.success(
+          isBlocked
+            ? `${chatData.userProfileResponseDTO.email} has been unblocked.`
+            : `${chatData.userProfileResponseDTO.email} has been blocked.`
+        );
+        return true;
+      } else {
+        toastr.error(
+          isBlocked
+            ? `Failed to unblock ${chatData.userProfileResponseDTO.email}.`
+            : `Failed to block ${chatData.userProfileResponseDTO.email}.`
+        );
+        return false;
+      }
     } catch (error) {
       console.error("Hata:", error);
       return false;
@@ -570,7 +592,7 @@ const deleteChat = async (chat, showChatOptions, chatElement) => {
   const mainCallback = async () => {
     try {
       const response = await chatService.deleteChat(chat.userChatSettings);
-      if (response.data) {
+      if (response && response.status === 200) {
         if (chatElement) {
           removeChat(chatElement);
         } else {
@@ -581,8 +603,10 @@ const deleteChat = async (chat, showChatOptions, chatElement) => {
             chatInstance.chatList.splice(removeIndex, 1);
           }
         }
+        toastr.success("Chat deleted successfully.");
         return true;
       } else {
+        toastr.error("Failed to delete chat. Please try again.");
         return false;
       }
     } catch (error) {
@@ -660,7 +684,6 @@ function updateTranslateYAfterDelete(deletedChatTranslateY) {
       minTranslateY = currentTranslateY;
     }
   });
-  const chatElements1 = document.querySelectorAll(".chat1");
   return {
     maxIndex: maxTranslateY / 72,
     minIndex: minTranslateY / 72,
@@ -688,7 +711,6 @@ function translateYChatsDown(targetChatElementTranslateY) {
       minTranslateY = currentTranslateY;
     }
   });
-  const chatElements1 = document.querySelectorAll(".chat1");
   return {
     maxIndex: maxTranslateY / 72,
     minIndex: minTranslateY / 72,
@@ -730,23 +752,27 @@ function updateChatBoxElement(chatElement, newChatData, newIndex) {
   const timeDiv = chatElement.querySelector(".time");
   updateUnreadMessageCountAndSeenTick(chatElement, newChatData);
   chatElement.chatData = newChatData;
+
   nameSpan.textContent = newChatData.contactsDTO.userContactName
     ? newChatData.contactsDTO.userContactName
     : newChatData.userProfileResponseDTO.email;
+
   chatElement.dataset.user = newChatData.contactsDTO.userContactName
     ? newChatData.contactsDTO.userContactName
     : newChatData.userProfileResponseDTO.email;
+
   timeDiv.textContent = chatBoxLastMessageFormatDateTime(
     newChatData.chatDTO.messages[0].fullDateTime
   );
-  messageSpan.textContent = newChatData.chatDTO.messages[0].encryptedMessage;
+
+  messageSpan.textContent = newChatData.chatDTO.messages[0].decryptedMessage;
   chatElement.style.transform = `translateY(${newIndex * 72}px)`;
   chatElement.style.zIndex = chatInstance.chatList.length - newIndex;
 }
 function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
   const tickElement = chatElement.querySelector(".message-delivered-tick-div");
-  const isSender = chatData.chatDTO.senderId === chatInstance.user.id;
-  const isSeen = chatData.chatDTO.seen;
+  const isSender = chatData.chatDTO.messages[0].senderId === chatInstance.user.id;
+  const isSeen = chatData.chatDTO.messages[0].isSeen;
   if (chatData.userChatSettings.unreadMessageCount !== 0) {
     const unreadMessageCountElement = chatElement.querySelector(
       ".unread-message-count-div"
@@ -792,7 +818,7 @@ function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
 }
 const togglePinnedChat = async (chatData, showChatOptions) => {
   showChatOptions.removeChild(showChatOptions.firstElementChild);
-  const isPinned = chatData.userChatSettings.pinned;
+  const isPinned = chatData.userChatSettings.isPinned;
 
   try {
     if (isPinned) {
@@ -801,7 +827,7 @@ const togglePinnedChat = async (chatData, showChatOptions) => {
         (chat) => chat.chatDTO.id === chatData.chatDTO.id
       );
       if (chatIndex !== -1) {
-        chatInstance.chatList[chatIndex].userChatSettings.blocked = false;
+        chatInstance.chatList[chatIndex].userChatSettings.isBlocked = false;
       }
     } else {
       await chatService.chatBlock(chatData);
@@ -809,7 +835,7 @@ const togglePinnedChat = async (chatData, showChatOptions) => {
         (chat) => chat.chatDTO.id === chatData.chatDTO.id
       );
       if (chatIndex !== -1) {
-        chatInstance.chatList[chatIndex].userChatSettings.blocked = true;
+        chatInstance.chatList[chatIndex].userChatSettings.isBlocked = true;
       }
     }
     return true;
@@ -835,7 +861,6 @@ async function handleChatClick(event) {
   const chatData = chatElement.chatData;
   const innerDiv = chatElement.querySelector(".chat-box > div");
 
-  // Eğer zaten seçiliyse işlem yapma
   if (innerDiv.getAttribute("aria-selected") === "true") {
     return;
   }
@@ -866,6 +891,8 @@ async function markMessagesAsReadAndFetchMessages(chatElement) {
     userChatSettingsId: chatElement.chatData.userChatSettings.id,
     chatRoomId: chatElement.chatData.chatDTO.id,
     senderId: chatElement.chatData.userProfileResponseDTO.id,
+    unreadMessageCount:
+      chatElement.chatData.userChatSettings.unreadMessageCount,
   };
 
   chatInstance.webSocketManagerChat.sendMessageToAppChannel(
@@ -879,22 +906,21 @@ const removeUnreadMessageCountElement = (chatElement) => {
   );
   unreadMessageCountDiv.remove();
 };
-async function fetchMessages(chatData) {
-  const chatRoomLast30Messages = await chatService.getLast30Messages(
-    chatData.chatDTO.id
+async function fetchMessages(chatSummaryData) {
+  const chatRoomLast30Messages = new ChatDTO(
+    await chatService.getLast30Messages(chatSummaryData.chatDTO.id)
   );
-
-  const newChatData = {
-    ...chatData,
-    chatDTO: {
-      ...chatData.chatDTO,
-      messages: chatRoomLast30Messages.messages,
-      isLastPage: chatRoomLast30Messages.isLastPage,
-    },
-  };
+  const newChatSummaryData = new ChatSummaryDTO({
+    chatDTO: chatRoomLast30Messages,
+    contactsDTO: new ContactsDTO(chatSummaryData.contactsDTO),
+    userProfileResponseDTO: new UserProfileResponseDTO(
+      chatSummaryData.userProfileResponseDTO
+    ),
+    userChatSettings: new UserChatSettingsDTO(chatSummaryData.userChatSettings),
+  });
 
   await removeMessageBoxAndUnsubscribe();
-  await createMessageBox(newChatData);
+  await createMessageBox(newChatSummaryData);
 }
 
 function removeEventListeners(chatElementDOM) {
@@ -914,9 +940,7 @@ async function createChatBoxWithFirstMessage(recipientJSON) {
     recipientJSON.senderId,
     recipientJSON.chatRoomId
   );
-  result.chatDTO.messages[0].encryptedMessage = await decryptMessage(
-    result.chatDTO.messages[0]
-  );
+  result.chatDTO.messages[0].decryptedMessage = recipientJSON.decryptedMessage;
   chatInstance.chatList.unshift(result);
   const chatListContentElement = document.querySelector(".chat-list-content");
   chatListContentElement.style.height =
@@ -1068,7 +1092,6 @@ export {
   isChatExists,
   isChatListLengthGreaterThanVisibleItemCount,
   lastMessageChange,
-  moveChatToTop,
   toggleBlockUser,
   updateChatBox,
   updateChatInstance,

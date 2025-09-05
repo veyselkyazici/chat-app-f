@@ -2,25 +2,27 @@ import { createElement, createDefaultImage } from "../utils/util.js";
 import { viewPhoto } from "./UpdateUserProfile.js";
 import { toggleBlockUser } from "./ChatBox.js";
 
+let closeProfileFn = null;
 function createContactInformation(contact, chatData) {
+  if (document.querySelector(".profile-span-div")) {
+    return;
+  }
   const style = document.createElement("style");
   style.textContent = `
+
       @media screen and (min-width: 1024px) and (max-width: 1300px) {
         .profile {
-          position: absolute;
           right: 0;
           width: 60%;
           max-width: 60%;
           height: 100%;
         }
       }
-
-      @media screen and (min-width: 1300px) {
+        @media screen and (min-width: 1300px) {
     .profile {
         flex: 0 0 30%;
         max-width: 30%;
-    }
-}
+} }
     `;
   document.head.append(style);
 
@@ -99,14 +101,14 @@ function createContactInformation(contact, chatData) {
     "div",
     "profile-span-div-span-div-header-div-div2",
     null,
-    { title: "Kişi bilgisi" }
+    { title: "Profile information" }
   );
   const profileSpanDivSpanDivHeaderDivDiv2H1 = createElement(
     "h1",
     "profile-span-div-span-div-header-div-div2-h1",
     null,
     null,
-    "Kişi bilgisi"
+    "Profile information"
   );
   profileSpanDivSpanDivHeaderDivDiv2.append(
     profileSpanDivSpanDivHeaderDivDiv2H1
@@ -220,7 +222,7 @@ function createContactInformation(contact, chatData) {
     "profile-section-about-div-div-div-span",
     null,
     null,
-    "Hakkımda"
+    "About"
   );
 
   const profileSectionDivAboutSpan = createElement(
@@ -295,7 +297,7 @@ function createContactInformation(contact, chatData) {
   );
 
   blockTextDiv2.append(blockTextSpan);
-  blockTextDivDivSpan.append(blockTextDiv2, " kblock");
+  blockTextDivDivSpan.append(blockTextDiv2, " block");
   blockTextDivDiv.append(blockTextDivDivSpan);
   blockTextDiv.append(blockTextDivDiv);
 
@@ -377,15 +379,29 @@ function createContactInformation(contact, chatData) {
     }
     profileSpanDiv.remove();
   });
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && profileCloseDivButton) {
-      if (style && style.parentNode) {
-        style.parentNode.removeChild(style);
-      }
-      profileSpanDiv.remove();
-    }
-  });
+  function closeProfile() {
+    if (style && style.parentNode) style.parentNode.removeChild(style);
+    if (profileSpanDiv && profileSpanDiv.parentNode)
+      profileSpanDiv.parentNode.removeChild(profileSpanDiv);
+  }
+  closeProfileFn = closeProfile;
+  function keydownHandler(event) {
+    if (event.key === "Escape") closeProfile();
+  }
+  document.addEventListener("keydown", keydownHandler);
+  // document.addEventListener("keydown", function (event) {
+  //   if (event.key === "Escape" && profileCloseDivButton) {
+  //     if (style && style.parentNode) {
+  //       style.parentNode.removeChild(style);
+  //     }
+  //     profileSpanDiv.remove();
+  //   }
+  // });
   blockButton.addEventListener("click", () => toggleBlockUser(chatData));
 }
 
-export { createContactInformation };
+function closeProfileFunc() {
+  if (closeProfileFn) closeProfileFn();
+}
+
+export { createContactInformation, closeProfileFunc };

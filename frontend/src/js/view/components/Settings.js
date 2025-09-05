@@ -512,7 +512,7 @@ const handlePrivacyClick = () => {
     "privacy-2-1-2-1-1-1",
     null,
     null,
-    "Hakkımda"
+    "About"
   );
   const divPrivacy2_1_4_1_1_2 = createElement("div", "privacy-2-1-2-1-1-2");
   const spanPrivacy2_1_4_1_1_2 = createElement(
@@ -1050,14 +1050,14 @@ const handleAboutMeClick = () => {
   divBackBtn.append(divBackBtn1);
 
   const divTitle = createElement("div", "privacy123", null, {
-    title: "Hakkımda",
+    title: "About",
   });
   const h1Title = createElement(
     "h1",
     "privacy12",
     null,
     { "aria-label": "Profil fotoğrafı" },
-    "Hakkımda"
+    "About"
   );
   divTitle.append(h1Title);
   divSettingsHeader.append(divBackBtn);
@@ -1074,14 +1074,14 @@ const handleAboutMeClick = () => {
     "lastseen-and-online-1-1",
     null,
     null,
-    "Hakkımda bilgimi kimler görebilir"
+    "Who can see my About"
   );
 
   lastSeenAndOnline1.append(lastSeenAndOnline11);
 
   const radioGroup = createElement("div", "", null, {
     role: "radiogroup",
-    "aria-label": "Hakkımda bilgimi kimler görebilir",
+    "aria-label": "Who can see my About",
   });
 
   const buttonEveryone = createRadioButton(

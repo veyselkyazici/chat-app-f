@@ -621,7 +621,7 @@ async function handleContactClick(event) {
     }
   } else if (!contactData.invitationResponseDTO.invited) {
     const options = new ModalOptionsDTO({
-      contentText: `${contactData.userContactName} kişisini davet etmek istiyor musunuz?`,
+      contentText: `Do you want to invite ${contactData.userContactName}?`,
       buttonText: "Davet et",
       showBorders: false,
       mainCallback: async () => {
@@ -634,8 +634,8 @@ async function handleContactClick(event) {
     new Modal(options);
     // showModal(options);
   } else {
-    const dto = new ModalOptionsDTO({
-      contentText: `${contactData.userContactName} kişisi zaten davet edilmiş.`,
+    const options = new ModalOptionsDTO({
+      contentText: `${contactData.userContactName} has already been invited.`,
       buttonText: "Davet et",
       mainCallback: () => {
         return true;
@@ -682,7 +682,7 @@ function handleMouseover(event) {
     const chatOptionsButton = document.createElement("button");
     chatOptionsButton.className = "chat-options-btn";
     chatOptionsButton.setAttribute("aria-label", "Open chat context menu");
-    chatOptionsButton.setAttribute("aria-hidden", "true");
+    // chatOptionsButton.setAttribute("aria-hidden", "true");
     chatOptionsButton.tabIndex = 0;
     chatOptionsButton.style.width = "20px";
     chatOptionsButton.style.opacity = "1";

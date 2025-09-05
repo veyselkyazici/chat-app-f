@@ -7,10 +7,7 @@ export const chatService = {
         `${CHAT_SERVICE_URL}/delete-chat`,
         userChatSettings
       );
-      if (response.status === 200) {
-        return true;
-      }
-      return false;
+      return response;
     } catch (error) {
       console.error("Error:", error.message);
       throw error;
@@ -53,7 +50,7 @@ export const chatService = {
         `${CHAT_SERVICE_URL}/chat-block`,
         chatSummaryDTO
       );
-      return response.data.data;
+      return response;
     } catch (error) {
       console.error("Error:", error.message);
       throw error;
@@ -94,7 +91,7 @@ export const chatService = {
         `${CHAT_SERVICE_URL}/chat-unblock`,
         chatSummaryDTO
       );
-      return response.data.data;
+      return response;
     } catch (error) {
       console.error("Error:", error.message);
       throw error;
@@ -149,7 +146,7 @@ export const chatService = {
       return response.data;
     } catch (error) {
       console.error("Error:", error.message);
-      return false;
+      throw error;
     }
   },
 };

@@ -92,7 +92,7 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
           ? listItem.contactsDTO.userContactName
           : listItem.userProfileResponseDTO.email;
         timeSpan.textContent = time;
-        messageSpan.textContent = listItem.chatDTO.messages[0].encryptedMessage;
+        messageSpan.textContent = listItem.chatDTO.messages[0].decryptedMessage;
         item.dataset.user = nameSpan.textContent = listItem.contactsDTO
           .userContactName
           ? listItem.contactsDTO.userContactName

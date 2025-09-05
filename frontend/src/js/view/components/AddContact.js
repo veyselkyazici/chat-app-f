@@ -93,7 +93,7 @@ const addContact = async (emailDOM, nameDOM) => {
     return;
   }
   const response = await contactService.addContact(addContactRequestDTO);
-  if (response.status === 200) {
+  if (response && response.status === 200) {
     const modal = document.querySelector(".content > span");
     modal.firstElementChild.remove();
   }

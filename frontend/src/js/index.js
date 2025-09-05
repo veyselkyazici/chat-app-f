@@ -5,8 +5,11 @@ import Register from "./view/pages/Register.js";
 import Login from "./view/pages/Login.js";
 import ForgotPassord from "./view/pages/ForgotPassword.js";
 import Chat from "./view/pages/Chat.js";
+import VerificationSuccess from "./view/pages/VerificationSuccess.js";
+import VerificationFailed from "./view/pages/VerificationFailed.js";
 import { ChatLayout } from "./view/layouts/ChatLayout.js";
 import { DefaultLayout } from "./view/layouts/DefaultLayout.js";
+import Verify from "./view/pages/Verify.js";
 
 const routes = [
   { path: "/", view: Home, layout: DefaultLayout },
@@ -14,6 +17,19 @@ const routes = [
   { path: "/login", view: Login, layout: DefaultLayout },
   { path: "/forgot-password", view: ForgotPassord, layout: DefaultLayout },
   { path: "/chat", view: Chat, layout: ChatLayout, authRequired: true },
+
+  {
+    path: "/verification-success",
+    view: VerificationSuccess,
+    layout: DefaultLayout,
+  },
+  {
+    path: "/verification-failed",
+    view: VerificationFailed,
+    layout: DefaultLayout,
+  },
+
+  { path: "/verify", view: Verify, layout: DefaultLayout },
 ];
 
 const pathToRegex = (path) => new RegExp(`^${path.replace(/\//g, "\\/")}$`);

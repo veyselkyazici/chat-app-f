@@ -43,8 +43,7 @@ export const authService = {
       const response = axiosInstance.post(`${AUTH_SERVICE_URL}/logout`);
       return response;
     } catch (error) {
-      console.error("Authentication check failed:", error);
-      return false;
+      throw error;
     }
   },
 
