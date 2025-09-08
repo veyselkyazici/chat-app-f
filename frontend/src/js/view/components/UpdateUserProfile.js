@@ -67,7 +67,7 @@ async function userUpdateModal(user, bool) {
       visibility: "visible",
     });
     imgElement.id = "profilePhoto";
-    imgElement.setAttribute("alt", "Profil Fotoğrafı");
+    imgElement.setAttribute("alt", "Profile photo");
     imgElement.setAttribute("src", user.imagee);
     profilePhotoUrlElement.append(imgElement);
     profilePhotoButtonDivDiv.append(profilePhotoUrlElement);
@@ -175,7 +175,7 @@ function goHome() {
   return true;
 }
 
-function toggleEditName(user) {
+async function toggleEditName(user) {
   const nameInput = document.getElementById("nameInput");
   const editButton = document.getElementById("editButtonName");
   if (nameInput.readOnly) {
@@ -193,7 +193,9 @@ function toggleEditName(user) {
           toastr.error(error.message);
         });
       } else {
-        userService.updateUserName(updateUserDTO);
+        debugger;
+        const response = await userService.updateUserName(updateUserDTO);
+        chatInstance.user.firstName = response.data.value;
       }
     } else {
       toastr.error("Name cannot be empty");
@@ -201,7 +203,7 @@ function toggleEditName(user) {
   }
 }
 
-function toggleEditAbout() {
+async function toggleEditAbout() {
   const aboutInput = document.getElementById("aboutInput");
   const editButton = document.getElementById("editButtonAbout");
   if (aboutInput.readOnly) {
@@ -219,7 +221,8 @@ function toggleEditAbout() {
           toastr.error(error.message);
         });
       } else {
-        userService.updateUserAbout(updateUserDTO);
+        const response = await userService.updateUserAbout(updateUserDTO);
+        chatInstance.user.about = response.data.value;
       }
     } else {
       toastr.error("About cannot be empty");
@@ -816,7 +819,7 @@ async function cropImage(canvas1, userId, originalFile) {
           visibility: "visible",
         });
         imgElement.id = "profilePhoto";
-        imgElement.setAttribute("alt", "Profil Fotoğrafı");
+        imgElement.setAttribute("alt", "Profile photo");
         imgElement.setAttribute("src", response.data.url);
         profilePhotoUrlElement.append(imgElement);
         profilePhotoButtonDivDiv.append(profilePhotoUrlElement);

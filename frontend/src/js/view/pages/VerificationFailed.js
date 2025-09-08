@@ -1,8 +1,8 @@
 import AbstractView from "../AbstractView.js";
 import { mailService } from "../services/mailService.js";
-import { isValidEmail } from "../utils/util.js";
 import { navigateTo } from "../../index.js";
-
+import { ResendConfirmationRequestDTO } from "../dtos/mail/request/ResendConfirmationRequestDTO.js";
+import { showError } from "../utils/util.js";
 export default class extends AbstractView {
   constructor(params) {
     super(params);
@@ -17,9 +17,10 @@ export default class extends AbstractView {
 
         <p style="margin-bottom: 20px;">The verification link is invalid or expired.</p>
 
-        <div style="margin-bottom: 20px;">
-          <input type="email" id="emailInput" placeholder="Enter your email" 
-            style="width: 100%; padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc;" />
+        <div class="input-icon">
+          <i class="fa-solid fa-envelope"></i>
+          <div class="error-message"></div>
+          <input id="confirmationEmail" name="email" placeholder="E-posta" >
         </div>
 
         <button id="resendVerification" 
@@ -28,7 +29,7 @@ export default class extends AbstractView {
         </button>
 
         <div style="margin-top: 15px;">
-          <a href="/" data-link style="color: #007bff; text-decoration: none;">← Back to Home</a>
+          <a href="/" data-link style="color: black; text-decoration: none;">← Back to Home</a>
         </div>
       </div>
     `;
@@ -37,7 +38,7 @@ export default class extends AbstractView {
   async init() {
     const failed = sessionStorage.getItem("verificationFailed");
     if (!failed) {
-      return navigateTo("/"); // Eğer direkt sayfaya girilmişse anasayfaya yönlendir
+      return navigateTo("/");
     }
     sessionStorage.removeItem("verificationFailed");
 
@@ -51,11 +52,19 @@ export default class extends AbstractView {
   }
 
   async handleResendVerification() {
-    const emailInput = document.getElementById("emailInput");
+    const emailInput = document.getElementById("confirmationEmail");
     const email = emailInput ? emailInput.value.trim() : "";
+    if (!email) {
+      return;
+    }
 
-    if (!email || !isValidEmail(email)) {
-      alert("Please enter a valid email address.");
+    const resendConfirmationDTO = new ResendConfirmationRequestDTO(email);
+    const validationErrors = resendConfirmationDTO.validate();
+
+    if (validationErrors.length > 0) {
+      validationErrors.forEach((error) => {
+        showError(emailInput, error.message);
+      });
       return;
     }
 
@@ -65,14 +74,16 @@ export default class extends AbstractView {
     button.disabled = true;
 
     try {
-      const response = await mailService.resendConfirmationMail(email);
+      const response = await mailService.resendConfirmationMail(resendConfirmationDTO);
       if (response && response.status === 200) {
-        alert("Verification email has been resent. Please check your inbox.");
+        toastr.success(
+          "Verification email has been resent. Please check your inbox."
+        );
       } else {
-        alert("Failed to resend verification email. Please try again.");
+        toastr.failed("Failed to resend verification email. Please try again.");
       }
     } catch (error) {
-      alert("An error occurred. Please try again.");
+      toastr.failed("An error occurred. Please try again.");
     } finally {
       button.textContent = originalText;
       button.disabled = false;

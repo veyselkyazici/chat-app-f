@@ -7,13 +7,20 @@ export default class extends AbstractView {
     this.setTitle("Verifying Account...");
   }
 
-  async getHtml() {
-    return `
-      <div style="text-align:center; padding:50px;">
-        <h2>Verifying your account, please wait...</h2>
-      </div>
-    `;
-  }
+async getHtml() {
+  return `
+    <div style="text-align:center; padding:50px;">
+      <h2 style="
+        font-size: 28px; 
+        font-weight: bold; 
+        color: #ffffff; 
+        text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
+      ">
+        Verifying your account, please wait...
+      </h2>
+    </div>
+  `;
+}
 
   async init() {
     const urlParams = new URLSearchParams(window.location.search);

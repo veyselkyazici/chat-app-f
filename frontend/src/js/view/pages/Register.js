@@ -4,7 +4,8 @@ import {
   clearErrorMessages,
   showError,
   toggleVisibilityPassword,
-  getRecaptchaToken
+  getRecaptchaToken,
+  ruleCheck
 } from "../utils/util.js";
 import { navigateTo } from "../../index.js";
 import { authService } from "../services/authService.js";
@@ -79,7 +80,7 @@ export default class extends AbstractView {
   }
 
   async init() {
-    await this.addEventListeners();
+    requestAnimationFrame(() => this.addEventListeners());
   }
 
   async addEventListeners() {
@@ -89,7 +90,7 @@ export default class extends AbstractView {
 
     pwdInput.addEventListener("input", ({ target: { value } }) => {
       const rulesList = document.getElementById("pwdRules");
-      this.ruleCheck(rulesList, value);
+      ruleCheck(rulesList, value);
     });
     pwdInput.addEventListener("focus", () => {
       if (!regexRuleDiv.hasChildNodes()) {
@@ -104,7 +105,7 @@ export default class extends AbstractView {
     `;
       }
       const rulesList = document.getElementById("pwdRules");
-      this.ruleCheck(rulesList, pwdInput.value);
+      ruleCheck(rulesList, pwdInput.value);
     });
     pwdInput.addEventListener("blur", () => {
       regexRuleDiv.innerHTML = "";
@@ -199,20 +200,5 @@ export default class extends AbstractView {
     } catch (error) {
       console.error("An error occurred:", error.message);
     }
-  }
-
-  ruleCheck(rulesList, value) {
-    const checks = {
-      length: (v) => v.length >= 8 && v.length <= 32,
-      upper: (v) => /[A-Z]/.test(v),
-      lower: (v) => /[a-z]/.test(v),
-      digit: (v) => /\d/.test(v),
-      special: (v) => /[@#$%^&+=.?!\-_]/.test(v),
-    };
-    Object.entries(checks).forEach(([rule, test]) => {
-      rulesList
-        .querySelector(`[data-rule="${rule}"]`)
-        .classList.toggle("ok", test(value));
-    });
   }
 }

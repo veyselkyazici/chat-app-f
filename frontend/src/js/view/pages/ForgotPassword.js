@@ -4,6 +4,8 @@ import {
   clearErrorMessages,
   showError,
   getRecaptchaToken,
+  ruleCheck,
+  toggleVisibilityPassword
 } from "../utils/util.js";
 import { authService } from "../services/authService.js";
 import { ResetPasswordRequestDTO } from "../dtos/auth/request/ResetPasswordRequestDTO.js";
@@ -16,6 +18,7 @@ import {
   generateKeyPair,
   base64Encode,
 } from "../utils/e2ee.js";
+
 export default class extends AbstractView {
   constructor(params) {
     super(params);
@@ -104,13 +107,34 @@ export default class extends AbstractView {
                 </div>
                 <div class="input-icon">
                     <i class="fa-solid fa-lock"></i>
-                    <input type="password" id="resetPasswordFormPassword" name="newPassword" placeholder="New Password">
                     <div class="error-message"></div>
+                    <input type="password" id="resetPasswordFormPassword" name="newPassword" placeholder="New Password">
+                    
+                      <button
+    type="button"
+    class="toggle-visibility"
+    aria-label="Show password"
+    tabindex="-1"
+    data-target="resetPasswordFormPassword"
+  >
+    <i class="fa-solid fa-eye"></i>
+  </button>
                 </div>
+                <div class="regex-rule"></div>
                 <div class="input-icon">
                     <i class="fa-solid fa-lock"></i>
-                    <input type="password" id="resetPasswordFormConfirmPassword" name="confirmPassword" placeholder="Confirm Password">
                     <div class="error-message"></div>
+                    <input type="password" id="resetPasswordFormConfirmPassword" name="confirmPassword" placeholder="Confirm Password">
+                    
+                              <button
+    type="button" tabindex="-1"
+    class="toggle-visibility"
+    aria-label="Show password"
+    tabindex="-1"
+    data-target="resetPasswordFormConfirmPassword"
+  >
+    <i class="fa-solid fa-eye"></i>
+  </button>
                 </div>
                 <button class="button" type="submit">Change Password</button>
             </form>
@@ -126,6 +150,9 @@ export default class extends AbstractView {
     const container = document.getElementById("forgotPasswordContainer");
     if (container) {
       container.innerHTML = this.renderCurrentStep();
+      if (this.currentStep === 3) {
+        this.addPasswordStepListeners();
+      }
     }
   }
 
@@ -141,6 +168,42 @@ export default class extends AbstractView {
         event.preventDefault();
         await this.resetPassword();
       }
+    });
+  }
+
+  addPasswordStepListeners() {
+    const pwdInput = document.getElementById("resetPasswordFormPassword");
+    const regexRuleDiv = document.querySelector(".regex-rule");
+    pwdInput.addEventListener("input", ({ target: { value } }) => {
+      const rulesList = document.getElementById("pwdRules");
+      ruleCheck(rulesList, value);
+    });
+    pwdInput.addEventListener("focus", () => {
+      if (!regexRuleDiv.hasChildNodes()) {
+        regexRuleDiv.innerHTML = `
+      <ul id="pwdRules" class="rules">
+        <li data-rule="length">8‑32 karakter</li>
+        <li data-rule="upper">En az 1 büyük harf (A‑Z)</li>
+        <li data-rule="lower">En az 1 küçük harf (a‑z)</li>
+        <li data-rule="digit">En az 1 rakam (0‑9)</li>
+        <li data-rule="special">En az 1 özel karakter (@ # $ …)</li>
+      </ul>
+    `;
+      }
+      const rulesList = document.getElementById("pwdRules");
+      ruleCheck(rulesList, pwdInput.value);
+    });
+    pwdInput.addEventListener("blur", () => {
+      regexRuleDiv.innerHTML = "";
+    });
+    document.querySelectorAll(".toggle-visibility").forEach((btn) => {
+      debugger;
+      const icon = btn.querySelector("i");
+      const input = document.getElementById(btn.dataset.target);
+      btn.addEventListener("mousedown", (e) => e.preventDefault());
+      btn.addEventListener("click", () =>
+        toggleVisibilityPassword(btn, icon, input)
+      );
     });
   }
 
@@ -205,7 +268,11 @@ export default class extends AbstractView {
     }
     const recaptchaToken = await getRecaptchaToken("checkOtp");
     try {
-      const { data } = await authService.checkOTP(this.email, otp,recaptchaToken);
+      const { data } = await authService.checkOTP(
+        this.email,
+        otp,
+        recaptchaToken
+      );
       if (data.success) {
         this.resetToken = data.resetToken;
         this.currentStep = 3;

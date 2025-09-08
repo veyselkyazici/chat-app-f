@@ -3,6 +3,22 @@ function showError(inputElement, errorMessage) {
     inputElement.parentElement.querySelector(".error-message");
   errorElement.textContent = errorMessage;
 }
+
+function ruleCheck(rulesList, value) {
+  const checks = {
+    length: (v) => v.length >= 8 && v.length <= 32,
+    upper: (v) => /[A-Z]/.test(v),
+    lower: (v) => /[a-z]/.test(v),
+    digit: (v) => /\d/.test(v),
+    special: (v) => /[@#$%^&+=.?!\-_]/.test(v),
+  };
+  Object.entries(checks).forEach(([rule, test]) => {
+    rulesList
+      .querySelector(`[data-rule="${rule}"]`)
+      .classList.toggle("ok", test(value));
+  });
+}
+
 function clearErrorMessages() {
   const errorElements = document.querySelectorAll(".error-message");
   errorElements.forEach((element) => {
@@ -251,6 +267,7 @@ function handleBackBtnClick(removeElement) {
   removeElement.remove();
 }
 const toggleVisibilityPassword = (btn, icon, input) => {
+  debugger;
   const start = input.selectionStart;
   const end = input.selectionEnd;
   const hidden = input.type === "password";
@@ -293,5 +310,6 @@ export {
   handleBackBtnClick,
   isValidEmail,
   toggleVisibilityPassword,
-  getRecaptchaToken
+  getRecaptchaToken,
+  ruleCheck,
 };

@@ -354,14 +354,14 @@ const handlePrivacyClick = () => {
   divBackBtn.append(divBackBtn1);
 
   const divTitle = createElement("div", "privacy123", null, {
-    title: "Gizlilik",
+    title: "Privacy",
   });
   const h1Title = createElement(
     "h1",
     "privacy12",
     null,
-    { "aria-label": "Gizlilik" },
-    "Gizlilik"
+    { "aria-label": "Privacy" },
+    "Privacy"
   );
   divTitle.append(h1Title);
   divSettingsHeader.append(divBackBtn);
@@ -379,7 +379,7 @@ const handlePrivacyClick = () => {
     "privacy-2-1-1-1-1-1",
     null,
     { "aria-label": "" },
-    "Kişisel bilgilerimi kimler görebilir"
+    "Who can see my personal information"
   );
   divPrivacy2_1_1_1_1.append(spanPrivacy2_1_1_1_1_1);
   divPrivacy2_1_1_1.append(divPrivacy2_1_1_1_1);
@@ -404,7 +404,7 @@ const handlePrivacyClick = () => {
     "privacy-2-1-2-1-1-1",
     null,
     null,
-    "Son görülme ve çevrimiçi"
+    "Last seen and online"
   );
   const divPrivacy2_1_2_1_1_2 = createElement("div", "privacy-2-1-2-1-1-2");
   const spanPrivacy2_1_2_1_1_2 = createElement(
@@ -475,7 +475,7 @@ const handlePrivacyClick = () => {
     "privacy-2-1-2-1-1-1",
     null,
     null,
-    "Profil fotoğrafı"
+    "Profile photo"
   );
   const divPrivacy2_1_3_1_1_2 = createElement("div", "privacy-2-1-2-1-1-2");
   const spanPrivacy2_1_3_1_1_2 = createElement(
@@ -563,7 +563,7 @@ const handlePrivacyClick = () => {
     "Blocked Users"
   );
   const divPrivacy2_2_2_1_1_2 = createElement("div", "privacy-2-1-2-1-1-2");
-  const spanPrivacy2_2_2_1_1_2 = createElement("span", "", null, null, "Yok");
+  const spanPrivacy2_2_2_1_1_2 = createElement("span", "", null, null, "No");
   divPrivacy2_2_2_1_1_2.append(spanPrivacy2_2_2_1_1_2);
   divPrivacy2_2_2_1_1.append(divPrivacy2_2_2_1_1_1);
   divPrivacy2_2_2_1_1.append(divPrivacy2_2_2_1_1_2);
@@ -646,7 +646,7 @@ const readReceiptsTrue = () => {
     "privacy-2-1-2-1-1-1",
     null,
     null,
-    "Okundu bilgisi"
+    "Read receipt"
   );
   const divPrivacy2_1_6_1_1_2 = createElement("div", "privacy-2-1-2-1-1-2");
   const spanPrivacy2_1_6_1_1_2 = createElement(
@@ -654,7 +654,7 @@ const readReceiptsTrue = () => {
     "",
     null,
     null,
-    "Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir."
+    "If you disable this feature, you won’t be able to send or receive read receipts. For group chats, read receipts are always sent."
   );
   divPrivacy2_1_6_1_1_2.append(spanPrivacy2_1_6_1_1_2);
   divPrivacy2_1_6_1_1.append(divPrivacy2_1_6_1_1_1);
@@ -665,7 +665,7 @@ const readReceiptsTrue = () => {
   const divCheckboxWrapper = createElement("div", "privacy-2-1-6-1-2-1");
   const checkbox = createElement("input", "privacy-2-1-6-1-2-1-1", null, {
     "aria-label":
-      "Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir.",
+      "If you disable this feature, you won’t be able to send or receive read receipts. For group chats, read receipts are always sent.",
     tabindex: "0",
     type: "checkbox",
     checked: "",
@@ -711,7 +711,7 @@ const readReceiptsFalse = () => {
     "privacy-2-1-2-1-1-1",
     null,
     null,
-    "Okundu bilgisi"
+    "Read receipt"
   );
   const divPrivacy2_1_6_1_1_2 = createElement("div", "privacy-2-1-2-1-1-2");
   const spanPrivacy2_1_6_1_1_2 = createElement(
@@ -719,7 +719,7 @@ const readReceiptsFalse = () => {
     "",
     null,
     null,
-    "Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir."
+    "If you disable this feature, you won’t be able to send or receive read receipts. For group chats, read receipts are always sent."
   );
   divPrivacy2_1_6_1_1_2.append(spanPrivacy2_1_6_1_1_2);
   divPrivacy2_1_6_1_1.append(divPrivacy2_1_6_1_1_1);
@@ -731,7 +731,7 @@ const readReceiptsFalse = () => {
   const divCheckboxWrapper = createElement("div", "privacy-2-1-6-1-2-1");
   const checkbox = createElement("input", "privacy-2-1-6-1-2-1-1", null, {
     "aria-label":
-      "Bu özelliği devre dışı bırakırsanız Okundu bilgisi gönderemez ve alamazsınız. Grup sohbetleri için okundu bilgisi her zaman gönderilir.",
+      "If you disable this feature, you won’t be able to send or receive read receipts. For group chats, read receipts are always sent.",
     tabindex: "0",
     type: "checkbox",
     checked: "",
@@ -794,14 +794,14 @@ const handleLastSeenAndOnlineClick = () => {
   divBackBtn.append(divBackBtn1);
 
   const divTitle = createElement("div", "privacy123", null, {
-    title: "Son görülme ve çevrimiçi",
+    title: "Last seen and online",
   });
   const h1Title = createElement(
     "h1",
     "privacy12",
     null,
-    { "aria-label": "Son görülme ve çevrimiçi" },
-    "Son görülme ve çevrimiçi"
+    { "aria-label": "Last seen and online" },
+    "Last seen and online"
   );
   divTitle.append(h1Title);
   divSettingsHeader.append(divBackBtn);
@@ -818,14 +818,14 @@ const handleLastSeenAndOnlineClick = () => {
     "lastseen-and-online-1-1",
     null,
     null,
-    "Son görülme bilgimi kimler görebilir"
+    "Who can see my last seen"
   );
 
   lastSeenAndOnline1.append(lastSeenAndOnline11);
 
   const radioGroup = createElement("div", "", null, {
     role: "radiogroup",
-    "aria-label": "Son görülme bilgimi kimler görebilir",
+    "aria-label": "Who can see my last seen",
   });
 
   const buttonEveryone = createRadioButton(
@@ -872,8 +872,8 @@ const handleLastSeenAndOnlineClick = () => {
     "onlineStatusVisibility"
   );
   const buttonSameLastSeen = createRadioButton(
-    "Son görülme bilgisiyle aynı",
-    "Son görülme bilgisiyle aynı",
+    "Same as last seen",
+    "Same as last seen",
     "onlineStatusVisibility"
   );
 
@@ -884,14 +884,14 @@ const handleLastSeenAndOnlineClick = () => {
 
   const lastSeenAndOnline1_3 = createElement("div", "lastseen-and-online-1-3");
 
-  const strongLastSeen = createElement("strong", "", null, null, "Son görülme");
+  const strongLastSeen = createElement("strong", "", null, null, "Last seen");
 
-  const textAnd = document.createTextNode(" ve ");
+  const textAnd = document.createTextNode(" and ");
 
-  const strongOnline = createElement("strong", "", null, null, "çevrimiçi");
+  const strongOnline = createElement("strong", "", null, null, "online");
 
   const text = document.createTextNode(
-    " bilginizi paylaşmazsanız diğer kullanıcıların son görülme ve çevrimiçi bilgisini de göremezsiniz."
+    " if you don’t share your information, you won’t be able to see other users’ last seen and online status either."
   );
 
   lastSeenAndOnline1_3.append(strongLastSeen);
@@ -948,14 +948,14 @@ const handleProfilePhotoClick = () => {
   divBackBtn.append(divBackBtn1);
 
   const divTitle = createElement("div", "privacy123", null, {
-    title: "Profil fotoğrafı",
+    title: "Profile photo",
   });
   const h1Title = createElement(
     "h1",
     "privacy12",
     null,
-    { "aria-label": "Profil fotoğrafı" },
-    "Profil fotoğrafı"
+    { "aria-label": "Profile photo" },
+    "Profile photo"
   );
   divTitle.append(h1Title);
   divSettingsHeader.append(divBackBtn);
@@ -972,14 +972,14 @@ const handleProfilePhotoClick = () => {
     "lastseen-and-online-1-1",
     null,
     null,
-    "Profil Fotoğrafımı kimler görebilir"
+    "Who can see my profile photo"
   );
 
   lastSeenAndOnline1.append(lastSeenAndOnline11);
 
   const radioGroup = createElement("div", "", null, {
     role: "radiogroup",
-    "aria-label": "Profil Fotoğrafımı kimler görebilir",
+    "aria-label": "Who can see my profile photo",
   });
 
   const buttonEveryone = createRadioButton(
@@ -1056,7 +1056,7 @@ const handleAboutMeClick = () => {
     "h1",
     "privacy12",
     null,
-    { "aria-label": "Profil fotoğrafı" },
+    { "aria-label": "Profile photo" },
     "About"
   );
   divTitle.append(h1Title);
@@ -1154,7 +1154,7 @@ const handleGroupsClick = () => {
     "h1",
     "privacy12",
     null,
-    { "aria-label": "Profil fotoğrafı" },
+    { "aria-label": "Profile photo" },
     "Gruplar"
   );
   divTitle.append(h1Title);

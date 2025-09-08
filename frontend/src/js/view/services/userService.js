@@ -17,6 +17,7 @@ export const userService = {
   },
 
   updateUserName: async (updateUserDTO) => {
+    debugger;
     try {
       const response = await axiosInstance.put(
         `${USER_SERVICE_URL}/update-user-name`,

@@ -3,11 +3,12 @@ import axiosInstance from "./axiosConfig.js";
 const MAIL_SERVICE_URL = "/mail";
 
 export const mailService = {
-  resendConfirmationMail: async (email) => {
+  resendConfirmationMail: async (resendConfirmationDTO) => {
+    debugger;
     try {
       const response = await axiosInstance.post(
-        `${MAIL_SERVICE_URL}/create-confirmation`,
-        { email: email, id: null }
+        `${MAIL_SERVICE_URL}/resend-confirmation`,
+        resendConfirmationDTO
       );
       return response;
     } catch (error) {
