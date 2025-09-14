@@ -1,6 +1,7 @@
 import axiosInstance from "./axiosConfig.js";
-const CONTACTS_SERVICE_URL = "/contacts";
-const INVITATION_SERVICE_URL = "/invitation";
+
+const CONTACTS_SERVICE_URL = import.meta.env.VITE_CONTACTS_SERVICE_URL;
+const INVITATION_SERVICE_URL = import.meta.env.VITE_INVITATION_SERVICE_URL;
 
 export const contactService = {
   async deleteContactOrInvitation(id, type) {
@@ -11,29 +12,20 @@ export const contactService = {
           : `${INVITATION_SERVICE_URL}/${id}`;
 
       const response = await axiosInstance.delete(url);
-      return response.data;
+      return response;
     } catch (error) {
       console.error("Error deleting contact/invitation:", error);
       throw error;
     }
   },
 
-  async sendInvitation(data) {
-    const requestBody = {
-      invitationId: data.invitationId,
-      inviteeEmail: data.email,
-      contactName: data.userContactName,
-      inviterUserId: data.inviterUserId,
-      isInvited: data.invited,
-      inviterEmail: null,
-    };
-
+  async sendInvitation(sendInvitationDTO) {
     try {
-      await axiosInstance.post(
+      const response = await axiosInstance.post(
         `${INVITATION_SERVICE_URL}/send-invitation`,
-        requestBody
+        sendInvitationDTO
       );
-      return true;
+      return response;
     } catch (error) {
       console.error("Error sending invitation:", error);
       throw error;
@@ -59,8 +51,13 @@ export const contactService = {
         `${CONTACTS_SERVICE_URL}/add-contact`,
         dto
       );
-
-      toastr.success("User added successfully!");
+      if(response.status === 200 && response.data.success) {
+        toastr.success(response.data.message);
+      } else {
+        response.data.errors.forEach(element => {
+          toastr.error(element.message);
+        });
+      }
       return response;
     } catch (error) {
       toastr.error(

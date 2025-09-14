@@ -163,7 +163,6 @@ async function createChatBox(chat, index) {
   const optionSpan1 = createElement("span", "");
   const optionSpan2 = createElement("span", "");
   const optionSpan3 = createElement("span", "");
-
   if (chat.userChatSettings.unreadMessageCount !== 0) {
     optionSpan1.append(createUnreadMessageCount(chat));
   }
@@ -228,23 +227,22 @@ function moveChatToTop(chatRoomId) {
           .replace("translateY(", "")
           .replace("px)", "")
       );
-      // if (
-      //   chatElement.chatData.chatDTO.messages[0].senderId ===
-      //   chatInstance.user.id
-      // ) {
-      //   const messageTickElement = chatElement.chatData.chatDTO.messages[0]
-      //     .isSeen
-      //     ? chatBoxLastMessageDeliveredBlueTick()
-      //     : createMessageDeliveredTickElement();
-      //   const messageElement = chatElement.querySelector(".message-span");
-      //   if (messageElement.childElementCount > 1) {
-      //     messageElement.firstElementChild.remove();
-      //     messageElement.prepend(messageTickElement);
-      //   } else {
-      //     messageElement.prepend(messageTickElement);
-      //   }
-      // }
-      updateUnreadMessageCountAndSeenTick(chatElement, chat);
+      if (
+        chatElement.chatData.chatDTO.messages[0].senderId ===
+        chatInstance.user.id
+      ) {
+        const messageTickElement = chatElement.chatData.chatDTO.messages[0]
+          .isSeen
+          ? chatBoxLastMessageDeliveredBlueTick()
+          : createMessageDeliveredTickElement();
+        const messageElement = chatElement.querySelector(".message-span");
+        if (messageElement.childElementCount > 1) {
+          messageElement.firstElementChild.remove();
+          messageElement.prepend(messageTickElement);
+        } else {
+          messageElement.prepend(messageTickElement);
+        }
+      }
       chatElement.querySelector(".message-span-span").textContent =
         chat.chatDTO.messages[0].decryptedMessage;
       chatElement.querySelector(".time").textContent =
@@ -252,26 +250,32 @@ function moveChatToTop(chatRoomId) {
       translateYChatsDown(targetChatElement);
     } else {
       if (isChatListLengthGreaterThanVisibleItemCount()) {
-        // Chat liste visible item dan büyükse
         const maxTranslateYChatElement = findMaxTranslateYChatElement();
         updateChatBoxElement(maxTranslateYChatElement, chat, 0);
       } else {
         const chatListContentElement =
           document.querySelector(".chat-list-content");
 
-        // mevcut yüksekliği al
         const currentHeight = parseInt(
           chatListContentElement.style.height || 0,
           10
         );
 
-        // 72 ekle
         chatListContentElement.style.height = currentHeight + 72 + "px";
         createChatBox(chat, 0);
-        // Chat liste visible item dan küçük eşit ise
       }
     }
   }
+}
+function normalizeTranslateY() {
+  const chatElements = document.querySelectorAll(".chat1");
+  chatElements.forEach((chat, index) => {
+    chat.style.transform = `translateY(${index * 72}px)`;
+  });
+  const paneSideElement = document.querySelector("#pane-side");
+
+  // En yukarıya ışınlan
+  paneSideElement.scrollTop = 0;
 }
 const isChatListLengthGreaterThanVisibleItemCount = () => {
   const visibleItemCount = calculateVisibleItemCount();
@@ -376,7 +380,11 @@ function handleOptionsBtnClick(event) {
           null,
           { role: "button", "aria-label": "Add contact" },
           "Add contact",
-          () => addContactModal(chatData.userProfileResponseDTO.email)
+          () =>
+            addContactModal(
+              chatInstance.user,
+              chatData.userProfileResponseDTO.email
+            )
         );
         addContact.append(addContactLiDivElement);
         divElement.append(addContact);
@@ -394,9 +402,6 @@ function handleOptionsBtnClick(event) {
         userChatSettings: { ...chatData.userChatSettings },
       });
 
-      // const archiveLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
-      // const archiveLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${archiveLabel}` }, archiveLabel);
-
       const blockLiElement = createElement(
         "li",
         "list-item1",
@@ -411,20 +416,6 @@ function handleOptionsBtnClick(event) {
         blockLabel,
         () => toggleBlockUser(chatData)
       );
-
-      // const pinLiElement = createElement(
-      //   "li",
-      //   "list-item1",
-      //   { opacity: "1" },
-      //   { "data-animate-dropdown-item": "true" }
-      // );
-      // const pinLiDivElement = createElement(
-      //   "div",
-      //   "list-item1-div",
-      //   null,
-      //   { role: "button", "aria-label": `${pinLabel}` },
-      //   pinLabel
-      // );
 
       const deleteLiElement = createElement(
         "li",
@@ -441,28 +432,10 @@ function handleOptionsBtnClick(event) {
         () => deleteChat(chatData, showChatOptions, chatElement)
       );
 
-      // const markUnreadLiElement = createElement(
-      //   "li",
-      //   "list-item1",
-      //   { opacity: "1" },
-      //   { "data-animate-dropdown-item": "true" }
-      // );
-      // const markUnreadLiDivElement = createElement(
-      //   "div",
-      //   "list-item1-div",
-      //   null,
-      //   { role: "button", "aria-label": `${markUnreadLabel}` },
-      //   markUnreadLabel
-      // );
-
       blockLiElement.append(blockLiDivElement);
-      // pinLiElement.append(pinLiDivElement);
       deleteLiElement.append(deleteLiDivElement);
-      // markUnreadLiElement.append(markUnreadLiDivElement);
       divElement.append(blockLiElement);
-      // divElement.append(pinLiElement);
       divElement.append(deleteLiElement);
-      // divElement.append(markUnreadLiElement);
       ulElement.append(divElement);
 
       chatOptionsDiv.append(ulElement);
@@ -711,6 +684,8 @@ function translateYChatsDown(targetChatElementTranslateY) {
       minTranslateY = currentTranslateY;
     }
   });
+  const paneSideElement = document.querySelector("#pane-side");
+  paneSideElement.scrollTop = 0;
   return {
     maxIndex: maxTranslateY / 72,
     minIndex: minTranslateY / 72,
@@ -771,14 +746,15 @@ function updateChatBoxElement(chatElement, newChatData, newIndex) {
 }
 function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
   const tickElement = chatElement.querySelector(".message-delivered-tick-div");
-  const isSender = chatData.chatDTO.messages[0].senderId === chatInstance.user.id;
+  const isSender =
+    chatData.chatDTO.messages[0].senderId === chatInstance.user.id;
   const isSeen = chatData.chatDTO.messages[0].isSeen;
   if (chatData.userChatSettings.unreadMessageCount !== 0) {
     const unreadMessageCountElement = chatElement.querySelector(
       ".unread-message-count-div"
     );
     if (unreadMessageCountElement) {
-      unreadMessageCountElement.textContent =
+      unreadMessageCountElement.firstElementChild.textContent =
         chatData.userChatSettings.unreadMessageCount;
     } else {
       const chatOptionsFirstSpan =
@@ -1072,12 +1048,23 @@ const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
     chatElementDOM.chatData.userProfileResponseDTO.id;
 };
 
-const ariaSelectedRemove = (selectedChat) => {
-  const previouslySelectedInnerDiv =
-    selectedChat.querySelector(".chat-box > div");
-  selectedChat.querySelector(".chat").classList.remove("selected-chat");
-  previouslySelectedInnerDiv.setAttribute("aria-selected", "false");
-  chatInstance.selectedChatUserId = null;
+const ariaSelectedRemove = (selectedChat, newSelectedId) => {
+  const visibleChatElements = Array.from(document.querySelectorAll(".chat1"));
+  const previouslySelectedInnerDiv = visibleChatElements.find(
+    (chat) => chat.chatData.userProfileResponseDTO.id === selectedChat
+  );
+  if (previouslySelectedInnerDiv) {
+    const selectedValueElement =
+      previouslySelectedInnerDiv.querySelector(".chat-box > div");
+    selectedValueElement.ariaSelected = false;
+    const selectedValueClassElement =
+      selectedValueElement.querySelector(".chat.cursor");
+    selectedValueClassElement.classList.remove("selected-chat");
+  }
+
+  // selectedChat.querySelector(".chat").classList.remove("selected-chat");
+  // previouslySelectedInnerDiv.setAttribute("aria-selected", "false");
+  chatInstance.selectedChatUserId = newSelectedId ? newSelectedId : null;
 };
 
 export {
@@ -1097,4 +1084,5 @@ export {
   updateChatInstance,
   updateChatsTranslateY,
   updateUnreadMessageCountAndSeenTick,
+  handleChatClick,
 };

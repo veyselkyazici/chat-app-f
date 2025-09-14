@@ -40,7 +40,7 @@ import {
 } from "../utils/e2ee.js";
 import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
 import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
-import { FeignClientUserProfileResponseDTO } from "../dtos/contact/response/FeignClientUserProfileResponseDTO.js";
+import { ContactResponseDTO } from "../dtos/contact/response/ContactResponseDTO.js";
 import { authService } from "../services/authService.js";
 
 export let webSocketManagerContacts;
@@ -74,14 +74,17 @@ export default class Chat extends AbstractView {
       this.updateLoadingProgress("Sohbetler yükleniyor...");
 
       this.addEventListeners();
-
+      // await this.delay(5000);
       await this.initialData();
       this.chatSearchInit();
       this.hideLoadingScreen();
     } catch (error) {
-      console.log(error);
+      console.error(error);
       this.updateLoadingProgress("An error occurred, please try again.");
     }
+  }
+  async delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
   async initialData() {
     const storageId = sessionStorage.getItem("id");
@@ -148,7 +151,7 @@ export default class Chat extends AbstractView {
   }
   async getContactList() {
     this.contactList = (await contactService.getContactList(this.user.id)).map(
-      (item) => new FeignClientUserProfileResponseDTO(item)
+      (item) => new ContactResponseDTO(item)
     );
   }
   async getChatList() {
@@ -164,18 +167,17 @@ export default class Chat extends AbstractView {
         return new ChatSummaryDTO(item);
       })
     );
-    console.log(this.chatList);
     await handleChats(this.chatList);
   }
   initializeWebSockets() {
     this.webSocketManagerContacts = new WebSocketManager(
-      "http://localhost:8080/ws/contacts",
+      import.meta.env.VITE_BASE_URL_WEBSOCKET_CONTACTS,
       this.user.id,
       sessionStorage.getItem("access_token")
     );
 
     this.webSocketManagerChat = new WebSocketManager(
-      "http://localhost:8080/ws/chat",
+      import.meta.env.VITE_BASE_URL_WEBSOCKET_CHAT,
       this.user.id,
       sessionStorage.getItem("access_token")
     );
@@ -245,10 +247,49 @@ export default class Chat extends AbstractView {
     const updatePrivacy = `/user/${this.user.id}/queue/updated-privacy-response`;
     const updatedProfilePhoto = `/user/${this.user.id}/queue/updated-profile-photo-message`;
     const disconnect = `/user/${this.user.id}/queue/disconnect`;
+    const invitedUserJoined = `/user/${this.user.id}/queue/invited-user-joined`;
+
+    this.webSocketManagerContacts.subscribeToChannel(
+      invitedUserJoined,
+      async (invitedUserJoinedMessage) => {
+        const invitedUserJoinedResponseDTO = new ContactResponseDTO(
+          JSON.parse(invitedUserJoinedMessage.body)
+        );
+        this.contactList = this.contactList.filter((contact) => {
+          if (contact.contactsDTO) {
+            return true;
+          } else {
+            return contact.invitationResponseDTO?.inviteeEmail !==
+            invitedUserJoinedResponseDTO.userProfileResponseDTO.email
+              ? true
+              : false;
+          }
+        });
+
+        let inserted = false;
+
+        const newName =
+          invitedUserJoinedResponseDTO.contactsDTO.userContactName;
+
+        for (let i = 0; i < this.contactList.length; i++) {
+          const current = this.contactList[i];
+          const currentName = current.contactsDTO?.userContactName;
+          if (currentName && newName.localeCompare(currentName) < 0) {
+            this.contactList.splice(i, 0, invitedUserJoinedResponseDTO);
+            inserted = true;
+            break;
+          }
+        }
+        if (!inserted) {
+          this.contactList.push(invitedUserJoinedResponseDTO);
+        }
+      }
+    );
 
     this.webSocketManagerContacts.subscribeToChannel(disconnect, async () => {
       await this.logout();
     });
+
     this.webSocketManagerContacts.subscribeToChannel(
       `/user/${this.userId}/queue/error`,
       (message) => {
@@ -545,9 +586,9 @@ export default class Chat extends AbstractView {
       (message) => {
         try {
           const errorPayload = JSON.parse(message.body);
-          console.error("❌ WebSocket Error:", errorPayload);
+          console.error("WebSocket Error:", errorPayload);
         } catch (e) {
-          console.error("❌ WebSocket Error (raw):", message.body);
+          console.error("WebSocket Error (raw):", message.body);
         }
       }
     );
@@ -628,8 +669,9 @@ export default class Chat extends AbstractView {
         );
         findChat.chatDTO.messages[0].isSeen = true;
         if (findChatElement) {
-          const chatBoxElementDeliveredTick =
-            findChatElement.querySelector(".message-span").firstElementChild;
+          const chatBoxElementDeliveredTick = findChatElement.querySelector(
+            ".message-delivered-tick-div"
+          ).firstElementChild;
           chatBoxElementDeliveredTick.className = "message-seen-tick-span";
           chatBoxElementDeliveredTick.ariaLabel = " Okundu ";
         }
@@ -675,6 +717,7 @@ export default class Chat extends AbstractView {
             const unreadMessageCountSpan = chatElement.querySelector(
               ".unread-message-count-span"
             );
+
             if (unreadMessageCountSpan) {
               unreadMessageCountSpan.textContent =
                 recipientJSON.unreadMessageCount;
@@ -752,7 +795,7 @@ export default class Chat extends AbstractView {
               if (chat.chatData.chatDTO.messages[0].senderId === this.user.id) {
                 messageSpan.removeChild(messageSpan.firstElementChild);
               }
-              messageSpanSpan.textContent = "yaziyor...";
+              messageSpanSpan.textContent = "typing...";
             } else {
               if (chat.chatData.chatDTO.messages[0].senderId === this.user.id) {
                 const messageDeliveredTickElement =
@@ -795,7 +838,7 @@ export default class Chat extends AbstractView {
 
     if (addFriendButtonElement) {
       addFriendButtonElement.addEventListener("click", () => {
-        addContactModal();
+        addContactModal(chatInstance.user);
       });
     }
 

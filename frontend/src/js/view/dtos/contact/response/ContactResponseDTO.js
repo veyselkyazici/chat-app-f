@@ -2,7 +2,7 @@ import { UserProfileResponseDTO } from '../../user/response/UserProfileResponseD
 import { ContactsDTO } from './ContactsDTO.js'
 import { InvitationResponseDTO } from './InvitationResponseDTO.js'
 
-export class FeignClientUserProfileResponseDTO {
+export class ContactResponseDTO {
     constructor(data) {
         this.contactsDTO = data.contactsDTO ? new ContactsDTO(data.contactsDTO) : null;
         this.userProfileResponseDTO = data.userProfileResponseDTO ? new UserProfileResponseDTO(data.userProfileResponseDTO) : null;

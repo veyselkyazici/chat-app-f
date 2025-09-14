@@ -3,7 +3,7 @@ import {
   createMessageBox,
   removeMessageBoxAndUnsubscribe,
 } from "./MessageBox.js";
-import { ariaSelected, ariaSelectedRemove } from "./ChatBox.js";
+import { ariaSelected, ariaSelectedRemove, handleChatClick } from "./ChatBox.js";
 import { chatInstance } from "../pages/Chat.js";
 import { Modal } from "../utils/showModal.js";
 import { virtualScroll, UpdateItemsDTO } from "../utils/virtualScroll.js";
@@ -23,6 +23,7 @@ import { ContactsDTO } from "../dtos/contact/response/ContactsDTO.js";
 import { UserProfileResponseDTO } from "../dtos/user/response/UserProfileResponseDTO.js";
 import { UserChatSettingsDTO } from "../dtos/chat/response/UserChatSettingsDTO.js";
 import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
+import { SendInvitationDTO } from "../dtos/contact/request/SendInvitationDTO.js";
 
 async function createContactOrInvitation(user, index) {
   const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
@@ -253,8 +254,7 @@ const createInvitationsHTML = (user) => {
   chatOptions.append(span1);
   chatOptions.append(span2);
   chatOptions.append(span3);
-
-  if (user.invitationResponseDTO && !user.invitationResponseDTO.invited) {
+  if (user.invitationResponseDTO && !user.invitationResponseDTO.isInvited) {
     const nameSpan = createElement(
       "span",
       "name-span",
@@ -270,7 +270,7 @@ const createInvitationsHTML = (user) => {
     const invitationBtnContainer = createElement("div", "invitation-btn");
     chatNameAndTime.append(invitationBtnContainer);
     const invitationButton = createElement("button", "invitation-button");
-    if (!user.invitationResponseDTO.invited) {
+    if (!user.invitationResponseDTO.isInvited) {
       invitationButton.removeAttribute("disabled");
     } else {
       invitationButton.setAttribute("disabled", "disabled");
@@ -282,7 +282,7 @@ const createInvitationsHTML = (user) => {
       "invitation-button-1-1",
       { flexGrow: "1" },
       {},
-      "Davet et"
+      "Invite"
     );
     buttonDiv1.append(buttonDiv2);
     invitationButton.append(buttonDiv1);
@@ -555,7 +555,10 @@ async function handleContactClick(event) {
             chatInstance.selectedChatUserId,
             innerDiv
           )
-        : ariaSelectedRemove(chatInstance.selectedChatUserId);
+        : ariaSelectedRemove(
+            chatInstance.selectedChatUserId,
+            contactData.userProfileResponseDTO.id
+          );
     }
     let findChat = findChatRoom(
       chatInstance.user.id,
@@ -589,11 +592,20 @@ async function handleContactClick(event) {
           createChatRoomAndUserChatSettings.userChatSettings
         ),
       });
+      await createMessageBox(chatSummaryDTO);
     } else {
+      // scrollToChat(findChat.userProfileResponseDTO.id);
       const messagesResponse = await chatService.getLast30Messages(
         findChat.chatDTO.id
       );
-
+      // setTimeout(async () => {
+      //   const chatElements = Array.from(document.querySelectorAll('.chat1'));
+      //   const findChatElement = chatElements.find(chat => chat.chatData.userProfileResponseDTO.id === findChat.userProfileResponseDTO.id);
+      //   if (findChatElement) {
+      //     const fakeEvent = { currentTarget: findChatElement };
+      //     await handleChatClick(fakeEvent);
+      //   }
+      // }, 1000);
       chatSummaryDTO = new ChatSummaryDTO({
         chatDTO: new ChatDTO({
           id: findChat.chatDTO.id,
@@ -612,31 +624,56 @@ async function handleContactClick(event) {
       });
     }
 
-    // ToDo Profile.js ten sonra eğer o varken başka bir chat e clickleniyorsa o da remove edilecek
-    await removeMessageBoxAndUnsubscribe();
-    await createMessageBox(chatSummaryDTO);
+    const messageBoxElement = document.querySelector(".message-box1");
+    if (
+      messageBoxElement ||
+      messageBoxElement?.data.userProfileResponseDTO.id !==
+        contactData.userProfileResponseDTO.id
+    ) {
+      await removeMessageBoxAndUnsubscribe();
+      await createMessageBox(chatSummaryDTO);
+    }
+
     const contactListRenderDiv = document.querySelector(".a1-1-1");
     if (contactListRenderDiv) {
       contactListRenderDiv.removeChild(contactListRenderDiv.firstElementChild);
     }
-  } else if (!contactData.invitationResponseDTO.invited) {
-    const options = new ModalOptionsDTO({
-      contentText: `Do you want to invite ${contactData.userContactName}?`,
-      buttonText: "Davet et",
+  } else if (!contactData.invitationResponseDTO.isInvited) {
+    new Modal({
+      contentText: `Do you want to invite ${contactData.invitationResponseDTO.contactName}?`,
+      buttonText: "Invite",
       showBorders: false,
       mainCallback: async () => {
-        return await contactService.sendInvitation(contactData);
+        const sendInvitationDTO = new SendInvitationDTO(
+          contactData.invitationResponseDTO,
+          chatInstance.user.email
+        );
+        const response = await contactService.sendInvitation(sendInvitationDTO);
+        if (response.status === 200) {
+          contactData.invitationResponseDTO.isInvited = true;
+          const invitationButton = contactElementDOM.querySelector(
+            "button",
+            "invitation-button"
+          );
+          invitationButton.setAttribute("disabled", "disabled");
+          const buttonDiv2 = invitationButton.querySelector(
+            ".invitation-button-1-1"
+          );
+          buttonDiv2.textContent = "Invited";
+          return true;
+        }
+        return false;
       },
       headerHtml: null,
       closeOnBackdrop: true,
       closeOnEscape: true,
+      cancelButton: true,
+      cancelButtonId: "inviteCancelButton",
     });
-    new Modal(options);
-    // showModal(options);
   } else {
-    const options = new ModalOptionsDTO({
-      contentText: `${contactData.userContactName} has already been invited.`,
-      buttonText: "Davet et",
+    new Modal({
+      contentText: `${contactData.invitationResponseDTO.contactName} has already been invited.`,
+      buttonText: "Invite",
       mainCallback: () => {
         return true;
       },
@@ -645,8 +682,19 @@ async function handleContactClick(event) {
       closeOnBackdrop: true,
       closeOnEscape: true,
     });
-    new Modal(options);
-    // showModal(dto);
+  }
+}
+
+function scrollToChat(userId) {
+  const paneSideElement = document.querySelector("#pane-side");
+  const chatList = chatInstance.chatList;
+  const index = chatList.findIndex(
+    (c) => c.userProfileResponseDTO.id === userId
+  );
+
+  if (index >= 0) {
+    const itemHeight = 72; // sabit yükseklik
+    paneSideElement.scrollTop = index * itemHeight;
   }
 }
 
@@ -760,7 +808,11 @@ function handleOptionsBtnClick(event) {
         showChatOptions.innerHTML = "";
         const contactData = contactElement.contactData;
         new Modal({
-          contentText: `Do you want to delete ${contactData.contactsDTO.userContactName}?`,
+          contentText: `Do you want to delete ${
+            contactData.contactsDTO
+              ? contactData.contactsDTO.userContactName
+              : contactData.invitationResponseDTO.contactName
+          }?`,
           buttonText: "Evet",
           showBorders: false,
           mainCallback: async () => {
@@ -778,7 +830,7 @@ function handleOptionsBtnClick(event) {
                 idType
               );
             }
-            if (response) {
+            if (response && response.status === 200) {
               removeContact(contactElement, contactData);
               return true;
             } else {
@@ -791,7 +843,6 @@ function handleOptionsBtnClick(event) {
           closeOnBackdropClick: true,
           closeOnEscape: true,
         });
-        
       });
       document.addEventListener("click", closeOptionsDivOnClickOutside);
     }
@@ -831,7 +882,6 @@ function removeContact(contactElement, contactData) {
     const contactElements = document.querySelectorAll(".contact1");
     if (contactElements.length < chatInstance.contactList.length) {
       let newContactData = chatInstance.contactList[maxIndex];
-
       if (newContactData) {
         updateContactElement(contactElement, newContactData, maxIndex);
       } else {
@@ -841,20 +891,22 @@ function removeContact(contactElement, contactData) {
     } else {
       contactElement.remove();
     }
-    const findChat = chatInstance.chatList.find(
-      (chat) => chat.contactsDTO.id === contactData.contactsDTO.id
-    );
-    const chatElements = [...document.querySelectorAll(".chat1")];
-    const chatElement = chatElements.find(
-      (chat) => chat.chatData.contactsDTO.id === contactData.contactsDTO.id
-    );
-    if (findChat) {
-      findChat.contactsDTO.userHasAddedRelatedUser = false;
-      findChat.contactsDTO.userContactName = null;
-    }
-    if (chatElement) {
-      const nameSpan = chatElement.querySelector(".name-span");
-      nameSpan.textContent = findChat.userProfileResponseDTO.email;
+    if (contactData.userProfileResponseDTO) {
+      const findChat = chatInstance.chatList.find(
+        (chat) => chat.contactsDTO.id === contactData.contactsDTO.id
+      );
+      const chatElements = [...document.querySelectorAll(".chat1")];
+      const chatElement = chatElements.find(
+        (chat) => chat.chatData.contactsDTO.id === contactData.contactsDTO.id
+      );
+      if (findChat) {
+        findChat.contactsDTO.userHasAddedRelatedUser = false;
+        findChat.contactsDTO.userContactName = null;
+      }
+      if (chatElement) {
+        const nameSpan = chatElement.querySelector(".name-span");
+        nameSpan.textContent = findChat.userProfileResponseDTO.email;
+      }
     }
   }
 }
@@ -884,18 +936,80 @@ function updateTranslateYAfterDelete(deletedContactTranslateY) {
     minIndex: minTranslateY / 72,
   };
 }
-
+function updateContact(contactElement, newContactData, nameSpan, messageSpan) {
+  if (!contactElement.contactData.contactsDTO) {
+    const invetBtnParent = contactElement.querySelector(
+      ".chat-name-and-last-message-time"
+    );
+    invetBtnParent.removeChild(invetBtnParent.lastElementChild);
+  }
+  nameSpan.textContent = newContactData.contactsDTO.userContactName;
+  contactElement.dataset.user = newContactData.contactsDTO.userContactName;
+  messageSpan.textContent = newContactData.userProfileResponseDTO.about;
+}
+function updateInvitation(
+  contactElement,
+  newContactData,
+  nameSpan,
+  messageSpan
+) {
+  nameSpan.textContent = newContactData.invitationResponseDTO.contactName;
+  messageSpan.textContent = "";
+  const isInvite = newContactData.invitationResponseDTO.isInvited;
+  if (!contactElement.querySelector(".invitation-btn")) {
+    const invitationBtnContainer = createElement("div", "invitation-btn");
+    const invitationButton = createElement("button", "invitation-button");
+    if (!isInvite) {
+      const buttonDiv1 = createElement("div", "invitation-button-1");
+      const buttonDiv2 = createElement(
+        "div",
+        "invitation-button-1-1",
+        { flexGrow: "1" },
+        {},
+        "Invite"
+      );
+      buttonDiv1.append(buttonDiv2);
+      invitationButton.append(buttonDiv1);
+      invitationBtnContainer.append(invitationButton);
+    } else {
+      invitationButton.setAttribute("disabled", "disabled");
+      const buttonDiv1 = createElement("div", "invitation-button-1");
+      const buttonDiv2 = createElement(
+        "div",
+        "invitation-button-1-1",
+        { flexGrow: "1" },
+        {},
+        "Invited"
+      );
+      buttonDiv1.append(buttonDiv2);
+      invitationButton.append(buttonDiv1);
+      invitationBtnContainer.append(invitationButton);
+    }
+    chatInfo.append(invitationBtnContainer);
+  } else {
+    const invitationButton = contactElement.querySelector(
+      "button",
+      "invitation-button"
+    );
+    const buttonDiv2 = invitationButton.querySelector(".invitation-button-1-1");
+    if (!isInvite) {
+      invitationButton.removeAttribute("disabled");
+      buttonDiv2.textContent = "Invite";
+    } else {
+      invitationButton.setAttribute("disabled", "disabled");
+      buttonDiv2.textContent = "Invited";
+    }
+  }
+}
 function updateContactElement(contactElement, newContactData, newIndex) {
   const nameSpan = contactElement.querySelector(".name-span");
   const messageSpan = contactElement.querySelector(".message-span-span");
-
-  contactElement.contactData = newContactData;
-  nameSpan.textContent = newContactData.userContactName;
-  contactElement.dataset.user = newContactData.userContactName;
-  if (messageSpan) {
-    messageSpan.textContent = newContactData.about;
+  if (newContactData.contactsDTO) {
+    updateContact(contactElement, newContactData, nameSpan, messageSpan);
+  } else {
+    updateInvitation(contactElement, newContactData, nameSpan, messageSpan);
   }
-
+  contactElement.contactData = newContactData;
   contactElement.style.transform = `translateY(${newIndex * 72}px)`;
   contactElement.style.zIndex = chatInstance.contactList.length - newIndex;
 }

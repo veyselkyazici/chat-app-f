@@ -1,6 +1,6 @@
 import axiosInstance from "./axiosConfig.js";
 
-const AUTH_SERVICE_URL = "/auth";
+const AUTH_SERVICE_URL = import.meta.env.VITE_AUTH_SERVICE_URL;
 
 export const authService = {
   isAuthenticated: async () => {

@@ -1,3 +1,10 @@
 node_modules/
-docker-compose.yml
+docker-compose.frontend.yml
+docker.yml
 .env
+#Dockerfile
+.gitignore
+.env.production
+.env.development
+nginx.conf
+.dockerignore

@@ -5,7 +5,8 @@ import {
   showError,
   getRecaptchaToken,
   ruleCheck,
-  toggleVisibilityPassword
+  toggleVisibilityPassword,
+  escapeHtml
 } from "../utils/util.js";
 import { authService } from "../services/authService.js";
 import { ResetPasswordRequestDTO } from "../dtos/auth/request/ResetPasswordRequestDTO.js";
@@ -57,8 +58,7 @@ export default class extends AbstractView {
                 <h1>Please enter your email address for the verification code.</h1>
                 <div class="input-icon">
                     <i class="fa-solid fa-envelope"></i>
-                    <input id="sendOtpFormEmail" name="email" placeholder="Email" value="${
-                      this.email || ""
+                    <input id="sendOtpFormEmail" name="email" placeholder="Email" value="${escapeHtml(this.email)} || ""
                     }">
                     <div class="error-message"></div>
                 </div>
@@ -72,7 +72,7 @@ export default class extends AbstractView {
   renderOtpStep() {
     return `
             <form id="verifyOtpForm">
-                <p>Enter the verification code sent to ${this.email}.</p>
+                <p>Enter the verification code sent to ${escapeHtml(this.email)}.</p>
                 <div class="otp-timer-container">
                     <div id="otpTimer" class="timer-display">
                         <i class="fa-solid fa-clock"></i>
@@ -98,7 +98,7 @@ export default class extends AbstractView {
     return `
             <form id="resetPasswordForm">
                 <h1>Reset Password</h1>
-                <p>Set a new password for ${this.email}.</p>
+                <p>Set a new password for ${escapeHtml(this.email)}.</p>
                                 <div class="otp-timer-container">
                     <div id="otpTimer" class="timer-display">
                         <i class="fa-solid fa-clock"></i>
@@ -197,7 +197,6 @@ export default class extends AbstractView {
       regexRuleDiv.innerHTML = "";
     });
     document.querySelectorAll(".toggle-visibility").forEach((btn) => {
-      debugger;
       const icon = btn.querySelector("i");
       const input = document.getElementById(btn.dataset.target);
       btn.addEventListener("mousedown", (e) => e.preventDefault());

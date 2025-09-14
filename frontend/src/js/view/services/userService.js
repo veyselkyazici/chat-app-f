@@ -1,7 +1,9 @@
 import axiosInstance from "./axiosConfig.js";
 
-const USER_SERVICE_URL = "/user";
-const BASE_URL_MAIN_USER = "http://localhost:8080/api/v1/user";
+
+const USER_SERVICE_URL = import.meta.env.VITE_USER_SERVICE_URL;
+const BASE_URL_MAIN_USER = import.meta.env.BASE_URL_USER;
+
 export const userService = {
   updatePrivacy: async (privacyDTO) => {
     try {
@@ -17,7 +19,6 @@ export const userService = {
   },
 
   updateUserName: async (updateUserDTO) => {
-    debugger;
     try {
       const response = await axiosInstance.put(
         `${USER_SERVICE_URL}/update-user-name`,

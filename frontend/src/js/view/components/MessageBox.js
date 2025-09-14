@@ -40,9 +40,9 @@ async function createMessageBox(chatData) {
     closeProfileFunc();
   }
   let typingStatus = { isTyping: false, previousText: "" };
-  const messageBoxElement = await createMessageBoxHTML(chatData, typingStatus);
+  await createMessageBoxHTML(chatData, typingStatus);
   // ToDo lastPage bakilacak renderMessage // Scroll parametresi bakılacak
-  renderMessage(
+  await renderMessage(
     {
       messages: chatData.chatDTO.messages,
       lastPage: chatData.chatDTO.isLastPage,
@@ -74,16 +74,7 @@ const typingsStatus = async (status, chat, messageBoxElement) => {
     messageBoxElement.removeChild(statusSpan.parentElement);
   }
   if (status.typing) {
-    const statusDiv = createElement("div", "online-status");
-    const statusSpan = createElement(
-      "div",
-      "online-status-1",
-      { "min-height": "0px" },
-      { "aria-label": "", title: "" },
-      "yaziyor..."
-    );
-    statusDiv.append(statusSpan);
-    messageBoxElement.append(statusDiv);
+    messageBoxElement.append(createTypingElement());
   } else {
     const onlineElement = await isOnline(chat.userProfileResponseDTO);
     messageBoxElement.append(onlineElement);
@@ -96,6 +87,18 @@ const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
       onlineStatus(statusMessage, chat, messageBoxElement);
     }
   );
+};
+const createTypingElement = () => {
+  const statusDiv = createElement("div", "online-status");
+  const statusSpan = createElement(
+    "div",
+    "online-status-1",
+    { "min-height": "0px" },
+    { "aria-label": "", title: "" },
+    "typing..."
+  );
+  statusDiv.append(statusSpan);
+  return statusDiv;
 };
 
 const onlineStatus = async (statusMessage, chat, messageBoxElement) => {
@@ -1034,7 +1037,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
   divContenteditable.focus();
   div1_7_1_1_1_1_1.addEventListener("click", () => {
     updateCaretPosition();
-    showEmojiPicker(panel, thirdChild);
+    // showEmojiPicker(panel, thirdChild);
   });
 };
 
@@ -1348,10 +1351,12 @@ const isOnline = async (userContact, contact) => {
       (chatInstance.user.privacySettings.lastSeenVisibility !== "NOBODY" ||
         chatInstance.user.privacySettings.onlineStatusVisibility !== "NOBODY")
     ) {
-      const friendStatus = await chatService.checkUserOnlineStatus(
-        userContact.id
-      );
+      const friendStatus = await chatService.userOnlineStatus(userContact.id);
       if (friendStatus.status === "online") {
+        const typingDTO = await chatService.isTypingStatus(userContact.id);
+        if (typingDTO.isTyping) {
+          return createTypingElement();
+        }
         return isOnlineStatus(userContact, contact);
       } else {
         return lastSeenStatus(userContact, contact, friendStatus.lastSeen);
@@ -1496,10 +1501,23 @@ function messageBoxElementMessagesReadTick(messages, privacySettings) {
 }
 
 const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
+  const MAX_MESSAGE_LENGTH = 1000;
+
   const messageContentElement = document.querySelector(
     ".message-box1-7-1-1-1-2-1-1-1-1"
   );
   const messageContent = messageContentElement.textContent.trim();
+
+  if (!messageContent) {
+    return;
+  }
+
+  if (messageContent.length > MAX_MESSAGE_LENGTH) {
+    toastr.error(
+      `Message is too long. Maximum allowed is ${MAX_MESSAGE_LENGTH} characters.`
+    );
+    return;
+  }
 
   if (
     messageContent &&
@@ -1603,6 +1621,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
       sendButton,
       typingStatus
     );
+    typingStatus.isTyping = false;
     messageContentElement.parentElement.focus();
   } else {
     if (chatSummaryDTO.userChatSettings.isBlocked) {
@@ -1849,28 +1868,13 @@ function handleOptionsBtnClick(event, chat) {
       chatOptionsDiv.style.transform = "scale(1)";
       chatOptionsDiv.style.opacity = "1";
 
-      // const archiveLabel = chatData.userChatSettings.archived ? 'Sohbeti arşivden çıkar' : 'Sohbeti arşivle';
-      // const archiveLabel = chatData.userChatSettings.archived ? 'Arşivden çıkar' : 'Sohbeti arşivle';
       const blockLabel = chat.userChatSettings.isBlocked ? "Unblock" : "Block";
-      // const pinLabel = chatData.userChatSettings.pinned ? 'Sohbeti sabitlemeyi kaldır' : 'Sohbeti sabitle';
-      // ToDo
-      // const markUnreadLabel = 'Okunmadı olarak işaretle';
+
       const deleteChatLabel = "Delete user";
-      const closeChatLabel = "Close chat";
-      // const dto = new UserSettingsDTO({
-      //     friendId: chat.userProfileResponseDTO.id,
-      //     userId: chat.contactsDTO.userId,
-      //     id: chat.chatDTO.id,
-      //     friendEmail: chat.userProfileResponseDTO.email,
-      //     userChatSettings: { ...chat.userChatSettings }
-      // });
 
       const ulElement = createElement("ul", "ul1");
       const divElement = createElement("div", "");
 
-      // const archiveLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
-      // const archiveLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${archiveLabel}` }, archiveLabel);
-      // const chatDat = {chatDTO: };
       const formatChatData = {
         chatDTO: { id: chat.id },
         userChatSettings: { ...chat.userChatSettings },
@@ -1926,8 +1930,6 @@ function handleOptionsBtnClick(event, chat) {
         chatDTO: { id: chat.id },
         userChatSettings: chat.userChatSettings,
       };
-      // const pinLiElement = createElement('li', 'list-item1', { opacity: '1' }, { 'data-animate-dropdown-item': 'true' });
-      // const pinLiDivElement = createElement('div', 'list-item1-div', null, { 'role': 'button', 'aria-label': `${pinLabel}` }, pinLabel);
 
       const deleteLiElement = createElement(
         "li",

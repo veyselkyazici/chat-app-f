@@ -1,10 +1,9 @@
 import axiosInstance from "./axiosConfig.js";
 
-const MAIL_SERVICE_URL = "/mail";
+const MAIL_SERVICE_URL = import.meta.env.VITE_MAIL_SERVICE_URL;
 
 export const mailService = {
   resendConfirmationMail: async (resendConfirmationDTO) => {
-    debugger;
     try {
       const response = await axiosInstance.post(
         `${MAIL_SERVICE_URL}/resend-confirmation`,

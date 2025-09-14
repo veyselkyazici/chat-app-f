@@ -1,10 +1,9 @@
-import { chatInstance } from "../pages/Chat.js";
 import { clearErrorMessages, showError, createElement } from "../utils/util.js";
 import { contactService } from "../services/contactsService.js";
 import { Modal } from "../utils/showModal.js";
 import { AddContactRequestDTO } from "../dtos/contact/request/AddContactRequestDTO.js";
 
-const addContactModal = (email) => {
+const addContactModal = (addedByUser, email) => {
   const generalErrorDiv = createElement("div", "input-icon");
   const generalErrorMessage = createElement(
     "div",
@@ -46,7 +45,7 @@ const addContactModal = (email) => {
   new Modal({
     title: "Add contact",
     buttonText: "Add contact",
-    mainCallback: () => addContact(emailInput, nameInput),
+    mainCallback: () => addContact(addedByUser, emailInput, nameInput),
     showBorders: false,
     secondOptionButton: false,
     headerHtml: null,
@@ -66,7 +65,7 @@ const addContactModal = (email) => {
     emailDOM.readOnly = true;
   }
 };
-const addContact = async (emailDOM, nameDOM) => {
+const addContact = async (addedByUser, emailDOM, nameDOM) => {
   const email = emailDOM.value.trim();
   const name = nameDOM.value;
   const formElements = {
@@ -76,9 +75,10 @@ const addContact = async (emailDOM, nameDOM) => {
   };
 
   const addContactRequestDTO = new AddContactRequestDTO(
-    chatInstance.user.imagee,
+    addedByUser.imagee,
     name,
-    email
+    email,
+    addedByUser.email
   );
   clearErrorMessages();
   const validationErrors = addContactRequestDTO.validate();

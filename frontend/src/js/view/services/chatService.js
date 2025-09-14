@@ -1,5 +1,7 @@
 import axiosInstance from "./axiosConfig.js";
-const CHAT_SERVICE_URL = "/chat";
+
+const CHAT_SERVICE_URL = import.meta.env.VITE_CHAT_SERVICE_URL;
+
 export const chatService = {
   deleteChat: async (userChatSettings) => {
     try {
@@ -138,10 +140,21 @@ export const chatService = {
     }
   },
 
-  checkUserOnlineStatus: async (contactId) => {
+  userOnlineStatus: async (contactId) => {
     try {
       const response = await axiosInstance.get(
         `/status/is-online/${contactId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error:", error.message);
+      throw error;
+    }
+  },
+  isTypingStatus: async (contactId) => {
+    try {
+      const response = await axiosInstance.get(
+        `/status/is-typing/${contactId}`
       );
       return response.data;
     } catch (error) {

@@ -1,9 +1,10 @@
 import { isValidEmail } from "../../../utils/util.js";
 export class AddContactRequestDTO {
-  constructor(imagee, userContactName, userContactEmail) {
+  constructor(imagee, userContactName, userContactEmail, addedByEmail) {
     this.imagee = imagee;
     this.userContactName = userContactName;
     this.userContactEmail = userContactEmail;
+    this.addedByEmail = addedByEmail;
   }
 
   validate() {

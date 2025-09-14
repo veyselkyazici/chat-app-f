@@ -1,3 +1,11 @@
+function escapeHtml(text) {
+  return text.replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+}
+
 function showError(inputElement, errorMessage) {
   const errorElement =
     inputElement.parentElement.querySelector(".error-message");
@@ -267,7 +275,6 @@ function handleBackBtnClick(removeElement) {
   removeElement.remove();
 }
 const toggleVisibilityPassword = (btn, icon, input) => {
-  debugger;
   const start = input.selectionStart;
   const end = input.selectionEnd;
   const hidden = input.type === "password";
@@ -286,7 +293,7 @@ const toggleVisibilityPassword = (btn, icon, input) => {
 async function getRecaptchaToken(actionValue) {
   try {
     const token = await grecaptcha.execute(
-      "6LcqbYkrAAAAAAuqFYeYc2shBY6LJZEx058_aKw3",
+      "6Ld9XMgrAAAAALex7svxEKzI4wbni9P3WQOBfxTa",
       {
         action: actionValue,
       }
@@ -312,4 +319,5 @@ export {
   toggleVisibilityPassword,
   getRecaptchaToken,
   ruleCheck,
+  escapeHtml
 };

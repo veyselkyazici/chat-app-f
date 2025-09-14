@@ -1,7 +1,11 @@
 // virtualScroll.js
 import { updateUnreadMessageCountAndSeenTick } from "../components/ChatBox.js";
 import { chatInstance } from "../pages/Chat.js";
-import { createVisibilityProfilePhoto, chatBoxLastMessageFormatDateTime } from "./util.js";
+import {
+  createVisibilityProfilePhoto,
+  chatBoxLastMessageFormatDateTime,
+  createElement,
+} from "./util.js";
 export function virtualScroll(
   updateItemsDTO,
   paneSideElement,
@@ -49,93 +53,12 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
     const listItem = updateItemsDTO.list[newIndex];
     if (listItem) {
       if (!("invitationResponseDTO" in listItem)) {
-        const profileImage = item.querySelector(".image");
-        const profileImageElement = createVisibilityProfilePhoto(
-          listItem.userProfileResponseDTO,
-          listItem.contactsDTO
-        );
-        if (profileImage.firstElementChild.className === "svg-div") {
-          if (profileImageElement.className !== "svg-div") {
-            profileImage.firstElementChild.remove();
-            profileImage.append(profileImageElement);
-          }
-        } else {
-          if (profileImageElement.className === "svg-div") {
-            profileImage.firstElementChild.remove();
-            profileImage.append(profileImageElement);
-          } else {
-            profileImageElement.firstElementChild.src =
-              listItem.userProfileResponseDTO.imagee;
-          }
-        }
-        item.chatData = listItem;
-        if (chatInstance.selectedChatUserId !== null) {
-          const isSelected =
-            chatInstance.selectedChatUserId ===
-            listItem.userProfileResponseDTO.id;
-          if (isSelected) {
-            item.setAttribute("aria-selected", "true");
-            item.querySelector(".chat").classList.add("selected-chat");
-          } else {
-            item.setAttribute("aria-selected", "false");
-            item.querySelector(".chat").classList.remove("selected-chat");
-          }
-        }
-        const time = chatBoxLastMessageFormatDateTime(listItem.chatDTO.messages[0].fullDateTime)
-        const nameSpan = item.querySelector(".name-span");
-        const timeSpan = item.querySelector(".time");
-        const messageSpan = item.querySelector(".message-span-span");
-
-        updateUnreadMessageCountAndSeenTick(item, listItem);
-
-        nameSpan.textContent = listItem.contactsDTO.userContactName
-          ? listItem.contactsDTO.userContactName
-          : listItem.userProfileResponseDTO.email;
-        timeSpan.textContent = time;
-        messageSpan.textContent = listItem.chatDTO.messages[0].decryptedMessage;
-        item.dataset.user = nameSpan.textContent = listItem.contactsDTO
-          .userContactName
-          ? listItem.contactsDTO.userContactName
-          : listItem.userProfileResponseDTO.email;
-        item.style.transform = `translateY(${newIndex * 72}px)`;
+        chatsVirtualScroll(item, listItem, newIndex);
       } else {
         if (!listItem.invitationResponseDTO) {
-          const nameSpan = item.querySelector(".name-span");
-          const profileImage = item.querySelector(".image");
-          const profileImageElement = createVisibilityProfilePhoto(
-            listItem.userProfileResponseDTO,
-            listItem.contactsDTO
-          );
-          if (profileImage.firstElementChild.className === "svg-div") {
-            if (profileImageElement.className !== "svg-div") {
-              profileImage.firstElementChild.remove();
-              profileImage.append(profileImageElement);
-            }
-          } else {
-            if (profileImageElement.className === "svg-div") {
-              profileImage.firstElementChild.remove();
-              profileImage.append(profileImageElement);
-            } else {
-              profileImageElement.firstElementChild.src =
-                listItem.userProfileResponseDTO.imagee;
-            }
-          }
-          item.contactData = listItem;
-          const messageSpan = item.querySelector(".message-span-span");
-          nameSpan.textContent = listItem.contactsDTO.userContactName;
-          if (messageSpan) {
-            messageSpan.textContent = listItem.userProfileResponseDTO.about;
-          }
-          item.dataset.user = listItem.contactsDTO.userContactName;
+          contactsVirtualScroll(item, listItem);
         } else {
-          const nameSpan = item.querySelector(".name-span");
-          item.contactData = listItem;
-          const messageSpan = item.querySelector(".message-span-span");
-          nameSpan.textContent = listItem.invitationResponseDTO.contactName;
-          if (messageSpan) {
-            messageSpan.remove();
-          }
-          item.dataset.user = listItem.invitationResponseDTO.contactName;
+          invitationVirtualScroll(item, listItem);
         }
         item.style.transform = `translateY(${newIndex * 72}px)`;
       }
@@ -156,4 +79,144 @@ export class UpdateItemsDTO {
     this.removeEventListeners = removeEventListeners;
     this.addEventListeners = addEventListeners;
   }
+}
+
+function chatsVirtualScroll(item, listItem, newIndex) {
+  const profileImage = item.querySelector(".image");
+  const profileImageElement = createVisibilityProfilePhoto(
+    listItem.userProfileResponseDTO,
+    listItem.contactsDTO
+  );
+  if (profileImage.firstElementChild.className === "svg-div") {
+    if (profileImageElement.className !== "svg-div") {
+      profileImage.firstElementChild.remove();
+      profileImage.append(profileImageElement);
+    }
+  } else {
+    if (profileImageElement.className === "svg-div") {
+      profileImage.firstElementChild.remove();
+      profileImage.append(profileImageElement);
+    } else {
+      profileImageElement.firstElementChild.src =
+        listItem.userProfileResponseDTO.imagee;
+    }
+  }
+  item.chatData = listItem;
+  if (chatInstance.selectedChatUserId !== null) {
+    const isSelected =
+      chatInstance.selectedChatUserId === listItem.userProfileResponseDTO.id;
+    if (isSelected) {
+      item.setAttribute("aria-selected", "true");
+      item.querySelector(".chat").classList.add("selected-chat");
+    } else {
+      item.setAttribute("aria-selected", "false");
+      item.querySelector(".chat").classList.remove("selected-chat");
+    }
+  }
+  const time = chatBoxLastMessageFormatDateTime(
+    listItem.chatDTO.messages[0].fullDateTime
+  );
+  const nameSpan = item.querySelector(".name-span");
+  const timeSpan = item.querySelector(".time");
+  const messageSpan = item.querySelector(".message-span-span");
+
+  updateUnreadMessageCountAndSeenTick(item, listItem);
+
+  nameSpan.textContent = listItem.contactsDTO.userContactName
+    ? listItem.contactsDTO.userContactName
+    : listItem.userProfileResponseDTO.email;
+  timeSpan.textContent = time;
+  messageSpan.textContent = listItem.chatDTO.messages[0].decryptedMessage;
+  item.dataset.user = nameSpan.textContent = listItem.contactsDTO
+    .userContactName
+    ? listItem.contactsDTO.userContactName
+    : listItem.userProfileResponseDTO.email;
+  item.style.transform = `translateY(${newIndex * 72}px)`;
+}
+
+function contactsVirtualScroll(item, listItem) {
+  const nameSpan = item.querySelector(".name-span");
+  const profileImage = item.querySelector(".image");
+  const profileImageElement = createVisibilityProfilePhoto(
+    listItem.userProfileResponseDTO,
+    listItem.contactsDTO
+  );
+  if (profileImage.firstElementChild.className === "svg-div") {
+    if (profileImageElement.className !== "svg-div") {
+      profileImage.firstElementChild.remove();
+      profileImage.append(profileImageElement);
+    }
+  } else {
+    if (profileImageElement.className === "svg-div") {
+      profileImage.firstElementChild.remove();
+      profileImage.append(profileImageElement);
+    } else {
+      profileImageElement.firstElementChild.src =
+        listItem.userProfileResponseDTO.imagee;
+    }
+  }
+  item.contactData = listItem;
+  const messageSpan = item.querySelector(".message-span-span");
+  nameSpan.textContent = listItem.contactsDTO.userContactName;
+  if (messageSpan) {
+    messageSpan.textContent = listItem.userProfileResponseDTO.about;
+  }
+  const invitationBtn = item.querySelector(".invitation-btn");
+  if (invitationBtn) {
+    invitationBtn.remove();
+  }
+  item.dataset.user = listItem.contactsDTO.userContactName;
+}
+
+function invitationVirtualScroll(item, listItem) {
+  const nameSpan = item.querySelector(".name-span");
+  item.contactData = listItem;
+  const messageSpan = item.querySelector(".message-span-span");
+  nameSpan.textContent = listItem.invitationResponseDTO.contactName;
+  messageSpan.textContent = "";
+  item.dataset.user = listItem.invitationResponseDTO.contactName;
+  const isInvite = listItem.invitationResponseDTO.isInvited;
+  const chatInfo = item.querySelector(".chat-name-and-last-message-time");
+  if (!item.querySelector(".invitation-btn")) {
+    const invitationBtnContainer = createElement("div", "invitation-btn");
+    const invitationButton = createElement("button", "invitation-button");
+    if (!isInvite) {
+      const buttonDiv1 = createElement("div", "invitation-button-1");
+      const buttonDiv2 = createElement(
+        "div",
+        "invitation-button-1-1",
+        { flexGrow: "1" },
+        {},
+        "Invite"
+      );
+      buttonDiv1.append(buttonDiv2);
+      invitationButton.append(buttonDiv1);
+      invitationBtnContainer.append(invitationButton);
+    } else {
+      invitationButton.setAttribute("disabled", "disabled");
+      const buttonDiv1 = createElement("div", "invitation-button-1");
+      const buttonDiv2 = createElement(
+        "div",
+        "invitation-button-1-1",
+        { flexGrow: "1" },
+        {},
+        "Invited"
+      );
+      buttonDiv1.append(buttonDiv2);
+      invitationButton.append(buttonDiv1);
+      invitationBtnContainer.append(invitationButton);
+    }
+    chatInfo.append(invitationBtnContainer);
+  } else {
+    const invitationButton = item.querySelector("button", "invitation-button");
+    const buttonDiv2 = invitationButton.querySelector(".invitation-button-1-1");
+    if (!isInvite) {
+      invitationButton.removeAttribute("disabled");
+      buttonDiv2.textContent = "Invite";
+    } else {
+      invitationButton.setAttribute("disabled", "disabled");
+      buttonDiv2.textContent = "Invited";
+    }
+  }
+  nameSpan.textContent = item.contactData.invitationResponseDTO.contactName;
 }

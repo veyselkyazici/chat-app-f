@@ -193,7 +193,6 @@ async function toggleEditName(user) {
           toastr.error(error.message);
         });
       } else {
-        debugger;
         const response = await userService.updateUserName(updateUserDTO);
         chatInstance.user.firstName = response.data.value;
       }
@@ -384,14 +383,7 @@ function uploadPhoto(event, userId) {
           {},
           "The selected image is too small. Please choose an image with minimum dimensions of 192x192 pixels."
         );
-        // showModal(new ModalOptionsDTO({
-        //     title: '',
-        //     contentHtml: warningText,
-        //     buttonText: 'Tamam',
-        //     showBorders: false,
-        //     secondOptionButton: false,
-        //     cancelButton: false,
-        // }));
+
         new Modal({
           title: "",
           contentHtml: warningText,

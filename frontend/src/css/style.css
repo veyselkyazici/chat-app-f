@@ -205,6 +205,21 @@ section {
   transition: color 0.15s linear;
 }
 
+.info-message {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 12px;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  margin: 15px 0;
+  font-size: 14px;
+  text-align: center;
+}
+.info-message a {
+  color: #0d6efd;
+  font-weight: bold;
+  text-decoration: underline;
+}
 /* Footer styles */
 
 .social-icons {
@@ -1451,7 +1466,7 @@ button.chat-options-btn:focus {
   font-weight: 500;
   border-top-right-radius: 24px;
   transition-property: all;
-  color: #54656f;
+  color: white;
   cursor: default;
   padding-left: 24px;
   transition-timing-function: ease-out;

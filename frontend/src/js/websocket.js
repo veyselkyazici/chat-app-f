@@ -13,7 +13,7 @@ class WebSocketManager {
       this.sockJs = new SockJS(this.webSocketUrl);
       this.stompClient = Stomp.over(this.sockJs);
       this.stompClient.debug = (str) => {
-        console.log("STOMP Debug:", str);
+        // console.log("STOMP Debug:", str);
       };
       this.stompClient.connect(
         {
