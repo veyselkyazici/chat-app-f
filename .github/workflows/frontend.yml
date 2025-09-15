@@ -58,10 +58,10 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/vkychatappfrontend:latest
-            sudo docker stop vkychatapp-frontend || true
-            sudo docker rm vkychatapp-frontend || true
-            sudo docker run -d -p 8080:80 -p 443:443 \
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/vkychatappfrontend:latest
+            docker stop vkychatapp-frontend || true
+            docker rm vkychatapp-frontend || true
+            docker run -d -p 8080:80 -p 443:443 \
               -v /etc/letsencrypt/docker-certs/vkychatapp.com:/etc/letsencrypt/live/vkychatapp.com:ro \
               --name vkychatapp-frontend \
               ${{ secrets.DOCKER_HUB_USERNAME }}/vkychatappfrontend:latest
