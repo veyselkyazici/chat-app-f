@@ -61,7 +61,9 @@ jobs:
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/vkychatappfrontend:latest
             docker stop vkychatapp-frontend || true
             docker rm vkychatapp-frontend || true
-            docker run -d -p 8080:80 -p 443:443 \
+            docker run -d \
+              --network proxy-network \
+              -p 80:80 -p 443:443 \
               -v /etc/letsencrypt/docker-certs/vkychatapp.com:/etc/letsencrypt/live/vkychatapp.com:ro \
               --name vkychatapp-frontend \
               ${{ secrets.DOCKER_HUB_USERNAME }}/vkychatappfrontend:latest
