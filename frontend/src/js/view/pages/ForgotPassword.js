@@ -265,12 +265,11 @@ export default class extends AbstractView {
       );
       return;
     }
-    const recaptchaToken = await getRecaptchaToken("checkOtp");
+    
     try {
       const { data } = await authService.checkOTP(
         this.email,
-        otp,
-        recaptchaToken
+        otp
       );
       if (data.success) {
         this.resetToken = data.resetToken;
@@ -322,7 +321,7 @@ export default class extends AbstractView {
     }
     if (hasError) return;
     clearErrorMessages();
-    const recaptchaToken = await getRecaptchaToken("resetPassword");
+    const recaptchaToken = await getRecaptchaToken("password_reset");
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const { publicKey, privateKey } = await generateKeyPair();

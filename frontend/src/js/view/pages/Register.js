@@ -144,7 +144,7 @@ export default class extends AbstractView {
     }
 
     try {
-      const recaptchaToken = await getRecaptchaToken("register");
+      const recaptchaToken = await getRecaptchaToken("signup");
       const salt = crypto.getRandomValues(new Uint8Array(16));
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const { publicKey, privateKey } = await generateKeyPair();

@@ -14,13 +14,16 @@ export const authService = {
   },
 
   register: async (registerRequestDTO) => {
+    console.log("auth service url > ", AUTH_SERVICE_URL);
     try {
       const response = await axiosInstance.post(
         `${AUTH_SERVICE_URL}/register`,
         registerRequestDTO
       );
+      console.log("auth service url > ", response);
       return response.data;
     } catch (error) {
+      console.log("auth service url error > ", error);
       let message = "Registration failed";
 
       if (error.response?.data?.message) {

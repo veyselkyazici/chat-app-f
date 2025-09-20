@@ -151,7 +151,9 @@ section {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 40px;
+  padding-right: 40px;
+  padding-left: 40px;
+  /* padding: 40px; */
   flex: 1;
   text-align: center;
   gap: 20px;
@@ -414,7 +416,7 @@ body,
   height: 100%;
   padding: 0;
   margin: 0;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .chats {
@@ -696,7 +698,7 @@ svg {
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 20px;
+  /* padding: 20px; */
 }
 
 .default-content {
