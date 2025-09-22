@@ -42,9 +42,9 @@ CMD ["nginx", "-g", "daemon off;"]
 
 
 
-# # -------------------
-# # Build Stage
-# # -------------------
+# -------------------
+# Build Stage
+# -------------------
 # FROM node:20-alpine AS build
 # WORKDIR /app
 
