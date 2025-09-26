@@ -6,7 +6,7 @@ import {
   getRecaptchaToken,
   ruleCheck,
   toggleVisibilityPassword,
-  escapeHtml
+  escapeHtml,
 } from "../utils/util.js";
 import { authService } from "../services/authService.js";
 import { ResetPasswordRequestDTO } from "../dtos/auth/request/ResetPasswordRequestDTO.js";
@@ -58,8 +58,9 @@ export default class extends AbstractView {
                 <h1>Please enter your email address for the verification code.</h1>
                 <div class="input-icon">
                     <i class="fa-solid fa-envelope"></i>
-                    <input id="sendOtpFormEmail" name="email" placeholder="Email" value="${escapeHtml(this.email)} || ""
-                    }">
+<input id="sendOtpFormEmail" name="email" placeholder="Email" value="${
+      escapeHtml(this.email) || ""
+    }">
                     <div class="error-message"></div>
                 </div>
                 <div class="buttons">
@@ -72,7 +73,9 @@ export default class extends AbstractView {
   renderOtpStep() {
     return `
             <form id="verifyOtpForm">
-                <p>Enter the verification code sent to ${escapeHtml(this.email)}.</p>
+                <p>Enter the verification code sent to ${escapeHtml(
+                  this.email
+                )}.</p>
                 <div class="otp-timer-container">
                     <div id="otpTimer" class="timer-display">
                         <i class="fa-solid fa-clock"></i>
@@ -265,12 +268,9 @@ export default class extends AbstractView {
       );
       return;
     }
-    
+
     try {
-      const { data } = await authService.checkOTP(
-        this.email,
-        otp
-      );
+      const { data } = await authService.checkOTP(this.email, otp);
       if (data.success) {
         this.resetToken = data.resetToken;
         this.currentStep = 3;
