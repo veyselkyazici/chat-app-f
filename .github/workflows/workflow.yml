@@ -1,0 +1,70 @@
+name: CI/CD Docker Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+          build-args: |
+            VITE_BASE_URL_WEBSOCKET_CHAT=${{ secrets.VITE_BASE_URL_WEBSOCKET_CHAT }}
+            VITE_BASE_URL_WEBSOCKET_CONTACTS=${{ secrets.VITE_BASE_URL_WEBSOCKET_CONTACTS }}
+            VITE_BASE_URL_USER=${{ secrets.VITE_BASE_URL_USER }}
+            VITE_BASE_URL=${{ secrets.VITE_BASE_URL }}
+            VITE_USER_SERVICE_URL=${{ secrets.VITE_USER_SERVICE_URL }}
+            VITE_AUTH_SERVICE_URL=${{ secrets.VITE_AUTH_SERVICE_URL }}
+            VITE_CHAT_SERVICE_URL=${{ secrets.VITE_CHAT_SERVICE_URL }}
+            VITE_CONTACTS_SERVICE_URL=${{ secrets.VITE_CONTACTS_SERVICE_URL }}
+            VITE_INVITATION_SERVICE_URL=${{ secrets.VITE_INVITATION_SERVICE_URL }}
+            VITE_MAIL_SERVICE_URL=${{ secrets.VITE_MAIL_SERVICE_URL }}
+
+      # - name: Setup SSH key
+      #   run: |
+      #     mkdir -p ~/.ssh
+      #     echo "${{ secrets.VPS_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
+      #     chmod 600 ~/.ssh/id_rsa
+
+      # - name: Add VPS to known_hosts
+      #   run: ssh-keyscan -p -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      # - name: Test SSH connection
+      #   run: ssh -i ~/.ssh/id_rsa -p  ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "echo SSH connected"
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+            docker stop vkychatapp-frontend || true
+            docker rm vkychatapp-frontend || true
+            docker run -d \
+              --network frontend-network \
+              -p ${{ secrets.DOCKER_PORT_1 }} -p ${{ secrets.DOCKER_PORT_2 }} \
+              -v ${{ secrets.SSL_PATH }} \
+              --name vkychatapp-frontend \
+              ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
