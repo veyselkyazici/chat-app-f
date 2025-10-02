@@ -1,4 +1,3 @@
-import { userService } from "./view/services/userService.js";
 class WebSocketManager {
   constructor(webSocketUrl, userId, token) {
     this.webSocketUrl = webSocketUrl;
@@ -10,7 +9,9 @@ class WebSocketManager {
 
   connectWebSocket(successCallback = () => {}, errorCallback = () => {}) {
     try {
-      this.sockJs = new SockJS(this.webSocketUrl);
+      this.sockJs = new SockJS(this.webSocketUrl, null, {
+        transports: ["websocket"], // sadece websocket dene
+      });
       this.stompClient = Stomp.over(this.sockJs);
       this.stompClient.debug = (str) => {
         // console.log("STOMP Debug:", str);
@@ -22,7 +23,6 @@ class WebSocketManager {
         () => {
           successCallback();
           // this.notifyOnlineStatus(true);
-
         },
         (error) => {
           errorCallback(error);
