@@ -60,6 +60,7 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
+            docker rmi $(docker images -f "dangling=true" -f "reference=${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}" -q) || true
             docker stop vkychatapp-frontend || true
             docker rm vkychatapp-frontend || true
             docker run -d \
