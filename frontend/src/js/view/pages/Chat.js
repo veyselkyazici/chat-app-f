@@ -856,6 +856,7 @@ export default class Chat extends AbstractView {
   }
 
   async logout() {
+    debugger;
     try {
       const response = await authService.logout();
       if (response && response.status === 200) {
