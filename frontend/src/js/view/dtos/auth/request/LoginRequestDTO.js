@@ -37,19 +37,12 @@ export class LoginRequestDTO {
         message: "Invalid operation",
       });
     }
-    if (!this.password) {
+    if (!this.password || !passwordRegex.test(this.password)) {
       errors.push({
         field: "password",
         message: "Please enter a valid password",
       });
     }
-    if (!passwordRegex.test(this.password)) {
-      errors.push({
-        field: "general",
-        message: "Incorrect email address or password",
-      });
-    }
-
     return errors;
   }
 }

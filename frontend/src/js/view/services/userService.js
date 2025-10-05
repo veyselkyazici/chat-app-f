@@ -1,6 +1,5 @@
 import axiosInstance from "./axiosConfig.js";
 
-
 const USER_SERVICE_URL = import.meta.env.VITE_USER_SERVICE_URL;
 const BASE_URL_MAIN_USER = import.meta.env.BASE_URL_USER;
 
@@ -107,14 +106,8 @@ export const userService = {
 
   removePhoto: async () => {
     try {
-      const response = await axiosInstance.post(
-        `${USER_SERVICE_URL}/remove-profile-picture`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+      const response = await axiosInstance.patch(
+        `${USER_SERVICE_URL}/remove-profile-picture`
       );
       return response.data;
     } catch (error) {

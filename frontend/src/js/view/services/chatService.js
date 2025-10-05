@@ -3,11 +3,11 @@ import axiosInstance from "./axiosConfig.js";
 const CHAT_SERVICE_URL = import.meta.env.VITE_CHAT_SERVICE_URL;
 
 export const chatService = {
-  deleteChat: async (userChatSettings) => {
+  deleteChat: async (userChatSettingsDTO) => {
     try {
       const response = await axiosInstance.put(
         `${CHAT_SERVICE_URL}/delete-chat`,
-        userChatSettings
+        userChatSettingsDTO
       );
       return response;
     } catch (error) {

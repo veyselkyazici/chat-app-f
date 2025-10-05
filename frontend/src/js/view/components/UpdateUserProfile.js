@@ -25,6 +25,7 @@ async function userUpdateModal(user, bool) {
       role: "button",
     }
   );
+  const spinner = createElement("span", "spinner hidden");
   profilePhotoButton.id = "profilePhotoInput";
 
   const profilePhotoButtonDiv = createElement(
@@ -76,7 +77,7 @@ async function userUpdateModal(user, bool) {
   } else {
     profilePhotoButton.append(createDefaultImage());
   }
-
+  profilePhotoButton.append(spinner);
   profilePhotoDiv.append(profilePhotoButton);
   profilePhotoUserDiv.append(profilePhotoDiv);
 
@@ -194,6 +195,15 @@ async function toggleEditName(user) {
         });
       } else {
         const response = await userService.updateUserName(updateUserDTO);
+        chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
+          "updated-user-profile-send-message",
+          {
+            userId: chatInstance.user.id,
+            url: chatInstance.user.imagee,
+            about: chatInstance.user.about,
+            firstName: response.data.value,
+          }
+        );
         chatInstance.user.firstName = response.data.value;
       }
     } else {
@@ -221,6 +231,15 @@ async function toggleEditAbout() {
         });
       } else {
         const response = await userService.updateUserAbout(updateUserDTO);
+        chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
+          "updated-user-profile-send-message",
+          {
+            userId: chatInstance.user.id,
+            url: chatInstance.user.imagee,
+            about: response.data.value,
+            firstName: chatInstance.user.firstName,
+          }
+        );
         chatInstance.user.about = response.data.value;
       }
     } else {
@@ -775,7 +794,8 @@ async function cropImage(canvas1, userId, originalFile) {
   croppedCanvas.toBlob(async (blob) => {
     const formData = new FormData();
     formData.append("file", blob, originalFileName);
-
+    const overlay = document.querySelector(".overlay-spinner");
+    overlay.classList.remove("hidden");
     try {
       const response = await userService.uploadPhoto(formData, userId);
       if (response.success) {
@@ -826,12 +846,19 @@ async function cropImage(canvas1, userId, originalFile) {
         userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
         userProfilePhotoElement.append(image);
         chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
-          "updated-profile-photo-send-message",
-          { userId: userId, url: chatInstance.user.imagee }
+          "updated-user-profile-send-message",
+          {
+            userId: userId,
+            url: chatInstance.user.imagee,
+            about: chatInstance.user.about,
+            firstName: chatInstance.user.firstName,
+          }
         );
       }
     } catch (error) {
       console.error("Error uploading photo:", error);
+    } finally {
+      overlay.classList.add("hidden");
     }
   }, "image/png");
 }
@@ -860,7 +887,37 @@ function zoomImage(scaleFactor, canvas1) {
 }
 
 async function removePhoto() {
-  // userService.removePhoto();
+  ;
+  const photoElement = document.querySelector(".profile-photo-button");
+  const overlay = document.querySelector(".overlay-spinner");
+  const userProfilePhotoElement = document.querySelector(".user-profile-photo");
+
+  overlay.classList.remove("hidden");
+
+  try {
+    const response = await userService.removePhoto();
+
+    if (response.success) {
+      userProfilePhotoElement.innerHTML = "";
+      photoElement.innerHTML = "";
+      photoElement.append(createDefaultImage());
+      userProfilePhotoElement.append(createDefaultImage());
+      chatInstance.user.imagee = null;
+      chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
+        "updated-user-profile-send-message",
+        {
+          userId: chatInstance.user.id,
+          url: chatInstance.user.imagee,
+          about: chatInstance.user.about,
+          firstName: chatInstance.user.firstName,
+        }
+      );
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    overlay.classList.add("hidden");
+  }
 }
 
 function getUserProfilePhotoUrl() {

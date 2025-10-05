@@ -567,13 +567,12 @@ async function handleContactClick(event) {
     let chatSummaryDTO;
 
     if (!findChat) {
-      // Chat yoksa oluştur
+      ;
       const createChatRoomAndUserChatSettings =
         await chatService.createChatRoomIfNotExists(
           contactData.contactsDTO.userContactId
         );
 
-      // ChatSummaryDTO için gerekli alt DTO’ları oluştur
       chatSummaryDTO = new ChatSummaryDTO({
         chatDTO: new ChatDTO({
           id: createChatRoomAndUserChatSettings.id,
@@ -588,8 +587,8 @@ async function handleContactClick(event) {
         userProfileResponseDTO: new UserProfileResponseDTO(
           contactData.userProfileResponseDTO
         ),
-        userChatSettings: new UserChatSettingsDTO(
-          createChatRoomAndUserChatSettings.userChatSettings
+        userChatSettingsDTO: new UserChatSettingsDTO(
+          createChatRoomAndUserChatSettings.userChatSettingsDTO
         ),
       });
       await createMessageBox(chatSummaryDTO);
@@ -620,7 +619,7 @@ async function handleContactClick(event) {
         userProfileResponseDTO: new UserProfileResponseDTO(
           contactData.userProfileResponseDTO
         ),
-        userChatSettings: new UserChatSettingsDTO(findChat.userChatSettings),
+        userChatSettingsDTO: new UserChatSettingsDTO(findChat.userChatSettingsDTO),
       });
     }
 

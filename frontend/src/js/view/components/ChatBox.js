@@ -163,7 +163,7 @@ async function createChatBox(chat, index) {
   const optionSpan1 = createElement("span", "");
   const optionSpan2 = createElement("span", "");
   const optionSpan3 = createElement("span", "");
-  if (chat.userChatSettings.unreadMessageCount !== 0) {
+  if (chat.userChatSettingsDTO.unreadMessageCount !== 0) {
     optionSpan1.append(createUnreadMessageCount(chat));
   }
 
@@ -187,9 +187,9 @@ function createUnreadMessageCount(chat) {
     "unread-message-count-span",
     {},
     {
-      "aria-label": `${chat.userChatSettings.unreadMessageCount} okunmamış mesaj`,
+      "aria-label": `${chat.userChatSettingsDTO.unreadMessageCount} okunmamış mesaj`,
     },
-    chat.userChatSettings.unreadMessageCount
+    chat.userChatSettingsDTO.unreadMessageCount
   );
   unreadMessageCountDiv.append(unreadMessageCountSpan);
   return unreadMessageCountDiv;
@@ -358,13 +358,13 @@ function handleOptionsBtnClick(event) {
       chatOptionsDiv.style.transform = "scale(1)";
       chatOptionsDiv.style.opacity = "1";
       closeOptionsDivOnClickOutside();
-      const archiveLabel = chatData.userChatSettings.isArchived
+      const archiveLabel = chatData.userChatSettingsDTO.isArchived
         ? "Arşivden çıkar"
         : "Sohbeti arşivle";
-      const blockLabel = chatData.userChatSettings.isBlocked
+      const blockLabel = chatData.userChatSettingsDTO.isBlocked
         ? "Unblock"
         : "Block";
-      const pinLabel = chatData.userChatSettings.isPinned
+      const pinLabel = chatData.userChatSettingsDTO.isPinned
         ? "Sohbeti sabitlemeyi kaldır"
         : "Sohbeti sabitle";
       if (!chatData.contactsDTO.userHasAddedRelatedUser) {
@@ -399,7 +399,7 @@ function handleOptionsBtnClick(event) {
         userId: chatData.contactsDTO.userId,
         id: chatData.chatDTO.id,
         friendEmail: chatData.userProfileResponseDTO.email,
-        userChatSettings: { ...chatData.userChatSettings },
+        userChatSettingsDTO: { ...chatData.userChatSettingsDTO },
       });
 
       const blockLiElement = createElement(
@@ -449,11 +449,12 @@ const updateChatInstance = (chatId, blockedStatus) => {
     (chat) => chat.chatDTO.id === chatId
   );
   if (chatIndex !== -1) {
-    chatInstance.chatList[chatIndex].userChatSettings.isBlocked = blockedStatus;
+    chatInstance.chatList[chatIndex].userChatSettingsDTO.isBlocked =
+      blockedStatus;
   }
 };
 const toggleBlockUser = async (chatData) => {
-  const isBlocked = chatData.userChatSettings.isBlocked;
+  const isBlocked = chatData.userChatSettingsDTO.isBlocked;
   const blockMessage = isBlocked
     ? `Do you want to unblock ${chatData.userProfileResponseDTO.email}?`
     : `Do you want to block ${chatData.userProfileResponseDTO.email}?`;
@@ -564,7 +565,7 @@ const deleteChat = async (chat, showChatOptions, chatElement) => {
   const modalMessage = `Do you want to delete the chat with ${chat.userProfileResponseDTO.email}?`;
   const mainCallback = async () => {
     try {
-      const response = await chatService.deleteChat(chat.userChatSettings);
+      const response = await chatService.deleteChat(chat.userChatSettingsDTO);
       if (response && response.status === 200) {
         if (chatElement) {
           removeChat(chatElement);
@@ -749,13 +750,13 @@ function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
   const isSender =
     chatData.chatDTO.messages[0].senderId === chatInstance.user.id;
   const isSeen = chatData.chatDTO.messages[0].isSeen;
-  if (chatData.userChatSettings.unreadMessageCount !== 0) {
+  if (chatData.userChatSettingsDTO.unreadMessageCount !== 0) {
     const unreadMessageCountElement = chatElement.querySelector(
       ".unread-message-count-div"
     );
     if (unreadMessageCountElement) {
       unreadMessageCountElement.firstElementChild.textContent =
-        chatData.userChatSettings.unreadMessageCount;
+        chatData.userChatSettingsDTO.unreadMessageCount;
     } else {
       const chatOptionsFirstSpan =
         chatElement.querySelector(".chat-options").firstElementChild;
@@ -794,7 +795,7 @@ function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
 }
 const togglePinnedChat = async (chatData, showChatOptions) => {
   showChatOptions.removeChild(showChatOptions.firstElementChild);
-  const isPinned = chatData.userChatSettings.isPinned;
+  const isPinned = chatData.userChatSettingsDTO.isPinned;
 
   try {
     if (isPinned) {
@@ -803,7 +804,7 @@ const togglePinnedChat = async (chatData, showChatOptions) => {
         (chat) => chat.chatDTO.id === chatData.chatDTO.id
       );
       if (chatIndex !== -1) {
-        chatInstance.chatList[chatIndex].userChatSettings.isBlocked = false;
+        chatInstance.chatList[chatIndex].userChatSettingsDTO.isBlocked = false;
       }
     } else {
       await chatService.chatBlock(chatData);
@@ -811,7 +812,7 @@ const togglePinnedChat = async (chatData, showChatOptions) => {
         (chat) => chat.chatDTO.id === chatData.chatDTO.id
       );
       if (chatIndex !== -1) {
-        chatInstance.chatList[chatIndex].userChatSettings.isBlocked = true;
+        chatInstance.chatList[chatIndex].userChatSettingsDTO.isBlocked = true;
       }
     }
     return true;
@@ -836,11 +837,10 @@ async function handleChatClick(event) {
   const chatElement = event.currentTarget;
   const chatData = chatElement.chatData;
   const innerDiv = chatElement.querySelector(".chat-box > div");
-
+  chatInstance.selectedMessageBoxData = chatData;
   if (innerDiv.getAttribute("aria-selected") === "true") {
     return;
   }
-
   ariaSelected(chatElement, chatInstance.selectedChatUserId, innerDiv);
   chatInstance.webSocketManagerChat.unsubscribeFromChannel(
     `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`
@@ -854,7 +854,7 @@ async function handleChatClick(event) {
         await fetchMessages(chatElement.chatData);
     }
   );
-  if (chatData.userChatSettings.unreadMessageCount > 0) {
+  if (chatData.userChatSettingsDTO.unreadMessageCount > 0) {
     await markMessagesAsReadAndFetchMessages(chatElement);
   } else {
     await fetchMessages(chatData);
@@ -864,11 +864,11 @@ async function handleChatClick(event) {
 async function markMessagesAsReadAndFetchMessages(chatElement) {
   const dto = {
     recipientId: chatInstance.user.id,
-    userChatSettingsId: chatElement.chatData.userChatSettings.id,
+    userChatSettingsId: chatElement.chatData.userChatSettingsDTO.id,
     chatRoomId: chatElement.chatData.chatDTO.id,
     senderId: chatElement.chatData.userProfileResponseDTO.id,
     unreadMessageCount:
-      chatElement.chatData.userChatSettings.unreadMessageCount,
+      chatElement.chatData.userChatSettingsDTO.unreadMessageCount,
   };
 
   chatInstance.webSocketManagerChat.sendMessageToAppChannel(
@@ -888,11 +888,9 @@ async function fetchMessages(chatSummaryData) {
   );
   const newChatSummaryData = new ChatSummaryDTO({
     chatDTO: chatRoomLast30Messages,
-    contactsDTO: new ContactsDTO(chatSummaryData.contactsDTO),
-    userProfileResponseDTO: new UserProfileResponseDTO(
-      chatSummaryData.userProfileResponseDTO
-    ),
-    userChatSettings: new UserChatSettingsDTO(chatSummaryData.userChatSettings),
+    contactsDTO: chatSummaryData.contactsDTO,
+    userProfileResponseDTO: chatSummaryData.userProfileResponseDTO,
+    userChatSettingsDTO: chatSummaryData.userChatSettingsDTO,
   });
 
   await removeMessageBoxAndUnsubscribe();
@@ -1038,9 +1036,11 @@ const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
   ) {
     const parentDiv = document.querySelector(".chat-list-content"); // Ana div'i seçin
     const selectedDiv = parentDiv.querySelector('[aria-selected="true"]');
-    selectedDiv.setAttribute("aria-selected", "false");
+    if (selectedDiv) {
+      selectedDiv.setAttribute("aria-selected", "false");
 
-    selectedDiv.querySelector(".chat").classList.remove("selected-chat");
+      selectedDiv.querySelector(".chat").classList.remove("selected-chat");
+    }
   }
   chatElementDOM.querySelector(".chat").classList.add("selected-chat");
   innerDiv.setAttribute("aria-selected", "true");

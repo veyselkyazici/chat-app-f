@@ -69,16 +69,18 @@ const typingStatusSubscribe = (chat, messageBoxElement) => {
   );
 };
 const typingsStatus = async (status, chat, messageBoxElement) => {
-  const statusSpan = messageBoxElement.querySelector(".online-status-1");
-  if (statusSpan) {
-    messageBoxElement.removeChild(statusSpan.parentElement);
-  }
-  if (status.typing) {
-    messageBoxElement.append(createTypingElement());
-  } else {
-    const onlineElement = await isOnline(chat.userProfileResponseDTO);
-    messageBoxElement.append(onlineElement);
-  }
+  setTimeout(async () => {
+    const statusSpan = messageBoxElement.querySelector(".online-status-1");
+    if (statusSpan) {
+      messageBoxElement.removeChild(statusSpan.parentElement);
+    }
+    if (status.typing) {
+      messageBoxElement.append(createTypingElement());
+    } else {
+      const onlineElement = await isOnline(chat.userProfileResponseDTO);
+      messageBoxElement.append(onlineElement);
+    }
+  }, 1000);
 };
 const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
   chatInstance.webSocketManagerChat.subscribeToChannel(
@@ -104,7 +106,6 @@ const createTypingElement = () => {
 const onlineStatus = async (statusMessage, chat, messageBoxElement) => {
   const statusInfo = JSON.parse(statusMessage.body);
   const statusSpan = messageBoxElement.querySelector(".online-status-1");
-
   if (statusSpan) {
     messageBoxElement.removeChild(statusSpan.parentElement);
   }
@@ -766,7 +767,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
     ".message-box1-7-1-1-1-2-1-1-1"
   );
 
-  if (chatData.userChatSettings.isBlocked) {
+  if (chatData.userChatSettingsDTO.isBlocked) {
     blockInput(chatData.contactsDTO.userContactName, main, footer);
   } else {
     unBlockInput(chatData, main, footer, typingStatus);
@@ -1042,7 +1043,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
 };
 
 const onlineInfo = async (chat, messageBoxDiv2) => {
-  if (!chat.userChatSettings.isBlocked && !chat.userChatSettings.isBlockedMe) {
+  if (!chat.userChatSettingsDTO.isBlocked && !chat.userChatSettingsDTO.isBlockedMe) {
     const contactsOnlineStatusElement = await isOnline(
       chat.userProfileResponseDTO,
       chat.contactsDTO
@@ -1518,12 +1519,17 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
     );
     return;
   }
-
-  if (
-    messageContent &&
-    !chatSummaryDTO.userChatSettings.isBlocked &&
-    !chatSummaryDTO.userChatSettings.isBlockedMe
-  ) {
+  let isBlocked = false;
+  let isBlockedMe = false;
+  if (chatInstance.selectedMessageBoxData) {
+    isBlocked = chatInstance.selectedMessageBoxData.userChatSettingsDTO.isBlocked;
+    isBlockedMe =
+      chatInstance.selectedMessageBoxData.userChatSettingsDTO.isBlockedMe;
+  } else {
+    isBlocked = chatSummaryDTO.userChatSettingsDTO.isBlocked;
+    isBlockedMe = chatSummaryDTO.userChatSettingsDTO.isBlockedMe;
+  }
+  if (messageContent && !isBlocked && !isBlockedMe) {
     const encryptedData = await encryptMessage(
       messageContent,
       await importPublicKey(
@@ -1577,7 +1583,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
         }),
         contactsDTO: chatSummaryDTO.contactsDTO,
         userProfileResponseDTO: chatSummaryDTO.userProfileResponseDTO,
-        userChatSettings: chatSummaryDTO.userChatSettings,
+        userChatSettingsDTO: chatSummaryDTO.userChatSettingsDTO,
       });
 
       updateChatBox(newChatSummaryDTO);
@@ -1624,9 +1630,9 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
     typingStatus.isTyping = false;
     messageContentElement.parentElement.focus();
   } else {
-    if (chatSummaryDTO.userChatSettings.isBlocked) {
+    if (isBlocked) {
       toastr.error("This user is blocked. You cannot send a message.");
-    } else if (chatSummaryDTO.userChatSettings.isBlockedMe) {
+    } else if (isBlockedMe) {
       toastr.error("This user has blocked you. You cannot send a message.");
     }
   }
@@ -1868,7 +1874,7 @@ function handleOptionsBtnClick(event, chat) {
       chatOptionsDiv.style.transform = "scale(1)";
       chatOptionsDiv.style.opacity = "1";
 
-      const blockLabel = chat.userChatSettings.isBlocked ? "Unblock" : "Block";
+      const blockLabel = chat.userChatSettingsDTO.isBlocked ? "Unblock" : "Block";
 
       const deleteChatLabel = "Delete user";
 
@@ -1877,7 +1883,7 @@ function handleOptionsBtnClick(event, chat) {
 
       const formatChatData = {
         chatDTO: { id: chat.id },
-        userChatSettings: { ...chat.userChatSettings },
+        userChatSettingsDTO: { ...chat.userChatSettingsDTO },
         userProfileResponseDTO: { ...chat.contactsDTO.userProfileResponseDTO },
         contactsDTO: { ...chat.contactsDTO.contact },
       };
@@ -1928,7 +1934,7 @@ function handleOptionsBtnClick(event, chat) {
       const chatDTO = {
         userProfileResponseDTO: chat.contactsDTO.userProfileResponseDTO,
         chatDTO: { id: chat.id },
-        userChatSettings: chat.userChatSettings,
+        userChatSettingsDTO: chat.userChatSettingsDTO,
       };
 
       const deleteLiElement = createElement(

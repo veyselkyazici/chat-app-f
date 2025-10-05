@@ -8,6 +8,6 @@ export class ChatSummaryDTO {
         this.chatDTO = new ChatDTO(data.chatDTO);
         this.contactsDTO = new ContactsDTO(data.contactsDTO);
         this.userProfileResponseDTO = new UserProfileResponseDTO(data.userProfileResponseDTO);
-        this.userChatSettings = new UserChatSettingsDTO(data.userChatSettings);
+        this.userChatSettingsDTO = new UserChatSettingsDTO(data.userChatSettingsDTO);
     }
 }
