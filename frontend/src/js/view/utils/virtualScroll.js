@@ -11,6 +11,7 @@ export function virtualScroll(
   paneSideElement,
   visibleItemCount
 ) {
+  
   let start = 0;
   let end = visibleItemCount;
 

@@ -34,6 +34,8 @@ const emojiRegex =
   /([\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF}|\u{1F700}-\u{1F77F}|\u{1F780}-\u{1F7FF}|\u{1F800}-\u{1F8FF}|\u{1F900}-\u{1F9FF}|\u{1FA00}-\u{1FA6F}|\u{1FA70}-\u{1FAFF}])/gu;
 
 async function createMessageBox(chatData) {
+  const startMessage = document.querySelector(".start-message");
+  startMessage.style.display = "none";
   // <div class="contact-information profile"><span class="contact-information-span"></span></div>
   const confirmationElement = document.querySelector(".profile-span-div");
   if (confirmationElement) {
@@ -785,13 +787,15 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
           chatData.userProfileResponseDTO.id
         )
       );
-      renderMessage(
-        older30Messages,
-        chatData.userProfileResponseDTO.privacySettings,
-        false,
-        chatData.contactsDTO.userId
-      );
-    } else {
+
+      if (older30Messages) {
+        renderMessage(
+          older30Messages,
+          chatData.userProfileResponseDTO.privacySettings,
+          false,
+          chatData.contactsDTO.userId
+        );
+      }
     }
   });
   return messageBoxElement;
@@ -1043,7 +1047,10 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
 };
 
 const onlineInfo = async (chat, messageBoxDiv2) => {
-  if (!chat.userChatSettingsDTO.isBlocked && !chat.userChatSettingsDTO.isBlockedMe) {
+  if (
+    !chat.userChatSettingsDTO.isBlocked &&
+    !chat.userChatSettingsDTO.isBlockedMe
+  ) {
     const contactsOnlineStatusElement = await isOnline(
       chat.userProfileResponseDTO,
       chat.contactsDTO
@@ -1519,16 +1526,8 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
     );
     return;
   }
-  let isBlocked = false;
-  let isBlockedMe = false;
-  if (chatInstance.selectedMessageBoxData) {
-    isBlocked = chatInstance.selectedMessageBoxData.userChatSettingsDTO.isBlocked;
-    isBlockedMe =
-      chatInstance.selectedMessageBoxData.userChatSettingsDTO.isBlockedMe;
-  } else {
-    isBlocked = chatSummaryDTO.userChatSettingsDTO.isBlocked;
-    isBlockedMe = chatSummaryDTO.userChatSettingsDTO.isBlockedMe;
-  }
+  let isBlocked = chatSummaryDTO.userChatSettingsDTO.isBlocked;
+  let isBlockedMe = chatSummaryDTO.userChatSettingsDTO.isBlockedMe;
   if (messageContent && !isBlocked && !isBlockedMe) {
     const encryptedData = await encryptMessage(
       messageContent,
@@ -1629,6 +1628,9 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
     );
     typingStatus.isTyping = false;
     messageContentElement.parentElement.focus();
+
+    const paneSideElement = document.querySelector("#pane-side");
+    paneSideElement.scrollTop = 0;
   } else {
     if (isBlocked) {
       toastr.error("This user is blocked. You cannot send a message.");
@@ -1839,7 +1841,7 @@ function formatDateTime(utcDateTimeString) {
 const removeMessageBoxAndUnsubscribe = async () => {
   const messageBoxElement = document.querySelector(".message-box");
   const messageBox = messageBoxElement?.querySelector(".message-box1");
-  const startMessageElement = messageBoxElement.querySelector(".start-message");
+  // const startMessageElement = messageBoxElement.querySelector(".start-message");
   if (messageBox) {
     messageBoxElement.removeChild(messageBox);
     chatInstance.webSocketManagerChat.unsubscribeFromChannel(
@@ -1848,9 +1850,10 @@ const removeMessageBoxAndUnsubscribe = async () => {
     chatInstance.webSocketManagerChat.unsubscribeFromChannel(
       `/user/${chatInstance.user.id}/queue/message-box-typing`
     );
-  } else {
-    messageBoxElement.removeChild(startMessageElement);
   }
+  // else {
+  //   messageBoxElement.removeChild(startMessageElement);
+  // }
 };
 function handleOptionsBtnClick(event, chat) {
   event.stopPropagation();
@@ -1874,19 +1877,21 @@ function handleOptionsBtnClick(event, chat) {
       chatOptionsDiv.style.transform = "scale(1)";
       chatOptionsDiv.style.opacity = "1";
 
-      const blockLabel = chat.userChatSettingsDTO.isBlocked ? "Unblock" : "Block";
+      const blockLabel = chat.userChatSettingsDTO.isBlocked
+        ? "Unblock"
+        : "Block";
 
-      const deleteChatLabel = "Delete user";
+      const deleteChatLabel = "Delete chat";
 
       const ulElement = createElement("ul", "ul1");
       const divElement = createElement("div", "");
 
-      const formatChatData = {
-        chatDTO: { id: chat.id },
-        userChatSettingsDTO: { ...chat.userChatSettingsDTO },
-        userProfileResponseDTO: { ...chat.contactsDTO.userProfileResponseDTO },
-        contactsDTO: { ...chat.contactsDTO.contact },
-      };
+      // const formatChatData = {
+      //   chatDTO: { id: chat.chatDTO.id },
+      //   userChatSettingsDTO: { ...chat.userChatSettingsDTO },
+      //   userProfileResponseDTO: { ...chat.userProfileResponseDTO },
+      //   contactsDTO: { ...chat.contactsDTO },
+      // };
 
       const blockLiElement = createElement(
         "li",
@@ -1900,7 +1905,7 @@ function handleOptionsBtnClick(event, chat) {
         null,
         { role: "button", "aria-label": `${blockLabel}` },
         blockLabel,
-        () => toggleBlockUser(formatChatData)
+        () => toggleBlockUser(chat)
       );
 
       const contactInformationLiElement = createElement(
@@ -1932,8 +1937,8 @@ function handleOptionsBtnClick(event, chat) {
           )
       );
       const chatDTO = {
-        userProfileResponseDTO: chat.contactsDTO.userProfileResponseDTO,
-        chatDTO: { id: chat.id },
+        userProfileResponseDTO: chat.userProfileResponseDTO,
+        chatDTO: { id: chat.chatDTO.id },
         userChatSettingsDTO: chat.userChatSettingsDTO,
       };
 
@@ -1945,8 +1950,9 @@ function handleOptionsBtnClick(event, chat) {
       );
       const chatElements = document.querySelectorAll(".chat1");
       const chatElement = Array.from(chatElements).find(
-        (chatItem) => chatItem.chatData.chatDTO.id === chat.id
+        (chatItem) => chatItem.chatData.chatDTO.id === chat.chatDTO.id
       );
+
       const deleteLiDivElement = createElement(
         "div",
         "list-item1-div",

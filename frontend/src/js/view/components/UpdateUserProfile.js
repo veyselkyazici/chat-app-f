@@ -887,7 +887,7 @@ function zoomImage(scaleFactor, canvas1) {
 }
 
 async function removePhoto() {
-  ;
+  
   const photoElement = document.querySelector(".profile-photo-button");
   const overlay = document.querySelector(".overlay-spinner");
   const userProfilePhotoElement = document.querySelector(".user-profile-photo");

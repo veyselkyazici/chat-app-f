@@ -432,7 +432,18 @@ body,
   z-index: 200;
   transform: translateZ(0);
 }
-
+@media screen and (max-width: 900px) {
+  .chats {
+    flex: 0 0 45%;
+    max-width: 45%;
+  }
+}
+@media screen and (min-width: 900px) and (max-width: 1024px) {
+  .chats {
+    flex: 0 0 40%;
+    max-width: 40%;
+  }
+}
 @media screen and (min-width: 1024px) and (max-width: 1300px) {
   .chats {
     flex: 0 0 40%;
@@ -782,6 +793,7 @@ header {
   align-items: center;
   justify-content: center;
   height: 100%;
+  z-index: 899;
 }
 
 .vky {
@@ -1039,7 +1051,7 @@ button {
   position: fixed;
   box-sizing: border-box;
   background-color: rgba(255, 255, 255, 0.85);
-  z-index: 800;
+  z-index: 1200;
   left: 0;
 }
 
@@ -1547,10 +1559,13 @@ button.chat-options-btn:focus {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
-
 
 /* Kişiler, Topluluklar tıklanınca gösterilecek divlerin css i*/
 .a1 {
@@ -1565,8 +1580,7 @@ button.chat-options-btn:focus {
 }
 
 .a1-1 {
-  flex: 0 0 100%;
-  max-width: 100%;
+  width: 30%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1576,17 +1590,23 @@ button.chat-options-btn:focus {
   transform: translateZ(0);
 }
 
-@media screen and (min-width: 1024px) and (max-width: 1300px) {
+@media screen and (max-width: 900px) {
+  .a1-1 {
+    flex: 0 0 45%;
+    max-width: 45%;
+  }
+}
+
+@media screen and (min-width: 900px) and (max-width: 1024px) {
   .a1-1 {
     flex: 0 0 40%;
     max-width: 40%;
   }
 }
-
-@media screen and (min-width: 1300px) {
+@media screen and (min-width: 1024px) and (max-width: 1300px) {
   .a1-1 {
-    flex: 0 0 30%;
-    max-width: 30%;
+    flex: 0 0 40%;
+    max-width: 40%;
   }
 }
 
@@ -1920,6 +1940,7 @@ button.chat-options-btn:focus {
   background-color: #efeae2;
   transition: background-color 0.3s ease;
   transform-origin: left top;
+  z-index: 999;
 }
 
 .message-box1-1 {
@@ -2980,8 +3001,13 @@ button.chat-options-btn:focus {
   vertical-align: top;
   flex: none;
 }
-.contact-information {
-  flex-shrink: 0;
+
+.contact-information-span {
+  bottom: 0;
+  top: 0;
+  inset-inline-end: 0;
+  inset-inline-start: 0;
+  position: absolute;
 }
 .profile-span-div {
   bottom: 0;
@@ -3085,7 +3111,9 @@ button.chat-options-btn:focus {
   flex-shrink: 0;
   flex-grow: 0;
 }
-
+.main-profile {
+  align-items: center;
+}
 .section {
   margin-bottom: 10px;
   padding-top: 28px;
@@ -3103,8 +3131,21 @@ button.chat-options-btn:focus {
   animation-name: x15aousm-B;
 }
 
-.about {
+.section-about {
   padding-top: 17px;
+  margin-bottom: 10px;
+  padding-bottom: 19px;
+  padding-left: 30px;
+  flex-basis: auto;
+  padding-right: 30px;
+  flex-shrink: 0;
+  animation-timing-function: cubic-bezier(0.1, 0.82, 0.25, 1);
+  animation-duration: 1s;
+  position: relative;
+  flex-grow: 0;
+  box-shadow: 0 1px 3px rgba(11, 20, 26, 0.08);
+  background-color: white;
+  animation-name: x15aousm-B;
 }
 
 .profile-section-photo {

@@ -18,11 +18,7 @@ import {
   removeMessageBoxAndUnsubscribe,
   unBlockInput,
 } from "./MessageBox.js";
-import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
-import { ContactsDTO } from "../dtos/contact/response/ContactsDTO.js";
-import { UserProfileResponseDTO } from "../dtos/user/response/UserProfileResponseDTO.js";
-import { UserChatSettingsDTO } from "../dtos/chat/response/UserChatSettingsDTO.js";
 
 async function handleChats(chatList) {
   const paneSideElement = document.querySelector("#pane-side");
@@ -175,7 +171,7 @@ async function createChatBox(chat, index) {
   const chatListContentElement = document.querySelector(".chat-list-content");
 
   addEventListeners(chatElementDOM);
-  chatListContentElement.append(chatElementDOM);
+  chatListContentElement.prepend(chatElementDOM);
 }
 function createUnreadMessageCount(chat) {
   const unreadMessageCountDiv = createElement(
@@ -209,6 +205,7 @@ function moveChatToTop(chatRoomId) {
   const chatIndex = chatInstance.chatList.findIndex(
     (chat) => chat.chatDTO.id === chatRoomId
   );
+
   if (chatIndex !== -1) {
     let chat = null;
     if (chatInstance.chatList.length !== 1) {
@@ -263,6 +260,10 @@ function moveChatToTop(chatRoomId) {
 
         chatListContentElement.style.height = currentHeight + 72 + "px";
         createChatBox(chat, 0);
+        normalizeTranslateY();
+        if (chat.chatDTO.messages[0].senderId === chatInstance.user.id) {
+          scrollTop();
+        }
       }
     }
   }
@@ -271,10 +272,11 @@ function normalizeTranslateY() {
   const chatElements = document.querySelectorAll(".chat1");
   chatElements.forEach((chat, index) => {
     chat.style.transform = `translateY(${index * 72}px)`;
+    chat.style.zIndex = index;
   });
+}
+function scrollTop() {
   const paneSideElement = document.querySelector("#pane-side");
-
-  // En yukarıya ışınlan
   paneSideElement.scrollTop = 0;
 }
 const isChatListLengthGreaterThanVisibleItemCount = () => {
@@ -462,36 +464,45 @@ const toggleBlockUser = async (chatData) => {
   const mainCallback = async () => {
     try {
       let result;
+      
       if (isBlocked) {
         result = await chatService.chatUnblock(chatData);
         updateChatInstance(chatData.chatDTO.id, false);
+        chatData.userChatSettingsDTO.isBlocked = false;
         if (isMessageBoxDomExists(chatData.chatDTO.id)) {
           const messageBoxElement = document.querySelector(".message-box");
           const statusSpan = messageBoxElement.querySelector(".online-status");
           const messageBoxOnlineStatus =
             messageBoxElement.querySelector(".message-box1-2-2");
+
           const messageBoxFooter =
             messageBoxElement.querySelector(".message-box1-7");
           const messageBoxMain =
             messageBoxElement.querySelector(".message-box1");
           messageBoxFooter.innerHTML = "";
-          let typingStatus = { isTyping: false, previousText: "" };
+          const typingStatus = { isTyping: false, previousText: "" };
+
           unBlockInput(
             chatData,
             messageBoxMain,
             messageBoxFooter,
             typingStatus
           );
-          if (statusSpan) {
-            statusSpan.remove();
-          }
+
+          if (statusSpan) statusSpan.remove();
           await onlineInfo(chatData, messageBoxOnlineStatus);
         }
+
+        toastr.success(
+          `${chatData.userProfileResponseDTO.email} has been unblocked.`
+        );
       } else {
         result = await chatService.chatBlock(chatData);
         updateChatInstance(chatData.chatDTO.id, true);
+        chatData.userChatSettingsDTO.isBlocked = true;
         if (isMessageBoxDomExists(chatData.chatDTO.id)) {
           const messageBoxElement = document.querySelector(".message-box");
+
           const statusSpan = messageBoxElement.querySelector(".online-status");
           const messageBoxFooter =
             messageBoxElement.querySelector(".message-box1-7");
@@ -499,15 +510,14 @@ const toggleBlockUser = async (chatData) => {
             messageBoxElement.querySelector(".message-box1");
           messageBoxFooter.innerHTML = "";
           blockInput(
-            chatData.contactsDTO.userContactName
-              ? chatData.contactsDTO.userContactName
-              : chatData.userProfileResponseDTO.email,
+            chatData.contactsDTO.userContactName ||
+              chatData.userProfileResponseDTO.email,
             messageBoxMain,
             messageBoxFooter
           );
-          if (statusSpan) {
-            statusSpan.remove();
-          }
+
+          if (statusSpan) statusSpan.remove();
+
           chatInstance.webSocketManagerChat.unsubscribeFromChannel(
             `/user/${chatData.contactsDTO.userContactId}/queue/online-status`
           );
@@ -515,33 +525,31 @@ const toggleBlockUser = async (chatData) => {
             `/user/${chatInstance.user.id}/queue/message-box-typing`
           );
         }
-      }
-      if (result.status === 200) {
-        const parentSpan = document.querySelector(".block-text-div-div-span");
-        if (parentSpan) {
-          parentSpan.childNodes.forEach((node) => {
-            if (node.nodeType === 3) {
-              node.textContent = " " + (!isBlocked ? "unblock" : "block");
-            }
-          });
-        }
 
         toastr.success(
-          isBlocked
-            ? `${chatData.userProfileResponseDTO.email} has been unblocked.`
-            : `${chatData.userProfileResponseDTO.email} has been blocked.`
+          `${chatData.userProfileResponseDTO.email} has been blocked.`
         );
-        return true;
-      } else {
-        toastr.error(
-          isBlocked
-            ? `Failed to unblock ${chatData.userProfileResponseDTO.email}.`
-            : `Failed to block ${chatData.userProfileResponseDTO.email}.`
-        );
-        return false;
       }
+
+      const parentSpan = document.querySelector(".block-text-div-div-span");
+      if (parentSpan) {
+        parentSpan.childNodes.forEach((node) => {
+          if (node.nodeType === 3) {
+            node.textContent = " " + (!isBlocked ? "unblock" : "block");
+          }
+        });
+      }
+
+      return true;
     } catch (error) {
       console.error("Hata:", error);
+
+      toastr.error(
+        isBlocked
+          ? `Failed to unblock ${chatData.userProfileResponseDTO.email}.`
+          : `Failed to block ${chatData.userProfileResponseDTO.email}.`
+      );
+
       return false;
     }
   };
@@ -576,6 +584,17 @@ const deleteChat = async (chat, showChatOptions, chatElement) => {
           if (removeIndex !== -1) {
             chatInstance.chatList.splice(removeIndex, 1);
           }
+        }
+
+        const messageBoxElement = document.querySelector(".message-box1");
+        if (
+          messageBoxElement &&
+          messageBoxElement.data.userProfileResponseDTO.id ===
+            chat.userProfileResponseDTO.id
+        ) {
+          const startMessage = document.querySelector(".start-message");
+          startMessage.style.display = "flex";
+          messageBoxElement.remove();
         }
         toastr.success("Chat deleted successfully.");
         return true;
@@ -666,8 +685,6 @@ function updateTranslateYAfterDelete(deletedChatTranslateY) {
 
 function translateYChatsDown(targetChatElementTranslateY) {
   const chatElements = document.querySelectorAll(".chat1");
-  let maxTranslateY = -1;
-  let minTranslateY = Infinity;
 
   chatElements.forEach((chat) => {
     const currentTranslateY = parseInt(
@@ -675,22 +692,12 @@ function translateYChatsDown(targetChatElementTranslateY) {
     );
     if (targetChatElementTranslateY > currentTranslateY) {
       chat.style.transform = `translateY(${currentTranslateY + 72}px)`;
-      chat.zIndex = currentTranslateY / 72;
+      chat.style.zIndex = (currentTranslateY + 72) / 72;
     } else if (targetChatElementTranslateY === currentTranslateY) {
       chat.style.transform = `translateY(${0}px)`;
-    }
-    if (currentTranslateY > maxTranslateY) {
-      maxTranslateY = currentTranslateY;
-    } else if (currentTranslateY < minTranslateY) {
-      minTranslateY = currentTranslateY;
+      chat.style.zIndex = 0;
     }
   });
-  const paneSideElement = document.querySelector("#pane-side");
-  paneSideElement.scrollTop = 0;
-  return {
-    maxIndex: maxTranslateY / 72,
-    minIndex: minTranslateY / 72,
-  };
 }
 
 function getTranslateYMaxMinIndex() {
@@ -837,7 +844,6 @@ async function handleChatClick(event) {
   const chatElement = event.currentTarget;
   const chatData = chatElement.chatData;
   const innerDiv = chatElement.querySelector(".chat-box > div");
-  chatInstance.selectedMessageBoxData = chatData;
   if (innerDiv.getAttribute("aria-selected") === "true") {
     return;
   }
@@ -854,8 +860,10 @@ async function handleChatClick(event) {
         await fetchMessages(chatElement.chatData);
     }
   );
+
   if (chatData.userChatSettingsDTO.unreadMessageCount > 0) {
     await markMessagesAsReadAndFetchMessages(chatElement);
+    chatData.userChatSettingsDTO.unreadMessageCount = 0;
   } else {
     await fetchMessages(chatData);
   }
@@ -886,15 +894,10 @@ async function fetchMessages(chatSummaryData) {
   const chatRoomLast30Messages = new ChatDTO(
     await chatService.getLast30Messages(chatSummaryData.chatDTO.id)
   );
-  const newChatSummaryData = new ChatSummaryDTO({
-    chatDTO: chatRoomLast30Messages,
-    contactsDTO: chatSummaryData.contactsDTO,
-    userProfileResponseDTO: chatSummaryData.userProfileResponseDTO,
-    userChatSettingsDTO: chatSummaryData.userChatSettingsDTO,
-  });
+  chatSummaryData.chatDTO = chatRoomLast30Messages;
 
   await removeMessageBoxAndUnsubscribe();
-  await createMessageBox(newChatSummaryData);
+  await createMessageBox(chatSummaryData);
 }
 
 function removeEventListeners(chatElementDOM) {
@@ -914,6 +917,7 @@ async function createChatBoxWithFirstMessage(recipientJSON) {
     recipientJSON.senderId,
     recipientJSON.chatRoomId
   );
+
   result.chatDTO.messages[0].decryptedMessage = recipientJSON.decryptedMessage;
   chatInstance.chatList.unshift(result);
   const chatListContentElement = document.querySelector(".chat-list-content");
@@ -931,7 +935,18 @@ async function createChatBoxWithFirstMessage(recipientJSON) {
         updateChatBoxElement(chatElementMaxTranslateY, newChatData, 0);
       }
     } else {
+      const chatElements = document.querySelectorAll(".chat1");
+      chatElements.forEach((chat) => {
+        const zIndex = parseInt(chat.style.zIndex) || 0;
+        const newZIndex = zIndex + 1;
+        const newY = newZIndex * 72;
+        chat.style.transform = `translateY(${newY}px)`;
+        chat.style.zIndex = newZIndex;
+      });
       createChatBox(result, 0);
+      const firstChat = document.querySelector(".chat1");
+      firstChat.style.transform = "translateY(0px)";
+      firstChat.style.zIndex = 0;
     }
   }
 }

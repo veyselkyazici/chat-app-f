@@ -10,19 +10,56 @@ function createContactInformation(contact, chatData) {
   const style = document.createElement("style");
   style.textContent = `
 
-      @media screen and (min-width: 1024px) and (max-width: 1300px) {
+ 
+
+@media screen and (max-width: 900px) {
+    .profile {
+        position: absolute;
+        right: 0;
+        width: 55%;
+        max-width: calc(55%);
+        height: 100%;
+    }
+}
+@media screen and (min-width: 900px) and (max-width: 1024px) {
+    .profile {
+        position: absolute;
+        right: 0;
+        width: 60%;
+        max-width: calc(60%);
+        height: 100%;
+        
+    }
+}
+          @media screen and (min-width: 1024px) and (max-width: 1300px) {
         .profile {
+        position: absolute;
           right: 0;
           width: 60%;
-          max-width: 60%;
+          max-width: calc(60%);
           height: 100%;
         }
       }
         @media screen and (min-width: 1300px) {
     .profile {
-        flex: 0 0 30%;
-        max-width: 30%;
+            position: absolute;
+        width:30%;
+        max-width: calc(30% );
 } }
+
+ .contact-information.profile {
+  overflow-x: hidden;
+  height: 100%;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border-inline-start-style: solid;
+  position: relative;
+  flex-grow: 0;
+  animation-fill-mode: forwards;
+  transform: translateZ(0);
+  z-index: 1000;
+}
     `;
   document.head.append(style);
 
@@ -126,6 +163,7 @@ function createContactInformation(contact, chatData) {
   const profileSection = createElement("section", "profile-section");
 
   const profileSectionDivPhotoAndName = createElement("div", "section");
+  const mainProfleElement = createElement("div", "main-profile");
   const profileSectionPhoto = createElement("div", "profile-section-photo");
   const profileSectionPhotoButton = createElement(
     "div",
@@ -156,7 +194,7 @@ function createContactInformation(contact, chatData) {
   }
 
   profileSectionPhoto.append(profileSectionPhotoButton);
-  profileSectionDivPhotoAndName.append(profileSectionPhoto);
+  mainProfleElement.append(profileSectionPhoto);
 
   const profileSectionEmailAndContactName = createElement(
     "div",
@@ -200,11 +238,12 @@ function createContactInformation(contact, chatData) {
   profileSectionEmail.append(profileSectionEmailSpan);
   profileSectionEmailAndContactName.append(profileSectionEmailSpan);
   const profileSectionLine = createElement("div", "profile-section-line");
-  profileSectionDivPhotoAndName.append(profileSectionEmailAndContactName);
-  profileSectionDivPhotoAndName.append(profileSectionLine);
+  mainProfleElement.append(profileSectionEmailAndContactName);
+  mainProfleElement.append(profileSectionLine);
+  profileSectionDivPhotoAndName.append(mainProfleElement);
   profileSection.append(profileSectionDivPhotoAndName);
 
-  const profileSectionDivAbout = createElement("div", "section about");
+  const profileSectionDivAbout = createElement("div", "section-about");
   const profileSectionDivAboutDiv = createElement(
     "div",
     "profile-section-about-div"
@@ -296,8 +335,12 @@ function createContactInformation(contact, chatData) {
     contact.name
   );
 
+  
   blockTextDiv2.append(blockTextSpan);
-  blockTextDivDivSpan.append(blockTextDiv2, " block");
+  blockTextDivDivSpan.append(
+    blockTextDiv2,
+    chatData.userChatSettingsDTO.isBlocked ? " unblock" : " block"
+  );
   blockTextDivDiv.append(blockTextDivDivSpan);
   blockTextDiv.append(blockTextDivDiv);
 

@@ -57,7 +57,6 @@ export default class Chat extends AbstractView {
     this.selectedChatUserId = null;
     this.user = {};
     this.chatList = [];
-    this.selectedMessageBoxData = null;
     this.contactList = [];
     this.pingInterval = null;
     this.pingFrequency = 10000;
@@ -170,7 +169,6 @@ export default class Chat extends AbstractView {
         return new ChatSummaryDTO(item);
       })
     );
-    console.log(this.chatList);
     await handleChats(this.chatList);
   }
   initializeWebSockets() {
@@ -527,7 +525,7 @@ export default class Chat extends AbstractView {
         );
 
         let newPrivacySettings;
-        ;
+
         if (findChat) {
           findChat.userProfileResponseDTO.imagee = updatedUserProfileDTO.url;
           findChat.userProfileResponseDTO.about = updatedUserProfileDTO.about;
@@ -614,9 +612,6 @@ export default class Chat extends AbstractView {
         (chat) => chat.chatDTO.id === blockData.chatRoomId
       );
       if (chatData) {
-        if (this.selectedMessageBoxData) {
-          this.selectedMessageBoxData.userChatSettingsDTO.isBlockedMe = true;
-        }
         chatData.userChatSettingsDTO.isBlockedMe = true;
       }
       if (isMessageBoxDomExists(chatData.chatDTO.id)) {
@@ -1032,7 +1027,6 @@ const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
   }
 };
 const handleProfilePhotoVisibilityChange = (newValue, image) => {
-  ;
   const visibleChatsElements = [...document.querySelectorAll(".chat1")];
   const visibleChatElement = visibleChatsElements.find(
     (chat) =>

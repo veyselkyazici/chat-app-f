@@ -3,7 +3,11 @@ import {
   createMessageBox,
   removeMessageBoxAndUnsubscribe,
 } from "./MessageBox.js";
-import { ariaSelected, ariaSelectedRemove, handleChatClick } from "./ChatBox.js";
+import {
+  ariaSelected,
+  ariaSelectedRemove,
+  handleChatClick,
+} from "./ChatBox.js";
 import { chatInstance } from "../pages/Chat.js";
 import { Modal } from "../utils/showModal.js";
 import { virtualScroll, UpdateItemsDTO } from "../utils/virtualScroll.js";
@@ -531,6 +535,7 @@ async function renderContactListViewHTML(contactList) {
   span_a1_1_1.append(contactsSideDiv);
 }
 async function handleContactClick(event) {
+  
   const contactElementDOM = event.currentTarget;
   const contactData = contactElementDOM.contactData;
   if (contactData.contactsDTO) {
@@ -567,7 +572,7 @@ async function handleContactClick(event) {
     let chatSummaryDTO;
 
     if (!findChat) {
-      ;
+      
       const createChatRoomAndUserChatSettings =
         await chatService.createChatRoomIfNotExists(
           contactData.contactsDTO.userContactId
@@ -591,47 +596,28 @@ async function handleContactClick(event) {
           createChatRoomAndUserChatSettings.userChatSettingsDTO
         ),
       });
-      await createMessageBox(chatSummaryDTO);
     } else {
-      // scrollToChat(findChat.userProfileResponseDTO.id);
       const messagesResponse = await chatService.getLast30Messages(
         findChat.chatDTO.id
       );
-      // setTimeout(async () => {
-      //   const chatElements = Array.from(document.querySelectorAll('.chat1'));
-      //   const findChatElement = chatElements.find(chat => chat.chatData.userProfileResponseDTO.id === findChat.userProfileResponseDTO.id);
-      //   if (findChatElement) {
-      //     const fakeEvent = { currentTarget: findChatElement };
-      //     await handleChatClick(fakeEvent);
-      //   }
-      // }, 1000);
-      chatSummaryDTO = new ChatSummaryDTO({
-        chatDTO: new ChatDTO({
-          id: findChat.chatDTO.id,
-          participantIds: findChat.chatDTO.participantIds,
-          // Her mesajı JS MessageDTO sınıfına dönüştürüyoruz
-          messages: (messagesResponse.messages || []).map(
-            (msg) => new MessageDTO(msg)
-          ),
-          isLastPage: messagesResponse.isLastPage ?? true,
-        }),
-        contactsDTO: new ContactsDTO(contactData.contactsDTO),
-        userProfileResponseDTO: new UserProfileResponseDTO(
-          contactData.userProfileResponseDTO
-        ),
-        userChatSettingsDTO: new UserChatSettingsDTO(findChat.userChatSettingsDTO),
-      });
+
+      findChat.chatDTO.messages = (messagesResponse.messages || []).map(
+        (msg) => new MessageDTO(msg)
+      );
+      findChat.chatDTO.isLastPage = messagesResponse.isLastPage ?? true;
+
+      chatSummaryDTO = findChat;
     }
 
     const messageBoxElement = document.querySelector(".message-box1");
     if (
-      messageBoxElement ||
+      messageBoxElement &&
       messageBoxElement?.data.userProfileResponseDTO.id !==
         contactData.userProfileResponseDTO.id
     ) {
       await removeMessageBoxAndUnsubscribe();
-      await createMessageBox(chatSummaryDTO);
     }
+    await createMessageBox(chatSummaryDTO);
 
     const contactListRenderDiv = document.querySelector(".a1-1-1");
     if (contactListRenderDiv) {
