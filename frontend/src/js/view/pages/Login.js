@@ -94,7 +94,7 @@ export default class extends AbstractView {
   }
 
   loginForm = async () => {
-    debugger;
+    
     const formElements = {
       email: document.getElementById("loginEmail"),
       password: document.getElementById("loginPassword"),
