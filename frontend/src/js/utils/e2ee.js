@@ -29,7 +29,7 @@ export async function deriveAESKey(password, salt) {
     {
       name: "PBKDF2",
       salt: salt, // Rastgele tuz değeri
-      iterations: 150.000, // Zorluk faktörü 150.000
+      iterations: 150_000, // Zorluk faktörü 150_000
       hash: "SHA-256", // Hash algoritması
     },
     passwordKey, // Yukarıda oluşturulan parola anahtarı
