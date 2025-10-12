@@ -1,15 +1,15 @@
 //index.js
-import { authService } from "./view/services/authService.js";
-import Home from "./view/pages/Home.js";
-import Register from "./view/pages/Register.js";
-import Login from "./view/pages/Login.js";
-import ForgotPassord from "./view/pages/ForgotPassword.js";
-import Chat from "./view/pages/Chat.js";
-import VerificationSuccess from "./view/pages/VerificationSuccess.js";
-import VerificationFailed from "./view/pages/VerificationFailed.js";
-import { ChatLayout } from "./view/layouts/ChatLayout.js";
-import { DefaultLayout } from "./view/layouts/DefaultLayout.js";
-import Verify from "./view/pages/Verify.js";
+import { authService } from "./services/authService.js";
+import Home from "./pages/Home.js";
+import Register from "./pages/Register.js";
+import Login from "./pages/Login.js";
+import ForgotPassord from "./pages/ForgotPassword.js";
+import Chat from "./pages/Chat.js";
+import VerificationSuccess from "./pages/VerificationSuccess.js";
+import VerificationFailed from "./pages/VerificationFailed.js";
+import { ChatLayout } from "./layouts/ChatLayout.js";
+import { DefaultLayout } from "./layouts/DefaultLayout.js";
+import Verify from "./pages/Verify.js";
 
 const routes = [
   { path: "/", view: Home, layout: DefaultLayout },

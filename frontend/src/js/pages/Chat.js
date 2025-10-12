@@ -1,9 +1,9 @@
 // Chat.js
-import AbstractView from "../AbstractView.js";
+import AbstractView from "./AbstractView.js";
 import renderContactList from "../components/Contacts.js";
 import { createSettingsHtml } from "../components/Settings.js";
 import { addContactModal } from "../components/AddContact.js";
-import WebSocketManager from "../../websocket.js";
+import WebSocketManager from "../websocket.js";
 import { SearchHandler } from "../utils/searchHandler.js";
 import {
   createElement,
@@ -24,7 +24,7 @@ import {
   createMessageDeliveredTickElement,
   onlineInfo,
 } from "../components/MessageBox.js";
-import { navigateTo } from "../../index.js";
+import { navigateTo } from "../index.js";
 import { userService } from "../services/userService.js";
 import { contactService } from "../services/contactsService.js";
 import { chatService } from "../services/chatService.js";

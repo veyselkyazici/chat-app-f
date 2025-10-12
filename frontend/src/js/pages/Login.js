@@ -1,11 +1,11 @@
 //Login.js
-import { navigateTo } from "../../index.js";
-import AbstractView from "../AbstractView.js";
+import { navigateTo } from "../index.js";
+import AbstractView from "./AbstractView.js";
 import {
   clearErrorMessages,
   toggleVisibilityPassword,
   showError,
-  getRecaptchaToken
+  getRecaptchaToken,
 } from "../utils/util.js";
 import { authService } from "../services/authService.js";
 import { userService } from "../services/userService.js";
@@ -94,7 +94,6 @@ export default class extends AbstractView {
   }
 
   loginForm = async () => {
-    
     const formElements = {
       email: document.getElementById("loginEmail"),
       password: document.getElementById("loginPassword"),

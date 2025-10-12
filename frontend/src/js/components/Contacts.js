@@ -1,33 +1,29 @@
 // Contacts.js
+import { ariaSelected, ariaSelectedRemove } from "./ChatBox.js";
+import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
+import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
+import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
+import { UserChatSettingsDTO } from "../dtos/chat/response/UserChatSettingsDTO.js";
+import { SendInvitationDTO } from "../dtos/contact/request/SendInvitationDTO.js";
+import { ContactsDTO } from "../dtos/contact/response/ContactsDTO.js";
+import { UserProfileResponseDTO } from "../dtos/user/response/UserProfileResponseDTO.js";
 import {
   createMessageBox,
   removeMessageBoxAndUnsubscribe,
 } from "./MessageBox.js";
-import {
-  ariaSelected,
-  ariaSelectedRemove,
-  handleChatClick,
-} from "./ChatBox.js";
 import { chatInstance } from "../pages/Chat.js";
+import { chatService } from "../services/chatService.js";
+import { contactService } from "../services/contactsService.js";
+import { SearchHandler } from "../utils/searchHandler.js";
 import { Modal } from "../utils/showModal.js";
-import { virtualScroll, UpdateItemsDTO } from "../utils/virtualScroll.js";
 import {
+  backButton,
   createElement,
   createSvgElement,
   createVisibilityProfilePhoto,
-  backButton,
   handleBackBtnClick,
 } from "../utils/util.js";
-import { SearchHandler } from "../utils/searchHandler.js";
-import { contactService } from "../services/contactsService.js";
-import { chatService } from "../services/chatService.js";
-import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
-import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
-import { ContactsDTO } from "../dtos/contact/response/ContactsDTO.js";
-import { UserProfileResponseDTO } from "../dtos/user/response/UserProfileResponseDTO.js";
-import { UserChatSettingsDTO } from "../dtos/chat/response/UserChatSettingsDTO.js";
-import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
-import { SendInvitationDTO } from "../dtos/contact/request/SendInvitationDTO.js";
+import { UpdateItemsDTO, virtualScroll } from "../utils/virtualScroll.js";
 
 async function createContactOrInvitation(user, index) {
   const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
@@ -535,7 +531,6 @@ async function renderContactListViewHTML(contactList) {
   span_a1_1_1.append(contactsSideDiv);
 }
 async function handleContactClick(event) {
-  
   const contactElementDOM = event.currentTarget;
   const contactData = contactElementDOM.contactData;
   if (contactData.contactsDTO) {
@@ -572,7 +567,6 @@ async function handleContactClick(event) {
     let chatSummaryDTO;
 
     if (!findChat) {
-      
       const createChatRoomAndUserChatSettings =
         await chatService.createChatRoomIfNotExists(
           contactData.contactsDTO.userContactId

@@ -335,7 +335,6 @@ function createContactInformation(contact, chatData) {
     contact.name
   );
 
-  
   blockTextDiv2.append(blockTextSpan);
   blockTextDivDivSpan.append(
     blockTextDiv2,

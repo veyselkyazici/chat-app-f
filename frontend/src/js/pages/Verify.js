@@ -1,6 +1,6 @@
-import AbstractView from "../AbstractView.js";
+import AbstractView from "./AbstractView.js";
 import { mailService } from "../services/mailService.js";
-import { navigateTo } from "../../index.js";
+import { navigateTo } from "../index.js";
 export default class extends AbstractView {
   constructor(params) {
     super(params);

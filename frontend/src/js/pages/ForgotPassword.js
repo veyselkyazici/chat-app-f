@@ -1,5 +1,5 @@
 //ForgotPassord.js
-import AbstractView from "../AbstractView.js";
+import AbstractView from "./AbstractView.js";
 import {
   clearErrorMessages,
   showError,
@@ -10,7 +10,7 @@ import {
 } from "../utils/util.js";
 import { authService } from "../services/authService.js";
 import { ResetPasswordRequestDTO } from "../dtos/auth/request/ResetPasswordRequestDTO.js";
-import { navigateTo } from "../../index.js";
+import { navigateTo } from "../index.js";
 import { CreateForgotPasswordRequestDTO } from "../dtos/auth/request/CreateForgotPasswordRequestDTO.js";
 import {
   encryptPrivateKey,

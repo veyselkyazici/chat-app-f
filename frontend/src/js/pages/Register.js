@@ -1,5 +1,5 @@
 //Register.js
-import AbstractView from "../AbstractView.js";
+import AbstractView from "./AbstractView.js";
 import {
   clearErrorMessages,
   showError,
@@ -7,7 +7,7 @@ import {
   getRecaptchaToken,
   ruleCheck
 } from "../utils/util.js";
-import { navigateTo } from "../../index.js";
+import { navigateTo } from "../index.js";
 import { authService } from "../services/authService.js";
 import { RegisterRequestDTO } from "../dtos/auth/request/RegisterRequestDTO.js";
 import {

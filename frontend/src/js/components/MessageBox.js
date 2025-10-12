@@ -20,11 +20,13 @@ import {
   ariaSelectedRemove,
   deleteChat,
 } from "./ChatBox.js";
-import { createContactInformation } from "./ContactInformation.js";
+import {
+  createContactInformation,
+  closeProfileFunc,
+} from "./ContactInformation.js";
 import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
 import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
-import { closeProfileFunc } from "./ContactInformation.js";
 
 let caretPosition = 0;
 let caretNode = null;

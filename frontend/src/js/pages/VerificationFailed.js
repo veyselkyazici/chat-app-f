@@ -1,6 +1,6 @@
-import AbstractView from "../AbstractView.js";
+import AbstractView from "./AbstractView.js";
 import { mailService } from "../services/mailService.js";
-import { navigateTo } from "../../index.js";
+import { navigateTo } from "../index.js";
 import { ResendConfirmationRequestDTO } from "../dtos/mail/request/ResendConfirmationRequestDTO.js";
 import { showError } from "../utils/util.js";
 export default class extends AbstractView {

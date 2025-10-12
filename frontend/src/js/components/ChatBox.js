@@ -464,7 +464,7 @@ const toggleBlockUser = async (chatData) => {
   const mainCallback = async () => {
     try {
       let result;
-      
+
       if (isBlocked) {
         result = await chatService.chatUnblock(chatData);
         updateChatInstance(chatData.chatDTO.id, false);
