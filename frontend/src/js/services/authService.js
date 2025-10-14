@@ -14,16 +14,13 @@ export const authService = {
   },
 
   register: async (registerRequestDTO) => {
-    console.log("auth service url > ", AUTH_SERVICE_URL);
     try {
       const response = await axiosInstance.post(
         `${AUTH_SERVICE_URL}/register`,
         registerRequestDTO
       );
-      console.log("auth service url > ", response);
       return response.data;
     } catch (error) {
-      console.log("auth service url error > ", error);
       let message = "Registration failed";
 
       if (error.response?.data?.message) {
@@ -58,7 +55,10 @@ export const authService = {
       );
       if (response.data.data.accessToken && response.data.data.refreshToken) {
         sessionStorage.setItem("access_token", response.data.data.accessToken);
-        sessionStorage.setItem("refresh_token", response.data.data.refreshToken);
+        sessionStorage.setItem(
+          "refresh_token",
+          response.data.data.refreshToken
+        );
         sessionStorage.setItem("id", response.data.data.id);
       }
 

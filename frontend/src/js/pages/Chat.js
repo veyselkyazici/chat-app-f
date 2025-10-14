@@ -156,7 +156,6 @@ export default class Chat extends AbstractView {
     this.contactList = (await contactService.getContactList(this.user.id)).map(
       (item) => new ContactResponseDTO(item)
     );
-    console.log(this.contactList);
   }
   async getChatList() {
     const summaries = await chatService.getChatSummaries();
@@ -171,7 +170,6 @@ export default class Chat extends AbstractView {
         return new ChatSummaryDTO(item);
       })
     );
-    console.log(this.chatList);
     await handleChats(this.chatList);
   }
   initializeWebSockets() {
