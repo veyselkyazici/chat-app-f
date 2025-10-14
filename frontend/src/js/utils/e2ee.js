@@ -16,6 +16,7 @@ export async function generateKeyPair() {
   );
 }
 
+
 export async function deriveAESKey(password, salt) {
   // Parolayı AES anahtarına dönüştürür
   const passwordKey = await window.crypto.subtle.importKey(
