@@ -1,5 +1,6 @@
 import { isValidEmail } from "../../../utils/util.js";
 import { i18n } from "../../../i18n/i18n.js";
+import { passwordRules } from "../../../utils/util.js";
 export class ResetPasswordRequestDTO {
   constructor(
     email,
@@ -49,16 +50,15 @@ export class ResetPasswordRequestDTO {
         field: "password",
         message: i18n.t("login.passwordEmptyError"),
       });
-    } else if (this.newPassword.length < 6) {
-      errors.push({
-        field: "password",
-        message: i18n.t("login.passwordLength"),
-      });
-    } else if (this.newPassword.length > 32) {
-      errors.push({
-        field: "password",
-        message: i18n.t("login.passwordLength"),
-      });
+    } else {
+      for (const [rule, fn] of Object.entries(passwordRules)) {
+        if (!fn(this.newPassword)) {
+          errors.push({
+            field: "password",
+            message: i18n.t(`pwdRules.${rule}`),
+          });
+        }
+      }
     }
 
     if (!this.recaptchaToken) {

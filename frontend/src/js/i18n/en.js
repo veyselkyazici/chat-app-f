@@ -20,7 +20,7 @@ export default {
     incorrectEmailOrPassword: "Incorrect email address or password",
     invalidOperation: "Invalid operation",
     passwordError: "Please enter a valid password",
-    passwordEmptyError: "Şifre boş olamaz",
+    passwordEmptyError: "Password cannot be empty",
     passwordLength: "Password must be 8-32 characters long.",
   },
   forgotPassword: {

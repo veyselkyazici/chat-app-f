@@ -40,8 +40,8 @@ export class LoginRequestDTO {
     }
     if (!this.password || !passwordRegex.test(this.password)) {
       errors.push({
-        field: "password",
-        message: i18n.t("login.passwordError"),
+        field: "email",
+        message: i18n.t("login.incorrectEmailOrPassword"),
       });
     }
     return errors;

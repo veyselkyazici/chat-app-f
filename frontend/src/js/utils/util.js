@@ -1,9 +1,17 @@
+const passwordRules = {
+  length: (pwd) => pwd.length >= 8,
+  upperCase: (pwd) => /[A-Z]/.test(pwd),
+  lowerCase: (pwd) => /[a-z]/.test(pwd),
+  number: (pwd) => /\d/.test(pwd),
+  specialChar: (pwd) => /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
+};
 function escapeHtml(text) {
-  return text.replace(/&/g, "&amp;")
-             .replace(/</g, "&lt;")
-             .replace(/>/g, "&gt;")
-             .replace(/"/g, "&quot;")
-             .replace(/'/g, "&#039;");
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function showError(inputElement, errorMessage) {
@@ -304,6 +312,7 @@ async function getRecaptchaToken(actionValue) {
   }
 }
 export {
+  passwordRules,
   showError,
   clearErrorMessages,
   createElement,
@@ -319,5 +328,5 @@ export {
   toggleVisibilityPassword,
   getRecaptchaToken,
   ruleCheck,
-  escapeHtml
+  escapeHtml,
 };
