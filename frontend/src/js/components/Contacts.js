@@ -24,6 +24,7 @@ import {
   handleBackBtnClick,
 } from "../utils/util.js";
 import { UpdateItemsDTO, virtualScroll } from "../utils/virtualScroll.js";
+import { i18n } from "../i18n/i18n.js";
 
 async function createContactOrInvitation(user, index) {
   const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
@@ -282,7 +283,7 @@ const createInvitationsHTML = (user) => {
       "invitation-button-1-1",
       { flexGrow: "1" },
       {},
-      "Invite"
+      i18n.t("inviteUser.invite")
     );
     buttonDiv1.append(buttonDiv2);
     invitationButton.append(buttonDiv1);
@@ -441,9 +442,9 @@ async function renderContactListViewHTML(contactList) {
     {
       contenteditable: "true",
       role: "textbox",
-      title: "Search by name or email",
+      title: i18n.t("search.searchPlaceHolder"),
       tabindex: "3",
-      "aria-placeholder": "Search by name or email",
+      "aria-placeholder": i18n.t("search.searchPlaceHolder"),
     }
   );
   const contactSearchHandler = new SearchHandler({
@@ -463,7 +464,7 @@ async function renderContactListViewHTML(contactList) {
     placeholderConfig: {
       className: "css12",
       innerClassName: "css122",
-      text: "Search by name or email",
+      text: i18n.t("search.searchPlaceHolder"),
     },
     restoreFunction: initContactList,
   });
@@ -481,7 +482,7 @@ async function renderContactListViewHTML(contactList) {
     "css122",
     {},
     {},
-    "Search by name or email"
+    i18n.t("search.searchPlaceHolder")
   );
 
   const finalSpan = createElement("span", "css13");
@@ -619,8 +620,10 @@ async function handleContactClick(event) {
     }
   } else if (!contactData.invitationResponseDTO.isInvited) {
     new Modal({
-      contentText: `Do you want to invite ${contactData.invitationResponseDTO.contactName}?`,
-      buttonText: "Invite",
+      contentText: i18n.t("inviteUser.inviteMessage")(
+        contactData.invitationResponseDTO.contactName
+      ),
+      buttonText: i18n.t("inviteUser.invite"),
       showBorders: false,
       mainCallback: async () => {
         const sendInvitationDTO = new SendInvitationDTO(
@@ -638,7 +641,7 @@ async function handleContactClick(event) {
           const buttonDiv2 = invitationButton.querySelector(
             ".invitation-button-1-1"
           );
-          buttonDiv2.textContent = "Invited";
+          buttonDiv2.textContent = i18n.t("inviteUser.invited");
           return true;
         }
         return false;
@@ -651,8 +654,10 @@ async function handleContactClick(event) {
     });
   } else {
     new Modal({
-      contentText: `${contactData.invitationResponseDTO.contactName} has already been invited.`,
-      buttonText: "Invite",
+      contentText: i18n.t("inviteUser.inviteMessage")(
+        contactData.invitationResponseDTO.contactName
+      ),
+      buttonText: i18n.t("inviteUser.invite"),
       mainCallback: () => {
         return true;
       },
@@ -672,7 +677,7 @@ function scrollToChat(userId) {
   );
 
   if (index >= 0) {
-    const itemHeight = 72; // sabit yükseklik
+    const itemHeight = 72;
     paneSideElement.scrollTop = index * itemHeight;
   }
 }
@@ -768,7 +773,9 @@ function handleOptionsBtnClick(event) {
                 <ul class="ul1">
                     <div>
                         <li tabindex="0" class="contact-list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
-                            <div class="contact-list-item1-div" role="button" aria-label="Delete user">Delete user</div>
+                            <div class="contact-list-item1-div" role="button" aria-label="Delete user">${i18n.t(
+                              "contacts.deleteUser"
+                            )}</div>
                         </li>
                     </div>
                 </ul>
@@ -787,12 +794,14 @@ function handleOptionsBtnClick(event) {
         showChatOptions.innerHTML = "";
         const contactData = contactElement.contactData;
         new Modal({
-          contentText: `Do you want to delete ${
-            contactData.contactsDTO
-              ? contactData.contactsDTO.userContactName
-              : contactData.invitationResponseDTO.contactName
-          }?`,
-          buttonText: "Evet",
+          contentText: contactData.contactsDTO
+            ? i18n.t("contacts.deleteUserModalMessage")(
+                contactData.contactsDTO.userContactName
+              )
+            : i18n.t("contacts.deleteUserModalMessage")(
+                contactData.invitationResponseDTO.contactName
+              ),
+          buttonText: i18n.t("modal.yes"),
           showBorders: false,
           mainCallback: async () => {
             let response, idType;
@@ -945,7 +954,7 @@ function updateInvitation(
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        "Invite"
+        i18n.t("inivteUser.invite")
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -958,7 +967,7 @@ function updateInvitation(
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        "Invited"
+        i18n.t("inivteUser.invited")
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -973,10 +982,10 @@ function updateInvitation(
     const buttonDiv2 = invitationButton.querySelector(".invitation-button-1-1");
     if (!isInvite) {
       invitationButton.removeAttribute("disabled");
-      buttonDiv2.textContent = "Invite";
+      buttonDiv2.textContent = i18n.t("inivteUser.invite");
     } else {
       invitationButton.setAttribute("disabled", "disabled");
-      buttonDiv2.textContent = "Invited";
+      buttonDiv2.textContent = i18n.t("inivteUser.invited");
     }
   }
 }

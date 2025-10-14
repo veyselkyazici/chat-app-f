@@ -19,7 +19,7 @@ import {
   unBlockInput,
 } from "./MessageBox.js";
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
-
+import { i18n } from "../i18n/i18n.js";
 async function handleChats(chatList) {
   const paneSideElement = document.querySelector("#pane-side");
   const chatListContentElement =
@@ -183,7 +183,9 @@ function createUnreadMessageCount(chat) {
     "unread-message-count-span",
     {},
     {
-      "aria-label": `${chat.userChatSettingsDTO.unreadMessageCount} okunmamış mesaj`,
+      "aria-label": i18n.t("chatBox.unreadMessageCountAriaLabel")(
+        chat.userChatSettingsDTO.unreadMessageCount
+      ),
     },
     chat.userChatSettingsDTO.unreadMessageCount
   );
@@ -360,15 +362,11 @@ function handleOptionsBtnClick(event) {
       chatOptionsDiv.style.transform = "scale(1)";
       chatOptionsDiv.style.opacity = "1";
       closeOptionsDivOnClickOutside();
-      const archiveLabel = chatData.userChatSettingsDTO.isArchived
-        ? "Arşivden çıkar"
-        : "Sohbeti arşivle";
+
       const blockLabel = chatData.userChatSettingsDTO.isBlocked
-        ? "Unblock"
-        : "Block";
-      const pinLabel = chatData.userChatSettingsDTO.isPinned
-        ? "Sohbeti sabitlemeyi kaldır"
-        : "Sohbeti sabitle";
+        ? i18n.t("chatBox.unBlock")
+        : i18n.t("chatBox.block");
+
       if (!chatData.contactsDTO.userHasAddedRelatedUser) {
         const addContact = createElement(
           "li",
@@ -393,16 +391,7 @@ function handleOptionsBtnClick(event) {
       }
 
       // ToDo
-      const markUnreadLabel = "Okunmadı olarak işaretle";
-      const deleteChatLabel = "Delete chat";
-
-      const dto = new UserSettingsDTO({
-        friendId: chatData.userProfileResponseDTO.id,
-        userId: chatData.contactsDTO.userId,
-        id: chatData.chatDTO.id,
-        friendEmail: chatData.userProfileResponseDTO.email,
-        userChatSettingsDTO: { ...chatData.userChatSettingsDTO },
-      });
+      const deleteChatLabel = i18n.t("chatBox.deleteChat");
 
       const blockLiElement = createElement(
         "li",
@@ -458,8 +447,8 @@ const updateChatInstance = (chatId, blockedStatus) => {
 const toggleBlockUser = async (chatData) => {
   const isBlocked = chatData.userChatSettingsDTO.isBlocked;
   const blockMessage = isBlocked
-    ? `Do you want to unblock ${chatData.userProfileResponseDTO.email}?`
-    : `Do you want to block ${chatData.userProfileResponseDTO.email}?`;
+    ? i18n.t("chatBox.chatUnblock")(chatData.userProfileResponseDTO.email)
+    : i18n.t("chatBox.chatBlock")(chatData.userProfileResponseDTO.email);
 
   const mainCallback = async () => {
     try {
@@ -494,7 +483,7 @@ const toggleBlockUser = async (chatData) => {
         }
 
         toastr.success(
-          `${chatData.userProfileResponseDTO.email} has been unblocked.`
+          i18n.t("chatBox.toastrUnblock")(chatData.userProfileResponseDTO.email)
         );
       } else {
         result = await chatService.chatBlock(chatData);
@@ -527,7 +516,7 @@ const toggleBlockUser = async (chatData) => {
         }
 
         toastr.success(
-          `${chatData.userProfileResponseDTO.email} has been blocked.`
+          i18n.t("chatBox.toastrBlock")(chatData.userProfileResponseDTO.email)
         );
       }
 
@@ -535,7 +524,11 @@ const toggleBlockUser = async (chatData) => {
       if (parentSpan) {
         parentSpan.childNodes.forEach((node) => {
           if (node.nodeType === 3) {
-            node.textContent = " " + (!isBlocked ? "unblock" : "block");
+            node.textContent =
+              " " +
+              (!isBlocked
+                ? i18n.t("chatBox.unBlock")
+                : i18n.t("chatBox.block"));
           }
         });
       }
@@ -546,8 +539,12 @@ const toggleBlockUser = async (chatData) => {
 
       toastr.error(
         isBlocked
-          ? `Failed to unblock ${chatData.userProfileResponseDTO.email}.`
-          : `Failed to block ${chatData.userProfileResponseDTO.email}.`
+          ? i18n.t("chatBox.toasterUnblockError")(
+              chatData.userProfileResponseDTO.email
+            )
+          : i18n.t("chatBox.toastrBlockError")(
+              chatData.userProfileResponseDTO.email
+            )
       );
 
       return false;
@@ -558,7 +555,7 @@ const toggleBlockUser = async (chatData) => {
     title: "",
     contentText: blockMessage,
     mainCallback: mainCallback,
-    buttonText: isBlocked ? "Unblock" : "Block",
+    buttonText: isBlocked ? i18n.t("chatBox.unBlock") : i18n.t("chatBox.block"),
     showBorders: false,
     secondOptionButton: false,
     headerHtml: null,
@@ -570,7 +567,9 @@ const toggleBlockUser = async (chatData) => {
 };
 const deleteChat = async (chat, showChatOptions, chatElement) => {
   showChatOptions.removeChild(showChatOptions.firstElementChild);
-  const modalMessage = `Do you want to delete the chat with ${chat.userProfileResponseDTO.email}?`;
+  const modalMessage = i18n.t("chatBox.toastrBlock")(
+    chat.userProfileResponseDTO.email
+  );
   const mainCallback = async () => {
     try {
       const response = await chatService.deleteChat(chat.userChatSettingsDTO);
@@ -596,10 +595,10 @@ const deleteChat = async (chat, showChatOptions, chatElement) => {
           startMessage.style.display = "flex";
           messageBoxElement.remove();
         }
-        toastr.success("Chat deleted successfully.");
+        toastr.success(i18n.t("chatBox.deleteSuccess"));
         return true;
       } else {
-        toastr.error("Failed to delete chat. Please try again.");
+        toastr.error(i18n.t("chatBox.deleteFailed"));
         return false;
       }
     } catch (error) {
@@ -612,7 +611,7 @@ const deleteChat = async (chat, showChatOptions, chatElement) => {
     title: "",
     contentText: modalMessage,
     mainCallback: mainCallback,
-    buttonText: "Delete chat",
+    buttonText: i18n.t("chatBox.deleteChat"),
     showBorders: false,
     secondOptionButton: false,
     headerHtml: null,
@@ -1049,7 +1048,7 @@ const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
     selectedChat.chatData?.userProfileResponseDTO.id !==
       chatElementDOM.chatData.userProfileResponseDTO.id
   ) {
-    const parentDiv = document.querySelector(".chat-list-content"); // Ana div'i seçin
+    const parentDiv = document.querySelector(".chat-list-content");
     const selectedDiv = parentDiv.querySelector('[aria-selected="true"]');
     if (selectedDiv) {
       selectedDiv.setAttribute("aria-selected", "false");

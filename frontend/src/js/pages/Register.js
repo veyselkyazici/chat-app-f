@@ -5,7 +5,7 @@ import {
   showError,
   toggleVisibilityPassword,
   getRecaptchaToken,
-  ruleCheck
+  ruleCheck,
 } from "../utils/util.js";
 import { navigateTo } from "../index.js";
 import { authService } from "../services/authService.js";
@@ -17,6 +17,7 @@ import {
   generateKeyPair,
   base64Encode,
 } from "../utils/e2ee.js";
+import { i18n } from "../i18n/i18n.js";
 
 export default class extends AbstractView {
   constructor(params) {
@@ -27,7 +28,7 @@ export default class extends AbstractView {
   async getHtml() {
     return `
         <form id="registerForm">
-        <h1>Sign Up</h1>
+        <h1>${i18n.t("home.signUp")}</h1>
         <div class="input-icon">
             <div class="error-message" id="generalError"></div>
         </div>
@@ -42,7 +43,9 @@ export default class extends AbstractView {
           <i class="fa-solid fa-lock"></i>
           <div class="error-message"></div>
           
-          <input type="password" id="registerPassword" name="password" placeholder="Password" >
+          <input type="password" id="registerPassword" name="password" placeholder="${i18n.t(
+            "login.password"
+          )}" >
   <button
     type="button"
     class="toggle-visibility"
@@ -57,7 +60,9 @@ export default class extends AbstractView {
         <div class="input-icon">
           <i class="fa-solid fa-lock"></i>
           <div class="error-message"></div>
-          <input type="password" id="registerConfirmPassword" name="confirmPassword" placeholder="Password" >
+          <input type="password" id="registerConfirmPassword" name="confirmPassword" placeholder="${i18n.t(
+            "forgotPassword.confirmPassword"
+          )}">
           <button
     type="button" tabindex="-1"
     class="toggle-visibility"
@@ -70,7 +75,9 @@ export default class extends AbstractView {
           </div>
     
         <div class="buttons">
-          <button class="button" id="registerFormButton" type="button">Sign Up</button>
+          <button class="button" id="registerFormButton" type="button">${i18n.t(
+            "home.signUp"
+          )}</button>
         </div>
         
       </form>
@@ -96,11 +103,11 @@ export default class extends AbstractView {
       if (!regexRuleDiv.hasChildNodes()) {
         regexRuleDiv.innerHTML = `
       <ul id="pwdRules" class="rules">
-        <li data-rule="length">8‑32 karakter</li>
-        <li data-rule="upper">En az 1 büyük harf (A‑Z)</li>
-        <li data-rule="lower">En az 1 küçük harf (a‑z)</li>
-        <li data-rule="digit">En az 1 rakam (0‑9)</li>
-        <li data-rule="special">En az 1 özel karakter (@ # $ …)</li>
+       <li data-rule="length">${i18n.t("pwdRules.length")}</li>
+        <li data-rule="upper">${i18n.t("pwdRules.upperCase")}</li>
+        <li data-rule="lower">${i18n.t("pwdRules.lowerCase")}</li>
+        <li data-rule="digit">${i18n.t("pwdRules.number")}</li>
+        <li data-rule="special">${i18n.t("pwdRules.specialChar")}</li>
       </ul>
     `;
       }
@@ -193,8 +200,7 @@ export default class extends AbstractView {
         navigateTo("/login");
       } else {
         if (response.errors.length > 0) {
-          formElements.generalError.textContent =
-            response.errors[0].message;
+          formElements.generalError.textContent = response.errors[0].message;
         }
       }
     } catch (error) {

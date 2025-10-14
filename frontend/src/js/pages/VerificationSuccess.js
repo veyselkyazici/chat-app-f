@@ -22,20 +22,20 @@ export default class extends AbstractView {
                     <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
                     <h2 style="margin: 0 0 15px 0; color: #155724;">Email Verified Successfully!</h2>
                     <p style="margin: 10px 0; font-size: 16px;">
-                        Your account has been successfully verified. You can now log in to your account.
+                        ${i18n.t("verificationSuccess.successMessage")}
                     </p>
                 </div>
                 
                 <div class="buttons">
                     <a href="/login" class="button" data-link 
                        style="background-color: #28a745; padding: 12px 30px; font-size: 16px;">
-                        Go to Login
+                        ${i18n.t("verificationSuccess.goToLogin")}
                     </a>
                 </div>
                 
                 <p style="margin-top: 20px; color: #6c757d;">
                     <a href="/" data-link style="color: #007bff; text-decoration: none;">
-                        ← Back to Home
+                        ${i18n.t("verificationFailed.backToHome")}
                     </a>
                 </p>
             </div>

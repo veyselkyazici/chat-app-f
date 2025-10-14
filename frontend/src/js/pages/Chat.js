@@ -42,6 +42,7 @@ import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
 import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
 import { ContactResponseDTO } from "../dtos/contact/response/ContactResponseDTO.js";
 import { authService } from "../services/authService.js";
+import { i18n } from "../i18n/i18n.js";
 
 export let webSocketManagerContacts;
 export let webSocketManagerChat;
@@ -73,7 +74,7 @@ export default class Chat extends AbstractView {
 
   async init() {
     try {
-      this.updateLoadingProgress("Sohbetler yükleniyor...");
+      this.updateLoadingProgress(i18n.t("chat.loadingMessage"));
 
       this.addEventListeners();
       // await this.delay(5000);
@@ -82,7 +83,7 @@ export default class Chat extends AbstractView {
       this.hideLoadingScreen();
     } catch (error) {
       console.error(error);
-      this.updateLoadingProgress("An error occurred, please try again.");
+      this.updateLoadingProgress(i18n.t("chat.loadingErrorMessage"));
     }
   }
   async delay(ms) {
@@ -155,6 +156,7 @@ export default class Chat extends AbstractView {
     this.contactList = (await contactService.getContactList(this.user.id)).map(
       (item) => new ContactResponseDTO(item)
     );
+    console.log(this.contactList);
   }
   async getChatList() {
     const summaries = await chatService.getChatSummaries();
@@ -169,6 +171,7 @@ export default class Chat extends AbstractView {
         return new ChatSummaryDTO(item);
       })
     );
+    console.log(this.chatList);
     await handleChats(this.chatList);
   }
   initializeWebSockets() {
@@ -211,7 +214,7 @@ export default class Chat extends AbstractView {
       placeholderConfig: {
         className: "css12",
         innerClassName: "css122",
-        text: "Search by name, email or last message",
+        text: i18n.t("search.searchPlaceHolder"),
       },
       restoreFunction: handleChats,
     });
@@ -798,7 +801,7 @@ export default class Chat extends AbstractView {
               if (chat.chatData.chatDTO.messages[0].senderId === this.user.id) {
                 messageSpan.removeChild(messageSpan.firstElementChild);
               }
-              messageSpanSpan.textContent = "typing...";
+              messageSpanSpan.textContent = i18n.t("messageBox.typing");
             } else {
               if (chat.chatData.chatDTO.messages[0].senderId === this.user.id) {
                 const messageDeliveredTickElement =
@@ -923,6 +926,7 @@ export default class Chat extends AbstractView {
 
 const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
   const messageBoxElement = document.querySelector(".message-box1");
+
   if (
     messageBoxElement &&
     messageBoxElement.data.userProfileResponseDTO.id ===
@@ -956,8 +960,8 @@ const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
       ) {
         if (!statusElement) {
           const contactsOnlineStatusElement = isOnlineStatus(
-            newContactPrivacy.contactsDTO,
-            user
+            newContactPrivacy.contactsDTO.userProfileResponseDTO,
+            newContactPrivacy.contactsDTO.contact
           );
           const onlineStatusParentElement =
             messageBoxElement.querySelector(".message-box1-2-2");
@@ -966,7 +970,11 @@ const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
           }
         }
       } else {
-        if (statusElement) {
+        if (
+          statusElement &&
+          newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings
+            .onlineStatusVisibility !== "EVERYONE"
+        ) {
           statusElement.remove();
         }
       }
@@ -976,9 +984,10 @@ const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
 
 const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
   const messageBoxElement = document.querySelector(".message-box1");
+
   if (
     messageBoxElement &&
-    messageBoxElement.data.contactsDTO.userProfileResponseDTO.id ===
+    messageBoxElement.data.userProfileResponseDTO.id ===
       newContactPrivacy.contactsDTO.userProfileResponseDTO.id
   ) {
     const statusElement = messageBoxElement.querySelector(".online-status");
@@ -993,8 +1002,8 @@ const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
       ) {
         if (!statusElement) {
           const contactsOnlineStatusElement = isOnlineStatus(
-            newContactPrivacy.contactsDTO,
-            user
+            newContactPrivacy.contactsDTO.userProfileResponseDTO,
+            newContactPrivacy.contactsDTO.contact
           );
           const onlineStatusParentElement =
             messageBoxElement.querySelector(".message-box1-2-2");
@@ -1009,8 +1018,8 @@ const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
       ) {
         if (!statusElement) {
           const contactsOnlineStatusElement = isOnlineStatus(
-            newContactPrivacy.contactsDTO,
-            user
+            newContactPrivacy.contactsDTO.userProfileResponseDTO,
+            newContactPrivacy.contactsDTO.contact
           );
           const onlineStatusParentElement =
             messageBoxElement.querySelector(".message-box1-2-2");

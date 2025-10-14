@@ -2,7 +2,9 @@ import tr from "./tr.js";
 import en from "./en.js";
 
 const languages = { tr, en };
-let currentLang = localStorage.getItem("lang") || (navigator.language.startsWith("tr") ? "tr" : "en");
+let currentLang =
+  localStorage.getItem("lang") ||
+  (navigator.language.startsWith("tr") ? "tr" : "en");
 
 export const i18n = {
   t: (keyPath) => {

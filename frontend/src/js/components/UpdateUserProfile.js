@@ -8,6 +8,7 @@ import {
 import { userService } from "../services/userService.js";
 import { UpdateUserDTO } from "../dtos/user/request/UpdateUserDTO.js";
 import { chatInstance } from "../pages/Chat.js";
+import { i18n } from "../i18n/i18n.js";
 
 async function userUpdateModal(user, bool) {
   const updateProfileForm = createElement("form", "");
@@ -86,7 +87,7 @@ async function userUpdateModal(user, bool) {
   const nameInput = createElement("input", "", null, {
     name: "name",
     value: "",
-    placeholder: "Name",
+    placeholder: i18n.t("addContacts.name"),
     readonly: true,
     id: "nameInput",
   });
@@ -111,7 +112,7 @@ async function userUpdateModal(user, bool) {
   const aboutInput = createElement("input", "", null, {
     name: "about",
     value: "",
-    placeholder: "About",
+    placeholder: i18n.t("updateUserProfile.about"),
     readonly: true,
     id: "aboutInput",
   });
@@ -153,7 +154,7 @@ async function userUpdateModal(user, bool) {
       title: "",
       contentHtml: updateProfileForm,
       mainCallback: goHome,
-      buttonText: "Devam Et",
+      buttonText: i18n.t("modal.continue"),
       showBorders: false,
       secondOptionButton: false,
       headerHtml: null,
@@ -170,7 +171,7 @@ async function userUpdateModal(user, bool) {
 function goHome() {
   const name = document.getElementById("nameInput").value.trim();
   if (!name) {
-    toastr.error("İsim boş olamaz");
+    toastr.error(i18n.t("updateUserProfile.nameError"));
     return false;
   }
   return true;
@@ -206,8 +207,6 @@ async function toggleEditName(user) {
         );
         chatInstance.user.firstName = response.data.value;
       }
-    } else {
-      toastr.error("Name cannot be empty");
     }
   }
 }
@@ -243,7 +242,7 @@ async function toggleEditAbout() {
         chatInstance.user.about = response.data.value;
       }
     } else {
-      toastr.error("About cannot be empty");
+      toastr.error(i18n.t("updateUserProfile.aboutError"));
     }
   }
 }
@@ -281,7 +280,7 @@ const toggleOptions = (event, image) => {
         "",
         {},
         { tabIndex: "0" },
-        "Fotoğrafı görüntüle",
+        i18n.t("updateUserProfile.viewProfilePhoto"),
         () => viewPhoto(image)
       );
 
@@ -290,7 +289,7 @@ const toggleOptions = (event, image) => {
         "",
         {},
         { tabIndex: "0" },
-        "Fotoğraf yükle"
+        i18n.t("updateUserProfile.uploadProfilePhoto")
       );
 
       const removePhotoOption = createElement(
@@ -298,7 +297,7 @@ const toggleOptions = (event, image) => {
         "",
         {},
         { tabIndex: "0" },
-        "Fotoğrafı kaldır",
+        i18n.t("updateUserProfile.removeProfilePhoto"),
         () => removePhoto(image)
       );
 
@@ -314,7 +313,7 @@ const toggleOptions = (event, image) => {
         "",
         {},
         { tabIndex: "0" },
-        "Fotoğraf yükle"
+        i18n.t("updateUserProfile.uploadProfilePhoto")
       );
 
       photoOptions.append(uploadPhotoOption);
@@ -400,13 +399,13 @@ function uploadPhoto(event, userId) {
           "warning-text",
           {},
           {},
-          "The selected image is too small. Please choose an image with minimum dimensions of 192x192 pixels."
+          i18n.t("updateUserProfile.warningMessage")
         );
 
         new Modal({
           title: "",
           contentHtml: warningText,
-          buttonText: "Tamam",
+          buttonText: i18n.t("modal.ok"),
           showBorders: false,
           secondOptionButton: false,
           cancelButton: false,
@@ -674,7 +673,7 @@ function uploadPhoto(event, userId) {
           cropImage(canvas1, userId, file);
           return true;
         },
-        buttonText: "Yükle",
+        buttonText: i18n.t("modal.upload"),
         showBorders: false,
         secondOptionButton: false,
         cancelButton: false,
@@ -887,7 +886,6 @@ function zoomImage(scaleFactor, canvas1) {
 }
 
 async function removePhoto() {
-  
   const photoElement = document.querySelector(".profile-photo-button");
   const overlay = document.querySelector(".overlay-spinner");
   const userProfilePhotoElement = document.querySelector(".user-profile-photo");

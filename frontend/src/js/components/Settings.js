@@ -1381,6 +1381,7 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
       }
     }
   }
+  
   const oldPrivacySettings = { ...chatInstance.user };
   const result = await userService.updatePrivacy(updatedPrivacySettingsDTO);
   if (result.data) {

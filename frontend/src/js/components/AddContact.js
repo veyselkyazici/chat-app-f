@@ -2,7 +2,7 @@ import { clearErrorMessages, showError, createElement } from "../utils/util.js";
 import { contactService } from "../services/contactsService.js";
 import { Modal } from "../utils/showModal.js";
 import { AddContactRequestDTO } from "../dtos/contact/request/AddContactRequestDTO.js";
-
+import { i18n } from "../i18n/i18n.js";
 const addContactModal = (addedByUser, email) => {
   const generalErrorDiv = createElement("div", "input-icon");
   const generalErrorMessage = createElement(
@@ -13,7 +13,6 @@ const addContactModal = (addedByUser, email) => {
   );
   generalErrorDiv.append(generalErrorMessage);
 
-  // 2. E-posta input'u
   const emailDiv = createElement("div", "input-icon");
   const emailErrorMessage = createElement("div", "error-message");
   const emailInput = createElement(
@@ -28,7 +27,6 @@ const addContactModal = (addedByUser, email) => {
   );
   emailDiv.append(emailErrorMessage, emailInput);
 
-  // 3. Ad input'u
   const nameDiv = createElement("div", "input-icon");
   const nameErrorMessage = createElement("div", "error-message");
   const nameInput = createElement(
@@ -38,7 +36,7 @@ const addContactModal = (addedByUser, email) => {
     {
       id: "contactName",
       name: "name",
-      placeholder: "Ad",
+      placeholder: i18n.t("addContacts.name"),
     }
   );
   nameDiv.append(nameErrorMessage, nameInput);

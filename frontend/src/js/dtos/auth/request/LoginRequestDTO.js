@@ -1,4 +1,5 @@
 import { isValidEmail } from "../../../utils/util.js";
+import { i18n } from "../../../i18n/i18n.js";
 export class LoginRequestDTO {
   constructor(email, password, recaptchaToken) {
     this.email = email;
@@ -18,29 +19,29 @@ export class LoginRequestDTO {
     if (!this.email) {
       errors.push({
         field: "email",
-        message: "Please enter a valid email address",
+        message: i18n.t("login.emailError"),
       });
     } else if (!isValidEmail(this.email)) {
       errors.push({
         field: "email",
-        message: "Incorrect email address or password",
+        message: i18n.t("login.incorrectEmailOrPassword"),
       });
     } else if (this.email.length < 6 || this.email.length > 254) {
       errors.push({
         field: "email",
-        message: "Incorrect email address or password",
+        message: i18n.t("login.incorrectEmailOrPassword"),
       });
     }
     if (!this.recaptchaToken) {
       errors.push({
         field: "general",
-        message: "Invalid operation",
+        message: i18n.t("login.invalidOperation"),
       });
     }
     if (!this.password || !passwordRegex.test(this.password)) {
       errors.push({
         field: "password",
-        message: "Please enter a valid password",
+        message: i18n.t("login.passwordError"),
       });
     }
     return errors;

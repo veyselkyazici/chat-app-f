@@ -1,3 +1,4 @@
+import { i18n } from "../i18n/i18n";
 class Modal {
   constructor(options) {
     this.options = {
@@ -5,7 +6,7 @@ class Modal {
       contentHtml: "",
       contentText: "",
       mainCallback: null,
-      buttonText: "Tamam",
+      buttonText: i18n.t("modal.ok"),
       showBorders: true,
       secondOptionCallBack: null,
       secondOptionButtonText: "",
@@ -90,7 +91,7 @@ class Modal {
       cancelButtonContent.className = "cancel-btn-1";
       const cancelButtonText = document.createElement("div");
       cancelButtonText.className = "cancel-btn-1-1";
-      cancelButtonText.textContent = "İptal";
+      cancelButtonText.textContent = i18n.t("modal.cancel");
 
       cancelButtonContent.append(cancelButtonText);
       cancelButton.append(cancelButtonContent);

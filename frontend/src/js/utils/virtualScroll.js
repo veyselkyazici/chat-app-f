@@ -6,12 +6,13 @@ import {
   chatBoxLastMessageFormatDateTime,
   createElement,
 } from "./util.js";
+import { i18n } from "../i18n/i18n.js";
+
 export function virtualScroll(
   updateItemsDTO,
   paneSideElement,
   visibleItemCount
 ) {
-  
   let start = 0;
   let end = visibleItemCount;
 
@@ -188,7 +189,7 @@ function invitationVirtualScroll(item, listItem) {
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        "Invite"
+        i18n.t("inivteUser.invite")
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -201,7 +202,7 @@ function invitationVirtualScroll(item, listItem) {
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        "Invited"
+        i18n.t("inivteUser.invited")
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -213,10 +214,10 @@ function invitationVirtualScroll(item, listItem) {
     const buttonDiv2 = invitationButton.querySelector(".invitation-button-1-1");
     if (!isInvite) {
       invitationButton.removeAttribute("disabled");
-      buttonDiv2.textContent = "Invite";
+      buttonDiv2.textContent = i18n.t("inivteUser.invite");
     } else {
       invitationButton.setAttribute("disabled", "disabled");
-      buttonDiv2.textContent = "Invited";
+      buttonDiv2.textContent = i18n.t("inivteUser.invited");
     }
   }
   nameSpan.textContent = item.contactData.invitationResponseDTO.contactName;

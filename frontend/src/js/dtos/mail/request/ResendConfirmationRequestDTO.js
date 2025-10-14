@@ -1,4 +1,5 @@
 import { isValidEmail } from "../../../utils/util";
+import { i18n } from "../../../i18n/i18n.js";
 export class ResendConfirmationRequestDTO {
   constructor(email) {
     this.email = email;
@@ -9,17 +10,17 @@ export class ResendConfirmationRequestDTO {
     if (!this.email) {
       errors.push({
         field: "email",
-        message: "Please enter a valid email address",
+        message: i18n.t("login.emailError"),
       });
     } else if (!isValidEmail(this.email)) {
       errors.push({
         field: "email",
-        message: "Please enter a valid email address",
+        message: i18n.t("login.emailError"),
       });
     } else if (this.email.length < 6 || this.email.length > 254) {
       errors.push({
         field: "email",
-        message: "Please enter a valid email address",
+        message: i18n.t("login.emailError"),
       });
     }
     return errors;

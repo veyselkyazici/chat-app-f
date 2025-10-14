@@ -1,4 +1,5 @@
 import { isValidEmail } from "../../../utils/util.js";
+import { i18n } from "../../../i18n/i18n.js";
 export class ResetPasswordRequestDTO {
   constructor(
     email,
@@ -29,57 +30,66 @@ export class ResetPasswordRequestDTO {
     if (!this.email) {
       errors.push({
         field: "email",
-        message: "Please enter a valid email address",
+        message: i18n.t("login.emailError"),
       });
     } else if (!isValidEmail(this.email)) {
       errors.push({
         field: "email",
-        message: "Please enter a valid email address",
+        message: i18n.t("login.emailError"),
       });
     } else if (this.email.length < 6 || this.email.length > 254) {
       errors.push({
         field: "email",
-        message: "Please enter a valid email address",
+        message: i18n.t("login.emailError"),
       });
     }
 
     if (!this.newPassword) {
-      errors.push({ field: "password", message: "Password cannot be empty" });
+      errors.push({
+        field: "password",
+        message: i18n.t("login.passwordEmptyError"),
+      });
     } else if (this.newPassword.length < 6) {
       errors.push({
         field: "password",
-        message: "Password must be 8-32 characters long",
+        message: i18n.t("login.passwordLength"),
       });
     } else if (this.newPassword.length > 32) {
       errors.push({
         field: "password",
-        message: "Password must be 8-32 characters long",
+        message: i18n.t("login.passwordLength"),
       });
     }
 
     if (!this.recaptchaToken) {
       errors.push({
         field: "general",
-        message: "Invalid operation",
+        message: i18n.t("login.invalidOperation"),
       });
     }
     if (!this.publicKey || this.publicKey.length < 64) {
       errors.push({
         field: "general",
-        message: "Invalid operation",
+        message: i18n.t("login.invalidOperation"),
       });
     }
     if (!this.encryptedPrivateKey || this.encryptedPrivateKey.length < 64) {
       errors.push({
         field: "general",
-        message: "Invalid operation",
+        message: i18n.t("login.invalidOperation"),
       });
     }
     if (!this.salt || this.salt.length < 16) {
-      errors.push({ field: "general", message: "Invalid operation" });
+      errors.push({
+        field: "general",
+        message: i18n.t("login.invalidOperation"),
+      });
     }
     if (!this.iv || this.iv.length < 12) {
-      errors.push({ field: "general", message: "Invalid operation" });
+      errors.push({
+        field: "general",
+        message: i18n.t("login.invalidOperation"),
+      });
     }
 
     return errors;

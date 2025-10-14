@@ -21,6 +21,7 @@ import {
   base64Encode,
 } from "../utils/e2ee.js";
 import { LoginRequestDTO } from "../dtos/auth/request/LoginRequestDTO.js";
+import { i18n } from "../i18n/i18n.js";
 
 export default class extends AbstractView {
   constructor(params) {
@@ -31,7 +32,7 @@ export default class extends AbstractView {
   async getHtml() {
     return `
     <form id="loginForm">
-    <h1>Sign in</h1>
+    <h1>${i18n.t("home.signIn")}</h1>
     <div class="input-icon">
       <div class="error-message" id="generalError"></div>
     </div>
@@ -45,7 +46,9 @@ export default class extends AbstractView {
     <div class="input-icon">
         <i class="fa-solid fa-lock"></i>
         <div class="error-message"></div>
-        <input type="password" id="loginPassword" name="password" placeholder="Password">
+        <input type="password" id="loginPassword" name="password" placeholder="${i18n.t(
+          "login.password"
+        )}">
           <button
     type="button"
     class="toggle-visibility"
@@ -58,8 +61,12 @@ export default class extends AbstractView {
     </div>
 
     <div class="buttons">
-        <button class="button" type="button" id="loginFormButton">Sign in</button>
-        <button class="button" type="button" id="forgotPasswordFormButton">Forgot password</button>
+        <button class="button" type="button" id="loginFormButton">${i18n.t(
+          "home.signIn"
+        )}</button>
+        <button class="button" type="button" id="forgotPasswordFormButton">${i18n.t(
+          "forgotPassword.forgotPassword"
+        )}</button>
     </div>
     </form>
         `;

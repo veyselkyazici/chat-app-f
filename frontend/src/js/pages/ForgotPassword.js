@@ -19,7 +19,7 @@ import {
   generateKeyPair,
   base64Encode,
 } from "../utils/e2ee.js";
-
+import { i18n } from "../i18n/i18n.js";
 export default class extends AbstractView {
   constructor(params) {
     super(params);
@@ -55,7 +55,7 @@ export default class extends AbstractView {
   renderEmailStep() {
     return `
             <form id="sendOtpForm">
-                <h1>Please enter your email address for the verification code.</h1>
+                <h1>${i18n.t("forgotPassword.emailMessage")}</h1>
                 <div class="input-icon">
                     <i class="fa-solid fa-envelope"></i>
 <input id="sendOtpFormEmail" name="email" placeholder="Email" value="${
@@ -64,7 +64,9 @@ export default class extends AbstractView {
                     <div class="error-message"></div>
                 </div>
                 <div class="buttons">
-                    <button class="button" type="submit">Send Mail</button>
+                    <button class="button" type="submit">${i18n.t(
+                      "forgotPassword.sendMail"
+                    )}</button>
                 </div>
             </form>
         `;
@@ -73,16 +75,16 @@ export default class extends AbstractView {
   renderOtpStep() {
     return `
             <form id="verifyOtpForm">
-                <p>Enter the verification code sent to ${escapeHtml(
-                  this.email
-                )}.</p>
+                <p>${i18n.t("forgotPassword.verificationCode")(
+                  escapeHtml(this.email)
+                )}</p>
                 <div class="otp-timer-container">
                     <div id="otpTimer" class="timer-display">
                         <i class="fa-solid fa-clock"></i>
                         <span id="timerText">03:00</span>
                     </div>
                     <button id="resendOtpBtn" class="resend-btn" disabled type="button">
-                        Resend Code
+                        ${i18n.t("forgotPassword.resendCode")}
                     </button>
                 </div>
                 <div class="input-icon">
@@ -91,7 +93,9 @@ export default class extends AbstractView {
                     <div class="error-message"></div>
                 </div>
                 <div class="buttons" id="verifyOtp">
-                    <button class="button" type="submit">Verify Code</button>
+                    <button class="button" type="submit">${i18n.t(
+                      "forgotPassword.verifyCode"
+                    )}</button>
                 </div>
             </form>
         `;
@@ -101,7 +105,9 @@ export default class extends AbstractView {
     return `
             <form id="resetPasswordForm">
                 <h1>Reset Password</h1>
-                <p>Set a new password for ${escapeHtml(this.email)}.</p>
+                <p>${i18n.t("forgotPassword.resetPasswordMessage")(
+                  escapeHtml(this.email)
+                )}</p>
                                 <div class="otp-timer-container">
                     <div id="otpTimer" class="timer-display">
                         <i class="fa-solid fa-clock"></i>
@@ -111,7 +117,9 @@ export default class extends AbstractView {
                 <div class="input-icon">
                     <i class="fa-solid fa-lock"></i>
                     <div class="error-message"></div>
-                    <input type="password" id="resetPasswordFormPassword" name="newPassword" placeholder="New Password">
+                    <input type="password" id="resetPasswordFormPassword" name="newPassword" placeholder="${i18n.t(
+                      "forgotPassword.newPassword"
+                    )}">
                     
                       <button
     type="button"
@@ -127,7 +135,9 @@ export default class extends AbstractView {
                 <div class="input-icon">
                     <i class="fa-solid fa-lock"></i>
                     <div class="error-message"></div>
-                    <input type="password" id="resetPasswordFormConfirmPassword" name="confirmPassword" placeholder="Confirm Password">
+                    <input type="password" id="resetPasswordFormConfirmPassword" name="confirmPassword" placeholder="${i18n.t(
+                      "forgotPassword.confirmPassword"
+                    )}">
                     
                               <button
     type="button" tabindex="-1"
@@ -139,7 +149,9 @@ export default class extends AbstractView {
     <i class="fa-solid fa-eye"></i>
   </button>
                 </div>
-                <button class="button" type="submit">Change Password</button>
+                <button class="button" type="submit">${i18n.t(
+                  "forgotPassword.changePassword"
+                )}</button>
             </form>
         `;
   }
@@ -185,11 +197,11 @@ export default class extends AbstractView {
       if (!regexRuleDiv.hasChildNodes()) {
         regexRuleDiv.innerHTML = `
       <ul id="pwdRules" class="rules">
-        <li data-rule="length">8‑32 karakter</li>
-        <li data-rule="upper">En az 1 büyük harf (A‑Z)</li>
-        <li data-rule="lower">En az 1 küçük harf (a‑z)</li>
-        <li data-rule="digit">En az 1 rakam (0‑9)</li>
-        <li data-rule="special">En az 1 özel karakter (@ # $ …)</li>
+        <li data-rule="length">${i18n.t("pwdRules.length")}</li>
+        <li data-rule="upper">${i18n.t("pwdRules.upperCase")}</li>
+        <li data-rule="lower">${i18n.t("pwdRules.lowerCase")}</li>
+        <li data-rule="digit">${i18n.t("pwdRules.number")}</li>
+        <li data-rule="special">${i18n.t("pwdRules.specialChar")}</li>
       </ul>
     `;
       }
@@ -264,7 +276,7 @@ export default class extends AbstractView {
     if (!otp) {
       showError(
         document.querySelector('#verifyOtpForm [name="otp"]'),
-        "Doğrulama kodu boş olamaz"
+        i18n.t("forgotPassword.verificationCodeError")
       );
       return;
     }
@@ -311,11 +323,11 @@ export default class extends AbstractView {
     ) {
       showError(
         document.querySelector('#resetPasswordForm [name="confirmPassword"]'),
-        "Passwords do not match."
+        i18n.t("forgotPassword.passwordsNotMatch")
       );
       showError(
         document.querySelector('#resetPasswordForm [name="newPassword"]'),
-        "Passwords do not match."
+        i18n.t("forgotPassword.passwordsNotMatch")
       );
       hasError = true;
     }
@@ -359,17 +371,17 @@ export default class extends AbstractView {
     try {
       const response = await authService.resetPassword(resetPassword);
       if (response.success) {
-        toastr.success(
-          "Password updated successfully. Redirecting to the login page in 5 seconds."
-        );
+        toastr.success(i18n.t("forgotPassword.successMessage"));
         setTimeout(() => navigateTo("/login"), 5000);
       } else {
         const errorData = await response.json();
-        toastr.error(errorData.message || "Password reset failed");
+        toastr.error(
+          errorData.message || i18n.t("forgotPassword.failedMessage")
+        );
       }
     } catch (error) {
       console.error("Error:", error);
-      toastr.error("Password reset failed. Try again later");
+      toastr.error(i18n.t("forgotPassword.failedMessageCatch"));
     }
   }
   startOtpTimer() {
@@ -393,7 +405,7 @@ export default class extends AbstractView {
           };
         } else {
           clearInterval(this.timerInterval);
-          toastr.error("5 minutes have passed. Redirecting to the homepage...");
+          toastr.error(i18n.t("forgotPassword.timerError"));
           navigateTo("/");
         }
       } else {

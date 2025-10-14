@@ -1,14 +1,15 @@
 import AbstractView from "./AbstractView.js";
 import { mailService } from "../services/mailService.js";
 import { navigateTo } from "../index.js";
+import { i18n } from "../i18n/i18n.js";
 export default class extends AbstractView {
   constructor(params) {
     super(params);
     this.setTitle("Verifying Account...");
   }
 
-async getHtml() {
-  return `
+  async getHtml() {
+    return `
     <div style="text-align:center; padding:50px;">
       <h2 style="
         font-size: 28px; 
@@ -16,11 +17,11 @@ async getHtml() {
         color: #ffffff; 
         text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
       ">
-        Verifying your account, please wait...
+        ${i18n.t("verify.verifyMessage")}
       </h2>
     </div>
   `;
-}
+  }
 
   async init() {
     const urlParams = new URLSearchParams(window.location.search);

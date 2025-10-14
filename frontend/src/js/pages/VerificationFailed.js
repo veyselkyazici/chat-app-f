@@ -3,6 +3,7 @@ import { mailService } from "../services/mailService.js";
 import { navigateTo } from "../index.js";
 import { ResendConfirmationRequestDTO } from "../dtos/mail/request/ResendConfirmationRequestDTO.js";
 import { showError } from "../utils/util.js";
+import { i18n } from "../i18n/i18n.js";
 export default class extends AbstractView {
   constructor(params) {
     super(params);
@@ -13,9 +14,13 @@ export default class extends AbstractView {
     return `
       <div class="register-login" style="text-align: center; max-width: 400px; margin: 50px auto;">
         <div style="font-size: 60px; color: #721c24;">❌</div>
-        <h2 style="color: #721c24;">Verification Failed</h2>
+        <h2 style="color: #721c24;">${i18n.t(
+          "verificationFailed.verificationFailedMessage"
+        )}</h2>
 
-        <p style="margin-bottom: 20px;">The verification link is invalid or expired.</p>
+        <p style="margin-bottom: 20px;">${i18n.t(
+          "verificationFailed.expiredLink"
+        )}</p>
 
         <div class="input-icon">
           <i class="fa-solid fa-envelope"></i>
@@ -25,11 +30,13 @@ export default class extends AbstractView {
 
         <button id="resendVerification" 
           style="background-color: #007bff; color: #fff; padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer;">
-          Resend Verification Email
+          ${i18n.t("verificationFailed.resendVerificationMessage")}
         </button>
 
         <div style="margin-top: 15px;">
-          <a href="/" data-link style="color: black; text-decoration: none;">← Back to Home</a>
+          <a href="/" data-link style="color: black; text-decoration: none;">${i18n.t(
+            "verificationFailed.backToHome"
+          )}</a>
         </div>
       </div>
     `;
@@ -70,20 +77,20 @@ export default class extends AbstractView {
 
     const button = document.getElementById("resendVerification");
     const originalText = button.textContent;
-    button.textContent = "Sending...";
+    button.textContent = i18n.t("verificationFailed.sending");
     button.disabled = true;
 
     try {
-      const response = await mailService.resendConfirmationMail(resendConfirmationDTO);
+      const response = await mailService.resendConfirmationMail(
+        resendConfirmationDTO
+      );
       if (response && response.status === 200) {
-        toastr.success(
-          "Verification email has been resent. Please check your inbox."
-        );
+        toastr.success(i18n.t("verificationFailed.successMessage"));
       } else {
-        toastr.failed("Failed to resend verification email. Please try again.");
+        toastr.failed(i18n.t("verificationFailed.failedMessage"));
       }
     } catch (error) {
-      toastr.failed("An error occurred. Please try again.");
+      toastr.failed(i18n.t("verificationFailed.errorMessage"));
     } finally {
       button.textContent = originalText;
       button.disabled = false;

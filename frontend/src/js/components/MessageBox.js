@@ -27,7 +27,7 @@ import {
 import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
 import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
-
+import { i18n } from "../i18n/i18n.js";
 let caretPosition = 0;
 let caretNode = null;
 let range = null;
@@ -90,6 +90,7 @@ const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
   chatInstance.webSocketManagerChat.subscribeToChannel(
     `/user/${chat.userProfileResponseDTO.id}/queue/online-status`,
     async (statusMessage) => {
+      
       onlineStatus(statusMessage, chat, messageBoxElement);
     }
   );
@@ -101,7 +102,7 @@ const createTypingElement = () => {
     "online-status-1",
     { "min-height": "0px" },
     { "aria-label": "", title: "" },
-    "typing..."
+    i18n.t("messageBox.typing")
   );
   statusDiv.append(statusSpan);
   return statusDiv;
@@ -151,7 +152,10 @@ const handleTextBlur = (chat, typingStatus, textArea) => {
 const handleTextFocus = (chat, typingStatus, textArea) => {
   const currentText = textArea.textContent.trim();
 
-  if (!currentText || currentText === "Bir mesaj yazın") {
+  if (
+    !currentText ||
+    currentText === i18n.t("messageBox.messageBoxPlaceHolder")
+  ) {
     if (typingStatus.isTyping) {
       chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
         userId: chat.contactsDTO.userId,
@@ -184,7 +188,10 @@ function handlePaste(event) {
 function handleTextInput(textArea, chat, typingStatus, event) {
   const currentText = textArea.textContent.trim();
 
-  if (!currentText || currentText === "Bir mesaj yazın") {
+  if (
+    !currentText ||
+    currentText === i18n.t("messageBox.messageBoxPlaceHolder")
+  ) {
     // Boşsa veya placeholder varsa false gönder
     if (typingStatus.isTyping) {
       chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
@@ -442,7 +449,7 @@ const updatePlaceholder = (textArea, sendButton, typingStatus) => {
   if (!placeholder && !hasText) {
     placeholder = document.createElement("div");
     placeholder.className = placeholderClass;
-    placeholder.textContent = "Bir mesaj yazın";
+    placeholder.textContent = i18n.t("messageBox.messageBoxPlaceHolder");
     textArea.append(placeholder);
     setSendButtonState(sendButton, false, typingStatus);
   }
@@ -808,7 +815,7 @@ const blockInput = (userName, main, footer) => {
     "block-message-input",
     null,
     null,
-    `You cannot send a message to blocked user ${userName}.`
+    i18n.t("messageBox.blockInputMessage")
   );
   footer.append(blockMessageInputDiv);
   main.append(footer);
@@ -946,7 +953,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     "message-box1-7-1-1-1-2-1-1-1-2",
     null,
     null,
-    "Bir mesaj yazın"
+    i18n.t("messageBox.messageBoxPlaceHolder")
   );
 
   textArea.append(divContenteditable);
@@ -1148,7 +1155,10 @@ const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
         }
       } catch (error) {
         console.error("Mesaj çözme hatası:", error);
-        return { ...message, decryptedMessage: "Şifreli mesaj çözülemedi" };
+        return {
+          ...message,
+          decryptedMessage: i18n.t("messageBox.decryptedErrorMessage"),
+        };
       }
     })
   );
@@ -1393,7 +1403,7 @@ const isOnlineStatus = (userContact, contact) => {
       "online-status-1",
       { "min-height": "0px" },
       { "aria-label": "", title: "" },
-      "çevrimiçi"
+      i18n.t("messageBox.online")
     );
     statusDiv.append(statusSpan);
     return statusDiv;
@@ -1524,7 +1534,10 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 
   if (messageContent.length > MAX_MESSAGE_LENGTH) {
     toastr.error(
-      `Message is too long. Maximum allowed is ${MAX_MESSAGE_LENGTH} characters.`
+      i18n.t("messageBox.sendMessageContentLengthError")(
+        MAX_MESSAGE_LENGTH,
+        messageContent.length
+      )
     );
     return;
   }
@@ -1635,9 +1648,9 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
     paneSideElement.scrollTop = 0;
   } else {
     if (isBlocked) {
-      toastr.error("This user is blocked. You cannot send a message.");
+      toastr.error(i18n.t("messageBox.sendMessageIsBlockedMessage"));
     } else if (isBlockedMe) {
-      toastr.error("This user has blocked you. You cannot send a message.");
+      toastr.error(i18n.t("messageBox.sendMessageIsBlockedMeMessage"));
     }
   }
 };
@@ -1711,7 +1724,8 @@ function formatDateTime(utcDateTimeString) {
   const localDate = new Date(utcDateTimeString);
 
   const diffInDays = Math.floor((now - localDate) / (1000 * 60 * 60 * 24));
-  const userLanguage = navigator.language || "en-US";
+  const currentLang = i18n.getLang();
+  const userLanguage = currentLang === "tr" ? "tr-TR" : "en-US";
 
   const formattedTime = localDate.toLocaleTimeString(userLanguage, {
     hour: "2-digit",
@@ -1743,102 +1757,10 @@ function formatDateTime(utcDateTimeString) {
     }).format(localDate);
   }
 
-  const lastSeenPrefix = userLanguage.startsWith("tr")
-    ? "son görülme"
-    : "last seen";
+  const lastSeenPrefix = i18n.t("messageBox.lastSeen");
 
   return `${lastSeenPrefix} ${relativeTimeText} ${formattedTime}`;
 }
-
-// function formatDateTime(utcDateTimeString) {
-//     const now = new Date();
-//     const utcDate = new Date(utcDateTimeString);
-
-//     // Sistem ayarlarını al (timezone dahil)
-//     const systemOptions = Intl.DateTimeFormat().resolvedOptions();
-//     const userLanguage = systemOptions.locale;
-//     const userTimezone = systemOptions.timeZone;
-
-//     // UTC tarihini kullanıcının zaman dilimine çevir
-//     const localDate = new Date(utcDate.toLocaleString("en-US", {timeZone: userTimezone}));
-//     const todayLocal = new Date(now.toLocaleString("en-US", {timeZone: userTimezone}));
-
-//     // Gün farkını hesapla (yerel zamanda)
-//     const diffInMs = todayLocal.getTime() - localDate.getTime();
-//     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-
-//     // Yerel saat formatı
-//     const formattedTime = localDate.toLocaleTimeString(userLanguage, {
-//         hour: '2-digit',
-//         minute: '2-digit',
-//         hour12: false
-//     });
-
-//     let relativeTimeText;
-
-//     if (diffInDays === 0) {
-//         // Bugün
-//         return `${getLastSeenText(userLanguage)} bugün ${formattedTime}`;
-//     } else if (diffInDays === 1) {
-//         // Dün
-//         const relativeFormatter = new Intl.RelativeTimeFormat(userLanguage, { numeric: 'auto' });
-//         relativeTimeText = relativeFormatter.format(-1, 'day');
-//     } else if (diffInDays < 7) {
-//         // Bu hafta içi - gün adı
-//         relativeTimeText = new Intl.DateTimeFormat(userLanguage, {
-//             weekday: 'long',
-//             timeZone: userTimezone
-//         }).format(utcDate);
-//     } else if (now.getFullYear() === localDate.getFullYear()) {
-//         // Bu yıl içi
-//         relativeTimeText = new Intl.DateTimeFormat(userLanguage, {
-//             month: 'long',
-//             day: 'numeric',
-//             timeZone: userTimezone
-//         }).format(utcDate);
-//     } else {
-//         // Farklı yıl
-//         relativeTimeText = new Intl.DateTimeFormat(userLanguage, {
-//             year: 'numeric',
-//             month: 'long',
-//             day: 'numeric',
-//             timeZone: userTimezone
-//         }).format(utcDate);
-//     }
-
-//     return `${getLastSeenText(userLanguage)} ${relativeTimeText} ${formattedTime}`;
-// }
-
-// // Yardımcı fonksiyon - "son görülme" metni
-// function getLastSeenText(locale) {
-//     const translations = {
-//         'tr': 'son görülme',
-//         'tr-TR': 'son görülme',
-//         'en': 'last seen',
-//         'en-US': 'last seen',
-//         'en-GB': 'last seen',
-//         'de': 'zuletzt gesehen',
-//         'de-DE': 'zuletzt gesehen',
-//         'fr': 'vu pour la dernière fois',
-//         'fr-FR': 'vu pour la dernière fois',
-//         'es': 'visto por última vez',
-//         'es-ES': 'visto por última vez'
-//     };
-
-//     // Tam locale kontrolü
-//     if (translations[locale]) {
-//         return translations[locale];
-//     }
-
-//     // Sadece dil kodu kontrolü (tr-TR -> tr)
-//     const langCode = locale.split('-')[0];
-//     if (translations[langCode]) {
-//         return translations[langCode];
-//     }
-
-//     // Varsayılan
-//     return 'last seen';
-// }
 
 const removeMessageBoxAndUnsubscribe = async () => {
   const messageBoxElement = document.querySelector(".message-box");
@@ -1880,10 +1802,10 @@ function handleOptionsBtnClick(event, chat) {
       chatOptionsDiv.style.opacity = "1";
 
       const blockLabel = chat.userChatSettingsDTO.isBlocked
-        ? "Unblock"
-        : "Block";
+        ? i18n.t("chatBox.unBlock")
+        : i18n.t("chatBox.block");
 
-      const deleteChatLabel = "Delete chat";
+      const deleteChatLabel = i18n.t("chatBox.deleteChat");
 
       const ulElement = createElement("ul", "ul1");
       const divElement = createElement("div", "");

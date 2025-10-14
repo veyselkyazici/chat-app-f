@@ -1,7 +1,7 @@
 import { createElement, createDefaultImage } from "../utils/util.js";
 import { viewPhoto } from "./UpdateUserProfile.js";
 import { toggleBlockUser } from "./ChatBox.js";
-
+import { i18n } from "../i18n/i18n.js";
 let closeProfileFn = null;
 function createContactInformation(contact, chatData) {
   if (document.querySelector(".profile-span-div")) {
@@ -338,7 +338,9 @@ function createContactInformation(contact, chatData) {
   blockTextDiv2.append(blockTextSpan);
   blockTextDivDivSpan.append(
     blockTextDiv2,
-    chatData.userChatSettingsDTO.isBlocked ? " unblock" : " block"
+    chatData.userChatSettingsDTO.isBlocked
+      ? i18n.t("chatBox.unBlock")
+      : i18n.t("chatBox.block")
   );
   blockTextDivDiv.append(blockTextDivDivSpan);
   blockTextDiv.append(blockTextDivDiv);
@@ -394,7 +396,7 @@ function createContactInformation(contact, chatData) {
     "delete-text-div-div-span",
     null,
     null,
-    "Delete chat"
+    i18n.t("chatBox.deleteChat")
   );
 
   deleteTextDivDiv.append(deleteTextDivDivSpan);
