@@ -153,4 +153,32 @@ export default {
   verify: {
     verifyMessage: "Hesabınız doğrulanıyor, lütfen bekleyin...",
   },
+  settings: {
+    settings: "Ayarlar",
+    account: "Hesap",
+    privacy: "Gizlilik",
+    changePassword: "Şifre değiştir",
+    logout: "Çıkış",
+    personalInformation: "Kişisel bilgilerimi kimler görebilir",
+    lastSeenAndOnline: "Son görülme ve çevrimiçi",
+    profilePhoto: "Profil fotoğrafı",
+    about: "Hakkında",
+    blockedUsers: "Engellenmiş kullanıcılar",
+    readReceipt: "Okundu bilgisi",
+    readSettingsInfo:
+      "Bu özelliği devre dışı bırakırsanız, okundu bilgilerini gönderemez veya alamazsınız.",
+    whoCanSeeMyLastSeen: "Son görülme bilgisini kimler görebilir",
+    everyone: "Herkes",
+    myContacts: "Kişilerim",
+    nobody: "Hiç kimse",
+    whoCanSeeOnlineInfo: "Çevrimiçi olduğumu kimler görebilir",
+    sameAsLastSeen: "Son görülme bilgisiyle aynı",
+    lastSeenAndOnlineInfo:
+      " bilgilerinizi paylaşmazsanız, diğer kullanıcıların son görülme ve çevrimiçi durumlarını da göremezsiniz.",
+    and: " ve ",
+    lastSeen: "Son görülme",
+    online: "çevrimiçi",
+    whoCanSeeMyProfilePhoto: "Profil fotoğrafımı kimler görebilir",
+    whoCanSeeMyAbout: "Hakkımda bilgimi kim görebilir",
+  },
 };

@@ -16,7 +16,6 @@ export async function generateKeyPair() {
   );
 }
 
-
 export async function deriveAESKey(password, salt) {
   // Parolayı AES anahtarına dönüştürür
   const passwordKey = await window.crypto.subtle.importKey(
@@ -186,7 +185,6 @@ export async function decryptMessage(chatDTO, isSender = false) {
     return "Bu mesaja erişilemiyor"; // Eğer mesaj çözülemezse
   }
 }
-
 
 export function generateSessionKey() {
   return window.crypto.getRandomValues(new Uint8Array(32));

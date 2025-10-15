@@ -148,4 +148,32 @@ export default {
   verify: {
     verifyMessage: "Verifying your account, please wait...",
   },
+  settings: {
+    settings: "Settings",
+    account: "Account",
+    privacy: "Privacy",
+    changePassword: "Change password",
+    logout: "Logout",
+    personalInformation: "Who can see my personal information",
+    lastSeenAndOnline: "Last seen and online",
+    profilePhoto: "Profile photo",
+    about: "About",
+    blockedUsers: "Blocked users",
+    readReceipt: "Read receipt",
+    readSettingsInfo:
+      "If you disable this feature, you won’t be able to send or receive read receipts.",
+    whoCanSeeMyLastSeen: "Who can see my last seen",
+    everyone: "Everyone",
+    myContacts: "My contacts",
+    noOne: "Nobody",
+    whoCanSeeOnlineInfo: "Who can see when I’m online?",
+    sameAsLastSeen: "Same as last seen",
+    lastSeenAndOnlineInfo:
+      " if you don’t share your information, you won’t be able to see other users’ last seen and online status either.",
+    and: " and ",
+    lastSeen: "Last seen",
+    online: "online",
+    whoCanSeeMyProfilePhoto: "Who can see my profile photo",
+    whoCanSeeMyAbout: "Who can see my About",
+  },
 };
