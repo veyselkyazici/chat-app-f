@@ -1269,7 +1269,6 @@ function createRadioButton(ariaLabel, textContent, optionName) {
 }
 
 function createRadioIcon(ariaLabel, optionName) {
-  debugger;
   let isSelected =
     chatInstance.user.privacySettings[optionName] ===
     mapAriaLabelToEnum(ariaLabel);
@@ -1361,6 +1360,7 @@ const updateRadioButtonState = (radioButton, isChecked) => {
 };
 
 const handleRadioButtonClick = async (radioButton, optionName) => {
+  
   let visibilityOption = mapAriaLabelToEnum(radioButton.data);
   if (!visibilityOption) {
     visibilityOption =
