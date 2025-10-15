@@ -574,7 +574,7 @@ const handlePrivacyClick = () => {
   divPrivacy2_2_2_1.append(divPrivacy2_2_2_1_2);
   divPrivacy2_2_2.append(divPrivacy2_2_2_1);
   divPrivacy2_2.append(divPrivacy2_2_2);
-  divPrivacy2.append(divPrivacy2_2);
+  // divPrivacy2.append(divPrivacy2_2);
 
   divSettings1.append(header);
   divSettings1.append(divPrivacy2);
@@ -830,17 +830,17 @@ const handleLastSeenAndOnlineClick = () => {
   });
 
   const buttonEveryone = createRadioButton(
-    i18n.t("settings.everyone"),
+    "Everyone",
     i18n.t("settings.everyone"),
     "lastSeenVisibility"
   );
   const buttonMyContacts = createRadioButton(
-    i18n.t("settings.myContacts"),
+    "My contacts",
     i18n.t("settings.myContacts"),
     "lastSeenVisibility"
   );
   const buttonNobody = createRadioButton(
-    i18n.t("settings.nobody"),
+    "Nobody",
     i18n.t("settings.nobody"),
     "lastSeenVisibility"
   );
@@ -864,11 +864,11 @@ const handleLastSeenAndOnlineClick = () => {
 
   const radioGroup2 = createElement("div", "", null, {
     role: "radiogroup",
-    "aria-label": "Çevrimiçi olduğumu kimler görebilir",
+    "aria-label": i18n.t("settings.whoCanSeeOnlineInfo"),
   });
 
   const buttonEveryone2 = createRadioButton(
-    i18n.t("settings.everyone"),
+    "Everyone",
     i18n.t("settings.everyone"),
     "onlineStatusVisibility"
   );
@@ -996,17 +996,17 @@ const handleProfilePhotoClick = () => {
   });
 
   const buttonEveryone = createRadioButton(
-    i18n.t("settings.everyone"),
+    "Everyone",
     i18n.t("settings.everyone"),
     "profilePhotoVisibility"
   );
   const buttonMyContacts = createRadioButton(
-    i18n.t("settings.myContacts"),
+    "My contacts",
     i18n.t("settings.myContacts"),
     "profilePhotoVisibility"
   );
   const buttonNobody = createRadioButton(
-    i18n.t("settings.nobody"),
+    "Nobody",
     i18n.t("settings.nobody"),
     "profilePhotoVisibility"
   );
@@ -1098,16 +1098,20 @@ const handleAboutMeClick = () => {
   });
 
   const buttonEveryone = createRadioButton(
-    i18n.t("settings.everyone"),
+    "Everyone",
     i18n.t("settings.everyone"),
     "aboutVisibility"
   );
   const buttonMyContacts = createRadioButton(
-    i18n.t("settings.myContacts"),
+    "My contacts",
     i18n.t("settings.myContacts"),
     "aboutVisibility"
   );
-  const buttonNobody = createRadioButton("No one", "No one", "aboutVisibility");
+  const buttonNobody = createRadioButton(
+    "Nobody",
+    i18n.t("settings.nobody"),
+    "aboutVisibility"
+  );
   radioGroup.append(buttonEveryone);
   radioGroup.append(buttonMyContacts);
   radioGroup.append(buttonNobody);
@@ -1423,7 +1427,7 @@ const mapAriaLabelToEnum = (ariaLabel) => {
   switch (ariaLabel) {
     case "Everyone":
       return VisibilityOption.EVERYONE;
-    case "My contacts":
+    case "Contacts":
       return VisibilityOption.CONTACTS;
     case "Nobody":
       return VisibilityOption.NOBODY;
