@@ -835,7 +835,7 @@ const handleLastSeenAndOnlineClick = () => {
     "lastSeenVisibility"
   );
   const buttonMyContacts = createRadioButton(
-    "My contacts",
+    "Contacts",
     i18n.t("settings.myContacts"),
     "lastSeenVisibility"
   );
@@ -1001,7 +1001,7 @@ const handleProfilePhotoClick = () => {
     "profilePhotoVisibility"
   );
   const buttonMyContacts = createRadioButton(
-    "My contacts",
+    "Contacts",
     i18n.t("settings.myContacts"),
     "profilePhotoVisibility"
   );
@@ -1103,7 +1103,7 @@ const handleAboutMeClick = () => {
     "aboutVisibility"
   );
   const buttonMyContacts = createRadioButton(
-    "My contacts",
+    "Contacts",
     i18n.t("settings.myContacts"),
     "aboutVisibility"
   );
