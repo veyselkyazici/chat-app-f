@@ -1269,6 +1269,7 @@ function createRadioButton(ariaLabel, textContent, optionName) {
 }
 
 function createRadioIcon(ariaLabel, optionName) {
+  debugger;
   let isSelected =
     chatInstance.user.privacySettings[optionName] ===
     mapAriaLabelToEnum(ariaLabel);

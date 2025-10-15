@@ -151,8 +151,7 @@ export async function decryptMessage(chatDTO, isSender = false) {
       encryptedKey
     );
   } catch (e) {
-    console.error("RSA Decryption Error Details:", e);
-    return "Bu mesaja erişilemiyor"; // Kullanıcıya gösterilecek bilgi
+    return "Bu mesaja erişilemiyor";
   }
 
   let aesKey;
