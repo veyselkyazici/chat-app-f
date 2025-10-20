@@ -93,7 +93,6 @@ export default class Chat extends AbstractView {
     const storageId = sessionStorage.getItem("id");
     const reponse = await userService.getUserWithUserKeyByAuthId(storageId);
     this.user = reponse.data;
-
     if (this.user) {
       this.initializeWebSockets();
       if (this.user.updatedAt == null) {
@@ -130,6 +129,7 @@ export default class Chat extends AbstractView {
     const storedIv = sessionStorage.getItem("encryptionIv");
     const storedPublicKey = sessionStorage.getItem("publicKey");
     if (storedSessionKey && storedEncryptedPrivateKey && storedIv) {
+      
       const sessionKey = base64ToUint8Array(storedSessionKey);
       setSessionKey(sessionKey);
 

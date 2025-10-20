@@ -24,6 +24,10 @@ export default {
     passwordEmptyError: "Şifre boş olamaz",
     passwordLength: "Şifre 8‑32 karakter uzunluğunda olmalıdır.",
   },
+  register: {
+    registerSuccess:
+      "Kayıt başarılı! Hesabınızı etkinleştirmek için lütfen e-postanızı kontrol edin.",
+  },
   forgotPassword: {
     forgotPassword: "Şifremi unuttum",
     emailMessage: "Doğrulama kodu için lütfen e-posta adresinizi girin.",
@@ -38,7 +42,7 @@ export default {
     confirmPassword: "Şifreyi doğrula",
     changePassword: "Şifreyi değiştir",
     verificationCodeError: "Doğrulama kodu boş olamaz",
-    passwordsNotMatch: "Şifreler eşleşmiyor.",
+    passwordsNotMatch: "Şifreler eşleşmiyor",
     successMessage:
       "Şifre güncellendi. 5 saniye içinde giriş sayfasına yönlendiriliyorsunuz.",
     failedMessage: "Şifre sıfırlanamadı",
@@ -180,5 +184,16 @@ export default {
     online: "çevrimiçi",
     whoCanSeeMyProfilePhoto: "Profil fotoğrafımı kimler görebilir",
     whoCanSeeMyAbout: "Hakkımda bilgimi kim görebilir",
+    oldPassword: "Mevcut şifreniz",
+    newPassword: "Yeni password",
+    confirmPassword: "Confirm new password",
+    fillAllFields: "Lütfen tüm alanları doldurun",
+    passwordsNotMatch: "Şifreler eşleşmiyor",
+    passwordChangeSuccess: "Şifre değiştirme başarılı",
+    passwordChangeFail: "Şifre değiştirilirken bir hata oluştu",
+    oldPasswordRequired: "Mevcut şifreniz boş olamaz",
+    oldPasswordInvalid: "Mevcut şifreniz geçerli değil",
+    newPasswordRequired: "Yeni şifreniz boş olamaz",
+    newPasswordInvalid: "Yeni şifreniz geçerli değil",
   },
 };

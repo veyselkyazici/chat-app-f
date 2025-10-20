@@ -23,6 +23,10 @@ export default {
     passwordEmptyError: "Password cannot be empty",
     passwordLength: "Password must be 8-32 characters long.",
   },
+  register: {
+    registerSuccess:
+      "Sign up successful. Please check your email to activate your account.",
+  },
   forgotPassword: {
     forgotPassword: "Forgot password",
     emailMessage: "Please enter your email address for the verification code.",
@@ -175,5 +179,16 @@ export default {
     online: "online",
     whoCanSeeMyProfilePhoto: "Who can see my profile photo",
     whoCanSeeMyAbout: "Who can see my About",
+    oldPassword: "Old password",
+    newPassword: "New password",
+    confirmPassword: "Confirm new password",
+    fillAllFields: "Please fill in all fields",
+    passwordsNotMatch: "Passwords do not match",
+    passwordChangeSuccess: "Password changed successfully",
+    passwordChangeFail: "Failed to change password",
+    oldPasswordRequired: "Old password cannot be empty",
+    oldPasswordInvalid: "Old password format is invalid",
+    newPasswordRequired: "New password cannot be empty",
+    newPasswordInvalid: "New password format is invalid",
   },
 };

@@ -145,8 +145,14 @@ export default class extends AbstractView {
       formElements.password.value.trim() !==
       formElements.confirmPassword.value.trim()
     ) {
-      showError(formElements.confirmPassword, "Passwords do not match");
-      showError(formElements.password, "Passwords do not match");
+      showError(
+        formElements.confirmPassword,
+        i18n.t("forgotPassword.passwordsNotMatch")
+      );
+      showError(
+        formElements.password,
+        i18n.t("forgotPassword.passwordsNotMatch")
+      );
       return;
     }
 
@@ -155,11 +161,11 @@ export default class extends AbstractView {
       const salt = crypto.getRandomValues(new Uint8Array(16));
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const { publicKey, privateKey } = await generateKeyPair();
-      const privateKeyRaw = await window.crypto.subtle.exportKey(
-        "pkcs8",
-        privateKey
-      );
-      const privateKeyBase64 = base64Encode(new Uint8Array(privateKeyRaw));
+      // const privateKeyRaw = await window.crypto.subtle.exportKey(
+      //   "pkcs8",
+      //   privateKey
+      // );
+      // const privateKeyBase64 = base64Encode(new Uint8Array(privateKeyRaw));
       const aesKey = await deriveAESKey(
         formElements.password.value.trim(),
         salt
@@ -177,7 +183,7 @@ export default class extends AbstractView {
         Array.from(new Uint8Array(encryptedPrivateKey)),
         Array.from(salt),
         Array.from(iv),
-        privateKeyBase64,
+        // privateKeyBase64,
         recaptchaToken
       );
 
@@ -194,9 +200,7 @@ export default class extends AbstractView {
       }
       const response = await authService.register(registerRequestDTO);
       if (response.success) {
-        toastr.success(
-          "Sign up successful. Please check your email to activate your account."
-        );
+        toastr.success(i18n.t("register.registerSuccess"));
         navigateTo("/login");
       } else {
         if (response.errors.length > 0) {

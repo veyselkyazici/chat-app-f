@@ -238,8 +238,6 @@ export default class extends AbstractView {
       validationErrors.forEach((error) => {
         if (error.field !== "general") {
           showError(formElements[`${error.field}`], error.message);
-        } else {
-          formElements.generalError.textContent = error.message;
         }
       });
       this.email = "";

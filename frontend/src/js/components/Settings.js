@@ -3,12 +3,21 @@ import {
   createDefaultImage,
   createElement,
   handleBackBtnClick,
+  showError,
+  clearErrorMessages,
+  ruleCheck,
+  toggleVisibilityPassword,
 } from "../utils/util.js";
 import { chatInstance } from "../pages/Chat.js";
 import { ifVisibilitySettingsChangeWhileMessageBoxIsOpen } from "./MessageBox.js";
 import { userService } from "../services/userService.js";
 import { userUpdateModal } from "./UpdateUserProfile.js";
 import { i18n } from "../i18n/i18n.js";
+import { Modal } from "../utils/showModal.js";
+import { ChangePasswordRequestDTO } from "../dtos/auth/request/ChangePasswordRequestDTO.js";
+import { authService } from "../services/authService.js";
+import { reencryptPrivateKey, base64ToUint8Array } from "../utils/e2ee.js";
+
 function createSettingsHtml() {
   const span = document.querySelector(".a1-1-1");
   const existingSettingsDiv = span.querySelector(".settings");
@@ -587,7 +596,194 @@ const handlePrivacyClick = () => {
 };
 // const handleNotificationsClick = () => {};
 
-const handleChangePassword = () => {};
+const handleChangePassword = () => {
+  const content = document.createElement("div");
+  content.innerHTML = `
+    <form id="changePasswordForm" class="change-password-form">
+
+      <div class="input-icon">
+        <div class="error-message" id="generalError"></div>
+      </div>
+
+      <div class="input-icon">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="oldPassword" placeholder="${i18n.t(
+          "settings.oldPassword"
+        )}">
+        <button
+          type="button"
+          tabindex="-1"
+          class="toggle-visibility"
+          aria-label="Show password"
+          data-target="oldPassword"
+        >
+          <i class="fa-solid fa-eye"></i>
+        </button>
+        <div class="error-message"></div>
+      </div>
+
+      <div class="input-icon">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="newPassword" placeholder="${i18n.t(
+          "settings.newPassword"
+        )}">
+        <button
+          type="button"
+          tabindex="-1"
+          class="toggle-visibility"
+          aria-label="Show password"
+          data-target="newPassword"
+        >
+          <i class="fa-solid fa-eye"></i>
+        </button>
+        <div class="error-message"></div>
+      </div>
+
+      <div class="regex-rule"></div>
+
+      <div class="input-icon">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="confirmPassword" placeholder="${i18n.t(
+          "settings.newPassword"
+        )}">
+        <button
+          type="button"
+          tabindex="-1"
+          class="toggle-visibility"
+          aria-label="Show password"
+          data-target="confirmPassword"
+        >
+          <i class="fa-solid fa-eye"></i>
+        </button>
+        <div class="error-message"></div>
+      </div>
+    </form>
+  `;
+
+  new Modal({
+    title: i18n.t("settings.changePassword"),
+    contentHtml: content,
+    buttonText: i18n.t("modal.ok"),
+    cancelButton: true,
+    cancelButtonId: "cancelChangePassword",
+    modalOkButtonId: "confirmChangePassword",
+    mainCallback: async () => {
+      const formElements = {
+        oldPassword: document.getElementById("oldPassword"),
+        newPassword: document.getElementById("newPassword"),
+        confirmPassword: document.getElementById("confirmPassword"),
+        generalError: document.getElementById("generalError"),
+      };
+
+      clearErrorMessages();
+
+      const oldPassword = formElements.oldPassword.value.trim();
+      const newPassword = formElements.newPassword.value.trim();
+      const confirmPassword = formElements.confirmPassword.value.trim();
+
+      if (!oldPassword && !newPassword && !confirmPassword) {
+        showError(formElements.generalError, i18n.t("settings.fillAllFields"));
+        return false;
+      }
+
+      if (!oldPassword || !newPassword || !confirmPassword) {
+        showError(formElements.generalError, i18n.t("settings.fillAllFields"));
+        return false;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showError(
+          formElements.confirmPassword,
+          i18n.t("settings.passwordsNotMatch")
+        );
+        showError(
+          formElements.newPassword,
+          i18n.t("settings.passwordsNotMatch")
+        );
+        return false;
+      }
+      
+      const keyDataRes = chatInstance.user.userKey;
+
+      const reenc = await reencryptPrivateKey(
+        oldPassword,
+        newPassword,
+        base64ToUint8Array(keyDataRes.encryptedPrivateKey),
+        base64ToUint8Array(keyDataRes.salt),
+        base64ToUint8Array(keyDataRes.iv)
+      );
+
+      const changePasswordRequestDTO = new ChangePasswordRequestDTO(
+        oldPassword,
+        newPassword,
+        Array.from(reenc.encryptedPrivateKey),
+        Array.from(reenc.salt),
+        Array.from(reenc.iv)
+      );
+      const validationErrors = changePasswordRequestDTO.validate();
+      if (validationErrors.length > 0) {
+        validationErrors.forEach((error) => {
+          if (error.field !== "general") {
+            showError(formElements[`${error.field}`], error.message);
+          }
+        });
+        return;
+      }
+      try {
+        const res = await authService.changePassword(changePasswordRequestDTO);
+        if (res.success) {
+          toastr.success(i18n.t("settings.passwordChangeSuccess"));
+          return true;
+        } else {
+          toastr.error(res.message || i18n.t("settings.passwordChangeFail"));
+          return false;
+        }
+      } catch (err) {
+        console.error(err);
+        toastr.error(i18n.t("settings.passwordChangeFail"));
+        return false;
+      }
+    },
+  });
+  content.querySelectorAll(".toggle-visibility").forEach((btn) => {
+    const icon = btn.querySelector("i");
+    const input = content.querySelector(`#${btn.dataset.target}`);
+    btn.addEventListener("mousedown", (e) => e.preventDefault());
+    btn.addEventListener("click", () =>
+      toggleVisibilityPassword(btn, icon, input)
+    );
+  });
+
+  const regexRuleDiv = content.querySelector(".regex-rule");
+  const pwdInputs = [content.querySelector("#newPassword")];
+
+  pwdInputs.forEach((input) => {
+    input.addEventListener("focus", () => {
+      if (!regexRuleDiv.hasChildNodes()) {
+        regexRuleDiv.innerHTML = `
+          <ul id="pwdRules" class="rules">
+            <li data-rule="length">${i18n.t("pwdRules.length")}</li>
+            <li data-rule="upper">${i18n.t("pwdRules.upperCase")}</li>
+            <li data-rule="lower">${i18n.t("pwdRules.lowerCase")}</li>
+            <li data-rule="digit">${i18n.t("pwdRules.number")}</li>
+            <li data-rule="special">${i18n.t("pwdRules.specialChar")}</li>
+          </ul>
+        `;
+      }
+      const rulesList = content.querySelector("#pwdRules");
+      ruleCheck(rulesList, input.value);
+    });
+
+    input.addEventListener("input", ({ target: { value } }) => {
+      const rulesList = content.querySelector("#pwdRules");
+      ruleCheck(rulesList, value);
+    });
+
+    input.addEventListener("blur", () => {
+      regexRuleDiv.innerHTML = "";
+    });
+  });
+};
 async function handleLogoutClick() {
   await chatInstance.logout();
 }
@@ -1360,7 +1556,6 @@ const updateRadioButtonState = (radioButton, isChecked) => {
 };
 
 const handleRadioButtonClick = async (radioButton, optionName) => {
-  
   let visibilityOption = mapAriaLabelToEnum(radioButton.data);
   if (!visibilityOption) {
     visibilityOption =

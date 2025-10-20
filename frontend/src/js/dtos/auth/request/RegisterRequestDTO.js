@@ -8,7 +8,7 @@ export class RegisterRequestDTO {
     encryptedPrivateKey,
     salt,
     iv,
-    privateKey,
+    // privateKey,
     recaptchaToken
   ) {
     this.email = email;
@@ -17,7 +17,7 @@ export class RegisterRequestDTO {
     this.encryptedPrivateKey = encryptedPrivateKey;
     this.salt = salt;
     this.iv = iv;
-    this.privateKey = privateKey;
+    // this.privateKey = privateKey;
     this.recaptchaToken = recaptchaToken;
   }
 

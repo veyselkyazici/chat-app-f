@@ -142,4 +142,15 @@ export const authService = {
       throw new Error(error.response?.data?.message || "Password reset failed");
     }
   },
+  changePassword: async (changePasswordRequestDTO) => {
+    try {
+      const response = await axiosInstance.post(
+        `${AUTH_SERVICE_URL}/change-password`,
+        changePasswordRequestDTO
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Password reset failed");
+    }
+  },
 };

@@ -51,6 +51,51 @@ export async function encryptPrivateKey(privateKey, aesKey, iv) {
   );
 }
 
+export async function reencryptPrivateKey(
+  oldPassword,
+  newPassword,
+  encryptedPrivateKey,
+  oldSalt,
+  oldIv
+) {
+  try {
+    
+    const oldAesKey = await deriveAESKey(oldPassword, oldSalt);
+
+    const privateKey = await decryptPrivateKey(
+      encryptedPrivateKey,
+      oldAesKey,
+      oldIv
+    );
+    const privateKeyRaw = await window.crypto.subtle.exportKey(
+      "pkcs8",
+      privateKey
+    );
+    const privateKeyBase64 = base64Encode(new Uint8Array(privateKeyRaw));
+
+    const newSalt = crypto.getRandomValues(new Uint8Array(16));
+    const newIv = crypto.getRandomValues(new Uint8Array(12));
+
+    const newAesKey = await deriveAESKey(newPassword, newSalt);
+
+    const newEncryptedPrivateKey = await encryptPrivateKey(
+      privateKey,
+      newAesKey,
+      newIv
+    );
+
+    return {
+      encryptedPrivateKey: new Uint8Array(newEncryptedPrivateKey),
+      salt: newSalt,
+      iv: newIv,
+      privateKeyBase64,
+    };
+  } catch (err) {
+    console.error("Re-encryption failed", err);
+    throw new Error("Old password is incorrect or encrypted key is corrupted.");
+  }
+}
+
 export async function decryptPrivateKey(encrypted, aesKey, iv) {
   const decrypted = await window.crypto.subtle.decrypt(
     { name: "AES-GCM", iv },
