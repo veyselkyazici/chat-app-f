@@ -238,7 +238,7 @@ function createButton(
     subTitleText
   );
 
-  if (titleText == "Logout") {
+  if (titleText == i18n.t("settings.logout")) {
     const iconInnerSpan = document.createElement("span", "exit", null, {
       "data-icon": dataIcon,
     });
@@ -702,7 +702,7 @@ const handleChangePassword = () => {
         );
         return false;
       }
-      
+
       const keyDataRes = chatInstance.user.userKey;
 
       const reenc = await reencryptPrivateKey(

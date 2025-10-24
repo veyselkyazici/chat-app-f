@@ -47,6 +47,9 @@ export default {
     failedMessageCatch: "Password reset failed. Try again later",
     timerError: "5 minutes have passed. Redirecting to the homepage...",
   },
+  selectMessageBoxMessage: {
+    selectMessageBoxMessage: "Select a friend to start chatting",
+  },
   pwdRules: {
     length: "8‑32 character",
     upperCase: "Minimum 1 uppercase letter (A‑Z)",

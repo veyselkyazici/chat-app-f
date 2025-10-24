@@ -49,6 +49,9 @@ export default {
     failedMessageCatch: "Şifre sıfırlanamadı. Sonra tekrar deneyin",
     timerError: "5 dakika geçti. Ana sayfaya yönlendiriliyorsunuz…",
   },
+  selectMessageBoxMessage: {
+    selectMessageBoxMessage: "Sohbet etmek için bir arkadaş seç",
+  },
   pwdRules: {
     length: "8‑32 karakter",
     upperCase: "En az 1 büyük harf (A‑Z)",

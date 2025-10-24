@@ -32,7 +32,7 @@ export async function deriveAESKey(password, salt) {
       iterations: 150_000, // Zorluk faktörü 150_000
       hash: "SHA-256", // Hash algoritması
     },
-
+    
     passwordKey, // Yukarıda oluşturulan parola anahtarı
     { name: "AES-GCM", length: 256 }, // 256-bit AES anahtarı üret
     false, // Anahtar dışa aktarılamaz

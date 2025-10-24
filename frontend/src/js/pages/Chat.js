@@ -69,7 +69,11 @@ export default class Chat extends AbstractView {
 </div><div id="chat-loading-screen" class="chat-loading-screen"><span></span><div class="loading-container"><div class="loading-logo"><div class="whatsapp-logo"><i class="fas fa-comments fa-2x"></i></div></div><div class="loading-text"><p>Please wait</p></div><div class="loading-spinner"><div class="spinner"></div></div></div></div><span class></span><span class></span><span class></span><div class="chat-container"><div class="xixxii4"></div><div class="a1"><div class="a1-1"><span class="a1-1-1"></span></div><div class="a1-2"><span class="a1-2-1"></span></div></div><div class="chats"><header><header class="chat-list-header"><div class="user-photo">
 <div class="user-profile-photo"  style="height: 49px; width: 49px;" role="button"><div class="svg-div"><span class="" aria-hidden="true" data-icon="default-user"><svg class="svg-element" viewBox="0 0 212 212" height="212" width="212" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px" enable-background="new 0 0 212 212"><title>default-user</title><path fill="#DFE5E7" class="background" d="M106.251,0.5C164.653,0.5,212,47.846,212,106.25S164.653,212,106.25,212C47.846,212,0.5,164.654,0.5,106.25 S47.846,0.5,106.251,0.5z"></path><g><path fill="#FFFFFF" class="primary" d="M173.561,171.615c-0.601-0.915-1.287-1.907-2.065-2.955c-0.777-1.049-1.645-2.155-2.608-3.299 c-0.964-1.144-2.024-2.326-3.184-3.527c-1.741-1.802-3.71-3.646-5.924-5.47c-2.952-2.431-6.339-4.824-10.204-7.026 c-1.877-1.07-3.873-2.092-5.98-3.055c-0.062-0.028-0.118-0.059-0.18-0.087c-9.792-4.44-22.106-7.529-37.416-7.529 s-27.624,3.089-37.416,7.529c-0.338,0.153-0.653,0.318-0.985,0.474c-1.431,0.674-2.806,1.376-4.128,2.101 c-0.716,0.393-1.417,0.792-2.101,1.197c-3.421,2.027-6.475,4.191-9.15,6.395c-2.213,1.823-4.182,3.668-5.924,5.47 c-1.161,1.201-2.22,2.384-3.184,3.527c-0.964,1.144-1.832,2.25-2.609,3.299c-0.778,1.049-1.464,2.04-2.065,2.955 c-0.557,0.848-1.033,1.622-1.447,2.324c-0.033,0.056-0.073,0.119-0.104,0.174c-0.435,0.744-0.79,1.392-1.07,1.926 c-0.559,1.068-0.818,1.678-0.818,1.678v0.398c18.285,17.927,43.322,28.985,70.945,28.985c27.678,0,52.761-11.103,71.055-29.095 v-0.289c0,0-0.619-1.45-1.992-3.778C174.594,173.238,174.117,172.463,173.561,171.615z"></path><path fill="#FFFFFF" class="primary" d="M106.002,125.5c2.645,0,5.212-0.253,7.68-0.737c1.234-0.242,2.443-0.542,3.624-0.896 c1.772-0.532,3.482-1.188,5.12-1.958c2.184-1.027,4.242-2.258,6.15-3.67c2.863-2.119,5.39-4.646,7.509-7.509 c0.706-0.954,1.367-1.945,1.98-2.971c0.919-1.539,1.729-3.155,2.422-4.84c0.462-1.123,0.872-2.277,1.226-3.458 c0.177-0.591,0.341-1.188,0.49-1.792c0.299-1.208,0.542-2.443,0.725-3.701c0.275-1.887,0.417-3.827,0.417-5.811 c0-1.984-0.142-3.925-0.417-5.811c-0.184-1.258-0.426-2.493-0.725-3.701c-0.15-0.604-0.313-1.202-0.49-1.793 c-0.354-1.181-0.764-2.335-1.226-3.458c-0.693-1.685-1.504-3.301-2.422-4.84c-0.613-1.026-1.274-2.017-1.98-2.971 c-2.119-2.863-4.646-5.39-7.509-7.509c-1.909-1.412-3.966-2.643-6.15-3.67c-1.638-0.77-3.348-1.426-5.12-1.958 c-1.181-0.355-2.39-0.655-3.624-0.896c-2.468-0.484-5.035-0.737-7.68-0.737c-21.162,0-37.345,16.183-37.345,37.345 C68.657,109.317,84.84,125.5,106.002,125.5z"></path></g></svg></span></div></div>
 </div><div class="options-div"><div class="options"><div class="friend-list-btn option" tabindex="0" role="button" title="Yeni Sohbet Başlat" aria-label="Yeni Sohbet Başlat"><span class="friend-list-icon option material-symbols-outlined">chat_add_on</span></div><div class="add-friendd option" tabindex="0" role="button" title="Add contact" aria-label="Add contact"><i class="fa-solid fa-plus"></i></div><div class="settings-btn option" tabindex="0" role="button" title="Options" aria-label="Options"> <i class="fa-solid fa-gear"></i></div></div></div></header></header><div class="chat-content side">
-<div tabindex="-1" class="css1"><div class="chats-search-bar search-bar" id="chats-search-bar"><div></div><div class="css2"><button class="css3" tabindex="-1"><div class="css5"><span data-icon="search" class=""><svg viewBox="0 0 20 20" height="20" width="20" preserveAspectRatio="xMidYMid meet" fill="none"><title>search</title><path fill-rule="evenodd" clip-rule="evenodd" d="M4.36653 4.3664C5.36341 3.36953 6.57714 2.87 8.00012 2.87C9.42309 2.87 10.6368 3.36953 11.6337 4.3664C12.6306 5.36329 13.1301 6.57724 13.1301 8.00062C13.1301 8.57523 13.0412 9.11883 12.8624 9.63057C12.6972 10.1038 12.4733 10.5419 12.1909 10.9444L16.5712 15.3247C16.7454 15.4989 16.8385 15.7046 16.8385 15.9375C16.8385 16.1704 16.7454 16.3761 16.5712 16.5503C16.396 16.7254 16.1866 16.8175 15.948 16.8175C15.7095 16.8175 15.5001 16.7254 15.3249 16.5503L10.9448 12.1906C10.5421 12.4731 10.104 12.697 9.63069 12.8623C9.11895 13.041 8.57535 13.13 8.00074 13.13C6.57736 13.13 5.36341 12.6305 4.36653 11.6336C3.36965 10.6367 2.87012 9.42297 2.87012 8C2.87012 6.57702 3.36965 5.36328 4.36653 4.3664ZM8.00012 4.63C7.06198 4.63 6.26877 4.95685 5.61287 5.61275C4.95698 6.26865 4.63012 7.06186 4.63012 8C4.63012 8.93813 4.95698 9.73134 5.61287 10.3872C6.26877 11.0431 7.06198 11.37 8.00012 11.37C8.93826 11.37 9.73146 11.0431 10.3874 10.3872C11.0433 9.73134 11.3701 8.93813 11.3701 8C11.3701 7.06186 11.0433 6.26865 10.3874 5.61275C9.73146 4.95685 8.93826 4.63 8.00012 4.63Z" fill="currentColor"></path></svg></span></div></button><span></span><div class="css7"><div class="css8"><div class="css9" contenteditable="true" role="textbox" title="Arama metni giriş alanı" tabindex="3" aria-placeholder="Search" style="min-height: 1.47em; user-select: text; white-space: pre-wrap; word-break: break-word;"><p class="selectable-text1"><br></p></div><div class="css12"><div class="css122">Search by name, email or last message</div></div></div></div></div></div></div><span class="css13"></span><div class="pane-side" id="pane-side"><div class="css10"><div class="css11"></div></div><div tabindex="-1" class data-tab="4"><div tabindex="-1" style="pointer-events: auto;"><div class="chat-list-content" role="grid"></div></div></div></div></div></div><div class="message-box" id="chatWindow"><div class="start-message">Select a friend to start chatting.</div></div><div class="contact-information profile"><span class="contact-information-span"></span></div></div>`;
+<div tabindex="-1" class="css1"><div class="chats-search-bar search-bar" id="chats-search-bar"><div></div><div class="css2"><button class="css3" tabindex="-1"><div class="css5"><span data-icon="search" class=""><svg viewBox="0 0 20 20" height="20" width="20" preserveAspectRatio="xMidYMid meet" fill="none"><title>search</title><path fill-rule="evenodd" clip-rule="evenodd" d="M4.36653 4.3664C5.36341 3.36953 6.57714 2.87 8.00012 2.87C9.42309 2.87 10.6368 3.36953 11.6337 4.3664C12.6306 5.36329 13.1301 6.57724 13.1301 8.00062C13.1301 8.57523 13.0412 9.11883 12.8624 9.63057C12.6972 10.1038 12.4733 10.5419 12.1909 10.9444L16.5712 15.3247C16.7454 15.4989 16.8385 15.7046 16.8385 15.9375C16.8385 16.1704 16.7454 16.3761 16.5712 16.5503C16.396 16.7254 16.1866 16.8175 15.948 16.8175C15.7095 16.8175 15.5001 16.7254 15.3249 16.5503L10.9448 12.1906C10.5421 12.4731 10.104 12.697 9.63069 12.8623C9.11895 13.041 8.57535 13.13 8.00074 13.13C6.57736 13.13 5.36341 12.6305 4.36653 11.6336C3.36965 10.6367 2.87012 9.42297 2.87012 8C2.87012 6.57702 3.36965 5.36328 4.36653 4.3664ZM8.00012 4.63C7.06198 4.63 6.26877 4.95685 5.61287 5.61275C4.95698 6.26865 4.63012 7.06186 4.63012 8C4.63012 8.93813 4.95698 9.73134 5.61287 10.3872C6.26877 11.0431 7.06198 11.37 8.00012 11.37C8.93826 11.37 9.73146 11.0431 10.3874 10.3872C11.0433 9.73134 11.3701 8.93813 11.3701 8C11.3701 7.06186 11.0433 6.26865 10.3874 5.61275C9.73146 4.95685 8.93826 4.63 8.00012 4.63Z" fill="currentColor"></path></svg></span></div></button><span></span><div class="css7"><div class="css8"><div class="css9" contenteditable="true" role="textbox" title="Arama metni giriş alanı" tabindex="3" aria-placeholder="Search" style="min-height: 1.47em; user-select: text; white-space: pre-wrap; word-break: break-word;"><p class="selectable-text1"><br></p></div><div class="css12"><div class="css122">${i18n.t(
+      "search.searchPlaceHolder"
+    )}</div></div></div></div></div></div></div><span class="css13"></span><div class="pane-side" id="pane-side"><div class="css10"><div class="css11"></div></div><div tabindex="-1" class data-tab="4"><div tabindex="-1" style="pointer-events: auto;"><div class="chat-list-content" role="grid"></div></div></div></div></div></div><div class="message-box" id="chatWindow"><div class="start-message">${i18n.t(
+      "selectMessageBoxMessage.selectMessageBoxMessage"
+    )}</div></div><div class="contact-information profile"><span class="contact-information-span"></span></div></div>`;
   }
 
   async init() {
@@ -129,7 +133,6 @@ export default class Chat extends AbstractView {
     const storedIv = sessionStorage.getItem("encryptionIv");
     const storedPublicKey = sessionStorage.getItem("publicKey");
     if (storedSessionKey && storedEncryptedPrivateKey && storedIv) {
-      
       const sessionKey = base64ToUint8Array(storedSessionKey);
       setSessionKey(sessionKey);
 
@@ -435,7 +438,6 @@ export default class Chat extends AbstractView {
       updatePrivacy,
       async (updatePrivacyMessage) => {
         const updatePrivacy = JSON.parse(updatePrivacyMessage.body);
-
         const findContact = this.contactList.find(
           (contact) => contact.userProfileResponseDTO?.id === updatePrivacy.id
         );
@@ -451,6 +453,7 @@ export default class Chat extends AbstractView {
             oldPrivacySettings =
               findChat.userProfileResponseDTO.privacySettings;
             findChat.userProfileResponseDTO = updatePrivacy;
+
             newPrivacySettings = {
               contactsDTO: {
                 contact: { ...findChat.contactsDTO },
@@ -672,7 +675,11 @@ export default class Chat extends AbstractView {
           (chat) => chat.chatDTO.id === firstReadMessage.chatRoomId
         );
         findChat.chatDTO.messages[0].isSeen = true;
-        if (findChatElement) {
+        if (
+          findChatElement &&
+          this.user.privacySettings.readReceipts &&
+          findChat.userProfileResponseDTO.privacySettings.readReceipts
+        ) {
           const chatBoxElementDeliveredTick = findChatElement.querySelector(
             ".message-delivered-tick-div"
           ).firstElementChild;
@@ -691,6 +698,7 @@ export default class Chat extends AbstractView {
     this.webSocketManagerChat.subscribeToChannel(
       recipientMessageChannel,
       async (recipientMessage) => {
+        
         const recipientJSON = JSON.parse(recipientMessage.body);
         const decryptedMessage = await decryptMessage(recipientJSON);
         recipientJSON.decryptedMessage = decryptedMessage;
@@ -756,8 +764,9 @@ export default class Chat extends AbstractView {
               chatRoomId: recipientJSON.chatRoomId,
               senderId: recipientJSON.senderId,
             };
+            
             renderMessage(
-              { messages: chat.chatDTO.messages, lastPage: null },
+              { messages: chat.chatDTO.messages[0], lastPage: null },
               chat.userProfileResponseDTO.privacySettings,
               true,
               this.user.id

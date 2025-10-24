@@ -135,7 +135,11 @@ async function createChatBox(chat, index) {
   messageDiv.append(messageSpan);
   const bool = chat.chatDTO.messages[0].senderId === chatInstance.user.id;
   if (bool) {
-    if (chat.chatDTO.messages[0].isSeen) {
+    if (
+      chat.chatDTO.messages[0].isSeen &&
+      chatInstance.user.privacySettings.readReceipts &&
+      chat.userProfileResponseDTO.privacySettings.readReceipts
+    ) {
       const messageSeenTick = chatBoxLastMessageDeliveredBlueTick();
       messageSpan.append(messageSeenTick);
     } else {
@@ -861,7 +865,12 @@ async function handleChatClick(event) {
   );
 
   if (chatData.userChatSettingsDTO.unreadMessageCount > 0) {
-    await markMessagesAsReadAndFetchMessages(chatElement);
+    if (
+      chatData.userProfileResponseDTO.privacySettings.readReceipts &&
+      chatInstance.user.privacySettings.readReceipts
+    ) {
+      await markMessagesAsReadAndFetchMessages(chatElement);
+    }
     chatData.userChatSettingsDTO.unreadMessageCount = 0;
   } else {
     await fetchMessages(chatData);
