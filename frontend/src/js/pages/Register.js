@@ -27,6 +27,9 @@ export default class extends AbstractView {
 
   async getHtml() {
     return `
+    <div class="overlay-spinner hidden">
+  <div class="spinner"></div>
+</div>
         <form id="registerForm">
         <h1>${i18n.t("home.signUp")}</h1>
         <div class="input-icon">
@@ -75,7 +78,7 @@ export default class extends AbstractView {
           </div>
     
         <div class="buttons">
-          <button class="button" id="registerFormButton" type="button">${i18n.t(
+          <button class="button" id="registerFormButton" type="submit">${i18n.t(
             "home.signUp"
           )}</button>
         </div>
@@ -126,9 +129,12 @@ export default class extends AbstractView {
         toggleVisibilityPassword(btn, icon, input)
       );
     });
-    const registerFormButton = document.getElementById("registerFormButton");
-    if (registerFormButton) {
-      registerFormButton.addEventListener("click", () => this.registerUser());
+    const registerForm = document.getElementById("registerForm");
+    if (registerForm) {
+      registerForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        this.registerUser();
+      });
     }
   }
 
@@ -155,7 +161,8 @@ export default class extends AbstractView {
       );
       return;
     }
-
+    const overlay = document.querySelector(".overlay-spinner");
+    overlay.classList.remove("hidden");
     try {
       const recaptchaToken = await getRecaptchaToken("signup");
       const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -209,6 +216,8 @@ export default class extends AbstractView {
       }
     } catch (error) {
       console.error("An error occurred:", error.message);
+    } finally {
+      overlay.classList.add("hidden");
     }
   }
 }

@@ -1,5 +1,6 @@
 import AbstractView from "./AbstractView.js";
 import { navigateTo } from "../index.js";
+import { i18n } from "../i18n/i18n.js";
 
 export default class extends AbstractView {
   constructor(params) {

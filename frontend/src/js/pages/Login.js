@@ -31,6 +31,9 @@ export default class extends AbstractView {
 
   async getHtml() {
     return `
+    <div class="overlay-spinner hidden">
+  <div class="spinner"></div>
+</div>
     <form id="loginForm">
     <h1>${i18n.t("home.signIn")}</h1>
     <div class="input-icon">
@@ -61,7 +64,7 @@ export default class extends AbstractView {
     </div>
 
     <div class="buttons">
-        <button class="button" type="button" id="loginFormButton">${i18n.t(
+        <button class="button" type="submit" id="loginFormButton">${i18n.t(
           "home.signIn"
         )}</button>
         <button class="button" type="button" id="forgotPasswordFormButton">${i18n.t(
@@ -86,9 +89,13 @@ export default class extends AbstractView {
         toggleVisibilityPassword(btn, icon, passwordInput);
       });
     }
-    const loginFormButton = document.getElementById("loginFormButton");
-    if (loginFormButton) {
-      loginFormButton.addEventListener("click", () => this.loginForm());
+
+    const loginForm = document.getElementById("loginForm");
+    if (loginForm) {
+      loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        this.loginForm();
+      });
     }
     const forgotPasswordFormButton = document.getElementById(
       "forgotPasswordFormButton"
@@ -108,6 +115,8 @@ export default class extends AbstractView {
     };
 
     clearErrorMessages();
+    const overlay = document.querySelector(".overlay-spinner");
+    overlay.classList.remove("hidden");
     try {
       const recaptchaToken = await getRecaptchaToken("login");
       const loginRequestDTO = new LoginRequestDTO(
@@ -175,6 +184,8 @@ export default class extends AbstractView {
       }
     } catch (error) {
       console.error("An error occurred:", error);
+    } finally {
+      overlay.classList.add("hidden");
     }
   };
 }
