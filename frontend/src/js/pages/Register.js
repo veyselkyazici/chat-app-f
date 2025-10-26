@@ -138,6 +138,7 @@ export default class extends AbstractView {
     }
   }
 
+  
   async registerUser() {
     const formElements = {
       email: document.getElementById("registerEmail"),
