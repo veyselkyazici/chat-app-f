@@ -169,8 +169,9 @@ async function userUpdateModal(user, bool) {
 }
 
 function goHome() {
-  const name = document.getElementById("nameInput").value.trim();
-  if (!name) {
+  const name = chatInstance.user.firstName;
+
+  if (!name || !name.trim()) {
     toastr.error(i18n.t("updateUserProfile.nameError"));
     return false;
   }
