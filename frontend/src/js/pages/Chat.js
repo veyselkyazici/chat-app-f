@@ -807,7 +807,9 @@ export default class Chat extends AbstractView {
             if (status.typing) {
               messageSpanSpan.textContent = i18n.t("messageBox.typing");
             } else {
-              if (chat.chatData.chatDTO.messages[0].senderId === this.user.id) {
+              const isSender =
+                chat.chatData.chatDTO.messages[0].senderId === this.user.id;
+              if (isSender) {
                 const messageDeliveredTickElement =
                   createMessageDeliveredTickElement();
                 if (chat.chatData.chatDTO.isSeen) {
@@ -818,10 +820,12 @@ export default class Chat extends AbstractView {
                 }
                 messageSpan.prepend(messageDeliveredTickElement);
               }
-              tempMessage =
+              tempMessage = await decryptMessage(
                 chat.chatData.chatDTO.messages[
                   chat.chatData.chatDTO.messages.length - 1
-                ].decryptedMessage;
+                ].decryptedMessage,
+                isSender
+              );
               messageSpanSpan.textContent = tempMessage;
             }
           }

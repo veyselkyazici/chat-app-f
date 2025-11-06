@@ -1088,7 +1088,6 @@ const isMessageBoxDomExists = (chatRoomId) => {
   }
 };
 const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
-  
   const messageRenderDOM = document.querySelector(".message-box1-5-1-2-2");
   let messagesArray, lastPage;
   if (Array.isArray(messageDTO.messages)) {
