@@ -823,7 +823,7 @@ export default class Chat extends AbstractView {
               tempMessage = await decryptMessage(
                 chat.chatData.chatDTO.messages[
                   chat.chatData.chatDTO.messages.length - 1
-                ].decryptedMessage,
+                ],
                 isSender
               );
               messageSpanSpan.textContent = tempMessage;
