@@ -698,6 +698,11 @@ export default class Chat extends AbstractView {
     this.webSocketManagerChat.subscribeToChannel(
       recipientMessageChannel,
       async (recipientMessage) => {
+        debugger;
+        const chatElements = [...document.querySelectorAll(".chat1")];
+        const chatElement = chatElements.find(
+          (chat) => chat.chatData.chatDTO.id === recipientJSON.chatRoomId
+        );
         const recipientJSON = JSON.parse(recipientMessage.body);
         const decryptedMessage = await decryptMessage(recipientJSON);
         recipientJSON.decryptedMessage = decryptedMessage;
@@ -807,9 +812,7 @@ export default class Chat extends AbstractView {
             if (status.typing) {
               messageSpanSpan.textContent = i18n.t("messageBox.typing");
             } else {
-              const isSender =
-                chat.chatData.chatDTO.messages[0].senderId === this.user.id;
-              if (isSender) {
+              if (chat.chatData.chatDTO.messages[0].senderId === this.user.id) {
                 const messageDeliveredTickElement =
                   createMessageDeliveredTickElement();
                 if (chat.chatData.chatDTO.isSeen) {
@@ -819,14 +822,19 @@ export default class Chat extends AbstractView {
                     " Okundu ";
                 }
                 messageSpan.prepend(messageDeliveredTickElement);
+              } else {
+                tempMessage =
+                  chat.chatData.chatDTO.messages[
+                    chat.chatData.chatDTO.messages.length - 1
+                  ].decryptedMessage;
+                messageSpanSpan.textContent = tempMessage;
+
+                // if (
+                //   chat.chatData.chatDTO.messages[0].senderId === this.user.id
+                // ) {
+                //   messageSpan.removeChild(messageSpan.firstElementChild);
+                // }
               }
-              tempMessage = await decryptMessage(
-                chat.chatData.chatDTO.messages[
-                  chat.chatData.chatDTO.messages.length - 1
-                ],
-                isSender
-              );
-              messageSpanSpan.textContent = tempMessage;
             }
           }
         }
