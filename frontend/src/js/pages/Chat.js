@@ -699,11 +699,12 @@ export default class Chat extends AbstractView {
       recipientMessageChannel,
       async (recipientMessage) => {
         debugger;
+
+        const recipientJSON = JSON.parse(recipientMessage.body);
         const chatElements = [...document.querySelectorAll(".chat1")];
         const chatElement = chatElements.find(
           (chat) => chat.chatData.chatDTO.id === recipientJSON.chatRoomId
         );
-        const recipientJSON = JSON.parse(recipientMessage.body);
         const decryptedMessage = await decryptMessage(recipientJSON);
         recipientJSON.decryptedMessage = decryptedMessage;
         const chat = this.chatList.find(
