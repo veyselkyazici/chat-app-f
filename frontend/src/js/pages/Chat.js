@@ -807,7 +807,7 @@ export default class Chat extends AbstractView {
                 chat.chatData.chatDTO.messages.length - 1
               ].decryptedMessage;
             if (tempMessage == null) {
-              tempMessage = decryptMessage(
+              tempMessage = await decryptMessage(
                 chat.chatData.chatDTO.messages[
                   chat.chatData.chatDTO.messages.length - 1
                 ],
