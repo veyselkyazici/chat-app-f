@@ -817,13 +817,12 @@ export default class Chat extends AbstractView {
                     " Okundu ";
                 }
                 messageSpan.prepend(messageDeliveredTickElement);
-              } else {
-                tempMessage =
-                  chat.chatData.chatDTO.messages[
-                    chat.chatData.chatDTO.messages.length - 1
-                  ].decryptedMessage;
-                messageSpanSpan.textContent = tempMessage;
               }
+              tempMessage =
+                chat.chatData.chatDTO.messages[
+                  chat.chatData.chatDTO.messages.length - 1
+                ].decryptedMessage;
+              messageSpanSpan.textContent = tempMessage;
             }
           }
         }
