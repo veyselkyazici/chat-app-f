@@ -698,7 +698,6 @@ export default class Chat extends AbstractView {
     this.webSocketManagerChat.subscribeToChannel(
       recipientMessageChannel,
       async (recipientMessage) => {
-        
         const recipientJSON = JSON.parse(recipientMessage.body);
         const decryptedMessage = await decryptMessage(recipientJSON);
         recipientJSON.decryptedMessage = decryptedMessage;
@@ -764,7 +763,7 @@ export default class Chat extends AbstractView {
               chatRoomId: recipientJSON.chatRoomId,
               senderId: recipientJSON.senderId,
             };
-            
+
             renderMessage(
               { messages: chat.chatDTO.messages[0], lastPage: null },
               chat.userProfileResponseDTO.privacySettings,
@@ -803,8 +802,18 @@ export default class Chat extends AbstractView {
           ) {
             const messageSpan = chat.querySelector(".message-span");
             const messageSpanSpan = chat.querySelector(".message-span-span");
-            const tempMessage =
-              chat.chatData.chatDTO.messages[0].decryptedMessage;
+            let tempMessage =
+              chat.chatData.chatDTO.messages[
+                chat.chatData.chatDTO.messages.length - 1
+              ].decryptedMessage;
+            if (tempMessage == null) {
+              tempMessage = decryptMessage(
+                chat.chatData.chatDTO.messages[
+                  chat.chatData.chatDTO.messages.length - 1
+                ],
+                false
+              );
+            }
             if (status.typing) {
               if (chat.chatData.chatDTO.messages[0].senderId === this.user.id) {
                 messageSpan.removeChild(messageSpan.firstElementChild);
