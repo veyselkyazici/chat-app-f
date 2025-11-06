@@ -788,6 +788,7 @@ export default class Chat extends AbstractView {
     this.webSocketManagerChat.subscribeToChannel(
       typingChannel,
       async (typingMessage) => {
+        debugger;
         const status = JSON.parse(typingMessage.body);
         const visibleChats = [...document.querySelectorAll(".chat1")];
 
