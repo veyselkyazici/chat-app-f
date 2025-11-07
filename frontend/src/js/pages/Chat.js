@@ -813,12 +813,12 @@ export default class Chat extends AbstractView {
               chat.chatData.chatDTO.messages[
                 chat.chatData.chatDTO.messages.length - 1
               ].senderId === this.user.id;
+            const messageDTO =
+              chat.chatData.chatDTO.messages[
+                chat.chatData.chatDTO.messages.length - 1
+              ];
             if (status.typing) {
-              if (
-                chat.chatData.chatDTO.messages[
-                  chat.chatData.chatDTO.messages.length - 1
-                ].senderId === this.user.id
-              ) {
+              if (isSender) {
                 messageSpan.removeChild(messageSpan.firstElementChild);
               }
               messageSpanSpan.textContent = i18n.t("messageBox.typing");
@@ -826,22 +826,17 @@ export default class Chat extends AbstractView {
               if (isSender) {
                 const messageDeliveredTickElement =
                   createMessageDeliveredTickElement();
-                if (chat.chatData.chatDTO.isSeen) {
+                if (messageDTO.isSeen) {
                   messageDeliveredTickElement.firstElementChild.className =
                     "message-seen-tick-span";
                   messageDeliveredTickElement.firstElementChild.ariaLabel =
                     " Okundu ";
                 }
                 messageSpan.prepend(messageDeliveredTickElement);
-                messageSpanSpan.textContent =
-                  chat.chatData.chatDTO.messages[
-                    chat.chatData.chatDTO.messages.length - 1
-                  ].decryptedMessage;
+                messageSpanSpan.textContent = messageDTO.decryptedMessage;
               } else {
                 messageSpanSpan.textContent = await decryptMessage(
-                  chat.chatData.chatDTO.messages[
-                    chat.chatData.chatDTO.messages.length - 1
-                  ],
+                  messageDTO,
                   isSender
                 );
               }
