@@ -208,7 +208,6 @@ function updateChatBox(chat) {
 }
 
 function moveChatToTop(chatRoomId) {
-  debugger;
   const chatIndex = chatInstance.chatList.findIndex(
     (chat) => chat.chatDTO.id === chatRoomId
   );

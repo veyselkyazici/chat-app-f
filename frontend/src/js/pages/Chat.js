@@ -698,14 +698,7 @@ export default class Chat extends AbstractView {
     this.webSocketManagerChat.subscribeToChannel(
       recipientMessageChannel,
       async (recipientMessage) => {
-        debugger;
-
         const recipientJSON = JSON.parse(recipientMessage.body);
-        const chatElements = [...document.querySelectorAll(".chat1")];
-        const chatElement = chatElements.find(
-          (chat) => chat.chatData.chatDTO.id === recipientJSON.chatRoomId
-        );
-        console.log(chatElement);
         const decryptedMessage = await decryptMessage(recipientJSON);
         recipientJSON.decryptedMessage = decryptedMessage;
         const chat = this.chatList.find(
@@ -794,7 +787,6 @@ export default class Chat extends AbstractView {
     this.webSocketManagerChat.subscribeToChannel(
       typingChannel,
       async (typingMessage) => {
-        debugger;
         const status = JSON.parse(typingMessage.body);
         const visibleChats = [...document.querySelectorAll(".chat1")];
 
