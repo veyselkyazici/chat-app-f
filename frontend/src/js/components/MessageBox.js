@@ -1603,12 +1603,12 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
       );
     }
 
-    // chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
-    //   userId: chatInstance.user.id,
-    //   chatRoomId: chatSummaryDTO.chatDTO.id,
-    //   typing: false,
-    //   friendId: chatSummaryDTO.userProfileResponseDTO.id,
-    // });
+    chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
+      userId: chatInstance.user.id,
+      chatRoomId: chatSummaryDTO.chatDTO.id,
+      typing: false,
+      friendId: chatSummaryDTO.userProfileResponseDTO.id,
+    });
 
     renderMessage(
       { messages: [newMessageDTO], lastPage: null },
