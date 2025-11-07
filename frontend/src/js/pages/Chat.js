@@ -731,8 +731,6 @@ export default class Chat extends AbstractView {
           let unreadMessageCountDiv;
           let chatOptionsDiv;
           if (chatElement) {
-            chatElement.chatData.chatDTO.messages = chat.chatDTO.messages[0] =
-              incomingMessage;
             chatOptionsDiv = chatElement.querySelector(".chat-options");
             const unreadMessageCountSpan = chatElement.querySelector(
               ".unread-message-count-span"
