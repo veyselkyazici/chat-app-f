@@ -822,7 +822,7 @@ export default class Chat extends AbstractView {
             } else {
               if (
                 chat.chatData.chatDTO.messages[
-                  chat.chatData.chatDTO.messages - 1
+                  chat.chatData.chatDTO.messages.length - 1
                 ].senderId === this.user.id
               ) {
                 const messageDeliveredTickElement =
