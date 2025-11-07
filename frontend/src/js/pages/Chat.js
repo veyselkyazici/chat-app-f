@@ -809,7 +809,10 @@ export default class Chat extends AbstractView {
           ) {
             const messageSpan = chat.querySelector(".message-span");
             const messageSpanSpan = chat.querySelector(".message-span-span");
-
+            const isSender =
+              chat.chatData.chatDTO.messages[
+                chat.chatData.chatDTO.messages.length - 1
+              ].senderId === this.user.id;
             if (status.typing) {
               if (
                 chat.chatData.chatDTO.messages[
@@ -820,11 +823,7 @@ export default class Chat extends AbstractView {
               }
               messageSpanSpan.textContent = i18n.t("messageBox.typing");
             } else {
-              if (
-                chat.chatData.chatDTO.messages[
-                  chat.chatData.chatDTO.messages.length - 1
-                ].senderId === this.user.id
-              ) {
+              if (isSender) {
                 const messageDeliveredTickElement =
                   createMessageDeliveredTickElement();
                 if (chat.chatData.chatDTO.isSeen) {
@@ -834,11 +833,18 @@ export default class Chat extends AbstractView {
                     " Okundu ";
                 }
                 messageSpan.prepend(messageDeliveredTickElement);
+                messageSpanSpan.textContent =
+                  chat.chatData.chatDTO.messages[
+                    chat.chatData.chatDTO.messages.length - 1
+                  ].decryptedMessage;
+              } else {
+                messageSpanSpan.textContent = await decryptMessage(
+                  chat.chatData.chatDTO.messages[
+                    chat.chatData.chatDTO.messages.length - 1
+                  ],
+                  isSender
+                );
               }
-              messageSpanSpan.textContent =
-                chat.chatData.chatDTO.messages[
-                  chat.chatData.chatDTO.messages.length - 1
-                ].decryptedMessage;
             }
           }
         }
