@@ -705,6 +705,7 @@ export default class Chat extends AbstractView {
         const chatElement = chatElements.find(
           (chat) => chat.chatData.chatDTO.id === recipientJSON.chatRoomId
         );
+        console.log(chatElement);
         const decryptedMessage = await decryptMessage(recipientJSON);
         recipientJSON.decryptedMessage = decryptedMessage;
         const chat = this.chatList.find(
@@ -730,6 +731,8 @@ export default class Chat extends AbstractView {
           let unreadMessageCountDiv;
           let chatOptionsDiv;
           if (chatElement) {
+            chatElement.chatData.chatDTO.messages = chat.chatDTO.messages[0] =
+              incomingMessage;
             chatOptionsDiv = chatElement.querySelector(".chat-options");
             const unreadMessageCountSpan = chatElement.querySelector(
               ".unread-message-count-span"
