@@ -809,8 +809,6 @@ export default class Chat extends AbstractView {
           ) {
             const messageSpan = chat.querySelector(".message-span");
             const messageSpanSpan = chat.querySelector(".message-span-span");
-            let tempMessage;
-
             if (status.typing) {
               if (
                 chat.chatData.chatDTO.messages[
@@ -820,26 +818,24 @@ export default class Chat extends AbstractView {
                 messageSpan.removeChild(messageSpan.firstElementChild);
               }
               messageSpanSpan.textContent = i18n.t("messageBox.typing");
-            } else {
-              if (chat.chatData.chatDTO.messages[0].senderId === this.user.id) {
-                const messageDeliveredTickElement =
-                  createMessageDeliveredTickElement();
-                if (chat.chatData.chatDTO.isSeen) {
-                  messageDeliveredTickElement.firstElementChild.className =
-                    "message-seen-tick-span";
-                  messageDeliveredTickElement.firstElementChild.ariaLabel =
-                    " Okundu ";
-                }
-                messageSpan.prepend(messageDeliveredTickElement);
-              } 
-              // else {
-              //   tempMessage =
-              //     chat.chatData.chatDTO.messages[
-              //       chat.chatData.chatDTO.messages.length - 1
-              //     ].decryptedMessage;
-              //   messageSpanSpan.textContent = tempMessage;
-              // }
-            }
+            } 
+            // else {
+            //   if (
+            //     chat.chatData.chatDTO.messages[
+            //       chat.chatData.chatDTO.messages - 1
+            //     ].senderId === this.user.id
+            //   ) {
+            //     const messageDeliveredTickElement =
+            //       createMessageDeliveredTickElement();
+            //     if (chat.chatData.chatDTO.isSeen) {
+            //       messageDeliveredTickElement.firstElementChild.className =
+            //         "message-seen-tick-span";
+            //       messageDeliveredTickElement.firstElementChild.ariaLabel =
+            //         " Okundu ";
+            //     }
+            //     messageSpan.prepend(messageDeliveredTickElement);
+            //   }
+            // }
           }
         }
       }
