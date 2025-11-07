@@ -812,6 +812,13 @@ export default class Chat extends AbstractView {
             let tempMessage;
 
             if (status.typing) {
+              if (
+                chat.chatData.chatDTO.messages[
+                  chat.chatData.chatDTO.messages.length - 1
+                ].senderId === this.user.id
+              ) {
+                messageSpan.removeChild(messageSpan.firstElementChild);
+              }
               messageSpanSpan.textContent = i18n.t("messageBox.typing");
             } else {
               if (chat.chatData.chatDTO.messages[0].senderId === this.user.id) {
@@ -824,19 +831,14 @@ export default class Chat extends AbstractView {
                     " Okundu ";
                 }
                 messageSpan.prepend(messageDeliveredTickElement);
-              } else {
-                tempMessage =
-                  chat.chatData.chatDTO.messages[
-                    chat.chatData.chatDTO.messages.length - 1
-                  ].decryptedMessage;
-                messageSpanSpan.textContent = tempMessage;
-
-                // if (
-                //   chat.chatData.chatDTO.messages[0].senderId === this.user.id
-                // ) {
-                //   messageSpan.removeChild(messageSpan.firstElementChild);
-                // }
-              }
+              } 
+              // else {
+              //   tempMessage =
+              //     chat.chatData.chatDTO.messages[
+              //       chat.chatData.chatDTO.messages.length - 1
+              //     ].decryptedMessage;
+              //   messageSpanSpan.textContent = tempMessage;
+              // }
             }
           }
         }
