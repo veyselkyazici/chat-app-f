@@ -1,5 +1,4 @@
 import axiosInstance from "./axiosConfig.js";
-
 const CONTACTS_SERVICE_URL = import.meta.env.VITE_CONTACTS_SERVICE_URL;
 const INVITATION_SERVICE_URL = import.meta.env.VITE_INVITATION_SERVICE_URL;
 
@@ -51,18 +50,8 @@ export const contactService = {
         `${CONTACTS_SERVICE_URL}/add-contact`,
         dto
       );
-      if(response.status === 200 && response.data.success) {
-        toastr.success(response.data.message);
-      } else {
-        response.data.errors.forEach(element => {
-          toastr.error(element.message);
-        });
-      }
       return response;
     } catch (error) {
-      toastr.error(
-        error.response?.data?.message || "An error occurred during the process."
-      );
       throw error;
     }
   },

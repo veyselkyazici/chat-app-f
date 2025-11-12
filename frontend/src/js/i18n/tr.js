@@ -23,10 +23,15 @@ export default {
     passwordError: "Lütfen geçerli bir şifre girin",
     passwordEmptyError: "Şifre boş olamaz",
     passwordLength: "Şifre 8‑32 karakter uzunluğunda olmalıdır.",
+    success: "Giriş başarılı",
+    errorCode1000: "Email veya şifre yanlış",
+    errorCode1003:
+      "E-postanın doğrulanması gerekiyor. Lütfen gelen kutunuzu kontrol edin.",
   },
   register: {
     registerSuccess:
       "Kayıt başarılı! Hesabınızı etkinleştirmek için lütfen e-postanızı kontrol edin.",
+    errorCode1002: "Email zaten mevcut",
   },
   forgotPassword: {
     forgotPassword: "Şifremi unuttum",
@@ -48,6 +53,14 @@ export default {
     failedMessage: "Şifre sıfırlanamadı",
     failedMessageCatch: "Şifre sıfırlanamadı. Sonra tekrar deneyin",
     timerError: "5 dakika geçti. Ana sayfaya yönlendiriliyorsunuz…",
+    errorCode1004: "Email adresi bulunamadı",
+    verificationCodeErrorMessage: (remainingAttempts) =>
+      `Geçersiz doğrulama kodu. Kalan deneme hakkınız: ${remainingAttempts}`,
+    errorCode1011: "Çok fazla deneme yaptınız",
+    errorCode1012: "Şifre değiştirme başarısız, lütfen tekrar deneyin",
+    errorCode1013: "Email eşleşmiyor",
+    errorCode1014: "Geçersiz token",
+    errorCode1015: "Doğrulama kodu yanlış",
   },
   selectMessageBoxMessage: {
     selectMessageBoxMessage: "Sohbet etmek için bir arkadaş seç",
@@ -63,6 +76,7 @@ export default {
     contactNameLength: "En az 2 karakter olabilir",
     contactNameMaxLength: "En fazla 32 karakter olabilir",
     name: "İsim",
+    addContact: "Kişi ekle",
   },
   updateUser: {
     valueEmpty: "Bu alan boş bırakılamaz.",
@@ -87,8 +101,8 @@ export default {
     unreadMessageCountAriaLabel: (unreadMessageCount) =>
       `${unreadMessageCount} okunmamış mesaj`,
   },
-  inivteUser: {
-    invite: "Dvaet et",
+  inviteUser: {
+    invite: "Davet et",
     invited: "Davet edildi",
     alreadyBeenInvited: (contactName) =>
       `${contactName} kullanıcısı zaten davet edilmiş.`,
@@ -102,6 +116,8 @@ export default {
     deleteUser: "Kullanıcıyı sil",
     deleteUserModalMessage: (contactName) =>
       `${contactName} kullanıcısını silmek istiyor musunuz?`,
+    errorCode3001: "Kişi zaten ekli",
+    contactAddedSuccessfully: "Kişi başarıyla eklendi",
   },
   modal: {
     yes: "Evet",
@@ -135,10 +151,15 @@ export default {
     uploadProfilePhoto: "Fotoğraf yükle",
     warningMessage:
       "Seçilen görsel çok küçük. Lütfen en az 192x192 piksel boyutlarında bir görsel seçin.",
+    nameUpdated: "İsim başarıyla güncellendi",
+    aboutUpdated: "Hakkında başarıyla güncellendi",
   },
   chat: {
     loadingMessage: "Sohbetler yükleniyor...",
-    loadingErrorMessage: "Bir hata oluştu. Lütfen tekrar deneyin",
+    loadingErrorMessage: "Bir hata oluştu. Lütfen daha sonra tekrar deneyin",
+    senderBlocked:
+      "Bu kullanıcı tarafından engellendiğiniz için mesaj gönderemezsiniz",
+    recipientBlocked: "Alıcı sizi engellediği için mesaj gönderemezsiniz",
   },
   verificationFailed: {
     successMessage:
@@ -188,8 +209,8 @@ export default {
     whoCanSeeMyProfilePhoto: "Profil fotoğrafımı kimler görebilir",
     whoCanSeeMyAbout: "Hakkımda bilgimi kim görebilir",
     oldPassword: "Mevcut şifreniz",
-    newPassword: "Yeni password",
-    confirmPassword: "Confirm new password",
+    newPassword: "Yeni şifre",
+    confirmPassword: "Yeni şifreyi onayla",
     fillAllFields: "Lütfen tüm alanları doldurun",
     passwordsNotMatch: "Şifreler eşleşmiyor",
     passwordChangeSuccess: "Şifre değiştirme başarılı",
@@ -198,5 +219,23 @@ export default {
     oldPasswordInvalid: "Mevcut şifreniz geçerli değil",
     newPasswordRequired: "Yeni şifreniz boş olamaz",
     newPasswordInvalid: "Yeni şifreniz geçerli değil",
+  },
+  contactInformation: {
+    contactInformation: "Kişi bilgisi",
+    block: "engelle",
+    unBlock: "engeli kaldır",
+  },
+  errors: {
+    status400: "İstek hatalı. Lütfen girdiğiniz bilgileri kontrol edin.",
+    status401: "Yetkisiz erişim. Lütfen tekrar giriş yapın.",
+    status403: "Bu işlemi yapmak için yetkiniz yok.",
+    status404: "Aradığınız kaynak bulunamadı.",
+    status408: "İstek zaman aşımına uğradı. Lütfen tekrar deneyin.",
+    status429: "Çok fazla istek gönderdiniz. Lütfen biraz bekleyin.",
+    status500: "Sunucu hatası. Lütfen daha sonra tekrar deneyin.",
+    status502: "Geçersiz yanıt. Lütfen daha sonra tekrar deneyin.",
+    status503: "Servis geçici olarak kullanılamıyor. Lütfen tekrar deneyin.",
+    status504: "Sunucu yanıt vermedi. Lütfen daha sonra tekrar deneyin.",
+    unexpectedError: "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
   },
 };

@@ -170,9 +170,13 @@ async function userUpdateModal(user, bool) {
 
 function goHome() {
   const name = chatInstance.user.firstName;
-
+  const about = chatInstance.user.about;
   if (!name || !name.trim()) {
     toastr.error(i18n.t("updateUserProfile.nameError"));
+    return false;
+  }
+  if (!about || !about.trim()) {
+    toastr.error(i18n.t("updateUserProfile.aboutError"));
     return false;
   }
   return true;
@@ -241,6 +245,12 @@ async function toggleEditAbout() {
           }
         );
         chatInstance.user.about = response.data.value;
+        const settingsAbout = document.querySelector(
+          ".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1"
+        );
+        if (settingsAbout) {
+          settingsAbout.textContent = response.data.value;
+        }
       }
     } else {
       toastr.error(i18n.t("updateUserProfile.aboutError"));

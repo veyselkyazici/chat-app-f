@@ -1,4 +1,9 @@
-import { clearErrorMessages, showError, createElement } from "../utils/util.js";
+import {
+  clearErrorMessages,
+  showError,
+  createElement,
+  handleErrorCode,
+} from "../utils/util.js";
 import { contactService } from "../services/contactsService.js";
 import { Modal } from "../utils/showModal.js";
 import { AddContactRequestDTO } from "../dtos/contact/request/AddContactRequestDTO.js";
@@ -41,8 +46,8 @@ const addContactModal = (addedByUser, email) => {
   );
   nameDiv.append(nameErrorMessage, nameInput);
   new Modal({
-    title: "Add contact",
-    buttonText: "Add contact",
+    title: i18n.t("addContacts.addContact"),
+    buttonText: i18n.t("addContacts.addContact"),
     mainCallback: () => addContact(addedByUser, emailInput, nameInput),
     showBorders: false,
     secondOptionButton: false,
@@ -90,10 +95,20 @@ const addContact = async (addedByUser, emailDOM, nameDOM) => {
     });
     return;
   }
-  const response = await contactService.addContact(addContactRequestDTO);
-  if (response && response.status === 200) {
-    const modal = document.querySelector(".content > span");
-    modal.firstElementChild.remove();
+  try {
+    const response = await contactService.addContact(addContactRequestDTO);
+    if (response && response.status === 200 && response.data.success) {
+      toastr.success(i18n.t("contacts.contactAddedSuccessfully"));
+      const modal = document.querySelector(".content > span");
+      modal.firstElementChild.remove();
+    }
+  } catch (error) {
+    const errorResponse = error.response?.data;
+    if (errorResponse?.data?.errorCode) {
+      const { errorCode } = errorResponse.data;
+      handleErrorCode(errorCode, null, i18n);
+      return;
+    }
   }
 };
 

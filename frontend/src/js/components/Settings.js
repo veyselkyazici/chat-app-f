@@ -735,7 +735,7 @@ const handleChangePassword = () => {
           toastr.success(i18n.t("settings.passwordChangeSuccess"));
           return true;
         } else {
-          toastr.error(res.message || i18n.t("settings.passwordChangeFail"));
+          toastr.error(i18n.t("settings.passwordChangeFail"));
           return false;
         }
       } catch (err) {

@@ -13,6 +13,50 @@ function escapeHtml(text) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
 }
+function handleErrorCode(code, targetSelector = null, i18n) {
+  const errorMessages = {
+    1000: i18n.t("login.errorCode1000"),
+    1002: i18n.t("register.errorCode1002"),
+    1003: i18n.t("login.errorCode1003"),
+    1004: i18n.t("forgotPassword.errorCode1004"),
+    1011: i18n.t("forgotPassword.errorCode1011"),
+    1012: i18n.t("forgotPassword.errorCode1012"),
+    1013: i18n.t("forgotPassword.errorCode1013"),
+    1014: i18n.t("forgotPassword.errorCode1014"),
+    1015: i18n.t("forgotPassword.errorCode1015"),
+    1016: i18n.t("forgotPassword.errorCode1012"),
+
+    4003: i18n.t("chat.senderBlocked"),
+    4004: i18n.t("chat.recipientBlocked"),
+
+    3001: i18n.t("contacts.errorCode3001"),
+    3002: i18n.t("contacts.errorCode3001"),
+
+    400: i18n.t("errors.status400"),
+    401: i18n.t("errors.status401"),
+    403: i18n.t("errors.status403"),
+    404: i18n.t("errors.status404"),
+    408: i18n.t("errors.status408"),
+    429: i18n.t("errors.status429"),
+    500: i18n.t("errors.status500"),
+    502: i18n.t("errors.status502"),
+    503: i18n.t("errors.status503"),
+    504: i18n.t("errors.status504"),
+    9999: i18n.t("errors.unexpectedError"),
+  };
+
+  const message = errorMessages[code] || i18n.t("errors.unexpectedError");
+
+  if (targetSelector) {
+    const target = document.querySelector(targetSelector);
+    if (target) {
+      showError(target, message);
+      return;
+    }
+  }
+
+  toastr.error(message);
+}
 
 function showError(inputElement, errorMessage) {
   const errorElement =
@@ -329,4 +373,5 @@ export {
   getRecaptchaToken,
   ruleCheck,
   escapeHtml,
+  handleErrorCode,
 };

@@ -1827,7 +1827,7 @@ function handleOptionsBtnClick(event, chat) {
         "list-item1-div",
         null,
         { role: "button", "aria-label": "contactInformation" },
-        "Profile information",
+        i18n.t("contactInformation.contactInformation"),
         () =>
           createContactInformation(
             new ContactInformationDTO({

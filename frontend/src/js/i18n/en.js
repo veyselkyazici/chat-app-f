@@ -22,10 +22,14 @@ export default {
     passwordError: "Please enter a valid password",
     passwordEmptyError: "Password cannot be empty",
     passwordLength: "Password must be 8-32 characters long.",
+    success: "Login successful",
+    errorCode1000: "Incorrect email address or password",
+    errorCode1003: "Email needs verification. Please check your inbox",
   },
   register: {
     registerSuccess:
       "Sign up successful. Please check your email to activate your account.",
+    errorCode1002: "Email address already registered",
   },
   forgotPassword: {
     forgotPassword: "Forgot password",
@@ -46,6 +50,14 @@ export default {
     failedMessage: "Password reset failed",
     failedMessageCatch: "Password reset failed. Try again later",
     timerError: "5 minutes have passed. Redirecting to the homepage...",
+    errorCode1004: "Email address not found",
+    verificationCodeErrorMessage: (remainingAttempts) =>
+      `Invalid OTP Code. Remaining attempts: ${remainingAttempts}`,
+    errorCode1011: "Too many attempts",
+    errorCode1012: "Password reset failed, please try again",
+    errorCode1013: "Email mismatch",
+    errorCode1014: "Invalid reset token",
+    errorCode1015: "Otp not verified",
   },
   selectMessageBoxMessage: {
     selectMessageBoxMessage: "Select a friend to start chatting",
@@ -61,6 +73,7 @@ export default {
     contactNameMinLength: "Minimum 2 characters allowed",
     contactNameMaxLength: "Maximum 32 characters allowed",
     name: "Name",
+    addContact: "Add contact",
   },
   updateUser: {
     valueEmpty: "Value is required and cannot be empty.",
@@ -83,7 +96,7 @@ export default {
     unreadMessageCountAriaLabel: (unreadMessageCount) =>
       `${unreadMessageCount} unread message`,
   },
-  inivteUser: {
+  inviteUser: {
     invite: "Invite",
     invited: "Invited",
     alreadyBeenInvited: (contactName) =>
@@ -98,6 +111,8 @@ export default {
     deleteUser: "Delete user",
     deleteUserModalMessage: (contactName) =>
       `Do you want to delete the user ${contactName}?`,
+    errorCode3001: "Contact already exists",
+    contactAddedSuccessfully: "Contact added successfully",
   },
   modal: {
     yes: "Yes",
@@ -131,10 +146,14 @@ export default {
     uploadProfilePhoto: "Upload photo",
     warningMessage:
       "The selected image is too small. Please choose an image with minimum dimensions of 192x192 pixels.",
+    nameUpdated: "Name updated successfully",
+    aboutUpdated: "About updated successfully",
   },
   chat: {
     loadingMessage: "Loading chats...",
-    loadingErrorMessage: "An error occurred, please try again.",
+    loadingErrorMessage: "An error occurred. Please try again later.",
+    senderBlocked: "You are blocked and cannot send messages to this user",
+    recipientBlocked: "Recipient has blocked you from sending messages",
   },
   verificationFailed: {
     successMessage:
@@ -193,5 +212,23 @@ export default {
     oldPasswordInvalid: "Old password format is invalid",
     newPasswordRequired: "New password cannot be empty",
     newPasswordInvalid: "New password format is invalid",
+  },
+  contactInformation: {
+    contactInformation: "Contact info",
+    block: "block",
+    unBlock: "unblock",
+  },
+  errors: {
+    status400: "Bad request. Please check your input.",
+    status401: "Unauthorized. Please log in again.",
+    status403: "You do not have permission to perform this action.",
+    status404: "The requested resource was not found.",
+    status408: "Request timed out. Please try again.",
+    status429: "Too many requests. Please wait and try again.",
+    status500: "Internal server error. Please try again later.",
+    status502: "Invalid response from the server. Please try again later.",
+    status503: "Service temporarily unavailable. Please try again later.",
+    status504: "Server took too long to respond. Please try again later.",
+    unexpectedError: "An unexpected error occurred. Please try again later.",
   },
 };

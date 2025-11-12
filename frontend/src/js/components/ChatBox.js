@@ -383,7 +383,7 @@ function handleOptionsBtnClick(event) {
           "list-item1-div",
           null,
           { role: "button", "aria-label": "Add contact" },
-          "Add contact",
+          i18n.t("addContacts.addContact"),
           () =>
             addContactModal(
               chatInstance.user,

@@ -6,6 +6,7 @@ import {
   toggleVisibilityPassword,
   getRecaptchaToken,
   ruleCheck,
+  handleErrorCode,
 } from "../utils/util.js";
 import { navigateTo } from "../index.js";
 import { authService } from "../services/authService.js";
@@ -138,7 +139,6 @@ export default class extends AbstractView {
     }
   }
 
-  
   async registerUser() {
     const formElements = {
       email: document.getElementById("registerEmail"),
@@ -169,11 +169,6 @@ export default class extends AbstractView {
       const salt = crypto.getRandomValues(new Uint8Array(16));
       const iv = crypto.getRandomValues(new Uint8Array(12));
       const { publicKey, privateKey } = await generateKeyPair();
-      // const privateKeyRaw = await window.crypto.subtle.exportKey(
-      //   "pkcs8",
-      //   privateKey
-      // );
-      // const privateKeyBase64 = base64Encode(new Uint8Array(privateKeyRaw));
       const aesKey = await deriveAESKey(
         formElements.password.value.trim(),
         salt
@@ -191,7 +186,6 @@ export default class extends AbstractView {
         Array.from(new Uint8Array(encryptedPrivateKey)),
         Array.from(salt),
         Array.from(iv),
-        // privateKeyBase64,
         recaptchaToken
       );
 
@@ -206,13 +200,15 @@ export default class extends AbstractView {
         });
         return;
       }
+
       const response = await authService.register(registerRequestDTO);
       if (response.success) {
         toastr.success(i18n.t("register.registerSuccess"));
         navigateTo("/login");
       } else {
-        if (response.errors.length > 0) {
-          formElements.generalError.textContent = response.errors[0].message;
+        if (response.errors && response.errors.length > 0) {
+          const code = response.errors[0].code;
+          handleErrorCode(code, "#generalError", i18n);
         }
       }
     } catch (error) {

@@ -6,6 +6,7 @@ import {
   toggleVisibilityPassword,
   showError,
   getRecaptchaToken,
+  handleErrorCode,
 } from "../utils/util.js";
 import { authService } from "../services/authService.js";
 import { userService } from "../services/userService.js";
@@ -135,7 +136,9 @@ export default class extends AbstractView {
         });
         return;
       }
+
       const responseData = await authService.login(loginRequestDTO);
+
       if (responseData.success) {
         const user = await userService.getUserWithUserKeyByAuthId();
         const {
@@ -174,12 +177,12 @@ export default class extends AbstractView {
         sessionStorage.setItem("publicKey", exportedPublicKey);
         sessionStorage.setItem("sessionKey", base64Encode(newSessionKey));
         setUserKey({ privateKey, publicKey });
-        toastr.success(responseData.message);
+        toastr.success(i18n.t("login.success"));
         navigateTo("/chat");
       } else {
-        if (responseData.errors.length > 0) {
-          formElements.generalError.textContent =
-            responseData.errors[0].message;
+        if (responseData.errors && responseData.errors.length > 0) {
+          const code = responseData.errors[0].code;
+          handleErrorCode(code, "#generalError", i18n);
         }
       }
     } catch (error) {

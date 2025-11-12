@@ -7,6 +7,7 @@ import {
   ruleCheck,
   toggleVisibilityPassword,
   escapeHtml,
+  handleErrorCode,
 } from "../utils/util.js";
 import { authService } from "../services/authService.js";
 import { ResetPasswordRequestDTO } from "../dtos/auth/request/ResetPasswordRequestDTO.js";
@@ -255,9 +256,15 @@ export default class extends AbstractView {
         this.startOtpTimer();
       } else {
         if (response.errors.length > 0) {
+          if (response.errors[0].code === 1004)
+            showError(
+              document.querySelector('#sendOtpForm [name="email"]'),
+              i18n.t("forgotPassword.errorCode1004")
+            );
+        } else {
           showError(
             document.querySelector('#sendOtpForm [name="email"]'),
-            response.errors[0].message
+            i18n.t("forgotPassword.errorCode1011")
           );
         }
         this.email = "";
@@ -280,25 +287,35 @@ export default class extends AbstractView {
     }
 
     try {
-      const { data } = await authService.checkOTP(this.email, otp);
+      const data = await authService.checkOTP(this.email, otp);
+
       if (data.success) {
-        this.resetToken = data.resetToken;
+        this.resetToken = data.data.resetToken;
         this.currentStep = 3;
-        this.expiryTime = new Date(data.expiryTime);
+        this.expiryTime = new Date(data.data.expiryTime);
         await this.renderView();
         this.startOtpTimer();
       } else {
-        this.remainingAttempts = data.remainingAttempts;
-        showError(
-          document.querySelector('#verifyOtpForm [name="otp"]'),
-          data.message
-        );
-        if (data.remainingAttempts === 0) {
-          const resendBtn = document.querySelector("#resendOtpBtn");
-          resendBtn.disabled = false;
-          resendBtn.onclick = async () => {
-            await this.sendOtp();
-          };
+        if (data.data) {
+          this.remainingAttempts = data.data.remainingAttempts;
+          showError(
+            document.querySelector('#verifyOtpForm [name="otp"]'),
+            i18n.t("forgotPassword.verificationCodeErrorMessage")(
+              this.remainingAttempts
+            )
+          );
+          if (this.remainingAttempts === 0) {
+            const resendBtn = document.querySelector("#resendOtpBtn");
+            resendBtn.disabled = false;
+            resendBtn.onclick = async () => {
+              await this.sendOtp();
+            };
+          }
+        }
+
+        if (data.errors && data.errors.length > 0) {
+          const code = data.errors[0].code;
+          handleErrorCode(code, '#verifyOtpForm [name="otp"]', i18n);
         }
       }
     } catch (error) {
@@ -368,17 +385,17 @@ export default class extends AbstractView {
 
     try {
       const response = await authService.resetPassword(resetPassword);
+
       if (response.success) {
         toastr.success(i18n.t("forgotPassword.successMessage"));
         setTimeout(() => navigateTo("/login"), 5000);
       } else {
-        const errorData = await response.json();
-        toastr.error(
-          errorData.message || i18n.t("forgotPassword.failedMessage")
-        );
+        if (response.errors && response.errors.length > 0) {
+          const code = response.errors[0].code;
+          handleErrorCode(code, null, i18n);
+        }
       }
     } catch (error) {
-      console.error("Error:", error);
       toastr.error(i18n.t("forgotPassword.failedMessageCatch"));
     }
   }

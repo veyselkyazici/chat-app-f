@@ -138,14 +138,14 @@ function createContactInformation(contact, chatData) {
     "div",
     "profile-span-div-span-div-header-div-div2",
     null,
-    { title: "Profile information" }
+    { title: i18n.t("contactInformation.contactInformation") }
   );
   const profileSpanDivSpanDivHeaderDivDiv2H1 = createElement(
     "h1",
     "profile-span-div-span-div-header-div-div2-h1",
     null,
     null,
-    "Profile information"
+    i18n.t("contactInformation.contactInformation")
   );
   profileSpanDivSpanDivHeaderDivDiv2.append(
     profileSpanDivSpanDivHeaderDivDiv2H1
@@ -261,7 +261,7 @@ function createContactInformation(contact, chatData) {
     "profile-section-about-div-div-div-span",
     null,
     null,
-    "About"
+    i18n.t("updateUserProfile.about")
   );
 
   const profileSectionDivAboutSpan = createElement(
@@ -332,15 +332,15 @@ function createContactInformation(contact, chatData) {
     "block-text-span",
     { minHeight: "0px" },
     { dir: "auto" },
-    contact.name
+    `${contact.name} `
   );
 
   blockTextDiv2.append(blockTextSpan);
   blockTextDivDivSpan.append(
     blockTextDiv2,
     chatData.userChatSettingsDTO.isBlocked
-      ? i18n.t("chatBox.unBlock")
-      : i18n.t("chatBox.block")
+      ? i18n.t("contactInformation.unBlock")
+      : i18n.t("contactInformation.block")
   );
   blockTextDivDiv.append(blockTextDivDivSpan);
   blockTextDiv.append(blockTextDivDiv);

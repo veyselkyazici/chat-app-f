@@ -139,7 +139,20 @@ export const authService = {
       );
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || "Password reset failed");
+      let message = "Reset password failed";
+
+      if (error.response?.data?.message) {
+        message = error.response.data.message;
+      } else {
+        message = error.message || "Unexpected network error";
+      }
+
+      return {
+        success: false,
+        message,
+        errors: error.response?.data?.errors || [],
+        status: error.response?.status || 0,
+      };
     }
   },
   changePassword: async (changePasswordRequestDTO) => {
