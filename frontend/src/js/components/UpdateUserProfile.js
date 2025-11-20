@@ -211,6 +211,7 @@ async function toggleEditName(user) {
           }
         );
         chatInstance.user.firstName = response.data.value;
+        toastr.success(i18n.t("updateUserProfile.nameUpdated"));
       }
     }
   }
@@ -251,6 +252,7 @@ async function toggleEditAbout() {
         if (settingsAbout) {
           settingsAbout.textContent = response.data.value;
         }
+        toastr.success(i18n.t("updateUserProfile.aboutUpdated"));
       }
     } else {
       toastr.error(i18n.t("updateUserProfile.aboutError"));

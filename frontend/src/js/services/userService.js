@@ -23,7 +23,6 @@ export const userService = {
         `${USER_SERVICE_URL}/update-user-name`,
         updateUserDTO
       );
-      toastr.success(i18n.t("updateUserProfile.nameUpdated"));
       return response.data;
     } catch (error) {
       console.error("Error:", error.message);
@@ -65,7 +64,6 @@ export const userService = {
         `${USER_SERVICE_URL}/update-user-about`,
         updateUserDTO
       );
-      toastr.success(i18n.t("updateUserProfile.aboutUpdated"));
       return response.data;
     } catch (error) {
       console.error("Error:", error.message);
