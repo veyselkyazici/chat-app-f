@@ -756,10 +756,10 @@ export default class Chat extends AbstractView {
               chatOptionsDiv.firstElementChild.append(unreadMessageCountDiv);
             }
             const messageTickSpan = chatElement.querySelector(
-              ".message-delivered-tick-span"
+              ".message-delivered-tick-div"
             );
             if (messageTickSpan) {
-              messageTickSpan.parentElement.remove();
+              messageTickSpan.remove();
             }
           }
           if (isMessageBoxDomExists(recipientJSON.chatRoomId)) {
@@ -831,7 +831,9 @@ export default class Chat extends AbstractView {
                     " Okundu ";
                 }
                 messageSpan.prepend(messageDeliveredTickElement);
-                messageSpanSpan.textContent = messageDTO.decryptedMessage;
+                messageSpanSpan.textContent = messageDTO.decryptedMessage
+                  ? messageDTO.decryptedMessage
+                  : await decryptMessage(messageDTO, isSender);
               } else {
                 messageSpanSpan.textContent = await decryptMessage(
                   messageDTO,
@@ -1008,15 +1010,10 @@ const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
           .lastSeenVisibility === "EVERYONE"
       ) {
         if (!statusElement) {
-          const contactsOnlineStatusElement = isOnlineStatus(
+          isOnlineStatus(
             newContactPrivacy.contactsDTO.userProfileResponseDTO,
             newContactPrivacy.contactsDTO.contact
           );
-          const onlineStatusParentElement =
-            messageBoxElement.querySelector(".message-box1-2-2");
-          if (contactsOnlineStatusElement && onlineStatusParentElement) {
-            onlineStatusParentElement.append(contactsOnlineStatusElement);
-          }
         }
       } else if (
         newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings
@@ -1024,15 +1021,10 @@ const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
         newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser
       ) {
         if (!statusElement) {
-          const contactsOnlineStatusElement = isOnlineStatus(
+          isOnlineStatus(
             newContactPrivacy.contactsDTO.userProfileResponseDTO,
             newContactPrivacy.contactsDTO.contact
           );
-          const onlineStatusParentElement =
-            messageBoxElement.querySelector(".message-box1-2-2");
-          if (contactsOnlineStatusElement && onlineStatusParentElement) {
-            onlineStatusParentElement.append(contactsOnlineStatusElement);
-          }
         }
       } else {
         if (
@@ -1066,15 +1058,10 @@ const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
           .onlineStatusVisibility === "EVERYONE"
       ) {
         if (!statusElement) {
-          const contactsOnlineStatusElement = isOnlineStatus(
+          isOnlineStatus(
             newContactPrivacy.contactsDTO.userProfileResponseDTO,
             newContactPrivacy.contactsDTO.contact
           );
-          const onlineStatusParentElement =
-            messageBoxElement.querySelector(".message-box1-2-2");
-          if (contactsOnlineStatusElement && onlineStatusParentElement) {
-            onlineStatusParentElement.append(contactsOnlineStatusElement);
-          }
         }
       } else if (
         newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings
@@ -1082,15 +1069,10 @@ const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
         newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser
       ) {
         if (!statusElement) {
-          const contactsOnlineStatusElement = isOnlineStatus(
+          isOnlineStatus(
             newContactPrivacy.contactsDTO.userProfileResponseDTO,
             newContactPrivacy.contactsDTO.contact
           );
-          const onlineStatusParentElement =
-            messageBoxElement.querySelector(".message-box1-2-2");
-          if (contactsOnlineStatusElement && onlineStatusParentElement) {
-            onlineStatusParentElement.append(contactsOnlineStatusElement);
-          }
         }
       } else {
         if (statusElement) {

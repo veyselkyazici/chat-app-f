@@ -76,13 +76,11 @@ const typingsStatus = async (status, chat, messageBoxElement) => {
   setTimeout(async () => {
     const statusSpan = messageBoxElement.querySelector(".online-status-1");
     if (statusSpan) {
-      messageBoxElement.removeChild(statusSpan.parentElement);
-    }
-    if (status.typing) {
-      messageBoxElement.append(createTypingElement());
-    } else {
-      const onlineElement = await isOnline(chat.userProfileResponseDTO);
-      messageBoxElement.append(onlineElement);
+      if (status.typing) {
+        statusSpan.textContent = i18n.t("messageBox.typing");
+      } else {
+        await isOnline(chat.userProfileResponseDTO);
+      }
     }
   }, 1000);
 };
@@ -94,17 +92,41 @@ const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
     }
   );
 };
-const createTypingElement = () => {
-  const statusDiv = createElement("div", "online-status");
-  const statusSpan = createElement(
-    "div",
-    "online-status-1",
-    { "min-height": "0px" },
-    { "aria-label": "", title: "" },
-    i18n.t("messageBox.typing")
-  );
-  statusDiv.append(statusSpan);
-  return statusDiv;
+const createStatusElement = (type, value = null) => {
+  const messageBoxOnlineStatus = document.querySelector(".online-status-1");
+
+  let text = "";
+
+  switch (type) {
+    case "typing":
+      text = i18n.t("messageBox.typing");
+      break;
+
+    case "online":
+      text = i18n.t("messageBox.online");
+      break;
+
+    case "lastSeen":
+      text = formatDateTime(value);
+      break;
+  }
+  if (messageBoxOnlineStatus) {
+    messageBoxOnlineStatus.textContent = text;
+  } else {
+    const statusDiv = createElement("div", "online-status");
+    const statusSpan = createElement(
+      "div",
+      "online-status-1",
+      { "min-height": "0px" },
+      { "aria-label": "", title: "" },
+      text
+    );
+
+    statusDiv.append(statusSpan);
+    const messageBoxOnlineStatusParent =
+      document.querySelector(".message-box1-2-2");
+    messageBoxOnlineStatusParent.append(statusDiv);
+  }
 };
 
 const onlineStatus = async (statusMessage, chat, messageBoxElement) => {
@@ -113,22 +135,14 @@ const onlineStatus = async (statusMessage, chat, messageBoxElement) => {
   if (statusSpan) {
     messageBoxElement.removeChild(statusSpan.parentElement);
   }
-
   if (statusInfo.status === "online") {
-    const onlineElement = isOnlineStatus(
-      chat.userProfileResponseDTO,
-      chat.contactsDTO
-    );
-    messageBoxElement.append(onlineElement);
+    isOnlineStatus(chat.userProfileResponseDTO, chat.contactsDTO);
   } else {
-    const statusDiv = lastSeenStatus(
+    lastSeenStatus(
       chat.userProfileResponseDTO,
       chat.contactsDTO,
       statusInfo.lastSeen
     );
-    if (statusDiv) {
-      messageBoxElement.append(statusDiv);
-    }
   }
 };
 
@@ -687,8 +701,6 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
   header.append(messageBoxDiv3);
   main.append(header);
 
-  await onlineInfo(chatData, messageBoxDiv2);
-
   const spanMessageBox1_3 = createElement("span", "message-box1-3");
   const divMessageBox1_4 = createElement("div", "message-box1-4");
   main.append(spanMessageBox1_3);
@@ -773,9 +785,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
   const span = createElement("span", "");
   main.append(span);
   messageBoxElement.append(main);
-  const divContenteditable = main.querySelector(
-    ".message-box1-7-1-1-1-2-1-1-1"
-  );
+  await onlineInfo(chatData, messageBoxDiv2);
 
   if (chatData.userChatSettingsDTO.isBlocked) {
     blockInput(chatData.contactsDTO.userContactName, main, footer);
@@ -1059,14 +1069,8 @@ const onlineInfo = async (chat, messageBoxDiv2) => {
     !chat.userChatSettingsDTO.isBlocked &&
     !chat.userChatSettingsDTO.isBlockedMe
   ) {
-    const contactsOnlineStatusElement = await isOnline(
-      chat.userProfileResponseDTO,
-      chat.contactsDTO
-    );
-    if (contactsOnlineStatusElement) {
-      onlineVisibilitySubscribe(chat, messageBoxDiv2);
-      messageBoxDiv2.append(contactsOnlineStatusElement);
-    }
+    await isOnline(chat.userProfileResponseDTO, chat.contactsDTO);
+    onlineVisibilitySubscribe(chat, messageBoxDiv2);
     typingStatusSubscribe(chat, messageBoxDiv2);
   }
 };
@@ -1358,15 +1362,14 @@ const isOnline = async (userContact, contact) => {
       const friendStatus = await chatService.userOnlineStatus(userContact.id);
       if (friendStatus.status === "online") {
         const typingDTO = await chatService.isTypingStatus(userContact.id);
-        if (typingDTO.isTyping) {
-          return createTypingElement();
+        if (typingDTO.typing) {
+          createStatusElement("typing");
         }
-        return isOnlineStatus(userContact, contact);
+        isOnlineStatus(userContact, contact);
       } else {
-        return lastSeenStatus(userContact, contact, friendStatus.lastSeen);
+        lastSeenStatus(userContact, contact, friendStatus.lastSeen);
       }
     }
-    return;
   } catch (error) {
     console.error("Online status error:", error);
   }
@@ -1381,18 +1384,8 @@ const isOnlineStatus = (userContact, contact) => {
         chatInstance.user.privacySettings.onlineStatusVisibility ===
           "CONTACTS"))
   ) {
-    const statusDiv = createElement("div", "online-status");
-    const statusSpan = createElement(
-      "div",
-      "online-status-1",
-      { "min-height": "0px" },
-      { "aria-label": "", title: "" },
-      i18n.t("messageBox.online")
-    );
-    statusDiv.append(statusSpan);
-    return statusDiv;
+    createStatusElement("online");
   }
-  return;
 };
 const lastSeenStatus = (userContact, contact, lastSeen) => {
   if (
@@ -1404,23 +1397,13 @@ const lastSeenStatus = (userContact, contact, lastSeen) => {
       (contact.userHasAddedRelatedUser &&
         userContact.privacySettings.lastSeenVisibility === "CONTACTS"))
   ) {
-    const statusDiv = createElement("div", "online-status");
-    const statusSpan = createElement(
-      "div",
-      "online-status-1",
-      { "min-height": "0px" },
-      { "aria-label": "", title: "" },
-      formatDateTime(lastSeen)
-    );
-    statusDiv.append(statusSpan);
-    return statusDiv;
+    createStatusElement("lastSeen", lastSeen);
   } else {
     const statusDiv = document.querySelector(".online-status");
     if (statusDiv) {
       statusDiv.remove();
     }
   }
-  return;
 };
 const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = async (
   oldPrivacySettings,
@@ -1467,17 +1450,10 @@ const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = async (
     if (lastSeen || online) {
       const messageBoxDiv2 =
         messageBoxElement.querySelector(".message-box1-2-2");
-      const newStatusSpan = await isOnline(
+      await isOnline(
         messageBoxDiv2.data.userProfileResponseDTO,
         messageBoxDiv2.data.contactsDTO
       );
-      const oldStatusSpan = messageBoxDiv2.querySelector(".online-status");
-      if (newStatusSpan) {
-        oldStatusSpan?.remove();
-        messageBoxDiv2.append(newStatusSpan);
-      } else {
-        oldStatusSpan?.remove();
-      }
     }
   }
 };
@@ -1597,18 +1573,18 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 
       updateChatBox(existingChatSummary);
 
+      chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
+        userId: chatInstance.user.id,
+        chatRoomId: chatSummaryDTO.chatDTO.id,
+        typing: false,
+        friendId: chatSummaryDTO.userProfileResponseDTO.id,
+      });
+
       chatInstance.webSocketManagerChat.sendMessageToAppChannel(
         "send-message",
         newEncryptedMessageDTO
       );
     }
-
-    chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
-      userId: chatInstance.user.id,
-      chatRoomId: chatSummaryDTO.chatDTO.id,
-      typing: false,
-      friendId: chatSummaryDTO.userProfileResponseDTO.id,
-    });
 
     renderMessage(
       { messages: [newMessageDTO], lastPage: null },
