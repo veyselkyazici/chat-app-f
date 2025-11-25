@@ -20,10 +20,8 @@ class WebSocketManager {
           Authorization: `Bearer ${this.token}`,
         },
         () => {
-          console.log("1");
           this.pending.forEach((m) => {
             this.stompClient.send(m.channel, {}, m.payload);
-            console.log(m);
           });
 
           this.pending = [];
@@ -70,25 +68,11 @@ class WebSocketManager {
     const payload = JSON.stringify(message);
 
     if (!this.stompClient || !this.stompClient.connected) {
-      console.log("2");
       this.pending.push({ channel, payload });
       return;
     }
     this.stompClient.send(channel, {}, payload);
   }
-
-  // async notifyOnlineStatus(isOnline) {
-  //   if (isOnline) {
-  //     this.sendMessageToAppChannel("user-online", {
-  //       online: true,
-  //     });
-  //   } else {
-  //     await userService.updateUserLastSeen();
-  //     this.sendMessageToAppChannel("user-offline", {
-  //       online: false,
-  //     });
-  //   }
-  // }
 
   getSubscribedChannels() {
     return Array.from(this.subscriptions.keys());
