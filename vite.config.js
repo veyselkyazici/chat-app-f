@@ -6,20 +6,20 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    headers: {
-      "Content-Security-Policy": [
-        "default-src 'self'",
-        "script-src 'self' https://kit.fontawesome.com https://code.jquery.com https://cdnjs.cloudflare.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.gstatic.com/",
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://kit.fontawesome.com https://ka-f.fontawesome.com",
-        "img-src 'self' data: https: http://res.cloudinary.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
-        "font-src 'self' https://fonts.gstatic.com https://kit.fontawesome.com https://ka-f.fontawesome.com",
-        "connect-src 'self' https://vkychatapp.com",
-        "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/",
-        "media-src 'self'",
-        "object-src 'none'",
-        "form-action 'self'",
-      ].join("; "),
-    },
+    // headers: {
+    //   "Content-Security-Policy": [
+    //     "default-src 'self'",
+    //     "script-src 'self' https://kit.fontawesome.com https://code.jquery.com https://cdnjs.cloudflare.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.gstatic.com/",
+    //     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://kit.fontawesome.com https://ka-f.fontawesome.com",
+    //     "img-src 'self' data: https: http://res.cloudinary.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/",
+    //     "font-src 'self' https://fonts.gstatic.com https://kit.fontawesome.com https://ka-f.fontawesome.com",
+    //     "connect-src 'self' https://vkychatapp.com",
+    //     "frame-src 'self' https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/",
+    //     "media-src 'self'",
+    //     "object-src 'none'",
+    //     "form-action 'self'",
+    //   ].join("; "),
+    // },
   },
   build: {
     outDir: "../dist",

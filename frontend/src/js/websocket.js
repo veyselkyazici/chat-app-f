@@ -5,6 +5,7 @@ class WebSocketManager {
     this.token = token;
     this.stompClient = null;
     this.subscriptions = new Map();
+    this.pending = [];
   }
 
   connectWebSocket(successCallback = () => {}, errorCallback = () => {}) {
