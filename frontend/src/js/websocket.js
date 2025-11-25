@@ -9,28 +9,29 @@ class WebSocketManager {
 
   connectWebSocket(successCallback = () => {}, errorCallback = () => {}) {
     try {
-      console.log("1");
-      setTimeout(() => {
-        console.log("2");
-        this.sockJs = new SockJS(this.webSocketUrl);
-        this.stompClient = Stomp.over(this.sockJs);
-        this.stompClient.debug = (str) => {
-          // console.log("STOMP Debug:", str);
-        };
-        this.stompClient.connect(
-          {
-            Authorization: `Bearer ${this.token}`,
-          },
-          () => {
-            successCallback();
-            // this.notifyOnlineStatus(true);
-          },
-          (error) => {
-            errorCallback(error);
-            // this.notifyOnlineStatus(false);
-          }
-        );
-      }, 5000);
+      this.sockJs = new SockJS(this.webSocketUrl);
+      this.stompClient = Stomp.over(this.sockJs);
+      this.stompClient.debug = (str) => {
+        // console.log("STOMP Debug:", str);
+      };
+      this.stompClient.connect(
+        {
+          Authorization: `Bearer ${this.token}`,
+        },
+        () => {
+          this.pending.forEach((m) =>
+            this.stompClient.send(m.channel, {}, m.payload)
+          );
+
+          this.pending = [];
+          successCallback();
+          // this.notifyOnlineStatus(true);
+        },
+        (error) => {
+          errorCallback(error);
+          // this.notifyOnlineStatus(false);
+        }
+      );
     } catch (error) {
       errorCallback(error);
     }
@@ -51,8 +52,6 @@ class WebSocketManager {
       const subscription = this.stompClient.subscribe(channel, callback);
       this.subscriptions.set(channel, subscription);
     }
-    for (const [key, value] of this.subscriptions) {
-    }
   }
 
   unsubscribeFromChannel(channel) {
@@ -64,15 +63,15 @@ class WebSocketManager {
   }
 
   sendMessageToAppChannel(endpoint, message) {
-    console.log("3", this.stompClient?.connected);
-    if (this.stompClient) {
-      try {
-        const appChannel = `/app/${endpoint}`;
-        this.stompClient.send(appChannel, {}, JSON.stringify(message));
-      } catch (error) {
-        console.error("Error sending message to channel:", error);
-      }
+    const channel = `/app/${endpoint}`;
+    const payload = JSON.stringify(message);
+
+    if (!this.stompClient || !this.stompClient.connected) {
+      console.warn("WS not ready → queued:", endpoint);
+      this.pending.push({ channel, payload });
+      return;
     }
+    this.stompClient.send(channel, {}, payload);
   }
 
   // async notifyOnlineStatus(isOnline) {
