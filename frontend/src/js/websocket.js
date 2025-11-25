@@ -20,9 +20,11 @@ class WebSocketManager {
           Authorization: `Bearer ${this.token}`,
         },
         () => {
-          this.pending.forEach((m) =>
-            this.stompClient.send(m.channel, {}, m.payload)
-          );
+          console.log("1");
+          this.pending.forEach((m) => {
+            this.stompClient.send(m.channel, {}, m.payload);
+            console.log(m);
+          });
 
           this.pending = [];
           successCallback();
@@ -68,7 +70,7 @@ class WebSocketManager {
     const payload = JSON.stringify(message);
 
     if (!this.stompClient || !this.stompClient.connected) {
-      console.warn("WS not ready → queued:", endpoint);
+      console.log("2");
       this.pending.push({ channel, payload });
       return;
     }
