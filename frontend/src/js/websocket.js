@@ -1,4 +1,3 @@
-
 class WebSocketManager {
   constructor(webSocketUrl, userId, token) {
     this.webSocketUrl = webSocketUrl;
@@ -10,25 +9,28 @@ class WebSocketManager {
 
   connectWebSocket(successCallback = () => {}, errorCallback = () => {}) {
     try {
-      this.sockJs = new SockJS(this.webSocketUrl);
-      this.stompClient = Stomp.over(this.sockJs);
-      this.stompClient.debug = (str) => {
-        // console.log("STOMP Debug:", str);
-      };
-      this.stompClient.connect(
-        {
-          Authorization: `Bearer ${this.token}`,
-        },
-        () => {
-          successCallback();
-          // this.notifyOnlineStatus(true);
-
-        },
-        (error) => {
-          errorCallback(error);
-          // this.notifyOnlineStatus(false);
-        }
-      );
+      console.log("1");
+      setTimeout(() => {
+        console.log("2");
+        this.sockJs = new SockJS(this.webSocketUrl);
+        this.stompClient = Stomp.over(this.sockJs);
+        this.stompClient.debug = (str) => {
+          // console.log("STOMP Debug:", str);
+        };
+        this.stompClient.connect(
+          {
+            Authorization: `Bearer ${this.token}`,
+          },
+          () => {
+            successCallback();
+            // this.notifyOnlineStatus(true);
+          },
+          (error) => {
+            errorCallback(error);
+            // this.notifyOnlineStatus(false);
+          }
+        );
+      }, 5000);
     } catch (error) {
       errorCallback(error);
     }
@@ -62,6 +64,7 @@ class WebSocketManager {
   }
 
   sendMessageToAppChannel(endpoint, message) {
+    console.log("3", this.stompClient?.connected);
     if (this.stompClient) {
       try {
         const appChannel = `/app/${endpoint}`;
