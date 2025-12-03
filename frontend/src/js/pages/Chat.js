@@ -182,13 +182,11 @@ export default class Chat extends AbstractView {
   initializeWebSockets() {
     this.webSocketManagerContacts = new WebSocketManager(
       import.meta.env.VITE_BASE_URL_WEBSOCKET_CONTACTS,
-      this.user.id,
       sessionStorage.getItem("access_token")
     );
 
     this.webSocketManagerChat = new WebSocketManager(
       import.meta.env.VITE_BASE_URL_WEBSOCKET_CHAT,
-      this.user.id,
       sessionStorage.getItem("access_token")
     );
 
@@ -242,10 +240,8 @@ export default class Chat extends AbstractView {
   }
 
   async initContactsWebSocket() {
-    this.webSocketManagerContacts.connectWebSocket(
-      () => {
-        this.subscribeToFriendshipChannels();
-      },
+    this.webSocketManagerContacts.connect(
+      () => this.subscribeToFriendshipChannels(),
       (error) => {
         console.error("Contacts WebSocket bağlantı hatası: " + error);
       }
@@ -260,7 +256,7 @@ export default class Chat extends AbstractView {
     const disconnect = `/user/${this.user.id}/queue/disconnect`;
     const invitedUserJoined = `/user/${this.user.id}/queue/invited-user-joined`;
 
-    this.webSocketManagerContacts.subscribeToChannel(
+    this.webSocketManagerContacts.subscribe(
       invitedUserJoined,
       async (invitedUserJoinedMessage) => {
         const invitedUserJoinedResponseDTO = new ContactResponseDTO(
@@ -297,11 +293,11 @@ export default class Chat extends AbstractView {
       }
     );
 
-    this.webSocketManagerContacts.subscribeToChannel(disconnect, async () => {
+    this.webSocketManagerContacts.subscribe(disconnect, async () => {
       await this.logout();
     });
 
-    this.webSocketManagerContacts.subscribeToChannel(
+    this.webSocketManagerContacts.subscribe(
       `/user/${this.userId}/queue/error`,
       (message) => {
         try {
@@ -313,7 +309,7 @@ export default class Chat extends AbstractView {
       }
     );
 
-    this.webSocketManagerContacts.subscribeToChannel(
+    this.webSocketManagerContacts.subscribe(
       addContact,
       async (addContactMessage) => {
         const newContact = JSON.parse(addContactMessage.body);
@@ -363,7 +359,7 @@ export default class Chat extends AbstractView {
       }
     );
     // Eklenen kisi icin calisacak chat veya contact mevcut ise ekleyen kisinin privacy settingslerine gore profil photo  duzenlemeler yapilacak
-    this.webSocketManagerContacts.subscribeToChannel(
+    this.webSocketManagerContacts.subscribe(
       addContactUser,
       async (addContactMessage) => {
         const newContact = JSON.parse(addContactMessage.body);
@@ -411,7 +407,7 @@ export default class Chat extends AbstractView {
       }
     );
 
-    this.webSocketManagerContacts.subscribeToChannel(
+    this.webSocketManagerContacts.subscribe(
       addInvitation,
       async (addInvitationMessage) => {
         const newInvitation = JSON.parse(addInvitationMessage.body);
@@ -439,7 +435,7 @@ export default class Chat extends AbstractView {
       }
     );
     // ToDo
-    this.webSocketManagerContacts.subscribeToChannel(
+    this.webSocketManagerContacts.subscribe(
       updatePrivacy,
       async (updatePrivacyMessage) => {
         const updatePrivacy = JSON.parse(updatePrivacyMessage.body);
@@ -517,7 +513,7 @@ export default class Chat extends AbstractView {
       }
     );
     // ToDo
-    this.webSocketManagerContacts.subscribeToChannel(
+    this.webSocketManagerContacts.subscribe(
       updatedUserProfile,
       async (updatedUserProfileMessage) => {
         const updatedUserProfileDTO = JSON.parse(
@@ -572,11 +568,9 @@ export default class Chat extends AbstractView {
   }
 
   initChatWebSocket() {
-    this.webSocketManagerChat.connectWebSocket(
-      () => {
-        this.subscribeToChatChannels();
-      },
-      function (error) {
+    this.webSocketManagerChat.connect(
+      () => this.subscribeToChatChannels(),
+      (error) => {
         console.error("Chat WebSocket connection error: " + error);
       }
     );
@@ -593,10 +587,10 @@ export default class Chat extends AbstractView {
     const error = `/user/${this.user.id}/queue/error-message`;
     const disconnect = `/user/${this.user.id}/queue/disconnect`;
 
-    this.webSocketManagerChat.subscribeToChannel(disconnect, async () => {
+    this.webSocketManagerChat.subscribe(disconnect, async () => {
       await this.logout();
     });
-    this.webSocketManagerChat.subscribeToChannel(
+    this.webSocketManagerChat.subscribe(
       `/user/${this.userId}/queue/error`,
       (message) => {
         try {
@@ -607,7 +601,7 @@ export default class Chat extends AbstractView {
         }
       }
     );
-    this.webSocketManagerChat.subscribeToChannel(
+    this.webSocketManagerChat.subscribe(
       error,
       async (errorMessageDTO) => {
         const errorMessage = JSON.parse(errorMessageDTO.body);
@@ -616,7 +610,7 @@ export default class Chat extends AbstractView {
       }
     );
 
-    this.webSocketManagerChat.subscribeToChannel(chatBlock, async (block) => {
+    this.webSocketManagerChat.subscribe(chatBlock, async (block) => {
       const blockData = JSON.parse(block.body);
       const chatData = this.chatList.find(
         (chat) => chat.chatDTO.id === blockData.chatRoomId
@@ -630,15 +624,15 @@ export default class Chat extends AbstractView {
         if (statusSpan) {
           statusSpan.remove();
         }
-        this.webSocketManagerChat.unsubscribeFromChannel(
+        this.webSocketManagerChat.unsubscribe(
           `/user/${chatData.userProfileResponseDTO.id}/queue/online-status`
         );
-        this.webSocketManagerChat.unsubscribeFromChannel(
+        this.webSocketManagerChat.unsubscribe(
           `/user/${this.user.id}/queue/message-box-typing`
         );
       }
     });
-    this.webSocketManagerChat.subscribeToChannel(
+    this.webSocketManagerChat.subscribe(
       chatUnBlock,
       async (unblock) => {
         const unblockData = JSON.parse(unblock.body);
@@ -666,7 +660,7 @@ export default class Chat extends AbstractView {
       }
     );
 
-    this.webSocketManagerChat.subscribeToChannel(
+    this.webSocketManagerChat.subscribe(
       readMessagesChannel,
       (readMessages) => {
         const readMessagesJSON = JSON.parse(readMessages.body);
@@ -701,7 +695,7 @@ export default class Chat extends AbstractView {
         }
       }
     );
-    this.webSocketManagerChat.subscribeToChannel(
+    this.webSocketManagerChat.subscribe(
       recipientMessageChannel,
       async (recipientMessage) => {
         const recipientJSON = JSON.parse(recipientMessage.body);
@@ -776,7 +770,7 @@ export default class Chat extends AbstractView {
               true,
               this.user.id
             );
-            chatInstance.webSocketManagerChat.sendMessageToAppChannel(
+            chatInstance.webSocketManagerChat.send(
               "read-message",
               dto
             );
@@ -790,7 +784,7 @@ export default class Chat extends AbstractView {
         }
       }
     );
-    this.webSocketManagerChat.subscribeToChannel(
+    this.webSocketManagerChat.subscribe(
       typingChannel,
       async (typingMessage) => {
         const status = JSON.parse(typingMessage.body);
@@ -921,7 +915,7 @@ export default class Chat extends AbstractView {
     if (this.pingInterval) clearInterval(this.pingInterval);
 
     this.pingInterval = setInterval(() => {
-      this.webSocketManagerChat.sendMessageToAppChannel("ping", {});
+      this.webSocketManagerChat.send("ping", {});
     }, this.pingFrequency);
   }
 
@@ -934,24 +928,24 @@ export default class Chat extends AbstractView {
 
   handleVisibilityChange = async () => {
     if (document.hidden) {
-      this.webSocketManagerChat.sendMessageToAppChannel("user-away", {});
+      this.webSocketManagerChat.send("user-away", {});
       this.stopPing();
       await userService.updateUserLastSeen();
     } else {
-      this.webSocketManagerChat.sendMessageToAppChannel("user-online", {});
+      this.webSocketManagerChat.send("user-online", {});
       this.startPing();
     }
   };
 
   handleBeforeUnload = async () => {
-    this.webSocketManagerChat.sendMessageToAppChannel("user-offline", {});
+    this.webSocketManagerChat.send("user-offline", {});
     userService.updateLastSeenOnExit();
   };
 
   sendStatus(status) {
     if (this.lastUserStatus === status) return;
     this.lastUserStatus = status;
-    this.webSocketManagerChat.sendMessageToAppChannel(status, {});
+    this.webSocketManagerChat.send(status, {});
   }
 
   visibilityChange = () => {

@@ -201,7 +201,7 @@ async function toggleEditName(user) {
         });
       } else {
         const response = await userService.updateUserName(updateUserDTO);
-        chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
+        chatInstance.webSocketManagerContacts.send(
           "updated-user-profile-send-message",
           {
             userId: chatInstance.user.id,
@@ -236,7 +236,7 @@ async function toggleEditAbout() {
         });
       } else {
         const response = await userService.updateUserAbout(updateUserDTO);
-        chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
+        chatInstance.webSocketManagerContacts.send(
           "updated-user-profile-send-message",
           {
             userId: chatInstance.user.id,
@@ -857,7 +857,7 @@ async function cropImage(canvas1, userId, originalFile) {
         );
         userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
         userProfilePhotoElement.append(image);
-        chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
+        chatInstance.webSocketManagerContacts.send(
           "updated-user-profile-send-message",
           {
             userId: userId,
@@ -914,7 +914,7 @@ async function removePhoto() {
       photoElement.append(createDefaultImage());
       userProfilePhotoElement.append(createDefaultImage());
       chatInstance.user.imagee = null;
-      chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
+      chatInstance.webSocketManagerContacts.send(
         "updated-user-profile-send-message",
         {
           userId: chatInstance.user.id,

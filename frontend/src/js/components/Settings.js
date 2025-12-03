@@ -816,7 +816,7 @@ const handleReadReceiptsClick = async () => {
       readReceiptsBox1.className = "privacy-2-1-6-1-2-1-2-1-1";
     }
     chatInstance.user.privacySettings.readReceipts = newReadReceiptsValue;
-    chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
+    chatInstance.webSocketManagerContacts.send(
       "updated-privacy-send-message",
       result.data
     );
@@ -1606,7 +1606,7 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
       );
     }
 
-    chatInstance.webSocketManagerContacts.sendMessageToAppChannel(
+    chatInstance.webSocketManagerContacts.send(
       "updated-privacy-send-message",
       result.data
     );

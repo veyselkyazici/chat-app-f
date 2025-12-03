@@ -58,7 +58,7 @@ async function createMessageBox(chatData) {
 }
 
 const typingStatusSubscribe = (chat, messageBoxElement) => {
-  chatInstance.webSocketManagerChat.subscribeToChannel(
+  chatInstance.webSocketManagerChat.subscribe(
     `/user/${chat.contactsDTO.userId}/queue/message-box-typing`,
     async (typingMessage) => {
       const status = JSON.parse(typingMessage.body);
@@ -85,7 +85,7 @@ const typingsStatus = async (status, chat, messageBoxElement) => {
   }, 1000);
 };
 const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
-  chatInstance.webSocketManagerChat.subscribeToChannel(
+  chatInstance.webSocketManagerChat.subscribe(
     `/user/${chat.userProfileResponseDTO.id}/queue/online-status`,
     async (statusMessage) => {
       onlineStatus(statusMessage, chat, messageBoxElement);
@@ -150,7 +150,7 @@ const handleTextBlur = (chat, typingStatus, textArea) => {
   const currentText = textArea.textContent.trim();
   // Boşsa veya placeholder varsa typing false gönder
   if (typingStatus.isTyping) {
-    chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
+    chatInstance.webSocketManagerChat.send("typing", {
       userId: chat.contactsDTO.userId,
       chatRoomId: chat.chatDTO.id,
       typing: false,
@@ -170,7 +170,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
     currentText === i18n.t("messageBox.messageBoxPlaceHolder")
   ) {
     if (typingStatus.isTyping) {
-      chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
+      chatInstance.webSocketManagerChat.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
         typing: false,
@@ -183,7 +183,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
 
   // Eğer yazıyorsa typing true
   if (!typingStatus.isTyping && currentText.length > 0) {
-    chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
+    chatInstance.webSocketManagerChat.send("typing", {
       userId: chat.contactsDTO.userId,
       chatRoomId: chat.chatDTO.id,
       typing: true,
@@ -207,7 +207,7 @@ function handleTextInput(textArea, chat, typingStatus, event) {
   ) {
     // Boşsa veya placeholder varsa false gönder
     if (typingStatus.isTyping) {
-      chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
+      chatInstance.webSocketManagerChat.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
         typing: false,
@@ -218,7 +218,7 @@ function handleTextInput(textArea, chat, typingStatus, event) {
   } else {
     // Yazıyorsa true gönder
     if (!typingStatus.isTyping) {
-      chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
+      chatInstance.webSocketManagerChat.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
         typing: true,
@@ -1562,7 +1562,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 
       updateChatBox(newChatSummaryDTO);
 
-      chatInstance.webSocketManagerChat.sendMessageToAppChannel(
+      chatInstance.webSocketManagerChat.send(
         "send-message",
         newEncryptedMessageDTO
       );
@@ -1573,14 +1573,14 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 
       updateChatBox(existingChatSummary);
 
-      chatInstance.webSocketManagerChat.sendMessageToAppChannel("typing", {
+      chatInstance.webSocketManagerChat.send("typing", {
         userId: chatInstance.user.id,
         chatRoomId: chatSummaryDTO.chatDTO.id,
         typing: false,
         friendId: chatSummaryDTO.userProfileResponseDTO.id,
       });
 
-      chatInstance.webSocketManagerChat.sendMessageToAppChannel(
+      chatInstance.webSocketManagerChat.send(
         "send-message",
         newEncryptedMessageDTO
       );
@@ -1728,10 +1728,10 @@ const removeMessageBoxAndUnsubscribe = async () => {
   // const startMessageElement = messageBoxElement.querySelector(".start-message");
   if (messageBox) {
     messageBoxElement.removeChild(messageBox);
-    chatInstance.webSocketManagerChat.unsubscribeFromChannel(
+    chatInstance.webSocketManagerChat.unsubscribe(
       `/user/${messageBox.data.userProfileResponseDTO.id}/queue/online-status`
     );
-    chatInstance.webSocketManagerChat.unsubscribeFromChannel(
+    chatInstance.webSocketManagerChat.unsubscribe(
       `/user/${chatInstance.user.id}/queue/message-box-typing`
     );
   }

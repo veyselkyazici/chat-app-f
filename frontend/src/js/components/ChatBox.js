@@ -511,10 +511,10 @@ const toggleBlockUser = async (chatData) => {
 
           if (statusSpan) statusSpan.remove();
 
-          chatInstance.webSocketManagerChat.unsubscribeFromChannel(
+          chatInstance.webSocketManagerChat.unsubscribe(
             `/user/${chatData.contactsDTO.userContactId}/queue/online-status`
           );
-          chatInstance.webSocketManagerChat.unsubscribeFromChannel(
+          chatInstance.webSocketManagerChat.unsubscribe(
             `/user/${chatInstance.user.id}/queue/message-box-typing`
           );
         }
@@ -851,11 +851,11 @@ async function handleChatClick(event) {
     return;
   }
   ariaSelected(chatElement, chatInstance.selectedChatUserId, innerDiv);
-  chatInstance.webSocketManagerChat.unsubscribeFromChannel(
+  chatInstance.webSocketManagerChat.unsubscribe(
     `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`
   );
   const readConfirmationRecipientChannel = `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`;
-  chatInstance.webSocketManagerChat.subscribeToChannel(
+  chatInstance.webSocketManagerChat.subscribe(
     readConfirmationRecipientChannel,
     async (message) => {
       removeUnreadMessageCountElement(chatElement);
@@ -887,7 +887,7 @@ async function markMessagesAsReadAndFetchMessages(chatElement) {
       chatElement.chatData.userChatSettingsDTO.unreadMessageCount,
   };
 
-  chatInstance.webSocketManagerChat.sendMessageToAppChannel(
+  chatInstance.webSocketManagerChat.send(
     "read-message",
     dto
   );

@@ -1,82 +1,99 @@
-class WebSocketManager {
-  constructor(webSocketUrl, userId, token) {
-    this.webSocketUrl = webSocketUrl;
-    this.userId = userId;
+import { Client } from "@stomp/stompjs";
+
+export default class WebSocketManager {
+  constructor(url, token) {
+    this.url = url;
     this.token = token;
-    this.stompClient = null;
     this.subscriptions = new Map();
     this.pending = [];
+
+    this.client = new Client({
+      brokerURL: this.url,
+      connectHeaders: { Authorization: `Bearer ${this.token}` },
+      debug: () => {},
+      reconnectDelay: 5000,
+      heartbeatIncoming: 0,
+      heartbeatOutgoing: 0,
+
+      onConnect: () => this.onConnected(),
+      onStompError: (f) => this.onError(f),
+      onWebSocketClose: () => this.onClose(),
+    });
+
+    // document.addEventListener("visibilitychange", () => {
+    //   if (!document.hidden) {
+    //     // Client AKTİF değilse → activate et
+    //     if (!this.client.active) {
+    //       this.client.activate();
+    //       return;
+    //     }
+
+    //     // Client aktif ama bağlı değil → muhtemelen takıldı
+    //     if (this.client.active && !this.client.connected) {
+    //       this.client.deactivate();
+    //       setTimeout(() => this.client.activate(), 300);
+    //     }
+    //   }
+    // });
   }
 
-  connectWebSocket(successCallback = () => {}, errorCallback = () => {}) {
-    try {
-      this.sockJs = new SockJS(this.webSocketUrl);
-      this.stompClient = Stomp.over(this.sockJs);
-      this.stompClient.debug = (str) => {
-        // console.log("STOMP Debug:", str);
-      };
-      this.stompClient.connect(
-        {
-          Authorization: `Bearer ${this.token}`,
-        },
-        () => {
-          this.pending.forEach((m) => {
-            this.stompClient.send(m.channel, {}, m.payload);
-          });
+  connect(onSuccess, onError) {
+    this.onConnectCallback = onSuccess;
+    this.onErrorCallback = onError;
+    this.client.activate();
+  }
 
-          this.pending = [];
-          successCallback();
-          // this.notifyOnlineStatus(true);
-        },
-        (error) => {
-          errorCallback(error);
-          // this.notifyOnlineStatus(false);
-        }
-      );
-    } catch (error) {
-      errorCallback(error);
+  subscribe(channel, cb) {
+    if (this.client.connected) {
+      const sub = this.client.subscribe(channel, cb);
+      this.subscriptions.set(channel, sub);
+    } else {
+      setTimeout(() => this.subscribe(channel, cb), 120);
     }
   }
 
-  disconnectWebSocket() {
-    if (this.stompClient) {
-      this.stompClient.disconnect();
-      this.subscriptions.forEach((subscription) => {
-        subscription.unsubscribe();
-      });
-      this.subscriptions.clear();
-    }
-  }
-
-  subscribeToChannel(channel, callback) {
-    if (this.stompClient && !this.subscriptions.has(channel)) {
-      const subscription = this.stompClient.subscribe(channel, callback);
-      this.subscriptions.set(channel, subscription);
-    }
-  }
-
-  unsubscribeFromChannel(channel) {
+  unsubscribe(channel) {
     if (this.subscriptions.has(channel)) {
-      const subscription = this.subscriptions.get(channel);
-      subscription.unsubscribe();
+      this.subscriptions.get(channel).unsubscribe();
       this.subscriptions.delete(channel);
     }
   }
 
-  sendMessageToAppChannel(endpoint, message) {
-    const channel = `/app/${endpoint}`;
-    const payload = JSON.stringify(message);
+  send(destination, body) {
+    const json = JSON.stringify(body);
+    const fullDestination = "/app/" + destination;
 
-    if (!this.stompClient || !this.stompClient.connected) {
-      this.pending.push({ channel, payload });
+    if (!this.client.connected) {
+      this.pending.push({ destination: fullDestination, json });
       return;
     }
-    this.stompClient.send(channel, {}, payload);
+
+    this.client.publish({ destination: fullDestination, body: json });
   }
 
-  getSubscribedChannels() {
-    return Array.from(this.subscriptions.keys());
+  disconnect() {
+    this.client.deactivate();
+    this.subscriptions.forEach((s) => s.unsubscribe());
+    this.subscriptions.clear();
+  }
+
+  onConnected() {
+    this.flushPending();
+    if (this.onConnectCallback) this.onConnectCallback();
+  }
+
+  onError(err) {
+    if (this.onErrorCallback) this.onErrorCallback(err);
+  }
+
+  onClose() {
+    if (document.hidden) return;
+  }
+
+  flushPending() {
+    this.pending.forEach((m) => {
+      this.client.publish({ destination: m.destination, body: m.json });
+    });
+    this.pending = [];
   }
 }
-
-export default WebSocketManager;

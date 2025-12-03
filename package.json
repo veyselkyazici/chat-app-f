@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.0.0",
+    "@stomp/stompjs": "^7.2.1",
     "date-fns": "^3.3.0",
     "sockjs": "^0.3.24",
+    "sockjs-client": "^1.6.1",
     "ws": "^8.16.0"
   }
 }
