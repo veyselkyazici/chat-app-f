@@ -78,6 +78,7 @@ export default class WebSocketManager {
 
   onClose() {}
 
+  
   flushPending() {
     if (!this.client.connected) return;
 
