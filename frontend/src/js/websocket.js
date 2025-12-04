@@ -100,11 +100,6 @@ export default class WebSocketManager {
         this.restart();
         return;
       }
-
-      if (!this.client.connected && ws.readyState === WebSocket.OPEN) {
-        this.restart();
-        return;
-      }
     }, 5000);
   }
 
