@@ -10,9 +10,13 @@ export default class WebSocketManager {
 
     this.client = new Client({
       brokerURL: this.url,
-      connectHeaders: { Authorization: `Bearer ${this.token}` },
+      connectHeaders: {
+        Authorization: `Bearer ${this.token}`,
+      },
+
       debug: () => {},
-      reconnectDelay: 5000,
+      reconnectDelay: 0,
+
       heartbeatIncoming: 0,
       heartbeatOutgoing: 0,
 
@@ -20,38 +24,10 @@ export default class WebSocketManager {
       onStompError: (f) => this.onError(f),
       onWebSocketClose: () => this.onClose(),
     });
-
-    window.addEventListener("focus", () => {
-      console.log("THIS CLIENT > ", this.client);
-      console.log("THIS active > ", this.client.active);
-      console.log("THIS connected > ", this.client.connected);
-      console.log("THIS webSocket > ", this.client.webSocket);
-      console.log("THIS onConnectCallback > ", this.client.onConnectCallback);
-      console.log("THIS OPEN > ", WebSocket.OPEN);
-      console.log("THIS readyState > ", this.client.webSocket.readyState);
-      if (!this.client.connected) {
-        console.log("WebSocket yeniden bağlanıyor", this.url);
-        console.log("1");
-
-        if (this.client.active) {
-          console.log("2");
-          this.client.deactivate().finally(() => {
-            console.log("3");
-            setTimeout(() => {
-              console.log("4");
-              this.client.activate(), 300;
-            });
-          });
-        } else {
-          console.log("5");
-          // hiç aktif değilse direkt activate et
-          this.client.activate();
-        }
-      }
-    });
   }
 
   connect(onSuccess, onError) {
+    console.log("1");
     this.onConnectCallback = onSuccess;
     this.onErrorCallback = onError;
     this.client.activate();
@@ -86,6 +62,7 @@ export default class WebSocketManager {
   }
 
   disconnect() {
+    console.log("2");
     this.stopHealthCheck();
     this.client.deactivate();
     this.subscriptions.forEach((s) => s.unsubscribe());
@@ -106,9 +83,7 @@ export default class WebSocketManager {
     if (this.onErrorCallback) this.onErrorCallback(err);
   }
 
-  onClose() {
-    if (document.hidden) return;
-  }
+  onClose() {}
 
   flushPending() {
     if (!this.client.connected) return;
@@ -119,43 +94,35 @@ export default class WebSocketManager {
     this.pending = [];
   }
   startHealthCheck() {
-    if (this.healthInterval) return; // zaten çalışıyor
+    console.log("3");
+    if (this.healthInterval) return;
 
     this.healthInterval = setInterval(() => {
       const ws = this.client.webSocket;
 
-      // STOMP "connected" diyor ama gerçek soket açık değilse → ghost state
       if (this.client.connected && ws && ws.readyState !== WebSocket.OPEN) {
-        console.log(
-          "Ghost WebSocket tespit edildi, yeniden bağlanıyor... →",
-          this.url
-        );
+        console.warn("⚠️ Ghost socket detected → Restarting...");
         this.restart();
       }
     }, 5000);
-  }
-
-  stopHealthCheck() {
-    if (this.healthInterval) {
-      clearInterval(this.healthInterval);
-      this.healthInterval = null;
-    }
   }
 
   restart() {
     this.stopHealthCheck();
 
     if (this.client.active) {
-      this.client
-        .deactivate()
-        .finally(() => {
-          this.client.activate();
-        })
-        .catch(() => {
-          this.client.activate();
-        });
+      this.client.deactivate().finally(() => {
+        setTimeout(() => this.client.activate(), 300);
+      });
     } else {
       this.client.activate();
+    }
+  }
+
+  stopHealthCheck() {
+    if (this.healthInterval) {
+      clearInterval(this.healthInterval);
+      this.healthInterval = null;
     }
   }
 }
