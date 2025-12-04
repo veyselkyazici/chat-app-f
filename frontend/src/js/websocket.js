@@ -17,8 +17,8 @@ export default class WebSocketManager {
       debug: () => {},
       reconnectDelay: 0,
 
-      heartbeatIncoming: 0,
-      heartbeatOutgoing: 0,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
 
       onConnect: () => this.onConnected(),
       onStompError: (f) => this.onError(f),
@@ -101,7 +101,7 @@ export default class WebSocketManager {
       const ws = this.client.webSocket;
       console.log("5");
       if (this.client.connected && ws && ws.readyState !== WebSocket.OPEN) {
-        console.warn("⚠️ Ghost socket detected → Restarting...");
+        console.log("6");
         this.restart();
       }
     }, 5000);
