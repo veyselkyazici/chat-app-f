@@ -1683,7 +1683,9 @@ function formatDateTime(utcDateTimeString) {
   const now = new Date();
   const localDate = new Date(utcDateTimeString);
 
-  const diffInDays = Math.floor((now - localDate) / (1000 * 60 * 60 * 24));
+  const diffInMs = now - localDate;
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
   const currentLang = i18n.getLang();
   const userLanguage = currentLang === "tr" ? "tr-TR" : "en-US";
 
@@ -1693,13 +1695,11 @@ function formatDateTime(utcDateTimeString) {
   });
 
   let relativeTimeText;
-  const relativeTimeFormatter = new Intl.RelativeTimeFormat(userLanguage, {
-    numeric: "auto",
-  });
+
   if (diffInDays === 0) {
-    relativeTimeText = relativeTimeFormatter.format(0, "day");
+    relativeTimeText = i18n.t("lastSeen.today");
   } else if (diffInDays === 1) {
-    relativeTimeText = relativeTimeFormatter.format(-1, "day");
+    relativeTimeText = i18n.t("lastSeen.yesterday");
   } else if (diffInDays < 7) {
     relativeTimeText = new Intl.DateTimeFormat(userLanguage, {
       weekday: "long",

@@ -238,4 +238,8 @@ export default {
     status504: "Sunucu yanıt vermedi. Lütfen daha sonra tekrar deneyin.",
     unexpectedError: "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
   },
+  lastSeen: {
+    today: "Bugün",
+    yesterday: "Dün",
+  },
 };

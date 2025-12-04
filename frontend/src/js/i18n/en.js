@@ -231,4 +231,8 @@ export default {
     status504: "Server took too long to respond. Please try again later.",
     unexpectedError: "An unexpected error occurred. Please try again later.",
   },
+  lastSeen: {
+    today: "Today",
+    yesterday: "Yesterday"
+  },
 };
