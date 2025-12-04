@@ -96,10 +96,10 @@ export default class WebSocketManager {
   startHealthCheck() {
     console.log("3");
     if (this.healthInterval) return;
-
+    console.log("4");
     this.healthInterval = setInterval(() => {
       const ws = this.client.webSocket;
-
+      console.log("5");
       if (this.client.connected && ws && ws.readyState !== WebSocket.OPEN) {
         console.warn("⚠️ Ghost socket detected → Restarting...");
         this.restart();
