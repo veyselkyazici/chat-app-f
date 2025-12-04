@@ -94,18 +94,28 @@ export default class WebSocketManager {
     this.pending = [];
   }
   startHealthCheck() {
-    console.log("3");
     if (this.healthInterval) return;
-    console.log("4");
+
     this.healthInterval = setInterval(() => {
       const ws = this.client.webSocket;
-      console.log("CONNECT > ", this.client.connected);
-      console.log("WS > ", ws ? ws : null);
-      console.log("client > ", this.client);
-      console.log("5");
-      if (this.client.connected && ws && ws.readyState !== WebSocket.OPEN) {
-        console.log("6");
+
+      if (!ws) {
+        console.log("!ws");
         this.restart();
+        return;
+      }
+      if (this.client.connected && ws.readyState !== WebSocket.OPEN) {
+        console.log("this.client.connected && ws.readyState !== WebSock");
+        this.restart();
+        return;
+      }
+
+      if (!this.client.connected && ws.readyState === WebSocket.OPEN) {
+        console.log(
+          "!this.client.connected && ws.readyState === WebSocket.OPEN"
+        );
+        this.restart();
+        return;
       }
     }, 5000);
   }
