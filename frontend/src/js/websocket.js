@@ -15,11 +15,6 @@ export default class WebSocketManager {
       },
 
       debug: () => {},
-      reconnectDelay: 0,
-
-      heartbeatIncoming: 10000,
-      heartbeatOutgoing: 10000,
-
       onConnect: () => this.onConnected(),
       onStompError: (f) => this.onError(f),
       onWebSocketClose: () => this.onClose(),
