@@ -11,7 +11,9 @@ export default class WebSocketManager {
     this.client = new Client({
       brokerURL: this.url,
       connectHeaders: {
-        Authorization: `Bearer ${this.token}`,
+        get Authorization() {
+          return `Bearer ${sessionStorage.getItem("access_token")}`;
+        },
       },
 
       debug: () => {},
@@ -57,7 +59,6 @@ export default class WebSocketManager {
   }
 
   disconnect() {
-    console.log("2");
     this.stopHealthCheck();
     this.client.deactivate();
     this.subscriptions.forEach((s) => s.unsubscribe());
@@ -65,8 +66,6 @@ export default class WebSocketManager {
   }
 
   onConnected() {
-    console.info("WebSocket connected:", this.url);
-
     this.startHealthCheck();
     this.flushPending();
 
@@ -74,7 +73,6 @@ export default class WebSocketManager {
   }
 
   onError(err) {
-    console.error("STOMP ERROR:", err);
     if (this.onErrorCallback) this.onErrorCallback(err);
   }
 
@@ -95,20 +93,15 @@ export default class WebSocketManager {
       const ws = this.client.webSocket;
 
       if (!ws) {
-        console.log("!ws");
         this.restart();
         return;
       }
       if (this.client.connected && ws.readyState !== WebSocket.OPEN) {
-        console.log("this.client.connected && ws.readyState !== WebSock");
         this.restart();
         return;
       }
 
       if (!this.client.connected && ws.readyState === WebSocket.OPEN) {
-        console.log(
-          "!this.client.connected && ws.readyState === WebSocket.OPEN"
-        );
         this.restart();
         return;
       }
