@@ -6,6 +6,7 @@ export default class WebSocketManager {
     this.token = token;
     this.subscriptions = new Map();
     this.pending = [];
+    this.healthInterval = null;
 
     this.client = new Client({
       brokerURL: this.url,
@@ -20,21 +21,27 @@ export default class WebSocketManager {
       onWebSocketClose: () => this.onClose(),
     });
 
-    // document.addEventListener("visibilitychange", () => {
-    //   if (!document.hidden) {
-    //     // Client AKTİF değilse → activate et
-    //     if (!this.client.active) {
-    //       this.client.activate();
-    //       return;
-    //     }
+    window.addEventListener("focus", () => {
+      if (!this.client.connected) {
+        console.warn("WebSocket yeniden bağlanıyor", this.url);
+        console.warn("1");
 
-    //     // Client aktif ama bağlı değil → muhtemelen takıldı
-    //     if (this.client.active && !this.client.connected) {
-    //       this.client.deactivate();
-    //       setTimeout(() => this.client.activate(), 300);
-    //     }
-    //   }
-    // });
+        if (this.client.active) {
+          console.warn("2");
+          this.client.deactivate().finally(() => {
+            console.warn("3");
+            setTimeout(() => {
+              console.warn("4");
+              this.client.activate(), 300;
+            });
+          });
+        } else {
+          console.warn("5");
+          // hiç aktif değilse direkt activate et
+          this.client.activate();
+        }
+      }
+    });
   }
 
   connect(onSuccess, onError) {
@@ -72,17 +79,30 @@ export default class WebSocketManager {
   }
 
   disconnect() {
+    this.stopHealthCheck();
     this.client.deactivate();
     this.subscriptions.forEach((s) => s.unsubscribe());
     this.subscriptions.clear();
   }
 
   onConnected() {
+    console.info("WebSocket connected:", this.url);
+
+    this.startHealthCheck();
     this.flushPending();
+
     if (this.onConnectCallback) this.onConnectCallback();
+    console.log("THIS CLIENT > ", this.client);
+    console.log("THIS active > ", this.client.active);
+    console.log("THIS connected > ", this.client.connected);
+    console.log("THIS webSocket > ", this.client.webSocket);
+    console.log("THIS onConnectCallback > ", this.client.onConnectCallback);
+    console.log("THIS OPEN > ", WebSocket.OPEN);
+    console.log("THIS readyState > ", this.client.webSocket.readyState);
   }
 
   onError(err) {
+    console.error("STOMP ERROR:", err);
     if (this.onErrorCallback) this.onErrorCallback(err);
   }
 
@@ -91,9 +111,51 @@ export default class WebSocketManager {
   }
 
   flushPending() {
+    if (!this.client.connected) return;
+
     this.pending.forEach((m) => {
       this.client.publish({ destination: m.destination, body: m.json });
     });
     this.pending = [];
+  }
+  startHealthCheck() {
+    if (this.healthInterval) return; // zaten çalışıyor
+
+    this.healthInterval = setInterval(() => {
+      const ws = this.client.webSocket;
+
+      // STOMP "connected" diyor ama gerçek soket açık değilse → ghost state
+      if (this.client.connected && ws && ws.readyState !== WebSocket.OPEN) {
+        console.warn(
+          "Ghost WebSocket tespit edildi, yeniden bağlanıyor... →",
+          this.url
+        );
+        this.restart();
+      }
+    }, 5000);
+  }
+
+  stopHealthCheck() {
+    if (this.healthInterval) {
+      clearInterval(this.healthInterval);
+      this.healthInterval = null;
+    }
+  }
+
+  restart() {
+    this.stopHealthCheck();
+
+    if (this.client.active) {
+      this.client
+        .deactivate()
+        .finally(() => {
+          this.client.activate();
+        })
+        .catch(() => {
+          this.client.activate();
+        });
+    } else {
+      this.client.activate();
+    }
   }
 }

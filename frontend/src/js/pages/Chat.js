@@ -891,11 +891,11 @@ export default class Chat extends AbstractView {
         window.removeEventListener("beforeunload", this.handleBeforeUnload);
 
         if (this.webSocketManagerContacts) {
-          this.webSocketManagerContacts.disconnectWebSocket();
+          this.webSocketManagerContacts.disconnect();
         }
         if (this.webSocketManagerChat) {
           this.stopPing();
-          this.webSocketManagerChat.disconnectWebSocket();
+          this.webSocketManagerChat.disconnect();
         }
 
         await userService.updateUserLastSeen();
