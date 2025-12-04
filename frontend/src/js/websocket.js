@@ -99,6 +99,9 @@ export default class WebSocketManager {
     console.log("4");
     this.healthInterval = setInterval(() => {
       const ws = this.client.webSocket;
+      console.log("CONNECT > ", this.client.connected);
+      console.log("WS > ", ws ? ws : null);
+      console.log("client > ", this.client);
       console.log("5");
       if (this.client.connected && ws && ws.readyState !== WebSocket.OPEN) {
         console.log("6");
