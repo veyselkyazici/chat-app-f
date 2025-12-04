@@ -22,21 +22,28 @@ export default class WebSocketManager {
     });
 
     window.addEventListener("focus", () => {
+      console.log("THIS CLIENT > ", this.client);
+      console.log("THIS active > ", this.client.active);
+      console.log("THIS connected > ", this.client.connected);
+      console.log("THIS webSocket > ", this.client.webSocket);
+      console.log("THIS onConnectCallback > ", this.client.onConnectCallback);
+      console.log("THIS OPEN > ", WebSocket.OPEN);
+      console.log("THIS readyState > ", this.client.webSocket.readyState);
       if (!this.client.connected) {
-        console.warn("WebSocket yeniden bağlanıyor", this.url);
-        console.warn("1");
+        console.log("WebSocket yeniden bağlanıyor", this.url);
+        console.log("1");
 
         if (this.client.active) {
-          console.warn("2");
+          console.log("2");
           this.client.deactivate().finally(() => {
-            console.warn("3");
+            console.log("3");
             setTimeout(() => {
-              console.warn("4");
+              console.log("4");
               this.client.activate(), 300;
             });
           });
         } else {
-          console.warn("5");
+          console.log("5");
           // hiç aktif değilse direkt activate et
           this.client.activate();
         }
@@ -92,13 +99,6 @@ export default class WebSocketManager {
     this.flushPending();
 
     if (this.onConnectCallback) this.onConnectCallback();
-    console.log("THIS CLIENT > ", this.client);
-    console.log("THIS active > ", this.client.active);
-    console.log("THIS connected > ", this.client.connected);
-    console.log("THIS webSocket > ", this.client.webSocket);
-    console.log("THIS onConnectCallback > ", this.client.onConnectCallback);
-    console.log("THIS OPEN > ", WebSocket.OPEN);
-    console.log("THIS readyState > ", this.client.webSocket.readyState);
   }
 
   onError(err) {
@@ -126,7 +126,7 @@ export default class WebSocketManager {
 
       // STOMP "connected" diyor ama gerçek soket açık değilse → ghost state
       if (this.client.connected && ws && ws.readyState !== WebSocket.OPEN) {
-        console.warn(
+        console.log(
           "Ghost WebSocket tespit edildi, yeniden bağlanıyor... →",
           this.url
         );
