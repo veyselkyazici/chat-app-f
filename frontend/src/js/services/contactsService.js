@@ -55,4 +55,16 @@ export const contactService = {
       throw error;
     }
   },
+  
+  userOnlineStatus: async (contactId) => {
+    try {
+      const response = await axiosInstance.get(
+        `/status/is-online/${contactId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error:", error.message);
+      throw error;
+    }
+  },
 };

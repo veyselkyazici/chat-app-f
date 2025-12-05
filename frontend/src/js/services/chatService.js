@@ -140,17 +140,6 @@ export const chatService = {
     }
   },
 
-  userOnlineStatus: async (contactId) => {
-    try {
-      const response = await axiosInstance.get(
-        `/status/is-online/${contactId}`
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error:", error.message);
-      throw error;
-    }
-  },
   isTypingStatus: async (contactId) => {
     try {
       const response = await axiosInstance.get(

@@ -162,7 +162,6 @@ export default class Chat extends AbstractView {
     }
   }
   async getContactList() {
-    console.log(this.user.id);
     this.contactList = (await contactService.getContactList(this.user.id)).map(
       (item) => new ContactResponseDTO(item)
     );

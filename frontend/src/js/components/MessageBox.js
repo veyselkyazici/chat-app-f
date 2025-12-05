@@ -29,6 +29,7 @@ import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
 import { i18n } from "../i18n/i18n.js";
 import { webSocketService } from "../websocket/websocketService.js";
+import { contactService } from "../services/contactsService.js";
 
 let caretPosition = 0;
 let caretNode = null;
@@ -1361,7 +1362,7 @@ const isOnline = async (userContact, contact) => {
       (chatInstance.user.privacySettings.lastSeenVisibility !== "NOBODY" ||
         chatInstance.user.privacySettings.onlineStatusVisibility !== "NOBODY")
     ) {
-      const friendStatus = await chatService.userOnlineStatus(userContact.id);
+      const friendStatus = await contactService.userOnlineStatus(userContact.id);
       if (friendStatus.status === "online") {
         const typingDTO = await chatService.isTypingStatus(userContact.id);
         if (typingDTO.typing) {
