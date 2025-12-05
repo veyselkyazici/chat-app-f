@@ -1,4 +1,5 @@
 import { Client } from "@stomp/stompjs";
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export default class WebSocketManager {
   constructor(url) {
@@ -49,8 +50,28 @@ export default class WebSocketManager {
         }
       },
 
-      onStompError: (frame) => {
+      onStompError: async (frame) => {
         console.error("STOMP ERROR:", frame);
+
+        const code = frame.headers.message;
+
+        if (code === "EXPIRED_TOKEN") {
+          try {
+            const refreshTokenSession = sessionStorage.getItem("refresh_token");
+            const res = await axios.post(`${BASE_URL}/auth/refresh-token`, {
+              refreshToken: refreshTokenSession,
+            });
+            const { accessToken, refreshToken } = res.data.data;
+            sessionStorage.setItem("access_token", accessToken);
+            sessionStorage.setItem("refresh_token", refreshToken);
+
+            // 2) Yeni token ile WS'leri yeniden bağla
+            this.refreshToken();
+          } catch (e) {
+            console.error("WS token refresh failed", e);
+            window.location.href = "/login";
+          }
+        }
       },
     });
   }

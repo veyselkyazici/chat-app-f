@@ -15,10 +15,10 @@ class WebSocketService {
     );
   }
 
-  refreshAll() {
-    this.chatWS?.refreshToken();
-    this.contactsWS?.refreshToken();
-  }
+//   refreshAll() {
+//     this.chatWS?.refreshToken();
+//     this.contactsWS?.refreshToken();
+//   }
 }
 
 export const webSocketService = new WebSocketService();
