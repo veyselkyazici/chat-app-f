@@ -854,9 +854,9 @@ async function handleChatClick(event) {
   }
   ariaSelected(chatElement, chatInstance.selectedChatUserId, innerDiv);
   webSocketService.chatWS.unsubscribe(
-    `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`
+    `/user/queue/read-confirmation-recipient`
   );
-  const readConfirmationRecipientChannel = `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`;
+  const readConfirmationRecipientChannel = `/user/queue/read-confirmation-recipient`;
   webSocketService.chatWS.subscribe(
     readConfirmationRecipientChannel,
     async (message) => {

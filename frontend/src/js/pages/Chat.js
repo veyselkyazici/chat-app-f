@@ -162,6 +162,7 @@ export default class Chat extends AbstractView {
     }
   }
   async getContactList() {
+    console.log(this.user.id);
     this.contactList = (await contactService.getContactList(this.user.id)).map(
       (item) => new ContactResponseDTO(item)
     );
@@ -248,13 +249,13 @@ export default class Chat extends AbstractView {
   }
 
   subscribeToFriendshipChannels() {
-    const addContact = `/user/${this.user.id}/queue/add-contact`;
-    const addContactUser = `/user/${this.user.id}/queue/add-contact-user`;
-    const addInvitation = `/user/${this.user.id}/queue/add-invitation`;
-    const updatePrivacy = `/user/${this.user.id}/queue/updated-privacy-response`;
-    const updatedUserProfile = `/user/${this.user.id}/queue/updated-user-profile-message`;
-    const disconnect = `/user/${this.user.id}/queue/disconnect`;
-    const invitedUserJoined = `/user/${this.user.id}/queue/invited-user-joined`;
+    const addContact = `/user/queue/add-contact`;
+    const addContactUser = `/user/queue/add-contact-user`;
+    const addInvitation = `/user/queue/add-invitation`;
+    const updatePrivacy = `/user/queue/updated-privacy-response`;
+    const updatedUserProfile = `/user/queue/updated-user-profile-message`;
+    const disconnect = `/user/queue/disconnect`;
+    const invitedUserJoined = `/user/queue/invited-user-joined`;
 
     webSocketService.contactsWS.subscribe(
       invitedUserJoined,
@@ -297,17 +298,14 @@ export default class Chat extends AbstractView {
       await this.logout();
     });
 
-    webSocketService.contactsWS.subscribe(
-      `/user/${this.userId}/queue/error`,
-      (message) => {
-        try {
-          const errorPayload = JSON.parse(message.body);
-          console.error("❌ WebSocket Error:", errorPayload);
-        } catch (e) {
-          console.error("❌ WebSocket Error (raw):", message.body);
-        }
+    webSocketService.contactsWS.subscribe(`/user/queue/error`, (message) => {
+      try {
+        const errorPayload = JSON.parse(message.body);
+        console.error("❌ WebSocket Error:", errorPayload);
+      } catch (e) {
+        console.error("❌ WebSocket Error (raw):", message.body);
       }
-    );
+    });
 
     webSocketService.contactsWS.subscribe(
       addContact,
@@ -568,30 +566,27 @@ export default class Chat extends AbstractView {
   }
 
   subscribeToChatChannels() {
-    const recipientMessageChannel = `/user/${this.user.id}/queue/received-message`;
-    const typingChannel = `/user/${this.user.id}/queue/typing`;
-    const stopTypingChannel = `/user/${this.user.id}/queue/stop-typing`;
+    const recipientMessageChannel = `/user/queue/received-message`;
+    const typingChannel = `/user/queue/typing`;
+    const stopTypingChannel = `/user/queue/stop-typing`;
     // const readConfirmationSenderChannel = `/user/${this.user.id}/queue/read-confirmation-sender`;
-    const readMessagesChannel = `/user/${this.user.id}/queue/read-messages`;
-    const chatBlock = `/user/${this.user.id}/queue/block`;
-    const chatUnBlock = `/user/${this.user.id}/queue/unblock`;
-    const error = `/user/${this.user.id}/queue/error-message`;
-    const disconnect = `/user/${this.user.id}/queue/disconnect`;
+    const readMessagesChannel = `/user/queue/read-messages`;
+    const chatBlock = `/user/queue/block`;
+    const chatUnBlock = `/user/queue/unblock`;
+    const error = `/user/queue/error-message`;
+    const disconnect = `/user/queue/disconnect`;
 
     webSocketService.chatWS.subscribe(disconnect, async () => {
       await this.logout();
     });
-    webSocketService.chatWS.subscribe(
-      `/user/${this.userId}/queue/error`,
-      (message) => {
-        try {
-          const errorPayload = JSON.parse(message.body);
-          console.error("WebSocket Error:", errorPayload);
-        } catch (e) {
-          console.error("WebSocket Error (raw):", message.body);
-        }
+    webSocketService.chatWS.subscribe(`/user/queue/error`, (message) => {
+      try {
+        const errorPayload = JSON.parse(message.body);
+        console.error("WebSocket Error:", errorPayload);
+      } catch (e) {
+        console.error("WebSocket Error (raw):", message.body);
       }
-    );
+    });
     webSocketService.chatWS.subscribe(error, async (errorMessageDTO) => {
       const errorMessage = JSON.parse(errorMessageDTO.body);
       const code = errorMessage.code;

@@ -1564,10 +1564,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 
       updateChatBox(newChatSummaryDTO);
 
-      webSocketService.chatWS.send(
-        "send-message",
-        newEncryptedMessageDTO
-      );
+      webSocketService.chatWS.send("send-message", newEncryptedMessageDTO);
     } else {
       const existingChatSummary = chatInstance.chatList[chatIndex];
 
@@ -1582,10 +1579,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
         friendId: chatSummaryDTO.userProfileResponseDTO.id,
       });
 
-      webSocketService.chatWS.send(
-        "send-message",
-        newEncryptedMessageDTO
-      );
+      webSocketService.chatWS.send("send-message", newEncryptedMessageDTO);
     }
 
     renderMessage(
