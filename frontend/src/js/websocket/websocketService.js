@@ -1,4 +1,4 @@
-import WebSocketManager from "./WebSocketManager";
+import WebSocketManager from "./websocket";
 
 class WebSocketService {
   constructor() {
