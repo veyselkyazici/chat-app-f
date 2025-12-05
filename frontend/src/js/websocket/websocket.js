@@ -14,10 +14,10 @@ export default class WebSocketManager {
     this.client = new Client({
       brokerURL: this.url,
 
-      connectHeaders: {
-        get Authorization() {
-          return `Bearer ${sessionStorage.getItem("access_token")}`;
-        },
+      beforeConnect: () => {
+        this.client.connectHeaders = {
+          Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
+        };
       },
 
       heartbeatIncoming: 10000,
@@ -130,10 +130,8 @@ export default class WebSocketManager {
   }
 
   refreshToken() {
-    if (this.isConnected) {
-      this.client.deactivate().then(() => {
-        this.client.activate();
-      });
-    }
+    this.client.deactivate().then(() => {
+      this.client.activate();
+    });
   }
 }
