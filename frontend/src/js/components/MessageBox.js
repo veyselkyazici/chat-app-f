@@ -87,8 +87,8 @@ const typingsStatus = async (status, chat, messageBoxElement) => {
   }, 1000);
 };
 const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
-  webSocketService.chatWS.subscribe(
-    `/user/${chat.userProfileResponseDTO.id}/queue/online-status`,
+  webSocketService.contactsWS.subscribe(
+    `/user/queue/online-status`,
     async (statusMessage) => {
       onlineStatus(statusMessage, chat, messageBoxElement);
     }
@@ -1724,8 +1724,8 @@ const removeMessageBoxAndUnsubscribe = async () => {
   // const startMessageElement = messageBoxElement.querySelector(".start-message");
   if (messageBox) {
     messageBoxElement.removeChild(messageBox);
-    webSocketService.chatWS.unsubscribe(
-      `/user/${messageBox.data.userProfileResponseDTO.id}/queue/online-status`
+    webSocketService.contactsWS.unsubscribe(
+      `/user/queue/online-status`
     );
     webSocketService.chatWS.unsubscribe(
       `/user/${chatInstance.user.id}/queue/message-box-typing`

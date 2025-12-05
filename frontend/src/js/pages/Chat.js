@@ -607,12 +607,8 @@ export default class Chat extends AbstractView {
         if (statusSpan) {
           statusSpan.remove();
         }
-        webSocketService.chatWS.unsubscribe(
-          `/user/${chatData.userProfileResponseDTO.id}/queue/online-status`
-        );
-        webSocketService.chatWS.unsubscribe(
-          `/user/${this.user.id}/queue/message-box-typing`
-        );
+        webSocketService.contactsWS.unsubscribe(`/user/queue/online-status`);
+        webSocketService.chatWS.unsubscribe(`/user/queue/message-box-typing`);
       }
     });
     webSocketService.chatWS.subscribe(chatUnBlock, async (unblock) => {
@@ -896,25 +892,29 @@ export default class Chat extends AbstractView {
 
   sendStatus(status) {
     if (this.lastUserStatus === status) return;
+
     this.lastUserStatus = status;
-    webSocketService.chatWS.send(status, {});
+
+    this.webSocketManagerContacts.send("/user-status", {
+      status: status,
+    });
   }
 
   handleOnline() {
-    if (!this.webSocketManagerChat?.isConnected) return;
-    this.sendStatus("user-online");
+    if (!this.webSocketManagerContacts?.isConnected) return;
+    this.sendStatus("online");
     // this.startPing();
   }
 
   handleAway() {
-    if (!this.webSocketManagerChat?.isConnected) return;
-    this.sendStatus("user-away");
+    if (!this.webSocketManagerContacts?.isConnected) return;
+    this.sendStatus("away");
     // this.stopPing();
   }
 
   handleOffline() {
-    if (!this.webSocketManagerChat?.isConnected) return;
-    this.sendStatus("user-offline");
+    if (!this.webSocketManagerContacts?.isConnected) return;
+    this.sendStatus("offline");
     // this.stopPing();
   }
 }

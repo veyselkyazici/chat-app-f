@@ -513,11 +513,11 @@ const toggleBlockUser = async (chatData) => {
 
           if (statusSpan) statusSpan.remove();
 
-          webSocketService.chatWS.unsubscribe(
-            `/user/${chatData.contactsDTO.userContactId}/queue/online-status`
+          webSocketService.contactsWS.unsubscribe(
+            `/user/queue/online-status`
           );
           webSocketService.chatWS.unsubscribe(
-            `/user/${chatInstance.user.id}/queue/message-box-typing`
+            `/user/queue/message-box-typing`
           );
         }
 
