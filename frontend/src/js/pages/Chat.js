@@ -3,7 +3,7 @@ import AbstractView from "./AbstractView.js";
 import renderContactList from "../components/Contacts.js";
 import { createSettingsHtml } from "../components/Settings.js";
 import { addContactModal } from "../components/AddContact.js";
-import WebSocketManager from "../websocket.js";
+import WebSocketManager from "../websocket/websocket.js";
 import { SearchHandler } from "../utils/searchHandler.js";
 import {
   createElement,
@@ -42,11 +42,11 @@ import {
 import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
 import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
 import { ContactResponseDTO } from "../dtos/contact/response/ContactResponseDTO.js";
-import { authService } from "../services/authService.js";
 import { i18n } from "../i18n/i18n.js";
+import { webSocketService } from "../websocket/websocketService.js";
 
-export let webSocketManagerContacts;
-export let webSocketManagerChat;
+// export let webSocketManagerContacts;
+// export let webSocketManagerChat;
 export let chatInstance;
 
 export default class Chat extends AbstractView {
@@ -63,6 +63,8 @@ export default class Chat extends AbstractView {
     this.pingInterval = null;
     this.pingFrequency = 10000;
     this.lastUserStatus = null;
+    this.webSocketManagerChat = null;
+    this.webSocketManagerContacts = null;
   }
 
   async getHtml() {
@@ -180,23 +182,29 @@ export default class Chat extends AbstractView {
     await handleChats(this.chatList);
   }
   initializeWebSockets() {
-    this.webSocketManagerContacts = new WebSocketManager(
-      import.meta.env.VITE_BASE_URL_WEBSOCKET_CONTACTS,
-      sessionStorage.getItem("access_token")
-    );
+    webSocketService.init();
 
-    this.webSocketManagerChat = new WebSocketManager(
-      import.meta.env.VITE_BASE_URL_WEBSOCKET_CHAT,
-      sessionStorage.getItem("access_token")
-    );
+    this.webSocketManagerContacts = webSocketService.contactsWS;
+    this.webSocketManagerChat = webSocketService.chatWS;
 
-    this.initChatWebSocket();
-    this.initContactsWebSocket();
-    this.startPing();
+    this.webSocketManagerChat.connect(() => {
+      this.subscribeToChatChannels();
+      this.handleOnline();
+    });
 
-    // document.addEventListener("visibilitychange", this.handleVisibilityChange);
-    this.visibilityChange();
-    window.addEventListener("beforeunload", this.handleBeforeUnload);
+    this.webSocketManagerContacts.connect(() => {
+      this.subscribeToFriendshipChannels();
+    });
+    this.webSocketManagerChat.onDisconnect(() => {
+      this.handleOffline();
+    });
+
+    this.webSocketManagerChat.onReconnect(() => {
+      this.handleOnline();
+    });
+
+    this.visibilityHandlers();
+    // this.startPing();
   }
   chatSearchInit() {
     this.chatSearchHandler = new SearchHandler({
@@ -239,14 +247,6 @@ export default class Chat extends AbstractView {
     }
   }
 
-  async initContactsWebSocket() {
-    this.webSocketManagerContacts.connect(
-      () => this.subscribeToFriendshipChannels(),
-      (error) => {
-        console.error("Contacts WebSocket bağlantı hatası: " + error);
-      }
-    );
-  }
   subscribeToFriendshipChannels() {
     const addContact = `/user/${this.user.id}/queue/add-contact`;
     const addContactUser = `/user/${this.user.id}/queue/add-contact-user`;
@@ -256,7 +256,7 @@ export default class Chat extends AbstractView {
     const disconnect = `/user/${this.user.id}/queue/disconnect`;
     const invitedUserJoined = `/user/${this.user.id}/queue/invited-user-joined`;
 
-    this.webSocketManagerContacts.subscribe(
+    webSocketService.contactsWS.subscribe(
       invitedUserJoined,
       async (invitedUserJoinedMessage) => {
         const invitedUserJoinedResponseDTO = new ContactResponseDTO(
@@ -293,11 +293,11 @@ export default class Chat extends AbstractView {
       }
     );
 
-    this.webSocketManagerContacts.subscribe(disconnect, async () => {
+    webSocketService.contactsWS.subscribe(disconnect, async () => {
       await this.logout();
     });
 
-    this.webSocketManagerContacts.subscribe(
+    webSocketService.contactsWS.subscribe(
       `/user/${this.userId}/queue/error`,
       (message) => {
         try {
@@ -309,7 +309,7 @@ export default class Chat extends AbstractView {
       }
     );
 
-    this.webSocketManagerContacts.subscribe(
+    webSocketService.contactsWS.subscribe(
       addContact,
       async (addContactMessage) => {
         const newContact = JSON.parse(addContactMessage.body);
@@ -359,7 +359,7 @@ export default class Chat extends AbstractView {
       }
     );
     // Eklenen kisi icin calisacak chat veya contact mevcut ise ekleyen kisinin privacy settingslerine gore profil photo  duzenlemeler yapilacak
-    this.webSocketManagerContacts.subscribe(
+    webSocketService.contactsWS.subscribe(
       addContactUser,
       async (addContactMessage) => {
         const newContact = JSON.parse(addContactMessage.body);
@@ -407,7 +407,7 @@ export default class Chat extends AbstractView {
       }
     );
 
-    this.webSocketManagerContacts.subscribe(
+    webSocketService.contactsWS.subscribe(
       addInvitation,
       async (addInvitationMessage) => {
         const newInvitation = JSON.parse(addInvitationMessage.body);
@@ -435,7 +435,7 @@ export default class Chat extends AbstractView {
       }
     );
     // ToDo
-    this.webSocketManagerContacts.subscribe(
+    webSocketService.contactsWS.subscribe(
       updatePrivacy,
       async (updatePrivacyMessage) => {
         const updatePrivacy = JSON.parse(updatePrivacyMessage.body);
@@ -513,7 +513,7 @@ export default class Chat extends AbstractView {
       }
     );
     // ToDo
-    this.webSocketManagerContacts.subscribe(
+    webSocketService.contactsWS.subscribe(
       updatedUserProfile,
       async (updatedUserProfileMessage) => {
         const updatedUserProfileDTO = JSON.parse(
@@ -567,15 +567,6 @@ export default class Chat extends AbstractView {
     );
   }
 
-  initChatWebSocket() {
-    this.webSocketManagerChat.connect(
-      () => this.subscribeToChatChannels(),
-      (error) => {
-        console.error("Chat WebSocket connection error: " + error);
-      }
-    );
-  }
-
   subscribeToChatChannels() {
     const recipientMessageChannel = `/user/${this.user.id}/queue/received-message`;
     const typingChannel = `/user/${this.user.id}/queue/typing`;
@@ -587,10 +578,10 @@ export default class Chat extends AbstractView {
     const error = `/user/${this.user.id}/queue/error-message`;
     const disconnect = `/user/${this.user.id}/queue/disconnect`;
 
-    this.webSocketManagerChat.subscribe(disconnect, async () => {
+    webSocketService.chatWS.subscribe(disconnect, async () => {
       await this.logout();
     });
-    this.webSocketManagerChat.subscribe(
+    webSocketService.chatWS.subscribe(
       `/user/${this.userId}/queue/error`,
       (message) => {
         try {
@@ -601,16 +592,13 @@ export default class Chat extends AbstractView {
         }
       }
     );
-    this.webSocketManagerChat.subscribe(
-      error,
-      async (errorMessageDTO) => {
-        const errorMessage = JSON.parse(errorMessageDTO.body);
-        const code = errorMessage.code;
-        handleErrorCode(code, null, i18n);
-      }
-    );
+    webSocketService.chatWS.subscribe(error, async (errorMessageDTO) => {
+      const errorMessage = JSON.parse(errorMessageDTO.body);
+      const code = errorMessage.code;
+      handleErrorCode(code, null, i18n);
+    });
 
-    this.webSocketManagerChat.subscribe(chatBlock, async (block) => {
+    webSocketService.chatWS.subscribe(chatBlock, async (block) => {
       const blockData = JSON.parse(block.body);
       const chatData = this.chatList.find(
         (chat) => chat.chatDTO.id === blockData.chatRoomId
@@ -624,78 +612,72 @@ export default class Chat extends AbstractView {
         if (statusSpan) {
           statusSpan.remove();
         }
-        this.webSocketManagerChat.unsubscribe(
+        webSocketService.chatWS.unsubscribe(
           `/user/${chatData.userProfileResponseDTO.id}/queue/online-status`
         );
-        this.webSocketManagerChat.unsubscribe(
+        webSocketService.chatWS.unsubscribe(
           `/user/${this.user.id}/queue/message-box-typing`
         );
       }
     });
-    this.webSocketManagerChat.subscribe(
-      chatUnBlock,
-      async (unblock) => {
-        const unblockData = JSON.parse(unblock.body);
-        const chatData = this.chatList.find(
-          (chat) => chat.chatDTO.id === unblockData.chatRoomId
-        );
-        if (chatData) {
-          chatData.userChatSettingsDTO.isBlockedMe = false;
-        }
-        if (isMessageBoxDomExists(chatData.chatDTO.id)) {
-          const messageBoxElement = document.querySelector(".message-box");
-          const statusSpan = messageBoxElement.querySelector(".online-status");
-          const messageBoxOnlineStatus =
-            messageBoxElement.querySelector(".message-box1-2-2");
-          if (statusSpan) {
-            statusSpan.remove();
-          }
-          const chat = {
-            userProfileResponseDTO: { ...chatData.userProfileResponseDTO },
-            contactsDTO: { ...chatData.contactsDTO },
-            userChatSettingsDTO: { ...chatData.userChatSettingsDTO },
-          };
-          await onlineInfo(chat, messageBoxOnlineStatus);
-        }
+    webSocketService.chatWS.subscribe(chatUnBlock, async (unblock) => {
+      const unblockData = JSON.parse(unblock.body);
+      const chatData = this.chatList.find(
+        (chat) => chat.chatDTO.id === unblockData.chatRoomId
+      );
+      if (chatData) {
+        chatData.userChatSettingsDTO.isBlockedMe = false;
       }
-    );
+      if (isMessageBoxDomExists(chatData.chatDTO.id)) {
+        const messageBoxElement = document.querySelector(".message-box");
+        const statusSpan = messageBoxElement.querySelector(".online-status");
+        const messageBoxOnlineStatus =
+          messageBoxElement.querySelector(".message-box1-2-2");
+        if (statusSpan) {
+          statusSpan.remove();
+        }
+        const chat = {
+          userProfileResponseDTO: { ...chatData.userProfileResponseDTO },
+          contactsDTO: { ...chatData.contactsDTO },
+          userChatSettingsDTO: { ...chatData.userChatSettingsDTO },
+        };
+        await onlineInfo(chat, messageBoxOnlineStatus);
+      }
+    });
 
-    this.webSocketManagerChat.subscribe(
-      readMessagesChannel,
-      (readMessages) => {
-        const readMessagesJSON = JSON.parse(readMessages.body);
-        const firstReadMessage = readMessagesJSON[0];
-        const messageBoxElement = document.querySelector(".message-box1");
-        const chatBoxElements = [...document.querySelectorAll(".chat1")];
-        const findChatElement = chatBoxElements.find(
-          (chatElement) =>
-            chatElement.chatData.chatDTO.id === firstReadMessage.chatRoomId
-        );
-        const findChat = this.chatList.find(
-          (chat) => chat.chatDTO.id === firstReadMessage.chatRoomId
-        );
-        findChat.chatDTO.messages[0].isSeen = true;
-        if (
-          findChatElement &&
-          this.user.privacySettings.readReceipts &&
-          findChat.userProfileResponseDTO.privacySettings.readReceipts
-        ) {
-          const chatBoxElementDeliveredTick = findChatElement.querySelector(
-            ".message-delivered-tick-div"
-          ).firstElementChild;
-          chatBoxElementDeliveredTick.className = "message-seen-tick-span";
-          chatBoxElementDeliveredTick.ariaLabel = " Okundu ";
-        }
-        if (messageBoxElement) {
-          const messageData = messageBoxElement.data;
-          messageBoxElementMessagesReadTick(
-            readMessagesJSON,
-            messageData.userProfileResponseDTO.privacySettings
-          );
-        }
+    webSocketService.chatWS.subscribe(readMessagesChannel, (readMessages) => {
+      const readMessagesJSON = JSON.parse(readMessages.body);
+      const firstReadMessage = readMessagesJSON[0];
+      const messageBoxElement = document.querySelector(".message-box1");
+      const chatBoxElements = [...document.querySelectorAll(".chat1")];
+      const findChatElement = chatBoxElements.find(
+        (chatElement) =>
+          chatElement.chatData.chatDTO.id === firstReadMessage.chatRoomId
+      );
+      const findChat = this.chatList.find(
+        (chat) => chat.chatDTO.id === firstReadMessage.chatRoomId
+      );
+      findChat.chatDTO.messages[0].isSeen = true;
+      if (
+        findChatElement &&
+        this.user.privacySettings.readReceipts &&
+        findChat.userProfileResponseDTO.privacySettings.readReceipts
+      ) {
+        const chatBoxElementDeliveredTick = findChatElement.querySelector(
+          ".message-delivered-tick-div"
+        ).firstElementChild;
+        chatBoxElementDeliveredTick.className = "message-seen-tick-span";
+        chatBoxElementDeliveredTick.ariaLabel = " Okundu ";
       }
-    );
-    this.webSocketManagerChat.subscribe(
+      if (messageBoxElement) {
+        const messageData = messageBoxElement.data;
+        messageBoxElementMessagesReadTick(
+          readMessagesJSON,
+          messageData.userProfileResponseDTO.privacySettings
+        );
+      }
+    });
+    webSocketService.chatWS.subscribe(
       recipientMessageChannel,
       async (recipientMessage) => {
         const recipientJSON = JSON.parse(recipientMessage.body);
@@ -770,10 +752,7 @@ export default class Chat extends AbstractView {
               true,
               this.user.id
             );
-            chatInstance.webSocketManagerChat.send(
-              "read-message",
-              dto
-            );
+            webSocketService.chatWS.send("read-message", dto);
           }
           lastMessageChange(
             recipientJSON.chatRoomId,
@@ -784,61 +763,58 @@ export default class Chat extends AbstractView {
         }
       }
     );
-    this.webSocketManagerChat.subscribe(
-      typingChannel,
-      async (typingMessage) => {
-        const status = JSON.parse(typingMessage.body);
-        const visibleChats = [...document.querySelectorAll(".chat1")];
+    webSocketService.chatWS.subscribe(typingChannel, async (typingMessage) => {
+      const status = JSON.parse(typingMessage.body);
+      const visibleChats = [...document.querySelectorAll(".chat1")];
 
-        if (visibleChats) {
-          const chat = visibleChats.find(
-            (el) => el.chatData.chatDTO.id === status.chatRoomId
-          );
-          if (
-            chat &&
-            !chat.chatData.userChatSettingsDTO.isBlocked &&
-            !chat.chatData.userChatSettingsDTO.isBlockedMe
-          ) {
-            const messageSpan = chat.querySelector(".message-span");
-            const messageSpanSpan = chat.querySelector(".message-span-span");
-            const isSender =
-              chat.chatData.chatDTO.messages[
-                chat.chatData.chatDTO.messages.length - 1
-              ].senderId === this.user.id;
-            const messageDTO =
-              chat.chatData.chatDTO.messages[
-                chat.chatData.chatDTO.messages.length - 1
-              ];
-            if (status.typing) {
-              if (isSender) {
-                messageSpan.removeChild(messageSpan.firstElementChild);
+      if (visibleChats) {
+        const chat = visibleChats.find(
+          (el) => el.chatData.chatDTO.id === status.chatRoomId
+        );
+        if (
+          chat &&
+          !chat.chatData.userChatSettingsDTO.isBlocked &&
+          !chat.chatData.userChatSettingsDTO.isBlockedMe
+        ) {
+          const messageSpan = chat.querySelector(".message-span");
+          const messageSpanSpan = chat.querySelector(".message-span-span");
+          const isSender =
+            chat.chatData.chatDTO.messages[
+              chat.chatData.chatDTO.messages.length - 1
+            ].senderId === this.user.id;
+          const messageDTO =
+            chat.chatData.chatDTO.messages[
+              chat.chatData.chatDTO.messages.length - 1
+            ];
+          if (status.typing) {
+            if (isSender) {
+              messageSpan.removeChild(messageSpan.firstElementChild);
+            }
+            messageSpanSpan.textContent = i18n.t("messageBox.typing");
+          } else {
+            if (isSender) {
+              const messageDeliveredTickElement =
+                createMessageDeliveredTickElement();
+              if (messageDTO.isSeen) {
+                messageDeliveredTickElement.firstElementChild.className =
+                  "message-seen-tick-span";
+                messageDeliveredTickElement.firstElementChild.ariaLabel =
+                  " Okundu ";
               }
-              messageSpanSpan.textContent = i18n.t("messageBox.typing");
+              messageSpan.prepend(messageDeliveredTickElement);
+              messageSpanSpan.textContent = messageDTO.decryptedMessage
+                ? messageDTO.decryptedMessage
+                : await decryptMessage(messageDTO, isSender);
             } else {
-              if (isSender) {
-                const messageDeliveredTickElement =
-                  createMessageDeliveredTickElement();
-                if (messageDTO.isSeen) {
-                  messageDeliveredTickElement.firstElementChild.className =
-                    "message-seen-tick-span";
-                  messageDeliveredTickElement.firstElementChild.ariaLabel =
-                    " Okundu ";
-                }
-                messageSpan.prepend(messageDeliveredTickElement);
-                messageSpanSpan.textContent = messageDTO.decryptedMessage
-                  ? messageDTO.decryptedMessage
-                  : await decryptMessage(messageDTO, isSender);
-              } else {
-                messageSpanSpan.textContent = await decryptMessage(
-                  messageDTO,
-                  isSender
-                );
-              }
+              messageSpanSpan.textContent = await decryptMessage(
+                messageDTO,
+                isSender
+              );
             }
           }
         }
       }
-    );
+    });
   }
 
   addEventListeners() {
@@ -880,109 +856,72 @@ export default class Chat extends AbstractView {
     }
   }
 
-  async logout() {
-    try {
-      const response = await authService.logout();
-      if (response && response.status === 200) {
-        document.removeEventListener(
-          "visibilitychange",
-          this.handleVisibilityChange
-        );
-        window.removeEventListener("beforeunload", this.handleBeforeUnload);
-
-        if (this.webSocketManagerContacts) {
-          this.webSocketManagerContacts.disconnect();
-        }
-        if (this.webSocketManagerChat) {
-          this.stopPing();
-          this.webSocketManagerChat.disconnect();
-        }
-
-        await userService.updateUserLastSeen();
-
-        sessionStorage.clear();
-
-        navigateTo("/");
-      } else {
-        console.error("Logout failed, server returned:", response);
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  }
-
   startPing() {
-    if (this.pingInterval) clearInterval(this.pingInterval);
+    if (this.pingInterval) return;
 
     this.pingInterval = setInterval(() => {
-      this.webSocketManagerChat.send("ping", {});
+      this.webSocketManagerChat?.send("ping", {});
     }, this.pingFrequency);
   }
 
   stopPing() {
-    if (this.pingInterval) {
-      clearInterval(this.pingInterval);
-      this.pingInterval = null;
-    }
+    clearInterval(this.pingInterval);
+    this.pingInterval = null;
+  }
+  async logout() {
+    this.webSocketManagerChat?.send("user-offline", {});
+
+    // this.stopPing();
+
+    this.webSocketManagerChat?.disconnect();
+    this.webSocketManagerContacts?.disconnect();
+
+    sessionStorage.clear();
+
+    navigateTo("/");
   }
 
-  handleVisibilityChange = async () => {
-    if (document.hidden) {
-      this.webSocketManagerChat.send("user-away", {});
-      this.stopPing();
-      await userService.updateUserLastSeen();
-    } else {
-      this.webSocketManagerChat.send("user-online", {});
-      this.startPing();
-    }
-  };
+  visibilityHandlers() {
+    if (window.__chatVisibilityBound) return;
+    window.__chatVisibilityBound = true;
 
-  handleBeforeUnload = async () => {
-    this.webSocketManagerChat.send("user-offline", {});
-    userService.updateLastSeenOnExit();
-  };
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        this.handleAway();
+      } else {
+        this.handleOnline();
+      }
+    });
+
+    window.addEventListener("focus", () => this.handleOnline());
+    window.addEventListener("blur", () => this.handleAway());
+
+    window.addEventListener("beforeunload", () => this.handleOffline());
+  }
 
   sendStatus(status) {
     if (this.lastUserStatus === status) return;
     this.lastUserStatus = status;
-    this.webSocketManagerChat.send(status, {});
+    webSocketService.chatWS.send(status, {});
   }
 
-  visibilityChange = () => {
-    // Window Focus (sekme geri gelince)
-    window.addEventListener("focus", () => {
-      this.sendStatus("user-online");
-      this.startPing();
-    });
+  handleOnline() {
+    if (!this.webSocketManagerChat?.isConnected) return;
+    this.sendStatus("user-online");
+    // this.startPing();
+  }
 
-    // Window Blur (sekme değişince)
-    window.addEventListener("blur", () => {
-      this.sendStatus("user-away");
-      this.stopPing();
-    });
+  handleAway() {
+    if (!this.webSocketManagerChat?.isConnected) return;
+    this.sendStatus("user-away");
+    // this.stopPing();
+  }
 
-    // Pagehide (arka plana alınma)
-    window.addEventListener("pagehide", () => {
-      this.sendStatus("user-offline");
-      this.stopPing();
-    });
-
-    // Uygulamaya geri gelme
-    window.addEventListener("pageshow", () => {
-      this.sendStatus("user-online");
-      this.startPing();
-    });
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        this.sendStatus("user-away");
-        this.stopPing();
-      } else {
-        this.sendStatus("user-online");
-        this.startPing();
-      }
-    });
-  };
+  handleOffline() {
+    if (!this.webSocketManagerChat?.isConnected) return;
+    this.sendStatus("user-offline");
+    // this.stopPing();
+  }
 }
 
 const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {

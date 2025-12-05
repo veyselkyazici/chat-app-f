@@ -17,7 +17,7 @@ import { Modal } from "../utils/showModal.js";
 import { ChangePasswordRequestDTO } from "../dtos/auth/request/ChangePasswordRequestDTO.js";
 import { authService } from "../services/authService.js";
 import { reencryptPrivateKey, base64ToUint8Array } from "../utils/e2ee.js";
-
+import { webSocketService } from "../websocket/websocketService.js";
 function createSettingsHtml() {
   const span = document.querySelector(".a1-1-1");
   const existingSettingsDiv = span.querySelector(".settings");
@@ -816,7 +816,7 @@ const handleReadReceiptsClick = async () => {
       readReceiptsBox1.className = "privacy-2-1-6-1-2-1-2-1-1";
     }
     chatInstance.user.privacySettings.readReceipts = newReadReceiptsValue;
-    chatInstance.webSocketManagerContacts.send(
+    webSocketService.contactsWS.send(
       "updated-privacy-send-message",
       result.data
     );
@@ -1606,7 +1606,7 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
       );
     }
 
-    chatInstance.webSocketManagerContacts.send(
+    webSocketService.contactsWS.send(
       "updated-privacy-send-message",
       result.data
     );

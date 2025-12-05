@@ -20,6 +20,8 @@ import {
 } from "./MessageBox.js";
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
 import { i18n } from "../i18n/i18n.js";
+import { webSocketService } from "../websocket/websocketService.js";
+
 async function handleChats(chatList) {
   const paneSideElement = document.querySelector("#pane-side");
   const chatListContentElement =
@@ -511,10 +513,10 @@ const toggleBlockUser = async (chatData) => {
 
           if (statusSpan) statusSpan.remove();
 
-          chatInstance.webSocketManagerChat.unsubscribe(
+          webSocketService.chatWS.unsubscribe(
             `/user/${chatData.contactsDTO.userContactId}/queue/online-status`
           );
-          chatInstance.webSocketManagerChat.unsubscribe(
+          webSocketService.chatWS.unsubscribe(
             `/user/${chatInstance.user.id}/queue/message-box-typing`
           );
         }
@@ -851,11 +853,11 @@ async function handleChatClick(event) {
     return;
   }
   ariaSelected(chatElement, chatInstance.selectedChatUserId, innerDiv);
-  chatInstance.webSocketManagerChat.unsubscribe(
+  webSocketService.chatWS.unsubscribe(
     `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`
   );
   const readConfirmationRecipientChannel = `/user/${chatInstance.user.id}/queue/read-confirmation-recipient`;
-  chatInstance.webSocketManagerChat.subscribe(
+  webSocketService.chatWS.subscribe(
     readConfirmationRecipientChannel,
     async (message) => {
       removeUnreadMessageCountElement(chatElement);
@@ -887,10 +889,7 @@ async function markMessagesAsReadAndFetchMessages(chatElement) {
       chatElement.chatData.userChatSettingsDTO.unreadMessageCount,
   };
 
-  chatInstance.webSocketManagerChat.send(
-    "read-message",
-    dto
-  );
+  webSocketService.chatWS.send("read-message", dto);
 }
 const removeUnreadMessageCountElement = (chatElement) => {
   const unreadMessageCountDiv = chatElement.querySelector(

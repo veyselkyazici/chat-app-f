@@ -1,5 +1,7 @@
 import { i18n } from "../i18n/i18n";
 import { handleErrorCode } from "../utils/util";
+import { webSocketService } from "../websocket/websocketService";
+
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const axiosInstance = axios.create({
@@ -44,7 +46,7 @@ axiosInstance.interceptors.response.use(
         const { accessToken, refreshToken } = response.data.data;
         sessionStorage.setItem("access_token", accessToken);
         sessionStorage.setItem("refresh_token", refreshToken);
-
+        webSocketService.refreshAll();
         originalRequest.headers["Authorization"] = `Bearer ${accessToken}`;
 
         return axiosInstance(originalRequest);
@@ -54,7 +56,7 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+
     switch (status) {
       case 400:
         handleErrorCode(400, null, i18n);

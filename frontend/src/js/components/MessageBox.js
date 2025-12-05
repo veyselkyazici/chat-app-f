@@ -28,6 +28,8 @@ import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
 import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
 import { i18n } from "../i18n/i18n.js";
+import { webSocketService } from "../websocket/websocketService.js";
+
 let caretPosition = 0;
 let caretNode = null;
 let range = null;
@@ -58,7 +60,7 @@ async function createMessageBox(chatData) {
 }
 
 const typingStatusSubscribe = (chat, messageBoxElement) => {
-  chatInstance.webSocketManagerChat.subscribe(
+  webSocketService.chatWS.subscribe(
     `/user/${chat.contactsDTO.userId}/queue/message-box-typing`,
     async (typingMessage) => {
       const status = JSON.parse(typingMessage.body);
@@ -85,7 +87,7 @@ const typingsStatus = async (status, chat, messageBoxElement) => {
   }, 1000);
 };
 const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
-  chatInstance.webSocketManagerChat.subscribe(
+  webSocketService.chatWS.subscribe(
     `/user/${chat.userProfileResponseDTO.id}/queue/online-status`,
     async (statusMessage) => {
       onlineStatus(statusMessage, chat, messageBoxElement);
@@ -150,7 +152,7 @@ const handleTextBlur = (chat, typingStatus, textArea) => {
   const currentText = textArea.textContent.trim();
   // Boşsa veya placeholder varsa typing false gönder
   if (typingStatus.isTyping) {
-    chatInstance.webSocketManagerChat.send("typing", {
+    webSocketService.chatWS.send("typing", {
       userId: chat.contactsDTO.userId,
       chatRoomId: chat.chatDTO.id,
       typing: false,
@@ -170,7 +172,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
     currentText === i18n.t("messageBox.messageBoxPlaceHolder")
   ) {
     if (typingStatus.isTyping) {
-      chatInstance.webSocketManagerChat.send("typing", {
+      webSocketService.chatWS.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
         typing: false,
@@ -183,7 +185,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
 
   // Eğer yazıyorsa typing true
   if (!typingStatus.isTyping && currentText.length > 0) {
-    chatInstance.webSocketManagerChat.send("typing", {
+    webSocketService.chatWS.send("typing", {
       userId: chat.contactsDTO.userId,
       chatRoomId: chat.chatDTO.id,
       typing: true,
@@ -207,7 +209,7 @@ function handleTextInput(textArea, chat, typingStatus, event) {
   ) {
     // Boşsa veya placeholder varsa false gönder
     if (typingStatus.isTyping) {
-      chatInstance.webSocketManagerChat.send("typing", {
+      webSocketService.chatWS.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
         typing: false,
@@ -218,7 +220,7 @@ function handleTextInput(textArea, chat, typingStatus, event) {
   } else {
     // Yazıyorsa true gönder
     if (!typingStatus.isTyping) {
-      chatInstance.webSocketManagerChat.send("typing", {
+      webSocketService.chatWS.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
         typing: true,
@@ -1562,7 +1564,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 
       updateChatBox(newChatSummaryDTO);
 
-      chatInstance.webSocketManagerChat.send(
+      webSocketService.chatWS.send(
         "send-message",
         newEncryptedMessageDTO
       );
@@ -1573,14 +1575,14 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 
       updateChatBox(existingChatSummary);
 
-      chatInstance.webSocketManagerChat.send("typing", {
+      webSocketService.chatWS.send("typing", {
         userId: chatInstance.user.id,
         chatRoomId: chatSummaryDTO.chatDTO.id,
         typing: false,
         friendId: chatSummaryDTO.userProfileResponseDTO.id,
       });
 
-      chatInstance.webSocketManagerChat.send(
+      webSocketService.chatWS.send(
         "send-message",
         newEncryptedMessageDTO
       );
@@ -1728,10 +1730,10 @@ const removeMessageBoxAndUnsubscribe = async () => {
   // const startMessageElement = messageBoxElement.querySelector(".start-message");
   if (messageBox) {
     messageBoxElement.removeChild(messageBox);
-    chatInstance.webSocketManagerChat.unsubscribe(
+    webSocketService.chatWS.unsubscribe(
       `/user/${messageBox.data.userProfileResponseDTO.id}/queue/online-status`
     );
-    chatInstance.webSocketManagerChat.unsubscribe(
+    webSocketService.chatWS.unsubscribe(
       `/user/${chatInstance.user.id}/queue/message-box-typing`
     );
   }
