@@ -1,5 +1,4 @@
 // ChatBox.js
-import { chatInstance, UserSettingsDTO } from "../pages/Chat.js";
 import { chatService } from "../services/chatService.js";
 import { Modal } from "../utils/showModal.js";
 import {
@@ -21,6 +20,7 @@ import {
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
 import { i18n } from "../i18n/i18n.js";
 import { webSocketService } from "../websocket/websocketService.js";
+import { chatStore } from "../store/chatStore.js";
 
 async function handleChats(chatList) {
   const paneSideElement = document.querySelector("#pane-side");
@@ -135,11 +135,11 @@ async function createChatBox(chat, index) {
   lastMessageDiv.append(messageDiv);
   const messageSpan = createElement("span", "message-span", {}, { title: "" });
   messageDiv.append(messageSpan);
-  const bool = chat.chatDTO.messages[0].senderId === chatInstance.user.id;
+  const bool = chat.chatDTO.messages[0].senderId === chatStore.user.id;
   if (bool) {
     if (
       chat.chatDTO.messages[0].isSeen &&
-      chatInstance.user.privacySettings.readReceipts &&
+      chatStore.user.privacySettings.readReceipts &&
       chat.userProfileResponseDTO.privacySettings.readReceipts
     ) {
       const messageSeenTick = chatBoxLastMessageDeliveredBlueTick();
@@ -200,27 +200,27 @@ function createUnreadMessageCount(chat) {
 }
 
 function updateChatBox(chat) {
-  const findChat = chatInstance.chatList.find(
+  const findChat = chatStore.chatList.find(
     (chatItem) => chatItem.chatDTO.id === chat.chatDTO.id
   );
   if (!findChat) {
-    chatInstance.chatList.unshift(chat);
+    chatStore.chatList.unshift(chat);
   }
   moveChatToTop(chat.chatDTO.id);
 }
 
 function moveChatToTop(chatRoomId) {
-  const chatIndex = chatInstance.chatList.findIndex(
+  const chatIndex = chatStore.chatList.findIndex(
     (chat) => chat.chatDTO.id === chatRoomId
   );
 
   if (chatIndex !== -1) {
     let chat = null;
-    if (chatInstance.chatList.length !== 1) {
-      chat = chatInstance.chatList.splice(chatIndex, 1)[0];
-      chatInstance.chatList.unshift(chat);
+    if (chatStore.chatList.length !== 1) {
+      chat = chatStore.chatList.splice(chatIndex, 1)[0];
+      chatStore.chatList.unshift(chat);
     } else {
-      chat = chatInstance.chatList[0];
+      chat = chatStore.chatList[0];
     }
     const chatElements = document.querySelectorAll(".chat1");
     const chatElement = Array.from(chatElements).find(
@@ -234,7 +234,7 @@ function moveChatToTop(chatRoomId) {
       );
       if (
         chatElement.chatData.chatDTO.messages[0].senderId ===
-        chatInstance.user.id
+        chatStore.user.id
       ) {
         const messageTickElement = chatElement.chatData.chatDTO.messages[0]
           .isSeen
@@ -269,7 +269,7 @@ function moveChatToTop(chatRoomId) {
         chatListContentElement.style.height = currentHeight + 72 + "px";
         createChatBox(chat, 0);
         normalizeTranslateY();
-        if (chat.chatDTO.messages[0].senderId === chatInstance.user.id) {
+        if (chat.chatDTO.messages[0].senderId === chatStore.user.id) {
           scrollTop();
         }
       }
@@ -289,7 +289,7 @@ function scrollTop() {
 }
 const isChatListLengthGreaterThanVisibleItemCount = () => {
   const visibleItemCount = calculateVisibleItemCount();
-  return chatInstance.chatList.length > visibleItemCount;
+  return chatStore.chatList.length > visibleItemCount;
 };
 function updateChatsTranslateY() {
   const chatElements = document.querySelectorAll(".chat1");
@@ -388,7 +388,7 @@ function handleOptionsBtnClick(event) {
           i18n.t("addContacts.addContact"),
           () =>
             addContactModal(
-              chatInstance.user,
+              chatStore.user,
               chatData.userProfileResponseDTO.email
             )
         );
@@ -442,11 +442,11 @@ function handleOptionsBtnClick(event) {
   }
 }
 const updateChatInstance = (chatId, blockedStatus) => {
-  const chatIndex = chatInstance.chatList.findIndex(
+  const chatIndex = chatStore.chatList.findIndex(
     (chat) => chat.chatDTO.id === chatId
   );
   if (chatIndex !== -1) {
-    chatInstance.chatList[chatIndex].userChatSettingsDTO.isBlocked =
+    chatStore.chatList[chatIndex].userChatSettingsDTO.isBlocked =
       blockedStatus;
   }
 };
@@ -513,12 +513,8 @@ const toggleBlockUser = async (chatData) => {
 
           if (statusSpan) statusSpan.remove();
 
-          webSocketService.contactsWS.unsubscribe(
-            `/user/queue/online-status`
-          );
-          webSocketService.chatWS.unsubscribe(
-            `/user/queue/message-box-typing`
-          );
+          webSocketService.contactsWS.unsubscribe(`/user/queue/online-status`);
+          webSocketService.chatWS.unsubscribe(`/user/queue/message-box-typing`);
         }
 
         toastr.success(
@@ -583,11 +579,11 @@ const deleteChat = async (chat, showChatOptions, chatElement) => {
         if (chatElement) {
           removeChat(chatElement);
         } else {
-          const removeIndex = chatInstance.chatList.findIndex(
+          const removeIndex = chatStore.chatList.findIndex(
             (chatItem) => chatItem.chatDTO.id === chat.chatDTO.id
           );
           if (removeIndex !== -1) {
-            chatInstance.chatList.splice(removeIndex, 1);
+            chatStore.chatList.splice(removeIndex, 1);
           }
         }
 
@@ -633,28 +629,28 @@ function removeChat(chatElement) {
     chatElement.style.transform.replace("translateY(", "").replace("px)", "")
   );
   removeEventListeners(chatElement);
-  const removeIndex = chatInstance.chatList.findIndex(
+  const removeIndex = chatStore.chatList.findIndex(
     (chat) =>
       chat.chatDTO.id && chat.chatDTO.id === chatElement.chatData.chatDTO.id
   );
 
   if (removeIndex !== -1) {
-    chatInstance.chatList.splice(removeIndex, 1);
+    chatStore.chatList.splice(removeIndex, 1);
   }
   const chatListElement = document.querySelector(".chat-list-content");
-  const newHeight = chatInstance.chatList.length * 72;
+  const newHeight = chatStore.chatList.length * 72;
   chatListElement.style.height = `${newHeight}px`;
   const { maxIndex, minIndex } = updateTranslateYAfterDelete(
     deletedChatTranslateY
   );
 
   if (isChatListLengthGreaterThanVisibleItemCount()) {
-    let newChatData = chatInstance.chatList[maxIndex];
+    let newChatData = chatStore.chatList[maxIndex];
 
     if (newChatData) {
       updateChatBoxElement(chatElement, newChatData, maxIndex);
     } else {
-      newChatData = chatInstance.chatList[minIndex - 1];
+      newChatData = chatStore.chatList[minIndex - 1];
       updateChatBoxElement(chatElement, newChatData, minIndex - 1);
     }
   } else {
@@ -755,12 +751,12 @@ function updateChatBoxElement(chatElement, newChatData, newIndex) {
 
   messageSpan.textContent = newChatData.chatDTO.messages[0].decryptedMessage;
   chatElement.style.transform = `translateY(${newIndex * 72}px)`;
-  chatElement.style.zIndex = chatInstance.chatList.length - newIndex;
+  chatElement.style.zIndex = chatStore.chatList.length - newIndex;
 }
 function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
   const tickElement = chatElement.querySelector(".message-delivered-tick-div");
   const isSender =
-    chatData.chatDTO.messages[0].senderId === chatInstance.user.id;
+    chatData.chatDTO.messages[0].senderId === chatStore.user.id;
   const isSeen = chatData.chatDTO.messages[0].isSeen;
   if (chatData.userChatSettingsDTO.unreadMessageCount !== 0) {
     const unreadMessageCountElement = chatElement.querySelector(
@@ -812,19 +808,19 @@ const togglePinnedChat = async (chatData, showChatOptions) => {
   try {
     if (isPinned) {
       await chatService.chatUnblock(chatData);
-      const chatIndex = chatInstance.chatList.findIndex(
+      const chatIndex = chatStore.chatList.findIndex(
         (chat) => chat.chatDTO.id === chatData.chatDTO.id
       );
       if (chatIndex !== -1) {
-        chatInstance.chatList[chatIndex].userChatSettingsDTO.isBlocked = false;
+        chatStore.chatList[chatIndex].userChatSettingsDTO.isBlocked = false;
       }
     } else {
       await chatService.chatBlock(chatData);
-      const chatIndex = chatInstance.chatList.findIndex(
+      const chatIndex = chatStore.chatList.findIndex(
         (chat) => chat.chatDTO.id === chatData.chatDTO.id
       );
       if (chatIndex !== -1) {
-        chatInstance.chatList[chatIndex].userChatSettingsDTO.isBlocked = true;
+        chatStore.chatList[chatIndex].userChatSettingsDTO.isBlocked = true;
       }
     }
     return true;
@@ -852,7 +848,7 @@ async function handleChatClick(event) {
   if (innerDiv.getAttribute("aria-selected") === "true") {
     return;
   }
-  ariaSelected(chatElement, chatInstance.selectedChatUserId, innerDiv);
+  ariaSelected(chatElement, chatStore.selectedChatUserId, innerDiv);
   webSocketService.chatWS.unsubscribe(
     `/user/queue/read-confirmation-recipient`
   );
@@ -869,7 +865,7 @@ async function handleChatClick(event) {
   if (chatData.userChatSettingsDTO.unreadMessageCount > 0) {
     if (
       chatData.userProfileResponseDTO.privacySettings.readReceipts &&
-      chatInstance.user.privacySettings.readReceipts
+      chatStore.user.privacySettings.readReceipts
     ) {
       await markMessagesAsReadAndFetchMessages(chatElement);
     }
@@ -881,7 +877,7 @@ async function handleChatClick(event) {
 
 async function markMessagesAsReadAndFetchMessages(chatElement) {
   const dto = {
-    recipientId: chatInstance.user.id,
+    recipientId: chatStore.user.id,
     userChatSettingsId: chatElement.chatData.userChatSettingsDTO.id,
     chatRoomId: chatElement.chatData.chatDTO.id,
     senderId: chatElement.chatData.userProfileResponseDTO.id,
@@ -926,17 +922,17 @@ async function createChatBoxWithFirstMessage(recipientJSON) {
   );
 
   result.chatDTO.messages[0].decryptedMessage = recipientJSON.decryptedMessage;
-  chatInstance.chatList.unshift(result);
+  chatStore.chatList.unshift(result);
   const chatListContentElement = document.querySelector(".chat-list-content");
   chatListContentElement.style.height =
-    chatInstance.chatList.length * 72 + "px";
+    chatStore.chatList.length * 72 + "px";
   const paneSideElement = document.querySelector("#pane-side");
   const scrollTop = paneSideElement.scrollTop;
   const newStart = Math.max(Math.floor(scrollTop / 72) - 2, 0);
   if (newStart === 0) {
     if (isChatListLengthGreaterThanVisibleItemCount()) {
       const chatElementMaxTranslateY = findMaxTranslateYChatElement();
-      let newChatData = chatInstance.chatList[0];
+      let newChatData = chatStore.chatList[0];
 
       if (newChatData) {
         updateChatBoxElement(chatElementMaxTranslateY, newChatData, 0);
@@ -978,7 +974,7 @@ function findMaxTranslateYChatElement() {
 }
 
 function isChatExists(recipientJSON) {
-  return chatInstance.chatList.some(
+  return chatStore.chatList.some(
     (chat) => chat.chatDTO.id === recipientJSON.chatRoomId
   );
 }
@@ -1066,7 +1062,7 @@ const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
   }
   chatElementDOM.querySelector(".chat").classList.add("selected-chat");
   innerDiv.setAttribute("aria-selected", "true");
-  chatInstance.selectedChatUserId =
+  chatStore.selectedChatUserId =
     chatElementDOM.chatData.userProfileResponseDTO.id;
 };
 
@@ -1086,7 +1082,7 @@ const ariaSelectedRemove = (selectedChat, newSelectedId) => {
 
   // selectedChat.querySelector(".chat").classList.remove("selected-chat");
   // previouslySelectedInnerDiv.setAttribute("aria-selected", "false");
-  chatInstance.selectedChatUserId = newSelectedId ? newSelectedId : null;
+  chatStore.selectedChatUserId = newSelectedId ? newSelectedId : null;
 };
 
 export {

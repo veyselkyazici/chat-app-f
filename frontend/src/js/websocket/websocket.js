@@ -1,11 +1,14 @@
 import { Client } from "@stomp/stompjs";
+import { authService } from "../services/authService";
+import { navigateTo } from "..";
+
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export default class WebSocketManager {
   constructor(url) {
     this.url = url;
     this.isConnected = false;
-
+    this.disableReconnect = false;
     this.subscriptions = new Map();
 
     this._onConnect = null;
@@ -21,10 +24,10 @@ export default class WebSocketManager {
         };
       },
 
-      heartbeatIncoming: 10000,
-      heartbeatOutgoing: 10000,
+      heartbeatIncoming: 20000,
+      heartbeatOutgoing: 20000,
 
-      reconnectDelay: 3000,
+      reconnectDelay: () => (this.disableReconnect ? 0 : 3000),
 
       debug: () => {},
 
@@ -45,12 +48,15 @@ export default class WebSocketManager {
         const wasConnected = this.isConnected;
         this.isConnected = false;
 
-        if (wasConnected && this._onDisconnect) {
-          this._onDisconnect();
+        if (!this.disableReconnect) {
+          if (wasConnected && this._onDisconnect) {
+            this._onDisconnect();
+          }
         }
       },
 
       onStompError: async (frame) => {
+        debugger;
         console.error("STOMP ERROR:", frame);
 
         const code = frame.headers.message;
@@ -61,16 +67,27 @@ export default class WebSocketManager {
             const res = await axios.post(`${BASE_URL}/auth/refresh-token`, {
               refreshToken: refreshTokenSession,
             });
+
             const { accessToken, refreshToken } = res.data.data;
             sessionStorage.setItem("access_token", accessToken);
             sessionStorage.setItem("refresh_token", refreshToken);
 
-            // 2) Yeni token ile WS'leri yeniden bağla
             this.refreshToken();
           } catch (e) {
-            console.error("WS token refresh failed", e);
-            window.location.href = "/login";
+            navigateTo("/login");
           }
+        }
+
+        if (code === "INVALID_SESSION") {
+          await authService.logout();
+          this.webSocketManagerChat.disableReconnect = true;
+          sessionStorage.clear();
+          navigateTo("/login");
+        }
+
+        if (code === "INVALID_TOKEN") {
+          sessionStorage.clear();
+          navigateTo("/login");
         }
       },
     });
@@ -90,16 +107,15 @@ export default class WebSocketManager {
   }
 
   disconnect() {
+    this.disableReconnect = true;
+
     for (const [, data] of this.subscriptions.entries()) {
       try {
         data.stompSubscription?.unsubscribe();
-      } catch (e) {
-        console.warn("unsubscribe error:", e);
-      }
+      } catch {}
     }
 
     this.subscriptions.clear();
-
     this.isConnected = false;
 
     this.client.deactivate();
@@ -151,6 +167,7 @@ export default class WebSocketManager {
   }
 
   refreshToken() {
+    debugger;
     this.client.deactivate().then(() => {
       this.client.activate();
     });

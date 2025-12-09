@@ -1,5 +1,4 @@
 // MessageBox.js
-import { chatInstance } from "../pages/Chat.js";
 import { chatService } from "../services/chatService.js";
 import {
   base64ToUint8Array,
@@ -30,6 +29,7 @@ import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
 import { i18n } from "../i18n/i18n.js";
 import { webSocketService } from "../websocket/websocketService.js";
 import { contactService } from "../services/contactsService.js";
+import { chatStore } from "../store/chatStore.js";
 
 let caretPosition = 0;
 let caretNode = null;
@@ -1287,7 +1287,7 @@ const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
       divMessage1_1_1_2_1_2_1.append(divMessage1_1_1_2_1_2_1_2);
       if (
         message.isSeen &&
-        chatInstance.user.privacySettings.readReceipts &&
+        chatStore.user.privacySettings.readReceipts &&
         privacySettings.readReceipts
       ) {
         const messageTickSpan = divMessage1_1_1_2_1_2_1.querySelector(
@@ -1359,10 +1359,12 @@ const isOnline = async (userContact, contact) => {
     if (
       (userContact.privacySettings.lastSeenVisibility !== "NOBODY" ||
         userContact.privacySettings.onlineStatusVisibility !== "NOBODY") &&
-      (chatInstance.user.privacySettings.lastSeenVisibility !== "NOBODY" ||
-        chatInstance.user.privacySettings.onlineStatusVisibility !== "NOBODY")
+      (chatStore.user.privacySettings.lastSeenVisibility !== "NOBODY" ||
+        chatStore.user.privacySettings.onlineStatusVisibility !== "NOBODY")
     ) {
-      const friendStatus = await contactService.userOnlineStatus(userContact.id);
+      const friendStatus = await contactService.userOnlineStatus(
+        userContact.id
+      );
       if (friendStatus.status === "online") {
         const typingDTO = await chatService.isTypingStatus(userContact.id);
         if (typingDTO.typing) {
@@ -1382,19 +1384,18 @@ const isOnlineStatus = (userContact, contact) => {
     (userContact.privacySettings.onlineStatusVisibility === "EVERYONE" ||
       (contact.relatedUserHasAddedUser &&
         userContact.privacySettings.onlineStatusVisibility === "CONTACTS")) &&
-    (chatInstance.user.privacySettings.onlineStatusVisibility === "EVERYONE" ||
+    (chatStore.user.privacySettings.onlineStatusVisibility === "EVERYONE" ||
       (contact.userHasAddedRelatedUser &&
-        chatInstance.user.privacySettings.onlineStatusVisibility ===
-          "CONTACTS"))
+        chatStore.user.privacySettings.onlineStatusVisibility === "CONTACTS"))
   ) {
     createStatusElement("online");
   }
 };
 const lastSeenStatus = (userContact, contact, lastSeen) => {
   if (
-    (chatInstance.user.privacySettings.lastSeenVisibility === "EVERYONE" ||
+    (chatStore.user.privacySettings.lastSeenVisibility === "EVERYONE" ||
       (contact.relatedUserHasAddedUser &&
-        chatInstance.user.user.privacySettings.lastSeenVisibility ===
+        chatStore.user.user.privacySettings.lastSeenVisibility ===
           "CONTACTS")) &&
     (userContact.privacySettings.lastSeenVisibility === "EVERYONE" ||
       (contact.userHasAddedRelatedUser &&
@@ -1471,7 +1472,7 @@ function messageBoxElementMessagesReadTick(messages, privacySettings) {
 
     const messageElement = reverseRenderMessages[index];
     if (
-      chatInstance.user.privacySettings.readReceipts &&
+      chatStore.user.privacySettings.readReceipts &&
       privacySettings.readReceipts
     ) {
       const messageTickSpan = messageElement.querySelector(
@@ -1515,7 +1516,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
         )
       ),
       await importPublicKey(
-        base64ToUint8Array(chatInstance.user.userKey.publicKey)
+        base64ToUint8Array(chatStore.user.userKey.publicKey)
       )
     );
 
@@ -1527,7 +1528,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
       encryptedKeyForSender: encryptedData.encryptedKeyForSender,
       iv: encryptedData.iv,
       fullDateTime: new Date(),
-      senderId: chatInstance.user.id,
+      senderId: chatStore.user.id,
       recipientId: chatSummaryDTO.userProfileResponseDTO.id,
       isSeen: false,
     });
@@ -1539,12 +1540,12 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
       encryptedKeyForSender: encryptedData.encryptedKeyForSender,
       iv: encryptedData.iv,
       fullDateTime: new Date(),
-      senderId: chatInstance.user.id,
+      senderId: chatStore.user.id,
       recipientId: chatSummaryDTO.userProfileResponseDTO.id,
       isSeen: false,
     });
 
-    const chatIndex = chatInstance.chatList.findIndex(
+    const chatIndex = chatStore.chatList.findIndex(
       (c) => c.chatDTO.id === chatSummaryDTO.chatDTO.id
     );
     if (chatIndex === -1) {
@@ -1552,7 +1553,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
         chatDTO: new ChatDTO({
           id: chatSummaryDTO.chatDTO.id,
           participantIds: [
-            chatInstance.user.id,
+            chatStore.user.id,
             chatSummaryDTO.userProfileResponseDTO.id,
           ],
           messages: [newMessageDTO],
@@ -1567,14 +1568,14 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 
       webSocketService.chatWS.send("send-message", newEncryptedMessageDTO);
     } else {
-      const existingChatSummary = chatInstance.chatList[chatIndex];
+      const existingChatSummary = chatStore.chatList[chatIndex];
 
       existingChatSummary.chatDTO.messages = [newMessageDTO];
 
       updateChatBox(existingChatSummary);
 
       webSocketService.chatWS.send("typing", {
-        userId: chatInstance.user.id,
+        userId: chatStore.user.id,
         chatRoomId: chatSummaryDTO.chatDTO.id,
         typing: false,
         friendId: chatSummaryDTO.userProfileResponseDTO.id,
@@ -1725,11 +1726,9 @@ const removeMessageBoxAndUnsubscribe = async () => {
   // const startMessageElement = messageBoxElement.querySelector(".start-message");
   if (messageBox) {
     messageBoxElement.removeChild(messageBox);
-    webSocketService.contactsWS.unsubscribe(
-      `/user/queue/online-status`
-    );
+    webSocketService.contactsWS.unsubscribe(`/user/queue/online-status`);
     webSocketService.chatWS.unsubscribe(
-      `/user/${chatInstance.user.id}/queue/message-box-typing`
+      `/user/${chatStore.user.id}/queue/message-box-typing`
     );
   }
   // else {
@@ -1864,7 +1863,7 @@ function handleOptionsBtnClick(event, chat) {
 }
 
 async function handleBackBtnClickMessageBox(removeElement) {
-  ariaSelectedRemove(chatInstance.selectedChatUserId);
+  ariaSelectedRemove(chatStore.selectedChatUserId);
   await removeMessageBoxAndUnsubscribe();
   removeElement.remove();
 }

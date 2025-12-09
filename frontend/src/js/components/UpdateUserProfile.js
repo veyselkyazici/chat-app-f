@@ -7,8 +7,8 @@ import {
 } from "../utils/util.js";
 import { userService } from "../services/userService.js";
 import { UpdateUserDTO } from "../dtos/user/request/UpdateUserDTO.js";
-import { chatInstance } from "../pages/Chat.js";
 import { i18n } from "../i18n/i18n.js";
+import { chatStore } from "../store/chatStore.js";
 
 async function userUpdateModal(user, bool) {
   const updateProfileForm = createElement("form", "");
@@ -169,8 +169,8 @@ async function userUpdateModal(user, bool) {
 }
 
 function goHome() {
-  const name = chatInstance.user.firstName;
-  const about = chatInstance.user.about;
+  const name = chatStore.user.firstName;
+  const about = chatStore.user.about;
   if (!name || !name.trim()) {
     toastr.error(i18n.t("updateUserProfile.nameError"));
     return false;
@@ -201,16 +201,13 @@ async function toggleEditName(user) {
         });
       } else {
         const response = await userService.updateUserName(updateUserDTO);
-        webSocketService.contactsWS.send(
-          "updated-user-profile-send-message",
-          {
-            userId: chatInstance.user.id,
-            url: chatInstance.user.imagee,
-            about: chatInstance.user.about,
-            firstName: response.data.value,
-          }
-        );
-        chatInstance.user.firstName = response.data.value;
+        webSocketService.contactsWS.send("updated-user-profile-send-message", {
+          userId: chatStore.user.id,
+          url: chatStore.user.imagee,
+          about: chatStore.user.about,
+          firstName: response.data.value,
+        });
+        chatStore.user.firstName = response.data.value;
         toastr.success(i18n.t("updateUserProfile.nameUpdated"));
       }
     }
@@ -236,16 +233,13 @@ async function toggleEditAbout() {
         });
       } else {
         const response = await userService.updateUserAbout(updateUserDTO);
-        webSocketService.contactsWS.send(
-          "updated-user-profile-send-message",
-          {
-            userId: chatInstance.user.id,
-            url: chatInstance.user.imagee,
-            about: response.data.value,
-            firstName: chatInstance.user.firstName,
-          }
-        );
-        chatInstance.user.about = response.data.value;
+        webSocketService.contactsWS.send("updated-user-profile-send-message", {
+          userId: chatStore.user.id,
+          url: chatStore.user.imagee,
+          about: response.data.value,
+          firstName: chatStore.user.firstName,
+        });
+        chatStore.user.about = response.data.value;
         const settingsAbout = document.querySelector(
           ".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1"
         );
@@ -850,22 +844,19 @@ async function cropImage(canvas1, userId, originalFile) {
         profilePhotoButtonDiv.append(profilePhotoButtonDivDiv);
         profilePhotoButton.append(profilePhotoButtonDiv);
 
-        chatInstance.user.imagee = response.data.url;
+        chatStore.user.imagee = response.data.url;
         const image = createProfileImage({ imagee: response.data.url });
         const userProfilePhotoElement = document.querySelector(
           ".user-profile-photo"
         );
         userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
         userProfilePhotoElement.append(image);
-        webSocketService.contactsWS.send(
-          "updated-user-profile-send-message",
-          {
-            userId: userId,
-            url: chatInstance.user.imagee,
-            about: chatInstance.user.about,
-            firstName: chatInstance.user.firstName,
-          }
-        );
+        webSocketService.contactsWS.send("updated-user-profile-send-message", {
+          userId: userId,
+          url: chatStore.user.imagee,
+          about: chatStore.user.about,
+          firstName: chatStore.user.firstName,
+        });
       }
     } catch (error) {
       console.error("Error uploading photo:", error);
@@ -913,16 +904,13 @@ async function removePhoto() {
       photoElement.innerHTML = "";
       photoElement.append(createDefaultImage());
       userProfilePhotoElement.append(createDefaultImage());
-      chatInstance.user.imagee = null;
-      webSocketService.contactsWS.send(
-        "updated-user-profile-send-message",
-        {
-          userId: chatInstance.user.id,
-          url: chatInstance.user.imagee,
-          about: chatInstance.user.about,
-          firstName: chatInstance.user.firstName,
-        }
-      );
+      chatStore.user.imagee = null;
+      webSocketService.contactsWS.send("updated-user-profile-send-message", {
+        userId: chatStore.user.id,
+        url: chatStore.user.imagee,
+        about: chatStore.user.about,
+        firstName: chatStore.user.firstName,
+      });
     }
   } catch (error) {
     console.error(error);

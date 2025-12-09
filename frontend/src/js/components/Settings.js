@@ -8,7 +8,6 @@ import {
   ruleCheck,
   toggleVisibilityPassword,
 } from "../utils/util.js";
-import { chatInstance } from "../pages/Chat.js";
 import { ifVisibilitySettingsChangeWhileMessageBoxIsOpen } from "./MessageBox.js";
 import { userService } from "../services/userService.js";
 import { userUpdateModal } from "./UpdateUserProfile.js";
@@ -18,6 +17,8 @@ import { ChangePasswordRequestDTO } from "../dtos/auth/request/ChangePasswordReq
 import { authService } from "../services/authService.js";
 import { reencryptPrivateKey, base64ToUint8Array } from "../utils/e2ee.js";
 import { webSocketService } from "../websocket/websocketService.js";
+import { chatStore } from "../store/chatStore.js";
+
 function createSettingsHtml() {
   const span = document.querySelector(".a1-1-1");
   const existingSettingsDiv = span.querySelector(".settings");
@@ -77,11 +78,11 @@ function createSettingsHtml() {
   divListItemsInnerDiv.append(
     createButton(
       "",
-      chatInstance.user.firstName,
-      chatInstance.user.about,
-      chatInstance.user.imagee,
+      chatStore.user.firstName,
+      chatStore.user.about,
+      chatStore.user.imagee,
       null,
-      () => userUpdateModal(chatInstance.user, true),
+      () => userUpdateModal(chatStore.user, true),
       true
     )
   );
@@ -317,7 +318,7 @@ function createButton(
 }
 
 const handleAccountClick = () => {
-  userUpdateModal(chatInstance.user, true);
+  userUpdateModal(chatStore.user, true);
 };
 
 const handleSettingsBackBtnClick = () => {
@@ -423,9 +424,9 @@ const handlePrivacyClick = () => {
     null,
     null,
     `${mapEnumToAriaLabel(
-      chatInstance.user.privacySettings.lastSeenVisibility
+      chatStore.user.privacySettings.lastSeenVisibility
     )}, ${mapEnumToAriaLabel(
-      chatInstance.user.privacySettings.onlineStatusVisibility
+      chatStore.user.privacySettings.onlineStatusVisibility
     )}`
   );
   divPrivacy2_1_2_1_1_2.append(spanPrivacy2_1_2_1_1_2);
@@ -493,7 +494,7 @@ const handlePrivacyClick = () => {
     "",
     null,
     null,
-    mapEnumToAriaLabel(chatInstance.user.privacySettings.profilePhotoVisibility)
+    mapEnumToAriaLabel(chatStore.user.privacySettings.profilePhotoVisibility)
   );
   divPrivacy2_1_3_1_1_2.append(spanPrivacy2_1_3_1_1_2);
   divPrivacy2_1_3_1_1.append(divPrivacy2_1_3_1_1_1);
@@ -530,7 +531,7 @@ const handlePrivacyClick = () => {
     "",
     null,
     null,
-    mapEnumToAriaLabel(chatInstance.user.privacySettings.aboutVisibility)
+    mapEnumToAriaLabel(chatStore.user.privacySettings.aboutVisibility)
   );
   divPrivacy2_1_4_1_1_2.append(spanPrivacy2_1_4_1_1_2);
   divPrivacy2_1_4_1_1.append(divPrivacy2_1_4_1_1_1);
@@ -543,7 +544,7 @@ const handlePrivacyClick = () => {
   divPrivacy2_1_4_1.append(divPrivacy2_1_4_1_2);
 
   // Okundu bilgisi
-  if (chatInstance.user.privacySettings.readReceipts) {
+  if (chatStore.user.privacySettings.readReceipts) {
     const divPrivacy2_1_6 = readReceiptsTrue();
     divPrivacy2_1.append(divPrivacy2_1_6);
   } else {
@@ -703,7 +704,7 @@ const handleChangePassword = () => {
         return false;
       }
 
-      const keyDataRes = chatInstance.user.userKey;
+      const keyDataRes = chatStore.user.userKey;
 
       const reenc = await reencryptPrivateKey(
         oldPassword,
@@ -785,12 +786,12 @@ const handleChangePassword = () => {
   });
 };
 async function handleLogoutClick() {
-  await chatInstance.logout();
+  await chatStore.logout();
 }
 const handleReadReceiptsClick = async () => {
-  const newReadReceiptsValue = !chatInstance.user.privacySettings.readReceipts;
+  const newReadReceiptsValue = !chatStore.user.privacySettings.readReceipts;
   const privacyDTO = {
-    ...chatInstance.user.privacySettings,
+    ...chatStore.user.privacySettings,
     readReceipts: newReadReceiptsValue,
   };
 
@@ -815,7 +816,7 @@ const handleReadReceiptsClick = async () => {
       readReceiptsBox.className = "privacy-2-1-6-1-2-1-2-1";
       readReceiptsBox1.className = "privacy-2-1-6-1-2-1-2-1-1";
     }
-    chatInstance.user.privacySettings.readReceipts = newReadReceiptsValue;
+    chatStore.user.privacySettings.readReceipts = newReadReceiptsValue;
     webSocketService.contactsWS.send(
       "updated-privacy-send-message",
       result.data
@@ -1438,7 +1439,7 @@ function createRadioButton(ariaLabel, textContent, optionName) {
   const iconWrapper = createElement("div", "lastseen-and-online-1-2-1-1");
   const iconSpan = createElement("span", "lastseen-and-online-1-2-1-1-1");
 
-  const radioButton = createRadioIcon(ariaLabel, optionName, chatInstance.user);
+  const radioButton = createRadioIcon(ariaLabel, optionName, chatStore.user);
   iconSpan.append(radioButton);
   iconWrapper.append(iconSpan);
 
@@ -1466,12 +1467,12 @@ function createRadioButton(ariaLabel, textContent, optionName) {
 
 function createRadioIcon(ariaLabel, optionName) {
   let isSelected =
-    chatInstance.user.privacySettings[optionName] ===
+    chatStore.user.privacySettings[optionName] ===
     mapAriaLabelToEnum(ariaLabel);
 
   if (optionName === "onlineStatusVisibility" && ariaLabel !== "Everyone") {
     isSelected =
-      chatInstance.user.privacySettings[optionName] !==
+      chatStore.user.privacySettings[optionName] !==
       VisibilityOption.EVERYONE;
   }
 
@@ -1559,7 +1560,7 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
   let visibilityOption = mapAriaLabelToEnum(radioButton.data);
   if (!visibilityOption) {
     visibilityOption =
-      chatInstance.user.privacySettings[PrivacySettings.LAST_SEEN_VISIBILITY];
+      chatStore.user.privacySettings[PrivacySettings.LAST_SEEN_VISIBILITY];
   }
 
   const radioGroup = radioButton.closest('div[role="radiogroup"]');
@@ -1578,7 +1579,7 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
   updateRadioButtonState(radioButton, true);
 
   let updatedPrivacySettingsDTO = {
-    ...chatInstance.user.privacySettings,
+    ...chatStore.user.privacySettings,
     [optionName]: visibilityOption,
   };
   if (optionName === PrivacySettings.LAST_SEEN_VISIBILITY) {
@@ -1595,10 +1596,10 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
     }
   }
 
-  const oldPrivacySettings = { ...chatInstance.user };
+  const oldPrivacySettings = { ...chatStore.user };
   const result = await userService.updatePrivacy(updatedPrivacySettingsDTO);
   if (result.data) {
-    chatInstance.user = { ...chatInstance.user, ...result.data };
+    chatStore.user = { ...chatStore.user, ...result.data };
     if (document.querySelector(".message-box1")) {
       ifVisibilitySettingsChangeWhileMessageBoxIsOpen(
         oldPrivacySettings,

@@ -3,7 +3,6 @@ import AbstractView from "./AbstractView.js";
 import renderContactList from "../components/Contacts.js";
 import { createSettingsHtml } from "../components/Settings.js";
 import { addContactModal } from "../components/AddContact.js";
-import WebSocketManager from "../websocket/websocket.js";
 import { SearchHandler } from "../utils/searchHandler.js";
 import {
   createElement,
@@ -29,6 +28,7 @@ import { navigateTo } from "../index.js";
 import { userService } from "../services/userService.js";
 import { contactService } from "../services/contactsService.js";
 import { chatService } from "../services/chatService.js";
+import { authService } from "../services/authService.js";
 import { userUpdateModal } from "../components/UpdateUserProfile.js";
 import {
   importPublicKey,
@@ -44,27 +44,13 @@ import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
 import { ContactResponseDTO } from "../dtos/contact/response/ContactResponseDTO.js";
 import { i18n } from "../i18n/i18n.js";
 import { webSocketService } from "../websocket/websocketService.js";
-
-// export let webSocketManagerContacts;
-// export let webSocketManagerChat;
-export let chatInstance;
+import { chatStore } from "../store/chatStore.js";
 
 export default class Chat extends AbstractView {
   constructor(params) {
     super(params);
-    chatInstance = this;
     this.setTitle("Chat");
     this.chatSearchHandler = null;
-    this.visibleItemCount = 0;
-    this.selectedChatUserId = null;
-    this.user = {};
-    this.chatList = [];
-    this.contactList = [];
-    this.pingInterval = null;
-    this.pingFrequency = 10000;
-    this.lastUserStatus = null;
-    this.webSocketManagerChat = null;
-    this.webSocketManagerContacts = null;
   }
 
   async getHtml() {
@@ -87,7 +73,6 @@ export default class Chat extends AbstractView {
       this.updateLoadingProgress(i18n.t("chat.loadingMessage"));
 
       this.addEventListeners();
-      // await this.delay(5000);
       await this.initialData();
       this.chatSearchInit();
       this.hideLoadingScreen();
@@ -96,40 +81,42 @@ export default class Chat extends AbstractView {
       this.updateLoadingProgress(i18n.t("chat.loadingErrorMessage"));
     }
   }
-  async delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+
   async initialData() {
     const storageId = sessionStorage.getItem("id");
-    const reponse = await userService.getUserWithUserKeyByAuthId(storageId);
-    this.user = reponse.data;
-    if (this.user) {
-      this.initializeWebSockets();
-      if (this.user.updatedAt == null) {
-        this.hideLoadingScreen();
-        userUpdateModal(this.user, false);
-      }
-      if (!getUserKey()) {
-        try {
-          this.handleMissingUserKey();
-        } catch (error) {
-          console.error("Session restore error:", error);
-          navigateTo("/login");
-        }
-      }
-      if (this.user.imagee) {
-        const image = createProfileImage(this.user);
-        const userProfilePhotoElement = document.querySelector(
-          ".user-profile-photo"
-        );
-        userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
-        userProfilePhotoElement.append(image);
-      }
-      await this.getContactList();
-      await this.getChatList();
-    } else {
-      navigateTo("/login");
+    const response = await userService.getUserWithUserKeyByAuthId(storageId);
+
+    chatStore.setUser(response.data);
+
+    if (!chatStore.user) {
+      return navigateTo("/login");
     }
+
+    this.initializeWebSockets();
+
+    if (chatStore.user.updatedAt == null) {
+      this.hideLoadingScreen();
+      userUpdateModal(chatStore.user, false);
+    }
+
+    if (!getUserKey()) {
+      try {
+        await this.handleMissingUserKey();
+      } catch (err) {
+        console.error("Session restore error:", err);
+        return navigateTo("/login");
+      }
+    }
+
+    if (chatStore.user.imagee) {
+      const image = createProfileImage(chatStore.user);
+      const userProfile = document.querySelector(".user-profile-photo");
+      userProfile.firstChild.remove();
+      userProfile.append(image);
+    }
+
+    await this.getContactList();
+    await this.getChatList();
   }
   async handleMissingUserKey() {
     const storedSessionKey = sessionStorage.getItem("sessionKey");
@@ -138,18 +125,19 @@ export default class Chat extends AbstractView {
     );
     const storedIv = sessionStorage.getItem("encryptionIv");
     const storedPublicKey = sessionStorage.getItem("publicKey");
+
     if (storedSessionKey && storedEncryptedPrivateKey && storedIv) {
       const sessionKey = base64ToUint8Array(storedSessionKey);
       setSessionKey(sessionKey);
 
-      const decryptedPrivateKey = await decryptWithSessionKey(
+      const decrypted = await decryptWithSessionKey(
         base64ToUint8Array(storedEncryptedPrivateKey),
         base64ToUint8Array(storedIv)
       );
 
       const privateKey = await window.crypto.subtle.importKey(
         "pkcs8",
-        decryptedPrivateKey,
+        decrypted,
         { name: "RSA-OAEP", hash: "SHA-256" },
         false,
         ["decrypt"]
@@ -158,57 +146,64 @@ export default class Chat extends AbstractView {
       const publicKey = await importPublicKey(
         new base64ToUint8Array(storedPublicKey)
       );
+
       setUserKey({ privateKey, publicKey });
     }
   }
+
   async getContactList() {
-    this.contactList = (await contactService.getContactList(this.user.id)).map(
-      (item) => new ContactResponseDTO(item)
-    );
+    const list = await contactService.getContactList(chatStore.user.id);
+
+    chatStore.setContactList(list.map((item) => new ContactResponseDTO(item)));
   }
+
   async getChatList() {
     const summaries = await chatService.getChatSummaries();
-    this.chatList = await Promise.all(
+
+    const finalList = await Promise.all(
       summaries.map(async (item) => {
         const isSender =
-          item.chatDTO.messages[0].senderId === chatInstance.user.id;
+          item.chatDTO.messages[0].senderId === chatStore.user.id;
+
         item.chatDTO.messages[0].decryptedMessage = await decryptMessage(
           item.chatDTO.messages[0],
           isSender
         );
+
         return new ChatSummaryDTO(item);
       })
     );
-    await handleChats(this.chatList);
+
+    chatStore.setChatList(finalList);
+
+    await handleChats(chatStore.chatList);
   }
   initializeWebSockets() {
     webSocketService.init();
 
-    this.webSocketManagerContacts = webSocketService.contactsWS;
-    this.webSocketManagerChat = webSocketService.chatWS;
+    const chatWS = webSocketService.chatWS;
+    const contactsWS = webSocketService.contactsWS;
 
-    this.webSocketManagerChat.connect(() => {
+    chatStore.setWebSocketManagers(chatWS, contactsWS);
+
+    chatWS.connect(() => {
       this.subscribeToChatChannels();
       this.handleOnline();
     });
 
-    this.webSocketManagerContacts.connect(() => {
+    contactsWS.connect(() => {
       this.subscribeToFriendshipChannels();
     });
-    this.webSocketManagerChat.onDisconnect(() => {
-      this.handleOffline();
-    });
 
-    this.webSocketManagerChat.onReconnect(() => {
-      this.handleOnline();
-    });
+    chatWS.onDisconnect(() => this.handleOffline());
+    contactsWS.onDisconnect(() => this.handleOffline());
 
     this.visibilityHandlers();
-    // this.startPing();
   }
+
   chatSearchInit() {
     this.chatSearchHandler = new SearchHandler({
-      listData: this.chatList,
+      listData: chatStore.chatList,
       listContentSelector: ".chat-list-content",
       createItemFunction: handleChats,
       filterFunction: (chat, value) => {
@@ -217,9 +212,11 @@ export default class Chat extends AbstractView {
           chat.userProfileResponseDTO?.email ??
           ""
         ).toLowerCase();
+
         const lastMsg = (
           chat.chatDTO?.messages[0].decryptedMessage ?? ""
         ).toLowerCase();
+
         return !value || name.includes(value) || lastMsg.includes(value);
       },
       clearButtonSelector: ".css2 span:empty",
@@ -234,20 +231,19 @@ export default class Chat extends AbstractView {
   hideLoadingScreen() {
     const loadingScreen = document.getElementById("chat-loading-screen");
     const mainContent = document.querySelector(".chat-container");
-
     if (loadingScreen && mainContent) {
       loadingScreen.style.display = "none";
     }
   }
 
-  updateLoadingProgress(message) {
+  updateLoadingProgress(text) {
     const loadingText = document.querySelector(".loading-text p");
-    if (loadingText) {
-      loadingText.textContent = message;
-    }
+    if (loadingText) loadingText.textContent = text;
   }
 
   subscribeToFriendshipChannels() {
+    const contactsWS = chatStore.contactsWS;
+
     const addContact = `/user/queue/add-contact`;
     const addContactUser = `/user/queue/add-contact-user`;
     const addInvitation = `/user/queue/add-invitation`;
@@ -256,619 +252,556 @@ export default class Chat extends AbstractView {
     const disconnect = `/user/queue/disconnect`;
     const invitedUserJoined = `/user/queue/invited-user-joined`;
 
-    webSocketService.contactsWS.subscribe(
-      invitedUserJoined,
-      async (invitedUserJoinedMessage) => {
-        const invitedUserJoinedResponseDTO = new ContactResponseDTO(
-          JSON.parse(invitedUserJoinedMessage.body)
+    // invited-user-joined
+    contactsWS.subscribe(invitedUserJoined, async (msg) => {
+      const dto = new ContactResponseDTO(JSON.parse(msg.body));
+
+      // 1) varolan invitation'lardan sil
+      let updatedList = chatStore.contactList.filter((c) => {
+        if (c.contactsDTO) return true;
+        return (
+          c.invitationResponseDTO?.inviteeEmail !==
+          dto.userProfileResponseDTO.email
         );
-        this.contactList = this.contactList.filter((contact) => {
-          if (contact.contactsDTO) {
-            return true;
-          } else {
-            return contact.invitationResponseDTO?.inviteeEmail !==
-              invitedUserJoinedResponseDTO.userProfileResponseDTO.email
-              ? true
-              : false;
-          }
-        });
+      });
 
-        let inserted = false;
+      // 2) doğru yere ekle
+      let inserted = false;
+      const newName = dto.contactsDTO.userContactName;
 
-        const newName =
-          invitedUserJoinedResponseDTO.contactsDTO.userContactName;
-
-        for (let i = 0; i < this.contactList.length; i++) {
-          const current = this.contactList[i];
-          const currentName = current.contactsDTO?.userContactName;
-          if (currentName && newName.localeCompare(currentName) < 0) {
-            this.contactList.splice(i, 0, invitedUserJoinedResponseDTO);
-            inserted = true;
-            break;
-          }
-        }
-        if (!inserted) {
-          this.contactList.push(invitedUserJoinedResponseDTO);
+      for (let i = 0; i < updatedList.length; i++) {
+        const cur = updatedList[i];
+        if (
+          cur.contactsDTO &&
+          newName.localeCompare(cur.contactsDTO.userContactName) < 0
+        ) {
+          updatedList.splice(i, 0, dto);
+          inserted = true;
+          break;
         }
       }
-    );
+      if (!inserted) updatedList.push(dto);
 
-    webSocketService.contactsWS.subscribe(disconnect, async () => {
+      chatStore.setContactList(updatedList);
+    });
+
+    // disconnect → logout
+    contactsWS.subscribe(disconnect, async () => {
       await this.logout();
     });
 
-    webSocketService.contactsWS.subscribe(`/user/queue/error`, (message) => {
+    // error
+    contactsWS.subscribe(`/user/queue/error`, (msg) => {
       try {
-        const errorPayload = JSON.parse(message.body);
-        console.error("❌ WebSocket Error:", errorPayload);
-      } catch (e) {
-        console.error("❌ WebSocket Error (raw):", message.body);
+        console.error("❌ WS Error:", JSON.parse(msg.body));
+      } catch {
+        console.error("❌ WS Error (raw):", msg.body);
       }
     });
 
-    webSocketService.contactsWS.subscribe(
-      addContact,
-      async (addContactMessage) => {
-        const newContact = JSON.parse(addContactMessage.body);
-        const chatElements = [...document.querySelectorAll(".chat1")];
-        const chatElement = chatElements.find(
-          (chat) =>
-            chat.chatData.userProfileResponseDTO.id ===
-            newContact.userProfileResponseDTO.id
-        );
-        if (chatElement) {
-          const nameSpan = chatElement.querySelector(".name-span");
-          nameSpan.textContent = newContact.contactsDTO.userContactName;
-          chatElement.chatData.contactsDTO.userContactName =
+    // add-contact
+    contactsWS.subscribe(addContact, async (msg) => {
+      const newContact = JSON.parse(msg.body);
+
+      // chat list içindeki adı güncelle
+      const updatedChatList = chatStore.chatList.map((chat) => {
+        if (
+          chat.userProfileResponseDTO.id ===
+          newContact.userProfileResponseDTO.id
+        ) {
+          chat.contactsDTO.userContactName =
             newContact.contactsDTO.userContactName;
-          const findChat = chatInstance.chatList.find(
-            (chat) =>
-              chat.userProfileResponseDTO.id ===
-              newContact.userProfileResponseDTO.id
-          );
-          if (findChat) {
-            findChat.contactsDTO.userHasAddedRelatedUser = true;
-            findChat.contactsDTO.userContactName =
-              newContact.contactsDTO.userContactName;
-          }
+          chat.contactsDTO.userHasAddedRelatedUser = true;
         }
+        return chat;
+      });
 
-        let contactIdList = this.contactList.filter((contact) => contact.id);
+      chatStore.setChatList(updatedChatList);
 
-        const indexToInsert = contactIdList.findIndex((contact) => {
-          return (
-            contact.userContactName.localeCompare(
-              newContact.userContactName,
-              undefined,
-              { sensitivity: "base" }
-            ) > 0
-          );
-        });
-        if (indexToInsert === -1) {
-          contactIdList.push(newContact);
-        } else {
-          contactIdList.splice(indexToInsert, 0, newContact);
-        }
-        this.contactList = [
-          ...contactIdList,
-          ...this.contactList.filter((contact) => !contact.id),
-        ];
+      // Contact list sıralama
+      let contactIdList = chatStore.contactList.filter((c) => c.id);
+      const index = contactIdList.findIndex((c) => {
+        return (
+          c.userContactName.localeCompare(
+            newContact.userContactName,
+            undefined,
+            { sensitivity: "base" }
+          ) > 0
+        );
+      });
+
+      if (index === -1) {
+        contactIdList.push(newContact);
+      } else {
+        contactIdList.splice(index, 0, newContact);
       }
-    );
-    // Eklenen kisi icin calisacak chat veya contact mevcut ise ekleyen kisinin privacy settingslerine gore profil photo  duzenlemeler yapilacak
-    webSocketService.contactsWS.subscribe(
-      addContactUser,
-      async (addContactMessage) => {
-        const newContact = JSON.parse(addContactMessage.body);
-        const findContact = this.contactList.find(
-          (contact) =>
-            contact.userProfileResponseDTO.id === newContact.contactsDTO.userId
-        );
-        const findChat = this.chatList.find(
-          (chat) =>
-            chat.userProfileResponseDTO.id === newContact.contactsDTO.userId
-        );
 
-        if (findChat) {
-          findChat.contactsDTO.relatedUserHasAddedUser =
+      const invitations = chatStore.contactList.filter((c) => !c.id);
+      chatStore.setContactList([...contactIdList, ...invitations]);
+    });
+
+    // add-contact-user (karşı taraf seni ekledi)
+    contactsWS.subscribe(addContactUser, async (msg) => {
+      const newContact = JSON.parse(msg.body);
+
+      const updatedChats = chatStore.chatList.map((chat) => {
+        if (chat.userProfileResponseDTO.id === newContact.contactsDTO.userId) {
+          chat.contactsDTO.relatedUserHasAddedUser =
             newContact.contactsDTO.userHasAddedRelatedUser;
-          findChat.userProfileResponseDTO.imagee =
+
+          chat.userProfileResponseDTO.imagee =
             newContact.userProfileResponseDTO.imagee;
-          if (newContact.userProfileResponseDTO.imagee) {
+
+          if (chat.userProfileResponseDTO.imagee) {
             handleProfilePhotoVisibilityChange(
               {
-                contact: { ...findChat.contactsDTO },
-                userProfileResponseDTO: { ...findChat.userProfileResponseDTO },
+                contact: { ...chat.contactsDTO },
+                userProfileResponseDTO: { ...chat.userProfileResponseDTO },
               },
-              findChat.userProfileResponseDTO.imagee
+              chat.userProfileResponseDTO.imagee
             );
           }
         }
-        if (findContact) {
-          findContact.contactsDTO.relatedUserHasAddedUser =
+        return chat;
+      });
+
+      chatStore.setChatList(updatedChats);
+
+      const updatedContacts = chatStore.contactList.map((contact) => {
+        if (
+          contact.userProfileResponseDTO.id === newContact.contactsDTO.userId
+        ) {
+          contact.contactsDTO.relatedUserHasAddedUser =
             newContact.contactsDTO.userHasAddedRelatedUser;
-          findContact.userProfileResponseDTO.imagee =
+
+          contact.userProfileResponseDTO.imagee =
             newContact.userProfileResponseDTO.imagee;
-          if (newContact.userProfileResponseDTO.imagee) {
+
+          if (contact.userProfileResponseDTO.imagee) {
             handleProfilePhotoVisibilityChange(
               {
-                contact: { ...findContact.contactsDTO },
+                contact: { ...contact.contactsDTO },
                 userProfileResponseDTO: {
-                  ...findContact.userProfileResponseDTO,
+                  ...contact.userProfileResponseDTO,
                 },
               },
-              findContact.userProfileResponseDTO.imagee
+              contact.userProfileResponseDTO.imagee
             );
           }
         }
-      }
-    );
+        return contact;
+      });
 
-    webSocketService.contactsWS.subscribe(
-      addInvitation,
-      async (addInvitationMessage) => {
-        const newInvitation = JSON.parse(addInvitationMessage.body);
-        let invitationIdList = this.contactList.filter(
-          (invitation) => invitation.invitationResponseDTO
+      chatStore.setContactList(updatedContacts);
+    });
+
+    // add-invitation
+    contactsWS.subscribe(addInvitation, async (msg) => {
+      const newInvitation = JSON.parse(msg.body);
+
+      let invitations = chatStore.contactList.filter(
+        (c) => c.invitationResponseDTO
+      );
+
+      const idx = invitations.findIndex((inv) => {
+        return (
+          inv.invitationResponseDTO.contactName.localeCompare(
+            newInvitation.invitationResponseDTO.contactName,
+            undefined,
+            { sensitivity: "base" }
+          ) > 0
         );
-        const indexToInsert = invitationIdList.findIndex((invitation) => {
-          return (
-            invitation.invitationResponseDTO.contactName.localeCompare(
-              newInvitation.invitationResponseDTO.contactName,
-              undefined,
-              { sensitivity: "base" }
-            ) > 0
-          );
-        });
-        if (indexToInsert === -1) {
-          invitationIdList.push(newInvitation);
-        } else {
-          invitationIdList.splice(indexToInsert, 0, newInvitation);
-        }
-        this.contactList = [
-          ...this.contactList.filter((contact) => contact.contactsDTO),
-          ...invitationIdList,
-        ];
-      }
-    );
-    // ToDo
-    webSocketService.contactsWS.subscribe(
-      updatePrivacy,
-      async (updatePrivacyMessage) => {
-        const updatePrivacy = JSON.parse(updatePrivacyMessage.body);
-        const findContact = this.contactList.find(
-          (contact) => contact.userProfileResponseDTO?.id === updatePrivacy.id
-        );
-        const findChat = this.chatList.find(
-          (chat) => chat.userProfileResponseDTO.id === updatePrivacy.id
-        );
+      });
 
-        let oldPrivacySettings = null;
-        let newPrivacySettings;
+      if (idx === -1) invitations.push(newInvitation);
+      else invitations.splice(idx, 0, newInvitation);
 
-        if (findChat || findContact) {
-          if (findChat) {
-            oldPrivacySettings =
-              findChat.userProfileResponseDTO.privacySettings;
-            findChat.userProfileResponseDTO = updatePrivacy;
+      const contacts = chatStore.contactList.filter((c) => c.contactsDTO);
+      chatStore.setContactList([...contacts, ...invitations]);
+    });
 
-            newPrivacySettings = {
-              contactsDTO: {
-                contact: { ...findChat.contactsDTO },
-                userProfileResponseDTO: { ...findChat.userProfileResponseDTO },
-              },
-            };
-            if (oldPrivacySettings && newPrivacySettings) {
-              if (
-                updatePrivacy.privacySettings.profilePhotoVisibility !==
-                oldPrivacySettings.profilePhotoVisibility
-              ) {
-                handleProfilePhotoVisibilityChange(
-                  newPrivacySettings.contactsDTO,
-                  updatePrivacy.imagee
-                );
-              }
-              if (
-                updatePrivacy.privacySettings.onlineStatusVisibility !==
-                oldPrivacySettings.onlineStatusVisibility
-              ) {
-                handleOnlineStatusVisibilityChange(
-                  this.user,
-                  newPrivacySettings
-                );
-              }
-              if (
-                updatePrivacy.privacySettings.lastSeenVisibility !==
-                oldPrivacySettings.lastSeenVisibility
-              ) {
-                handleLastSeenVisibilityChange(this.user, newPrivacySettings);
-              }
-            }
+    // update-privacy
+    contactsWS.subscribe(updatePrivacy, async (msg) => {
+      const dto = JSON.parse(msg.body);
+
+      const chats = chatStore.chatList.map((chat) => {
+        if (chat.userProfileResponseDTO.id === dto.id) {
+          const old = chat.userProfileResponseDTO.privacySettings;
+          chat.userProfileResponseDTO = dto;
+
+          if (
+            old.profilePhotoVisibility !==
+            dto.privacySettings.profilePhotoVisibility
+          ) {
+            handleProfilePhotoVisibilityChange(
+              { contact: { ...chat.contactsDTO }, userProfileResponseDTO: dto },
+              dto.imagee
+            );
           }
-          if (findContact) {
-            oldPrivacySettings =
-              findContact.userProfileResponseDTO.privacySettings;
-            findContact.userProfileResponseDTO = updatePrivacy;
-            newPrivacySettings = {
+
+          if (
+            old.onlineStatusVisibility !==
+            dto.privacySettings.onlineStatusVisibility
+          ) {
+            handleOnlineStatusVisibilityChange(chatStore.user, {
               contactsDTO: {
-                contact: { ...findContact.contactsDTO },
-                userProfileResponseDTO: {
-                  ...findContact.userProfileResponseDTO,
-                },
+                contact: chat.contactsDTO,
+                userProfileResponseDTO: dto,
               },
-            };
-            if (oldPrivacySettings && newPrivacySettings) {
-              if (
-                updatePrivacy.privacySettings.aboutVisibility !==
-                oldPrivacySettings.aboutVisibility
-              ) {
-                handleAboutVisibilityChange(newPrivacySettings.contactsDTO);
-              }
-            }
+            });
+          }
+
+          if (
+            old.lastSeenVisibility !== dto.privacySettings.lastSeenVisibility
+          ) {
+            handleLastSeenVisibilityChange(chatStore.user, {
+              contactsDTO: {
+                contact: chat.contactsDTO,
+                userProfileResponseDTO: dto,
+              },
+            });
           }
         }
-      }
-    );
-    // ToDo
-    webSocketService.contactsWS.subscribe(
-      updatedUserProfile,
-      async (updatedUserProfileMessage) => {
-        const updatedUserProfileDTO = JSON.parse(
-          updatedUserProfileMessage.body
-        );
+        return chat;
+      });
 
-        const findContact = this.contactList.find(
-          (contact) =>
-            contact.userProfileResponseDTO?.id === updatedUserProfileDTO.userId
-        );
-        const findChat = this.chatList.find(
-          (chat) =>
-            chat.userProfileResponseDTO.id === updatedUserProfileDTO.userId
-        );
+      chatStore.setChatList(chats);
 
-        let newPrivacySettings;
+      const contacts = chatStore.contactList.map((c) => {
+        if (c.userProfileResponseDTO?.id === dto.id) {
+          const old = c.userProfileResponseDTO.privacySettings;
+          c.userProfileResponseDTO = dto;
 
-        if (findChat) {
-          findChat.userProfileResponseDTO.imagee = updatedUserProfileDTO.url;
-          findChat.userProfileResponseDTO.about = updatedUserProfileDTO.about;
-          findChat.userProfileResponseDTO.firstName =
-            updatedUserProfileDTO.firstName;
-          newPrivacySettings = {
-            contactsDTO: {
-              contact: { ...findChat.contactsDTO },
-              userProfileResponseDTO: { ...findChat.userProfileResponseDTO },
-            },
-          };
+          if (old.aboutVisibility !== dto.privacySettings.aboutVisibility) {
+            handleAboutVisibilityChange({
+              contact: c.contactsDTO,
+              userProfileResponseDTO: dto,
+            });
+          }
+        }
+        return c;
+      });
+
+      chatStore.setContactList(contacts);
+    });
+
+    // updated-user-profile
+    contactsWS.subscribe(updatedUserProfile, async (msg) => {
+      const dto = JSON.parse(msg.body);
+
+      const chats = chatStore.chatList.map((chat) => {
+        if (chat.userProfileResponseDTO.id === dto.userId) {
+          chat.userProfileResponseDTO.imagee = dto.url;
+          chat.userProfileResponseDTO.about = dto.about;
+          chat.userProfileResponseDTO.firstName = dto.firstName;
+
           handleProfilePhotoVisibilityChange(
             {
-              contact: { ...findChat.contactsDTO },
-              userProfileResponseDTO: { ...findChat.userProfileResponseDTO },
+              contact: chat.contactsDTO,
+              userProfileResponseDTO: chat.userProfileResponseDTO,
             },
-            findChat.userProfileResponseDTO.imagee
+            chat.userProfileResponseDTO.imagee
           );
         }
-        if (findContact) {
-          findContact.userProfileResponseDTO.imagee = updatedUserProfileDTO.url;
-          findContact.userProfileResponseDTO.about =
-            updatedUserProfileDTO.about;
-          findContact.userProfileResponseDTO.firstName =
-            updatedUserProfileDTO.firstName;
-          newPrivacySettings = {
-            contactsDTO: {
-              contact: { ...findContact.contactsDTO },
-              userProfileResponseDTO: { ...findContact.userProfileResponseDTO },
-            },
-          };
+        return chat;
+      });
+
+      chatStore.setChatList(chats);
+
+      const contacts = chatStore.contactList.map((contact) => {
+        if (contact.userProfileResponseDTO?.id === dto.userId) {
+          contact.userProfileResponseDTO.imagee = dto.url;
+          contact.userProfileResponseDTO.about = dto.about;
+          contact.userProfileResponseDTO.firstName = dto.firstName;
         }
-      }
-    );
+        return contact;
+      });
+
+      chatStore.setContactList(contacts);
+    });
   }
 
   subscribeToChatChannels() {
+    const chatWS = chatStore.chatWS;
+
     const recipientMessageChannel = `/user/queue/received-message`;
     const typingChannel = `/user/queue/typing`;
-    const stopTypingChannel = `/user/queue/stop-typing`;
-    // const readConfirmationSenderChannel = `/user/${this.user.id}/queue/read-confirmation-sender`;
     const readMessagesChannel = `/user/queue/read-messages`;
     const chatBlock = `/user/queue/block`;
     const chatUnBlock = `/user/queue/unblock`;
     const error = `/user/queue/error-message`;
     const disconnect = `/user/queue/disconnect`;
 
-    webSocketService.chatWS.subscribe(disconnect, async () => {
-      await this.logout();
-    });
-    webSocketService.chatWS.subscribe(`/user/queue/error`, (message) => {
+    chatWS.subscribe(disconnect, async () => this.logout());
+
+    chatWS.subscribe(`/user/queue/error`, (msg) => {
       try {
-        const errorPayload = JSON.parse(message.body);
-        console.error("WebSocket Error:", errorPayload);
-      } catch (e) {
-        console.error("WebSocket Error (raw):", message.body);
-      }
-    });
-    webSocketService.chatWS.subscribe(error, async (errorMessageDTO) => {
-      const errorMessage = JSON.parse(errorMessageDTO.body);
-      const code = errorMessage.code;
-      handleErrorCode(code, null, i18n);
-    });
-
-    webSocketService.chatWS.subscribe(chatBlock, async (block) => {
-      const blockData = JSON.parse(block.body);
-      const chatData = this.chatList.find(
-        (chat) => chat.chatDTO.id === blockData.chatRoomId
-      );
-      if (chatData) {
-        chatData.userChatSettingsDTO.isBlockedMe = true;
-      }
-      if (isMessageBoxDomExists(chatData.chatDTO.id)) {
-        const messageBoxElement = document.querySelector(".message-box");
-        const statusSpan = messageBoxElement.querySelector(".online-status");
-        if (statusSpan) {
-          statusSpan.remove();
-        }
-        webSocketService.contactsWS.unsubscribe(`/user/queue/online-status`);
-        webSocketService.chatWS.unsubscribe(`/user/queue/message-box-typing`);
-      }
-    });
-    webSocketService.chatWS.subscribe(chatUnBlock, async (unblock) => {
-      const unblockData = JSON.parse(unblock.body);
-      const chatData = this.chatList.find(
-        (chat) => chat.chatDTO.id === unblockData.chatRoomId
-      );
-      if (chatData) {
-        chatData.userChatSettingsDTO.isBlockedMe = false;
-      }
-      if (isMessageBoxDomExists(chatData.chatDTO.id)) {
-        const messageBoxElement = document.querySelector(".message-box");
-        const statusSpan = messageBoxElement.querySelector(".online-status");
-        const messageBoxOnlineStatus =
-          messageBoxElement.querySelector(".message-box1-2-2");
-        if (statusSpan) {
-          statusSpan.remove();
-        }
-        const chat = {
-          userProfileResponseDTO: { ...chatData.userProfileResponseDTO },
-          contactsDTO: { ...chatData.contactsDTO },
-          userChatSettingsDTO: { ...chatData.userChatSettingsDTO },
-        };
-        await onlineInfo(chat, messageBoxOnlineStatus);
+        console.error("WS error:", JSON.parse(msg.body));
+      } catch {
+        console.error("WS error(raw):", msg.body);
       }
     });
 
-    webSocketService.chatWS.subscribe(readMessagesChannel, (readMessages) => {
-      const readMessagesJSON = JSON.parse(readMessages.body);
-      const firstReadMessage = readMessagesJSON[0];
-      const messageBoxElement = document.querySelector(".message-box1");
-      const chatBoxElements = [...document.querySelectorAll(".chat1")];
-      const findChatElement = chatBoxElements.find(
-        (chatElement) =>
-          chatElement.chatData.chatDTO.id === firstReadMessage.chatRoomId
-      );
-      const findChat = this.chatList.find(
-        (chat) => chat.chatDTO.id === firstReadMessage.chatRoomId
-      );
-      findChat.chatDTO.messages[0].isSeen = true;
-      if (
-        findChatElement &&
-        this.user.privacySettings.readReceipts &&
-        findChat.userProfileResponseDTO.privacySettings.readReceipts
-      ) {
-        const chatBoxElementDeliveredTick = findChatElement.querySelector(
-          ".message-delivered-tick-div"
-        ).firstElementChild;
-        chatBoxElementDeliveredTick.className = "message-seen-tick-span";
-        chatBoxElementDeliveredTick.ariaLabel = " Okundu ";
+    chatWS.subscribe(error, (msg) => {
+      const err = JSON.parse(msg.body);
+      handleErrorCode(err.code, null, i18n);
+    });
+
+    // BLOCK
+    chatWS.subscribe(chatBlock, async (msg) => {
+      const dto = JSON.parse(msg.body);
+
+      const updated = chatStore.chatList.map((chat) => {
+        if (chat.chatDTO.id === dto.chatRoomId) {
+          chat.userChatSettingsDTO.isBlockedMe = true;
+        }
+        return chat;
+      });
+
+      chatStore.setChatList(updated);
+
+      if (isMessageBoxDomExists(dto.chatRoomId)) {
+        const box = document.querySelector(".message-box");
+        const statusSpan = box.querySelector(".online-status");
+        if (statusSpan) statusSpan.remove();
+
+        chatStore.contactsWS.unsubscribe(`/user/queue/online-status`);
+        chatStore.chatWS.unsubscribe(`/user/queue/message-box-typing`);
       }
-      if (messageBoxElement) {
-        const messageData = messageBoxElement.data;
+    });
+
+    // UNBLOCK
+    chatWS.subscribe(chatUnBlock, async (msg) => {
+      const dto = JSON.parse(msg.body);
+
+      const updated = chatStore.chatList.map((chat) => {
+        if (chat.chatDTO.id === dto.chatRoomId) {
+          chat.userChatSettingsDTO.isBlockedMe = false;
+        }
+        return chat;
+      });
+
+      chatStore.setChatList(updated);
+
+      if (isMessageBoxDomExists(dto.chatRoomId)) {
+        const messageBoxElement = document.querySelector(".message-box");
+        const statusSpan = messageBoxElement.querySelector(".online-status");
+        if (statusSpan) statusSpan.remove();
+
+        const chatData = updated.find((c) => c.chatDTO.id === dto.chatRoomId);
+
+        await onlineInfo(chatData, messageBoxElement);
+      }
+    });
+
+    // READ MESSAGES
+    chatWS.subscribe(readMessagesChannel, (msg) => {
+      const json = JSON.parse(msg.body);
+
+      const first = json[0];
+
+      const updated = chatStore.chatList.map((chat) => {
+        if (chat.chatDTO.id === first.chatRoomId) {
+          chat.chatDTO.messages[0].isSeen = true;
+        }
+        return chat;
+      });
+
+      chatStore.setChatList(updated);
+
+      const messageBox = document.querySelector(".message-box1");
+      if (messageBox) {
         messageBoxElementMessagesReadTick(
-          readMessagesJSON,
-          messageData.userProfileResponseDTO.privacySettings
+          json,
+          messageBox.data.userProfileResponseDTO.privacySettings
         );
       }
     });
-    webSocketService.chatWS.subscribe(
-      recipientMessageChannel,
-      async (recipientMessage) => {
-        const recipientJSON = JSON.parse(recipientMessage.body);
-        const decryptedMessage = await decryptMessage(recipientJSON);
-        recipientJSON.decryptedMessage = decryptedMessage;
-        const chat = this.chatList.find(
-          (chat) => chat.chatDTO.id === recipientJSON.chatRoomId
-        );
-        if (!chat) {
-          await createChatBoxWithFirstMessage(recipientJSON);
+
+    // RECEIVED MESSAGE
+    chatWS.subscribe(recipientMessageChannel, async (msg) => {
+      const dto = JSON.parse(msg.body);
+
+      dto.decryptedMessage = await decryptMessage(dto);
+
+      let chat = chatStore.chatList.find(
+        (c) => c.chatDTO.id === dto.chatRoomId
+      );
+
+      if (!chat) {
+        await createChatBoxWithFirstMessage(dto);
+        return;
+      }
+
+      const incoming = new MessageDTO({ ...dto });
+
+      chat.chatDTO.messages[0] = incoming;
+      chat.userChatSettingsDTO.unreadMessageCount = dto.unreadMessageCount;
+
+      updateChatBox(chat);
+
+      const chatElements = [...document.querySelectorAll(".chat1")];
+      const chatElement = chatElements.find(
+        (el) => el.chatData.chatDTO.id === dto.chatRoomId
+      );
+
+      // unread badge update
+      if (chatElement) {
+        const options = chatElement.querySelector(".chat-options");
+        const span = chatElement.querySelector(".unread-message-count-span");
+
+        if (span) {
+          span.textContent = dto.unreadMessageCount;
         } else {
-          const incomingMessage = new MessageDTO({
-            ...recipientJSON,
-            decryptedMessage,
-          });
-          chat.chatDTO.messages[0] = incomingMessage;
-          chat.userChatSettingsDTO.unreadMessageCount =
-            recipientJSON.unreadMessageCount;
-
-          updateChatBox(chat);
-          const chatElements = [...document.querySelectorAll(".chat1")];
-          const chatElement = chatElements.find(
-            (chat) => chat.chatData.chatDTO.id === recipientJSON.chatRoomId
+          const div = createElement("div", "unread-message-count-div");
+          const spanNew = createElement(
+            "span",
+            "unread-message-count-span",
+            {},
+            { "aria-label": `${dto.unreadMessageCount} unread messages` },
+            dto.unreadMessageCount
           );
-
-          let unreadMessageCountDiv;
-          let chatOptionsDiv;
-          if (chatElement) {
-            chatOptionsDiv = chatElement.querySelector(".chat-options");
-            const unreadMessageCountSpan = chatElement.querySelector(
-              ".unread-message-count-span"
-            );
-
-            if (unreadMessageCountSpan) {
-              unreadMessageCountSpan.textContent =
-                recipientJSON.unreadMessageCount;
-            } else {
-              unreadMessageCountDiv = createElement(
-                "div",
-                "unread-message-count-div"
-              );
-              const unreadMessageCountSpan = createElement(
-                "span",
-                "unread-message-count-span",
-                {},
-                {
-                  "aria-label": `${recipientJSON.unreadMessageCount} okunmamış mesaj`,
-                },
-                recipientJSON.unreadMessageCount
-              );
-              unreadMessageCountDiv.append(unreadMessageCountSpan);
-              chatOptionsDiv.firstElementChild.append(unreadMessageCountDiv);
-            }
-            const messageTickSpan = chatElement.querySelector(
-              ".message-delivered-tick-div"
-            );
-            if (messageTickSpan) {
-              messageTickSpan.remove();
-            }
-          }
-          if (isMessageBoxDomExists(recipientJSON.chatRoomId)) {
-            const dto = {
-              recipientId: recipientJSON.recipientId,
-              userChatSettingsId: chat.userChatSettingsDTO.id,
-              chatRoomId: recipientJSON.chatRoomId,
-              senderId: recipientJSON.senderId,
-            };
-
-            renderMessage(
-              { messages: chat.chatDTO.messages[0], lastPage: null },
-              chat.userProfileResponseDTO.privacySettings,
-              true,
-              this.user.id
-            );
-            webSocketService.chatWS.send("read-message", dto);
-          }
-          lastMessageChange(
-            recipientJSON.chatRoomId,
-            chatElement,
-            decryptedMessage,
-            recipientJSON.fullDateTime
-          );
+          div.append(spanNew);
+          options.firstElementChild.append(div);
         }
       }
-    );
-    webSocketService.chatWS.subscribe(typingChannel, async (typingMessage) => {
-      const status = JSON.parse(typingMessage.body);
-      const visibleChats = [...document.querySelectorAll(".chat1")];
 
-      if (visibleChats) {
-        const chat = visibleChats.find(
-          (el) => el.chatData.chatDTO.id === status.chatRoomId
+      // message box açıkken read-message gönder
+      if (isMessageBoxDomExists(dto.chatRoomId)) {
+        const msgDto = {
+          recipientId: dto.recipientId,
+          userChatSettingsId: chat.userChatSettingsDTO.id,
+          chatRoomId: dto.chatRoomId,
+          senderId: dto.senderId,
+        };
+
+        renderMessage(
+          { messages: incoming, lastPage: null },
+          chat.userProfileResponseDTO.privacySettings,
+          true,
+          chatStore.user.id
         );
-        if (
-          chat &&
-          !chat.chatData.userChatSettingsDTO.isBlocked &&
-          !chat.chatData.userChatSettingsDTO.isBlockedMe
-        ) {
-          const messageSpan = chat.querySelector(".message-span");
-          const messageSpanSpan = chat.querySelector(".message-span-span");
-          const isSender =
-            chat.chatData.chatDTO.messages[
-              chat.chatData.chatDTO.messages.length - 1
-            ].senderId === this.user.id;
-          const messageDTO =
-            chat.chatData.chatDTO.messages[
-              chat.chatData.chatDTO.messages.length - 1
-            ];
-          if (status.typing) {
-            if (isSender) {
-              messageSpan.removeChild(messageSpan.firstElementChild);
-            }
-            messageSpanSpan.textContent = i18n.t("messageBox.typing");
-          } else {
-            if (isSender) {
-              const messageDeliveredTickElement =
-                createMessageDeliveredTickElement();
-              if (messageDTO.isSeen) {
-                messageDeliveredTickElement.firstElementChild.className =
-                  "message-seen-tick-span";
-                messageDeliveredTickElement.firstElementChild.ariaLabel =
-                  " Okundu ";
-              }
-              messageSpan.prepend(messageDeliveredTickElement);
-              messageSpanSpan.textContent = messageDTO.decryptedMessage
-                ? messageDTO.decryptedMessage
-                : await decryptMessage(messageDTO, isSender);
-            } else {
-              messageSpanSpan.textContent = await decryptMessage(
-                messageDTO,
-                isSender
-              );
-            }
-          }
+
+        chatStore.chatWS.send("read-message", msgDto);
+      }
+
+      lastMessageChange(
+        dto.chatRoomId,
+        chatElement,
+        dto.decryptedMessage,
+        dto.fullDateTime
+      );
+    });
+
+    // TYPING
+    chatWS.subscribe(typingChannel, async (msg) => {
+      const status = JSON.parse(msg.body);
+
+      const visible = [...document.querySelectorAll(".chat1")];
+      const chatElement = visible.find(
+        (el) => el.chatData.chatDTO.id === status.chatRoomId
+      );
+
+      if (!chatElement) return;
+
+      const chat = chatElement.chatData;
+      if (
+        chat.userChatSettingsDTO.isBlocked ||
+        chat.userChatSettingsDTO.isBlockedMe
+      )
+        return;
+
+      const messageSpan = chatElement.querySelector(".message-span");
+      const messageText = chatElement.querySelector(".message-span-span");
+
+      const lastMsg = chat.chatDTO.messages[chat.chatDTO.messages.length - 1];
+
+      const isSender = lastMsg.senderId === chatStore.user.id;
+
+      if (status.typing) {
+        if (isSender) {
+          messageSpan.removeChild(messageSpan.firstElementChild);
         }
+        messageText.textContent = i18n.t("messageBox.typing");
+      } else {
+        if (isSender) {
+          const tick = createMessageDeliveredTickElement();
+          if (lastMsg.isSeen) {
+            tick.firstElementChild.className = "message-seen-tick-span";
+            tick.firstElementChild.ariaLabel = "Seen";
+          }
+          messageSpan.prepend(tick);
+        }
+
+        messageText.textContent =
+          lastMsg.decryptedMessage ?? (await decryptMessage(lastMsg, isSender));
       }
     });
   }
 
   addEventListeners() {
-    const addFriendButtonElement = document.querySelector(".add-friendd");
-    const contactListButtonElement = document.querySelector(".friend-list-btn");
-    const settingsBtnElement = document.querySelector(".settings-btn");
-    const userProfileImageButton = document.querySelector(
-      ".user-profile-photo"
-    );
+    const addFriendButton = document.querySelector(".add-friendd");
+    const contactListButton = document.querySelector(".friend-list-btn");
+    const settingsButton = document.querySelector(".settings-btn");
+    const profilePhotoButton = document.querySelector(".user-profile-photo");
     const searchInput = document.querySelector(".css9");
+
+    // Search
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
         this.chatSearchHandler.handleSearch(e);
       });
     }
 
-    if (userProfileImageButton) {
-      userProfileImageButton.addEventListener("click", () => {
-        userUpdateModal(this.user, true);
+    // Profile modal
+    if (profilePhotoButton) {
+      profilePhotoButton.addEventListener("click", () => {
+        userUpdateModal(chatStore.user, true);
       });
     }
 
-    if (addFriendButtonElement) {
-      addFriendButtonElement.addEventListener("click", () => {
-        addContactModal(chatInstance.user);
+    // Add friend modal
+    if (addFriendButton) {
+      addFriendButton.addEventListener("click", () => {
+        addContactModal(chatStore.user); // ← user store'dan geliyor
       });
     }
 
-    if (contactListButtonElement) {
-      contactListButtonElement.addEventListener("click", () => {
-        renderContactList(this.contactList);
+    // Contact list
+    if (contactListButton) {
+      contactListButton.addEventListener("click", () => {
+        renderContactList(chatStore.contactList);
       });
     }
 
-    if (settingsBtnElement) {
-      settingsBtnElement.addEventListener("click", () => {
+    // Settings
+    if (settingsButton) {
+      settingsButton.addEventListener("click", () => {
         createSettingsHtml();
       });
     }
   }
 
-  startPing() {
-    if (this.pingInterval) return;
-
-    this.pingInterval = setInterval(() => {
-      this.webSocketManagerChat?.send("ping", {});
-    }, this.pingFrequency);
-  }
-
-  stopPing() {
-    clearInterval(this.pingInterval);
-    this.pingInterval = null;
-  }
   async logout() {
-    this.webSocketManagerChat?.send("user-offline", {});
+    const overlay = document.querySelector(".overlay-spinner");
+    overlay.classList.remove("hidden");
 
-    // this.stopPing();
+    try {
+      await authService.logout();
+    } catch (e) {
+      console.error("Logout error:", e);
+    }
 
-    this.webSocketManagerChat?.disconnect();
-    this.webSocketManagerContacts?.disconnect();
+    try {
+      chatStore.chatWS?.disconnect();
+      chatStore.contactsWS?.disconnect();
+    } catch {}
 
     sessionStorage.clear();
 
-    navigateTo("/");
+    overlay.classList.add("hidden");
+
+    navigateTo("/login");
   }
 
   visibilityHandlers() {
@@ -876,77 +809,86 @@ export default class Chat extends AbstractView {
     window.__chatVisibilityBound = true;
 
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) {
-        this.handleAway();
-      } else {
-        this.handleOnline();
-      }
+      if (document.hidden) this.handleAway();
+      else this.handleOnline();
     });
 
     window.addEventListener("focus", () => this.handleOnline());
     window.addEventListener("blur", () => this.handleAway());
 
-    window.addEventListener("beforeunload", () => this.handleOffline());
-  }
+    window.addEventListener("beforeunload", () => {
+      try {
+        this.handleOffline();
+      } catch {}
 
-  sendStatus(status) {
-    if (this.lastUserStatus === status) return;
+      try {
+        chatStore.chatWS?.disconnect();
+      } catch {}
 
-    this.lastUserStatus = status;
+      try {
+        chatStore.contactsWS?.disconnect();
+      } catch {}
 
-    this.webSocketManagerContacts.send("/user-status", {
-      status: status,
+      // const access = sessionStorage.getItem("access_token");
+      // if (access) {
+      //   navigator.sendBeacon(
+      //     `${AUTH_SERVICE_URL}/logout`,
+      //     JSON.stringify({ token: access })
+      //   );
+      // }
     });
   }
 
+  sendStatus(status) {
+    if (chatStore.lastUserStatus === status) return;
+
+    chatStore.setLastUserStatus(status);
+
+    chatStore.contactsWS?.send("/user-status", { status });
+  }
+
   handleOnline() {
-    if (!this.webSocketManagerContacts?.isConnected) return;
+    if (!chatStore.contactsWS?.isConnected) return;
     this.sendStatus("online");
-    // this.startPing();
   }
 
   handleAway() {
-    if (!this.webSocketManagerContacts?.isConnected) return;
+    if (!chatStore.contactsWS?.isConnected) return;
     this.sendStatus("away");
-    // this.stopPing();
   }
 
   handleOffline() {
-    if (!this.webSocketManagerContacts?.isConnected) return;
+    if (!chatStore.contactsWS?.isConnected) return;
     this.sendStatus("offline");
-    // this.stopPing();
   }
 }
 
-const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
-  const messageBoxElement = document.querySelector(".message-box1");
+export const handleLastSeenVisibilityChange = (newContactPrivacy) => {
+  const user = chatStore.user;
 
+  const messageBoxElement = document.querySelector(".message-box1");
   if (
     messageBoxElement &&
     messageBoxElement.data.userProfileResponseDTO.id ===
       newContactPrivacy.contactsDTO.userProfileResponseDTO.id
   ) {
     const statusElement = messageBoxElement.querySelector(".online-status");
-    if (
+
+    const showForUser =
       user.privacySettings.lastSeenVisibility === "EVERYONE" ||
       (newContactPrivacy.contactsDTO.contact.userHasAddedRelatedUser &&
-        user.privacySettings.lastSeenVisibility === "CONTACTS")
-    ) {
-      if (
-        newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings
-          .lastSeenVisibility === "EVERYONE"
-      ) {
-        if (!statusElement) {
-          isOnlineStatus(
-            newContactPrivacy.contactsDTO.userProfileResponseDTO,
-            newContactPrivacy.contactsDTO.contact
-          );
-        }
-      } else if (
-        newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings
-          .lastSeenVisibility === "CONTACTS" &&
-        newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser
-      ) {
+        user.privacySettings.lastSeenVisibility === "CONTACTS");
+
+    if (showForUser) {
+      const contactPrivacy =
+        newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings;
+
+      const allow =
+        contactPrivacy.lastSeenVisibility === "EVERYONE" ||
+        (contactPrivacy.lastSeenVisibility === "CONTACTS" &&
+          newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser);
+
+      if (allow) {
         if (!statusElement) {
           isOnlineStatus(
             newContactPrivacy.contactsDTO.userProfileResponseDTO,
@@ -954,47 +896,39 @@ const handleLastSeenVisibilityChange = (user, newContactPrivacy) => {
           );
         }
       } else {
-        if (
-          statusElement &&
-          newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings
-            .onlineStatusVisibility !== "EVERYONE"
-        ) {
-          statusElement.remove();
-        }
+        statusElement?.remove();
       }
     }
   }
 };
 
-const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
-  const messageBoxElement = document.querySelector(".message-box1");
 
+export const handleOnlineStatusVisibilityChange = (newContactPrivacy) => {
+  const user = chatStore.user;
+
+  const messageBoxElement = document.querySelector(".message-box1");
   if (
     messageBoxElement &&
     messageBoxElement.data.userProfileResponseDTO.id ===
       newContactPrivacy.contactsDTO.userProfileResponseDTO.id
   ) {
     const statusElement = messageBoxElement.querySelector(".online-status");
-    if (
+
+    const showForUser =
       user.privacySettings.onlineStatusVisibility === "EVERYONE" ||
       (newContactPrivacy.contactsDTO.contact.userHasAddedRelatedUser &&
-        user.privacySettings.onlineStatusVisibility === "CONTACTS")
-    ) {
-      if (
-        newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings
-          .onlineStatusVisibility === "EVERYONE"
-      ) {
-        if (!statusElement) {
-          isOnlineStatus(
-            newContactPrivacy.contactsDTO.userProfileResponseDTO,
-            newContactPrivacy.contactsDTO.contact
-          );
-        }
-      } else if (
-        newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings
-          .onlineStatusVisibility === "CONTACTS" &&
-        newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser
-      ) {
+        user.privacySettings.onlineStatusVisibility === "CONTACTS");
+
+    if (showForUser) {
+      const contactPrivacy =
+        newContactPrivacy.contactsDTO.userProfileResponseDTO.privacySettings;
+
+      const allow =
+        contactPrivacy.onlineStatusVisibility === "EVERYONE" ||
+        (contactPrivacy.onlineStatusVisibility === "CONTACTS" &&
+          newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser);
+
+      if (allow) {
         if (!statusElement) {
           isOnlineStatus(
             newContactPrivacy.contactsDTO.userProfileResponseDTO,
@@ -1002,39 +936,44 @@ const handleOnlineStatusVisibilityChange = (user, newContactPrivacy) => {
           );
         }
       } else {
-        if (statusElement) {
-          statusElement.remove();
-        }
+        statusElement?.remove();
       }
     }
   }
 };
-const handleProfilePhotoVisibilityChange = (newValue, image) => {
-  const visibleChatsElements = [...document.querySelectorAll(".chat1")];
-  const visibleChatElement = visibleChatsElements.find(
+
+
+export const handleProfilePhotoVisibilityChange = (newValue, image) => {
+  const privacy =
+    newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility;
+
+  const bool =
+    privacy === "EVERYONE" ||
+    (privacy === "CONTACTS" && newValue.contact.relatedUserHasAddedUser);
+
+  // CHAT LIST
+  const visibleChats = [...document.querySelectorAll(".chat1")];
+  const chatElement = visibleChats.find(
     (chat) =>
       chat.chatData.userProfileResponseDTO.id ===
       newValue.userProfileResponseDTO.id
   );
-  const bool =
-    newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility ===
-      "EVERYONE" ||
-    (newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility ===
-      "CONTACTS" &&
-      newValue.contact.relatedUserHasAddedUser);
-  if (visibleChatElement) {
-    const imageElement = visibleChatElement.querySelector(".image");
+  if (chatElement) {
+    const imageElement = chatElement.querySelector(".image");
     changesVisibilityProfilePhoto(bool, imageElement, image);
   }
+
+  // CONTACT LIST
   if (document.querySelector(".a1-1-1-1-1-1-3")) {
-    const visibleContactsElements = [...document.querySelectorAll(".contact1")];
-    const visibleContactElement = visibleContactsElements.find(
-      (chat) =>
-        chat.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id
+    const visibleContacts = [...document.querySelectorAll(".contact1")];
+    const contact = visibleContacts.find(
+      (c) => c.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id
     );
-    const imageElement = visibleContactElement?.querySelector(".image");
+    const imageElement = contact?.querySelector(".image");
     changesVisibilityProfilePhoto(bool, imageElement, image);
   }
+
+  // MESSAGE BOX
   const messageBoxElement = document.querySelector(".message-box1");
   if (
     messageBoxElement &&
@@ -1045,25 +984,30 @@ const handleProfilePhotoVisibilityChange = (newValue, image) => {
     changesVisibilityProfilePhoto(bool, imageElement, image);
   }
 };
-const changesVisibilityProfilePhoto = (bool, imageElement, image) => {
-  if (bool && imageElement && image) {
-    if (imageElement.firstElementChild.className === "svg-div") {
+
+export const changesVisibilityProfilePhoto = (bool, imageElement, image) => {
+  if (!imageElement) return;
+
+  if (bool && image) {
+    // göster
+    if (imageElement.firstElementChild?.className === "svg-div") {
       imageElement.removeChild(imageElement.firstElementChild);
-      const imgElement = createElement(
+
+      const img = createElement(
         "img",
         "user-image",
         {},
-        { src: `${image}`, alt: "", draggable: "false", tabindex: "-1" }
+        { src: image, draggable: "false", tabindex: "-1", alt: "" }
       );
-      imageElement.append(imgElement);
+      imageElement.append(img);
     } else {
       imageElement.firstElementChild.src = image;
     }
   } else {
-    if (imageElement?.firstElementChild.className === "user-image") {
+    if (imageElement.firstElementChild?.className === "user-image") {
       imageElement.removeChild(imageElement.firstElementChild);
-      const svgDiv = createElement("div", "svg-div");
 
+      const svgDiv = createElement("div", "svg-div");
       const svgSpan = createElement(
         "span",
         "",
@@ -1075,36 +1019,8 @@ const changesVisibilityProfilePhoto = (bool, imageElement, image) => {
         viewBox: "0 0 212 212",
         height: "212",
         width: "212",
-        preserveAspectRatio: "xMidYMid meet",
-        version: "1.1",
-        x: "0px",
-        y: "0px",
-        "enable-background": "new 0 0 212 212",
-      });
-      const titleElement = createSvgElement("title", {});
-      titleElement.textContent = "default-user";
-      const pathBackground = createSvgElement("path", {
-        fill: "#DFE5E7",
-        class: "background",
-        d: "M106.251,0.5C164.653,0.5,212,47.846,212,106.25S164.653,212,106.25,212C47.846,212,0.5,164.654,0.5,106.25 S47.846,0.5,106.251,0.5z",
-      });
-      const groupElement = createSvgElement("g", {});
-      const pathPrimary1 = createSvgElement("path", {
-        fill: "#FFFFFF",
-        class: "primary",
-        d: "M173.561,171.615c-0.601-0.915-1.287-1.907-2.065-2.955c-0.777-1.049-1.645-2.155-2.608-3.299 c-0.964-1.144-2.024-2.326-3.184-3.527c-1.741-1.802-3.71-3.646-5.924-5.47c-2.952-2.431-6.339-4.824-10.204-7.026 c-1.877-1.07-3.873-2.092-5.98-3.055c-0.062-0.028-0.118-0.059-0.18-0.087c-9.792-4.44-22.106-7.529-37.416-7.529 s-27.624,3.089-37.416,7.529c-0.338,0.153-0.653,0.318-0.985,0.474c-1.431,0.674-2.806,1.376-4.128,2.101 c-0.716,0.393-1.417,0.792-2.101,1.197c-3.421,2.027-6.475,4.191-9.15,6.395c-2.213,1.823-4.182,3.668-5.924,5.47 c-1.161,1.201-2.22,2.384-3.184,3.527c-0.964,1.144-1.832,2.25-2.609,3.299c-0.778,1.049-1.464,2.04-2.065,2.955 c-0.557,0.848-1.033,1.622-1.447,2.324c-0.033,0.056-0.073,0.119-0.104,0.174c-0.435,0.744-0.79,1.392-1.07,1.926 c-0.559,1.068-0.818,1.678-0.818,1.678v0.398c18.285,17.927,43.322,28.985,70.945,28.985c27.678,0,52.761-11.103,71.055-29.095 v-0.289c0,0-0.619-1.45-1.992-3.778C174.594,173.238,174.117,172.463,173.561,171.615z",
-      });
-      const pathPrimary2 = createSvgElement("path", {
-        fill: "#FFFFFF",
-        class: "primary",
-        d: "M106.002,125.5c2.645,0,5.212-0.253,7.68-0.737c1.234-0.242,2.443-0.542,3.624-0.896 c1.772-0.532,3.482-1.188,5.12-1.958c2.184-1.027,4.242-2.258,6.15-3.67c2.863-2.119,5.39-4.646,7.509-7.509 c0.706-0.954,1.367-1.945,1.98-2.971c0.919-1.539,1.729-3.155,2.422-4.84c0.462-1.123,0.872-2.277,1.226-3.458 c0.177-0.591,0.341-1.188,0.49-1.792c0.299-1.208,0.542-2.443,0.725-3.701c0.275-1.887,0.417-3.827,0.417-5.811 c0-1.984-0.142-3.925-0.417-5.811c-0.184-1.258-0.426-2.493-0.725-3.701c-0.15-0.604-0.313-1.202-0.49-1.793 c-0.354-1.181-0.764-2.335-1.226-3.458c-0.693-1.685-1.504-3.301-2.422-4.84c-0.613-1.026-1.274-2.017-1.98-2.971 c-2.119-2.863-4.646-5.39-7.509-7.509c-1.909-1.412-3.966-2.643-6.15-3.67c-1.638-0.77-3.348-1.426-5.12-1.958 c-1.181-0.355-2.39-0.655-3.624-0.896c-2.468-0.484-5.035-0.737-7.68-0.737c-21.162,0-37.345,16.183-37.345,37.345 C68.657,109.317,84.84,125.5,106.002,125.5z",
       });
 
-      svgElement.append(titleElement);
-      svgElement.append(pathBackground);
-      groupElement.append(pathPrimary1);
-      groupElement.append(pathPrimary2);
-      svgElement.append(groupElement);
       svgSpan.append(svgElement);
       svgDiv.append(svgSpan);
       imageElement.append(svgDiv);
@@ -1112,20 +1028,20 @@ const changesVisibilityProfilePhoto = (bool, imageElement, image) => {
   }
 };
 
-const handleAboutVisibilityChange = (newValue) => {
+export const handleAboutVisibilityChange = (newValue) => {
+  const privacy =
+    newValue.userProfileResponseDTO.privacySettings.aboutVisibility;
+
   const bool =
-    newValue.userProfileResponseDTO.privacySettings.aboutVisibility ===
-      "EVERYONE" ||
-    (newValue.userProfileResponseDTO.privacySettings.aboutVisibility ===
-      "CONTACTS" &&
-      newValue.contact.userHasAddedRelatedUser);
+    privacy === "EVERYONE" ||
+    (privacy === "CONTACTS" && newValue.contact.userHasAddedRelatedUser);
+
   if (document.querySelector(".a1-1-1-1-1-1-3")) {
-    const visibleContactsElements = [...document.querySelectorAll(".contact1")];
-    const visibleContactElement = visibleContactsElements.find(
-      (chat) =>
-        chat.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id
+    const visibleContacts = [...document.querySelectorAll(".contact1")];
+    const contact = visibleContacts.find(
+      (c) => c.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id
     );
-    const aboutElement = visibleContactElement?.querySelector(".message");
+    const aboutElement = contact?.querySelector(".message");
     changesVisibilityAbout(
       bool,
       aboutElement,
@@ -1133,34 +1049,29 @@ const handleAboutVisibilityChange = (newValue) => {
     );
   }
 };
-const changesVisibilityAbout = (bool, aboutElement, about) => {
+
+export const changesVisibilityAbout = (bool, element, about) => {
+  if (!element) return;
+
   if (bool) {
-    if (aboutElement) {
-      if (!aboutElement.firstElementChild) {
-        const messageSpan = createElement(
-          "span",
-          "message-span",
-          {},
-          { title: "" }
-        );
-        aboutElement.append(messageSpan);
-        const innerSpan = createElement(
-          "span",
-          "message-span-span",
-          {},
-          { dir: "ltr", "aria-label": "" },
-          about
-        );
-        messageSpan.append(innerSpan);
-      }
+    if (!element.firstElementChild) {
+      const span = createElement("span", "message-span");
+      const inner = createElement(
+        "span",
+        "message-span-span",
+        {},
+        { dir: "ltr" },
+        about
+      );
+      span.append(inner);
+      element.append(span);
     }
   } else {
-    if (aboutElement && aboutElement.firstElementChild) {
-      aboutElement.removeChild(aboutElement.firstElementChild);
+    if (element.firstElementChild) {
+      element.removeChild(element.firstElementChild);
     }
   }
 };
-
 export class UserSettingsDTO {
   constructor({
     friendId = "",

@@ -11,7 +11,6 @@ import {
   createMessageBox,
   removeMessageBoxAndUnsubscribe,
 } from "./MessageBox.js";
-import { chatInstance } from "../pages/Chat.js";
 import { chatService } from "../services/chatService.js";
 import { contactService } from "../services/contactsService.js";
 import { SearchHandler } from "../utils/searchHandler.js";
@@ -25,6 +24,7 @@ import {
 } from "../utils/util.js";
 import { UpdateItemsDTO, virtualScroll } from "../utils/virtualScroll.js";
 import { i18n } from "../i18n/i18n.js";
+import { chatStore } from "../store/chatStore.js";
 
 async function createContactOrInvitation(user, index) {
   const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
@@ -32,7 +32,7 @@ async function createContactOrInvitation(user, index) {
   const contactElementDOM = document.createElement("div");
   contactElementDOM.classList.add("contact1");
   contactElementDOM.setAttribute("role", "listitem");
-  contactElementDOM.style.zIndex = chatInstance.contactList.length - index;
+  contactElementDOM.style.zIndex = chatStore.contactList.length - index;
   contactElementDOM.style.transition = "none 0s ease 0s";
   contactElementDOM.style.height = "72px";
   contactElementDOM.style.transform = `translateY(${index * 72}px)`;
@@ -351,7 +351,7 @@ function removeEventListeners(contactElement) {
 
 async function renderContactListViewHTML(contactList) {
   const span_a1_1_1 = document.querySelector(".a1-1-1");
-  const contactListHeight = `${chatInstance.contactList.length * 72}px`;
+  const contactListHeight = `${chatStore.contactList.length * 72}px`;
 
   const contactsSideDiv = createElement("div", "a1-1-1-1", {
     height: "100%",
@@ -549,20 +549,20 @@ async function handleContactClick(event) {
       }
       return;
     }
-    if (chatInstance.selectedChatUserId || chatBoxElement) {
+    if (chatStore.selectedChatUserId || chatBoxElement) {
       chatBoxElement != null
         ? ariaSelected(
             chatBoxElement,
-            chatInstance.selectedChatUserId,
+            chatStore.selectedChatUserId,
             innerDiv
           )
         : ariaSelectedRemove(
-            chatInstance.selectedChatUserId,
+            chatStore.selectedChatUserId,
             contactData.userProfileResponseDTO.id
           );
     }
     let findChat = findChatRoom(
-      chatInstance.user.id,
+      chatStore.user.id,
       contactData.contactsDTO.userContactId
     );
     let chatSummaryDTO;
@@ -577,7 +577,7 @@ async function handleContactClick(event) {
         chatDTO: new ChatDTO({
           id: createChatRoomAndUserChatSettings.id,
           participantIds: [
-            chatInstance.user.id,
+            chatStore.user.id,
             contactData.contactsDTO.userContactId,
           ],
           messages: [],
@@ -628,7 +628,7 @@ async function handleContactClick(event) {
       mainCallback: async () => {
         const sendInvitationDTO = new SendInvitationDTO(
           contactData.invitationResponseDTO,
-          chatInstance.user.email
+          chatStore.user.email
         );
         const response = await contactService.sendInvitation(sendInvitationDTO);
         if (response.status === 200) {
@@ -671,7 +671,7 @@ async function handleContactClick(event) {
 
 function scrollToChat(userId) {
   const paneSideElement = document.querySelector("#pane-side");
-  const chatList = chatInstance.chatList;
+  const chatList = chatStore.chatList;
   const index = chatList.findIndex(
     (c) => c.userProfileResponseDTO.id === userId
   );
@@ -696,7 +696,7 @@ function findChatRoomElement(userId, friendId) {
   });
 }
 function findChatRoom(userId, friendId) {
-  return chatInstance.chatList.find((chat) => {
+  return chatStore.chatList.find((chat) => {
     const participants = chat.chatDTO.participantIds;
     return (
       participants.includes(userId) &&
@@ -843,13 +843,13 @@ function removeContact(contactElement, contactData) {
   removeEventListeners(contactElement);
   let removeIndex;
   if (contactData.contactsDTO) {
-    removeIndex = chatInstance.contactList.findIndex(
+    removeIndex = chatStore.contactList.findIndex(
       (item) =>
         item.contactsDTO &&
         item.userProfileResponseDTO.id === contactData.userProfileResponseDTO.id
     );
   } else {
-    removeIndex = chatInstance.contactList.findIndex(
+    removeIndex = chatStore.contactList.findIndex(
       (item) =>
         item.contactsDTO === null &&
         item.invitationResponseDTO &&
@@ -859,28 +859,28 @@ function removeContact(contactElement, contactData) {
   }
 
   if (removeIndex !== -1) {
-    chatInstance.contactList.splice(removeIndex, 1);
+    chatStore.contactList.splice(removeIndex, 1);
     const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
-    const newHeight = chatInstance.contactList.length * 72;
+    const newHeight = chatStore.contactList.length * 72;
     contactListElement.style.height = `${newHeight}px`;
     const { maxIndex, minIndex } = updateTranslateYAfterDelete(
       deletedContactTranslateY
     );
 
     const contactElements = document.querySelectorAll(".contact1");
-    if (contactElements.length < chatInstance.contactList.length) {
-      let newContactData = chatInstance.contactList[maxIndex];
+    if (contactElements.length < chatStore.contactList.length) {
+      let newContactData = chatStore.contactList[maxIndex];
       if (newContactData) {
         updateContactElement(contactElement, newContactData, maxIndex);
       } else {
-        newContactData = chatInstance.contactList[minIndex - 1];
+        newContactData = chatStore.contactList[minIndex - 1];
         updateContactElement(contactElement, newContactData, minIndex - 1);
       }
     } else {
       contactElement.remove();
     }
     if (contactData.userProfileResponseDTO) {
-      const findChat = chatInstance.chatList.find(
+      const findChat = chatStore.chatList.find(
         (chat) => chat.contactsDTO.id === contactData.contactsDTO.id
       );
       const chatElements = [...document.querySelectorAll(".chat1")];
@@ -999,7 +999,7 @@ function updateContactElement(contactElement, newContactData, newIndex) {
   }
   contactElement.contactData = newContactData;
   contactElement.style.transform = `translateY(${newIndex * 72}px)`;
-  contactElement.style.zIndex = chatInstance.contactList.length - newIndex;
+  contactElement.style.zIndex = chatStore.contactList.length - newIndex;
 }
 
 function closeOptionsDivOnClickOutside(event) {

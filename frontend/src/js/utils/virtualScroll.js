@@ -1,12 +1,12 @@
 // virtualScroll.js
 import { updateUnreadMessageCountAndSeenTick } from "../components/ChatBox.js";
-import { chatInstance } from "../pages/Chat.js";
 import {
   createVisibilityProfilePhoto,
   chatBoxLastMessageFormatDateTime,
   createElement,
 } from "./util.js";
 import { i18n } from "../i18n/i18n.js";
+import { chatStore } from "../store/chatStore.js";
 
 export function virtualScroll(
   updateItemsDTO,
@@ -104,9 +104,9 @@ function chatsVirtualScroll(item, listItem, newIndex) {
     }
   }
   item.chatData = listItem;
-  if (chatInstance.selectedChatUserId !== null) {
+  if (chatStore.selectedChatUserId !== null) {
     const isSelected =
-      chatInstance.selectedChatUserId === listItem.userProfileResponseDTO.id;
+      chatStore.selectedChatUserId === listItem.userProfileResponseDTO.id;
     if (isSelected) {
       item.setAttribute("aria-selected", "true");
       item.querySelector(".chat").classList.add("selected-chat");
