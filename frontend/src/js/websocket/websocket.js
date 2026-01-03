@@ -1,6 +1,4 @@
 import { Client } from "@stomp/stompjs";
-import { authService } from "../services/authService";
-import { navigateTo } from "..";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -10,10 +8,16 @@ export default class WebSocketManager {
     this.isConnected = false;
     this.disableReconnect = false;
     this.subscriptions = new Map();
-
+    this.activate = null;
     this._onConnect = null;
     this._onReconnect = null;
     this._onDisconnect = null;
+    this._onForceLogout = null;
+
+    this._pingIntervalId = null;
+    this._visibilityHandler = null;
+    this._focusHandler = null;
+    this._visibilityBound = false;
 
     this.client = new Client({
       brokerURL: this.url,
@@ -24,8 +28,8 @@ export default class WebSocketManager {
         };
       },
 
-      heartbeatIncoming: 20000,
-      heartbeatOutgoing: 20000,
+      // heartbeatIncoming: 20000,
+      // heartbeatOutgoing: 20000,
 
       reconnectDelay: () => (this.disableReconnect ? 0 : 3000),
 
@@ -56,41 +60,41 @@ export default class WebSocketManager {
       },
 
       onStompError: async (frame) => {
-        debugger;
-        console.error("STOMP ERROR:", frame);
-
         const code = frame.headers.message;
 
-        if (code === "EXPIRED_TOKEN") {
+        if (code === "TOKEN_EXPIRED") {
           try {
-            const refreshTokenSession = sessionStorage.getItem("refresh_token");
+            const refreshToken = sessionStorage.getItem("refresh_token");
+
             const res = await axios.post(`${BASE_URL}/auth/refresh-token`, {
-              refreshToken: refreshTokenSession,
+              refreshToken,
             });
 
-            const { accessToken, refreshToken } = res.data.data;
+            const { accessToken, refreshToken: newRefresh } = res.data.data;
+
             sessionStorage.setItem("access_token", accessToken);
-            sessionStorage.setItem("refresh_token", refreshToken);
+            sessionStorage.setItem("refresh_token", newRefresh);
 
             this.refreshToken();
+            return;
           } catch (e) {
-            navigateTo("/login");
+            if (this._onForceLogout) this._onForceLogout();
+            return;
           }
         }
 
         if (code === "INVALID_SESSION") {
-          await authService.logout();
-          this.webSocketManagerChat.disableReconnect = true;
-          sessionStorage.clear();
-          navigateTo("/login");
+          if (this._onForceLogout) this._onForceLogout();
         }
 
         if (code === "INVALID_TOKEN") {
-          sessionStorage.clear();
-          navigateTo("/login");
+          if (this._onForceLogout) this._onForceLogout();
         }
       },
     });
+  }
+  onForceLogout(cb) {
+    this._onForceLogout = cb;
   }
 
   connect(onConnectCallback) {
@@ -167,9 +171,115 @@ export default class WebSocketManager {
   }
 
   refreshToken() {
-    debugger;
+    this.disableReconnect = false;
+
     this.client.deactivate().then(() => {
+      this.client.connectHeaders = {
+        Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
+      };
+
       this.client.activate();
     });
+  }
+
+  async reconnectCheck() {
+    if (!this.isConnected) {
+      this.client.deactivate().then(() => this.client.activate());
+      return;
+    }
+
+    try {
+      this.client.publish({
+        destination: "/app/ping",
+        body: "{}",
+      });
+    } catch (e) {
+      this.client.deactivate().then(() => this.client.activate());
+    }
+  }
+
+  startPing(intervalMs) {
+    setInterval(() => {
+      if (!this.isConnected) return;
+      if (!this.isActive) return;
+      try {
+        this.client.publish({
+          destination: "/app/ping",
+          body: "{}",
+        });
+      } catch (e) {
+        this.reconnectCheck();
+      }
+    }, intervalMs);
+  }
+
+  bindVisibilityReconnect() {
+    if (this._visibilityBound) return;
+    this._visibilityBound = true;
+
+    const updateActiveState = () => {
+      this.isActive = !document.hidden && document.hasFocus();
+    };
+
+    updateActiveState();
+
+    document.addEventListener("visibilitychange", () => {
+      updateActiveState();
+      if (this.isActive) {
+        setTimeout(() => this.reconnectCheck(), 300);
+      }
+    });
+
+    window.addEventListener("focus", () => {
+      updateActiveState();
+      if (this.isActive) {
+        setTimeout(() => this.reconnectCheck(), 200);
+      }
+    });
+
+    document.addEventListener("freeze", () => {
+      this.isActive = false;
+    });
+
+    window.addEventListener("blur", () => {
+      updateActiveState();
+    });
+  }
+  destroy() {
+    if (this._pingIntervalId) {
+      clearInterval(this._pingIntervalId);
+      this._pingIntervalId = null;
+    }
+
+    if (this._visibilityHandler) {
+      document.removeEventListener("visibilitychange", this._visibilityHandler);
+      this._visibilityHandler = null;
+    }
+
+    if (this._focusHandler) {
+      window.removeEventListener("focus", this._focusHandler);
+      this._focusHandler = null;
+    }
+
+    this._visibilityBound = false;
+
+    for (const [, data] of this.subscriptions.entries()) {
+      try {
+        data.stompSubscription?.unsubscribe();
+      } catch {}
+    }
+    this.subscriptions.clear();
+
+    this.disableReconnect = true;
+    this.isConnected = false;
+
+    try {
+      this.client.deactivate();
+    } catch {}
+
+    this._onConnect = null;
+    this._onReconnect = null;
+    this._onDisconnect = null;
+    this._onForceLogout = null;
   }
 }

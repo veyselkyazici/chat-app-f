@@ -28,8 +28,7 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
           build-args: |
-            VITE_BASE_URL_WEBSOCKET_CHAT=${{ secrets.VITE_BASE_URL_WEBSOCKET_CHAT }}
-            VITE_BASE_URL_WEBSOCKET_CONTACTS=${{ secrets.VITE_BASE_URL_WEBSOCKET_CONTACTS }}
+            VITE_BASE_URL_WEBSOCKET=${{ secrets.VITE_BASE_URL_WEBSOCKET}}
             VITE_BASE_URL_USER=${{ secrets.VITE_BASE_URL_USER }}
             VITE_BASE_URL=${{ secrets.VITE_BASE_URL }}
             VITE_USER_SERVICE_URL=${{ secrets.VITE_USER_SERVICE_URL }}

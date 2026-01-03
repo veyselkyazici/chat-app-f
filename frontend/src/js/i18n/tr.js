@@ -236,6 +236,7 @@ export default {
     status502: "Geçersiz yanıt. Lütfen daha sonra tekrar deneyin.",
     status503: "Servis geçici olarak kullanılamıyor. Lütfen tekrar deneyin.",
     status504: "Sunucu yanıt vermedi. Lütfen daha sonra tekrar deneyin.",
+    status3008: "Kendinizi kişi listenize ekleyemezsiniz.",
     unexpectedError: "Bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
   },
   lastSeen: {

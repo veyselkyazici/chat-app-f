@@ -2,23 +2,21 @@ import WebSocketManager from "./websocket";
 
 class WebSocketService {
   constructor() {
-    this.chatWS = null;
-    this.contactsWS = null;
+    this.ws = null;
   }
 
   init() {
-    this.chatWS = new WebSocketManager(
-      import.meta.env.VITE_BASE_URL_WEBSOCKET_CHAT
-    );
-    this.contactsWS = new WebSocketManager(
-      import.meta.env.VITE_BASE_URL_WEBSOCKET_CONTACTS
-    );
-  }
+    this.ws = new WebSocketManager(import.meta.env.VITE_BASE_URL_WEBSOCKET);
 
-//   refreshAll() {
-//     this.chatWS?.refreshToken();
-//     this.contactsWS?.refreshToken();
-//   }
+    this.ws.startPing(5000);
+    this.ws.bindVisibilityReconnect();
+  }
+  destroy() {
+    if (!this.ws) return;
+
+    this.ws.destroy();
+    this.ws = null;
+  }
 }
 
 export const webSocketService = new WebSocketService();

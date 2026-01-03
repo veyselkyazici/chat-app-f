@@ -513,8 +513,8 @@ const toggleBlockUser = async (chatData) => {
 
           if (statusSpan) statusSpan.remove();
 
-          webSocketService.contactsWS.unsubscribe(`/user/queue/online-status`);
-          webSocketService.chatWS.unsubscribe(`/user/queue/message-box-typing`);
+          webSocketService.ws.unsubscribe(`/user/queue/online-status`);
+          webSocketService.ws.unsubscribe(`/user/queue/message-box-typing`);
         }
 
         toastr.success(
@@ -849,11 +849,11 @@ async function handleChatClick(event) {
     return;
   }
   ariaSelected(chatElement, chatStore.selectedChatUserId, innerDiv);
-  webSocketService.chatWS.unsubscribe(
+  webSocketService.ws.unsubscribe(
     `/user/queue/read-confirmation-recipient`
   );
   const readConfirmationRecipientChannel = `/user/queue/read-confirmation-recipient`;
-  webSocketService.chatWS.subscribe(
+  webSocketService.ws.subscribe(
     readConfirmationRecipientChannel,
     async (message) => {
       removeUnreadMessageCountElement(chatElement);
@@ -885,7 +885,7 @@ async function markMessagesAsReadAndFetchMessages(chatElement) {
       chatElement.chatData.userChatSettingsDTO.unreadMessageCount,
   };
 
-  webSocketService.chatWS.send("read-message", dto);
+  webSocketService.ws.send("read-message", dto);
 }
 const removeUnreadMessageCountElement = (chatElement) => {
   const unreadMessageCountDiv = chatElement.querySelector(

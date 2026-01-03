@@ -229,6 +229,7 @@ export default {
     status502: "Invalid response from the server. Please try again later.",
     status503: "Service temporarily unavailable. Please try again later.",
     status504: "Server took too long to respond. Please try again later.",
+    status3008: "You can’t add yourself as a contact.",
     unexpectedError: "An unexpected error occurred. Please try again later.",
   },
   lastSeen: {

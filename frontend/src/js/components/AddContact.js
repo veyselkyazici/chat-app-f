@@ -106,6 +106,7 @@ const addContact = async (addedByUser, emailDOM, nameDOM) => {
     const errorResponse = error.response?.data;
     if (errorResponse?.data?.errorCode) {
       const { errorCode } = errorResponse.data;
+      
       handleErrorCode(errorCode, null, i18n);
       return;
     }

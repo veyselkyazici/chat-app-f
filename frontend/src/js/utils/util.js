@@ -42,6 +42,9 @@ function handleErrorCode(code, targetSelector = null, i18n) {
     502: i18n.t("errors.status502"),
     503: i18n.t("errors.status503"),
     504: i18n.t("errors.status504"),
+
+
+    3008: i18n.t("errors.status3008"),
     9999: i18n.t("errors.unexpectedError"),
   };
 

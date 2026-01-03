@@ -87,13 +87,13 @@ export default class Chat extends AbstractView {
     const response = await userService.getUserWithUserKeyByAuthId(storageId);
 
     chatStore.setUser(response.data);
-
+    console.log(chatStore.user.id);
     if (!chatStore.user) {
       return navigateTo("/login");
     }
 
     this.initializeWebSockets();
-
+    chatStore.setLogoutHandler(() => this.logout());
     if (chatStore.user.updatedAt == null) {
       this.hideLoadingScreen();
       userUpdateModal(chatStore.user, false);
@@ -181,24 +181,19 @@ export default class Chat extends AbstractView {
   initializeWebSockets() {
     webSocketService.init();
 
-    const chatWS = webSocketService.chatWS;
-    const contactsWS = webSocketService.contactsWS;
+    const ws = webSocketService.ws;
 
-    chatStore.setWebSocketManagers(chatWS, contactsWS);
+    chatStore.setWebSocketManagers(ws);
 
-    chatWS.connect(() => {
-      this.subscribeToChatChannels();
-      this.handleOnline();
+    ws.connect(() => {
+      this.subscribeToWebSocketChannels();
+      // if (document.hidden) {
+      //   this.sendStatus("away");
+      // }
     });
 
-    contactsWS.connect(() => {
-      this.subscribeToFriendshipChannels();
-    });
-
-    chatWS.onDisconnect(() => this.handleOffline());
-    contactsWS.onDisconnect(() => this.handleOffline());
-
-    this.visibilityHandlers();
+    ws.onForceLogout(() => this.logout());
+    // this.visibilityHandlers();
   }
 
   chatSearchInit() {
@@ -241,19 +236,234 @@ export default class Chat extends AbstractView {
     if (loadingText) loadingText.textContent = text;
   }
 
-  subscribeToFriendshipChannels() {
-    const contactsWS = chatStore.contactsWS;
+  subscribeToWebSocketChannels() {
+    // CAHAT
+    const ws = chatStore.ws;
 
+    const recipientMessageChannel = `/user/queue/received-message`;
+    const typingChannel = `/user/queue/typing`;
+    const readMessagesChannel = `/user/queue/read-messages`;
+    const chatBlock = `/user/queue/block`;
+    const chatUnBlock = `/user/queue/unblock`;
+    const error = `/user/queue/error-message`;
+    const disconnect = `/user/queue/disconnect`;
+
+    ws.subscribe(disconnect, async () => this.logout());
+
+    ws.subscribe(`/user/queue/error`, (msg) => {
+      try {
+        console.error("WS error:", JSON.parse(msg.body));
+      } catch {
+        console.error("WS error(raw):", msg.body);
+      }
+    });
+
+    ws.subscribe(error, (msg) => {
+      const err = JSON.parse(msg.body);
+      handleErrorCode(err.code, null, i18n);
+    });
+
+    // BLOCK
+    ws.subscribe(chatBlock, async (msg) => {
+      const dto = JSON.parse(msg.body);
+
+      const updated = chatStore.chatList.map((chat) => {
+        if (chat.chatDTO.id === dto.chatRoomId) {
+          chat.userChatSettingsDTO.isBlockedMe = true;
+        }
+        return chat;
+      });
+
+      chatStore.setChatList(updated);
+
+      if (isMessageBoxDomExists(dto.chatRoomId)) {
+        const box = document.querySelector(".message-box");
+        const statusSpan = box.querySelector(".online-status");
+        if (statusSpan) statusSpan.remove();
+
+        chatStore.ws.unsubscribe(`/user/queue/online-status`);
+        chatStore.ws.unsubscribe(`/user/queue/message-box-typing`);
+      }
+    });
+
+    // UNBLOCK
+    ws.subscribe(chatUnBlock, async (msg) => {
+      const dto = JSON.parse(msg.body);
+
+      const updated = chatStore.chatList.map((chat) => {
+        if (chat.chatDTO.id === dto.chatRoomId) {
+          chat.userChatSettingsDTO.isBlockedMe = false;
+        }
+        return chat;
+      });
+
+      chatStore.setChatList(updated);
+
+      if (isMessageBoxDomExists(dto.chatRoomId)) {
+        const messageBoxElement = document.querySelector(".message-box");
+        const statusSpan = messageBoxElement.querySelector(".online-status");
+        if (statusSpan) statusSpan.remove();
+
+        const chatData = updated.find((c) => c.chatDTO.id === dto.chatRoomId);
+
+        await onlineInfo(chatData, messageBoxElement);
+      }
+    });
+
+    // READ MESSAGES
+    ws.subscribe(readMessagesChannel, (msg) => {
+      const json = JSON.parse(msg.body);
+
+      const first = json[0];
+
+      const updated = chatStore.chatList.map((chat) => {
+        if (chat.chatDTO.id === first.chatRoomId) {
+          chat.chatDTO.messages[0].isSeen = true;
+        }
+        return chat;
+      });
+
+      chatStore.setChatList(updated);
+
+      const messageBox = document.querySelector(".message-box1");
+      if (messageBox) {
+        messageBoxElementMessagesReadTick(
+          json,
+          messageBox.data.userProfileResponseDTO.privacySettings
+        );
+      }
+    });
+
+    // RECEIVED MESSAGE
+    ws.subscribe(recipientMessageChannel, async (msg) => {
+      const dto = JSON.parse(msg.body);
+
+      dto.decryptedMessage = await decryptMessage(dto);
+
+      let chat = chatStore.chatList.find(
+        (c) => c.chatDTO.id === dto.chatRoomId
+      );
+
+      if (!chat) {
+        await createChatBoxWithFirstMessage(dto);
+        return;
+      }
+
+      const incoming = new MessageDTO({ ...dto });
+
+      chat.chatDTO.messages[0] = incoming;
+      chat.userChatSettingsDTO.unreadMessageCount = dto.unreadMessageCount;
+
+      updateChatBox(chat);
+
+      const chatElements = [...document.querySelectorAll(".chat1")];
+      const chatElement = chatElements.find(
+        (el) => el.chatData.chatDTO.id === dto.chatRoomId
+      );
+
+      // unread badge update
+      if (chatElement) {
+        const options = chatElement.querySelector(".chat-options");
+        const span = chatElement.querySelector(".unread-message-count-span");
+
+        if (span) {
+          span.textContent = dto.unreadMessageCount;
+        } else {
+          const div = createElement("div", "unread-message-count-div");
+          const spanNew = createElement(
+            "span",
+            "unread-message-count-span",
+            {},
+            { "aria-label": `${dto.unreadMessageCount} unread messages` },
+            dto.unreadMessageCount
+          );
+          div.append(spanNew);
+          options.firstElementChild.append(div);
+        }
+      }
+
+      // message box açıkken read-message gönder
+      if (isMessageBoxDomExists(dto.chatRoomId)) {
+        const msgDto = {
+          recipientId: dto.recipientId,
+          userChatSettingsId: chat.userChatSettingsDTO.id,
+          chatRoomId: dto.chatRoomId,
+          senderId: dto.senderId,
+        };
+
+        renderMessage(
+          { messages: incoming, lastPage: null },
+          chat.userProfileResponseDTO.privacySettings,
+          true,
+          chatStore.user.id
+        );
+
+        chatStore.ws.send("read-message", msgDto);
+      }
+
+      lastMessageChange(
+        dto.chatRoomId,
+        chatElement,
+        dto.decryptedMessage,
+        dto.fullDateTime
+      );
+    });
+
+    // TYPING
+    ws.subscribe(typingChannel, async (msg) => {
+      const status = JSON.parse(msg.body);
+
+      const visible = [...document.querySelectorAll(".chat1")];
+      const chatElement = visible.find(
+        (el) => el.chatData.chatDTO.id === status.chatRoomId
+      );
+
+      if (!chatElement) return;
+
+      const chat = chatElement.chatData;
+      if (
+        chat.userChatSettingsDTO.isBlocked ||
+        chat.userChatSettingsDTO.isBlockedMe
+      )
+        return;
+
+      const messageSpan = chatElement.querySelector(".message-span");
+      const messageText = chatElement.querySelector(".message-span-span");
+
+      const lastMsg = chat.chatDTO.messages[chat.chatDTO.messages.length - 1];
+
+      const isSender = lastMsg.senderId === chatStore.user.id;
+
+      if (status.typing) {
+        if (isSender) {
+          messageSpan.removeChild(messageSpan.firstElementChild);
+        }
+        messageText.textContent = i18n.t("messageBox.typing");
+      } else {
+        if (isSender) {
+          const tick = createMessageDeliveredTickElement();
+          if (lastMsg.isSeen) {
+            tick.firstElementChild.className = "message-seen-tick-span";
+            tick.firstElementChild.ariaLabel = "Seen";
+          }
+          messageSpan.prepend(tick);
+        }
+
+        messageText.textContent =
+          lastMsg.decryptedMessage ?? (await decryptMessage(lastMsg, isSender));
+      }
+    });
+
+    // CONTACTS
     const addContact = `/user/queue/add-contact`;
     const addContactUser = `/user/queue/add-contact-user`;
     const addInvitation = `/user/queue/add-invitation`;
     const updatePrivacy = `/user/queue/updated-privacy-response`;
     const updatedUserProfile = `/user/queue/updated-user-profile-message`;
-    const disconnect = `/user/queue/disconnect`;
     const invitedUserJoined = `/user/queue/invited-user-joined`;
 
     // invited-user-joined
-    contactsWS.subscribe(invitedUserJoined, async (msg) => {
+    ws.subscribe(invitedUserJoined, async (msg) => {
       const dto = new ContactResponseDTO(JSON.parse(msg.body));
 
       // 1) varolan invitation'lardan sil
@@ -286,12 +496,12 @@ export default class Chat extends AbstractView {
     });
 
     // disconnect → logout
-    contactsWS.subscribe(disconnect, async () => {
+    ws.subscribe(disconnect, async () => {
       await this.logout();
     });
 
     // error
-    contactsWS.subscribe(`/user/queue/error`, (msg) => {
+    ws.subscribe(`/user/queue/error`, (msg) => {
       try {
         console.error("❌ WS Error:", JSON.parse(msg.body));
       } catch {
@@ -300,10 +510,10 @@ export default class Chat extends AbstractView {
     });
 
     // add-contact
-    contactsWS.subscribe(addContact, async (msg) => {
+    ws.subscribe(addContact, async (msg) => {
       const newContact = JSON.parse(msg.body);
 
-      // chat list içindeki adı güncelle
+      /* -------- CHAT LIST GÜNCELLE -------- */
       const updatedChatList = chatStore.chatList.map((chat) => {
         if (
           chat.userProfileResponseDTO.id ===
@@ -318,30 +528,40 @@ export default class Chat extends AbstractView {
 
       chatStore.setChatList(updatedChatList);
 
-      // Contact list sıralama
-      let contactIdList = chatStore.contactList.filter((c) => c.id);
-      const index = contactIdList.findIndex((c) => {
-        return (
-          c.userContactName.localeCompare(
-            newContact.userContactName,
-            undefined,
-            { sensitivity: "base" }
-          ) > 0
-        );
-      });
+      /* -------- CONTACT LIST -------- */
 
-      if (index === -1) {
-        contactIdList.push(newContact);
-      } else {
-        contactIdList.splice(index, 0, newContact);
-      }
+      // 1️⃣ Sadece gerçek contact’lar
+      const contacts = chatStore.contactList.filter((c) => c.contactsDTO);
 
-      const invitations = chatStore.contactList.filter((c) => !c.id);
-      chatStore.setContactList([...contactIdList, ...invitations]);
+      // 2️⃣ Invitation’lar
+      const invitations = chatStore.contactList.filter(
+        (c) => c.invitationResponseDTO
+      );
+
+      // 3️⃣ Aynı contact varsa çıkar (WS duplicate guard)
+      const filteredContacts = contacts.filter(
+        (c) =>
+          c.userProfileResponseDTO.id !== newContact.userProfileResponseDTO.id
+      );
+
+      // 4️⃣ Yeni contact ekle
+      filteredContacts.push(newContact);
+
+      // 5️⃣ ALFABETİK SIRALA (🔥 kritik)
+      filteredContacts.sort((a, b) =>
+        getContactDisplayName(a).localeCompare(
+          getContactDisplayName(b),
+          undefined,
+          { sensitivity: "base" }
+        )
+      );
+
+      // 6️⃣ Store’a yaz
+      chatStore.setContactList([...filteredContacts, ...invitations]);
     });
 
     // add-contact-user (karşı taraf seni ekledi)
-    contactsWS.subscribe(addContactUser, async (msg) => {
+    ws.subscribe(addContactUser, async (msg) => {
       const newContact = JSON.parse(msg.body);
 
       const updatedChats = chatStore.chatList.map((chat) => {
@@ -396,7 +616,7 @@ export default class Chat extends AbstractView {
     });
 
     // add-invitation
-    contactsWS.subscribe(addInvitation, async (msg) => {
+    ws.subscribe(addInvitation, async (msg) => {
       const newInvitation = JSON.parse(msg.body);
 
       let invitations = chatStore.contactList.filter(
@@ -421,7 +641,7 @@ export default class Chat extends AbstractView {
     });
 
     // update-privacy
-    contactsWS.subscribe(updatePrivacy, async (msg) => {
+    ws.subscribe(updatePrivacy, async (msg) => {
       const dto = JSON.parse(msg.body);
 
       const chats = chatStore.chatList.map((chat) => {
@@ -486,7 +706,7 @@ export default class Chat extends AbstractView {
     });
 
     // updated-user-profile
-    contactsWS.subscribe(updatedUserProfile, async (msg) => {
+    ws.subscribe(updatedUserProfile, async (msg) => {
       const dto = JSON.parse(msg.body);
 
       const chats = chatStore.chatList.map((chat) => {
@@ -518,224 +738,6 @@ export default class Chat extends AbstractView {
       });
 
       chatStore.setContactList(contacts);
-    });
-  }
-
-  subscribeToChatChannels() {
-    const chatWS = chatStore.chatWS;
-
-    const recipientMessageChannel = `/user/queue/received-message`;
-    const typingChannel = `/user/queue/typing`;
-    const readMessagesChannel = `/user/queue/read-messages`;
-    const chatBlock = `/user/queue/block`;
-    const chatUnBlock = `/user/queue/unblock`;
-    const error = `/user/queue/error-message`;
-    const disconnect = `/user/queue/disconnect`;
-
-    chatWS.subscribe(disconnect, async () => this.logout());
-
-    chatWS.subscribe(`/user/queue/error`, (msg) => {
-      try {
-        console.error("WS error:", JSON.parse(msg.body));
-      } catch {
-        console.error("WS error(raw):", msg.body);
-      }
-    });
-
-    chatWS.subscribe(error, (msg) => {
-      const err = JSON.parse(msg.body);
-      handleErrorCode(err.code, null, i18n);
-    });
-
-    // BLOCK
-    chatWS.subscribe(chatBlock, async (msg) => {
-      const dto = JSON.parse(msg.body);
-
-      const updated = chatStore.chatList.map((chat) => {
-        if (chat.chatDTO.id === dto.chatRoomId) {
-          chat.userChatSettingsDTO.isBlockedMe = true;
-        }
-        return chat;
-      });
-
-      chatStore.setChatList(updated);
-
-      if (isMessageBoxDomExists(dto.chatRoomId)) {
-        const box = document.querySelector(".message-box");
-        const statusSpan = box.querySelector(".online-status");
-        if (statusSpan) statusSpan.remove();
-
-        chatStore.contactsWS.unsubscribe(`/user/queue/online-status`);
-        chatStore.chatWS.unsubscribe(`/user/queue/message-box-typing`);
-      }
-    });
-
-    // UNBLOCK
-    chatWS.subscribe(chatUnBlock, async (msg) => {
-      const dto = JSON.parse(msg.body);
-
-      const updated = chatStore.chatList.map((chat) => {
-        if (chat.chatDTO.id === dto.chatRoomId) {
-          chat.userChatSettingsDTO.isBlockedMe = false;
-        }
-        return chat;
-      });
-
-      chatStore.setChatList(updated);
-
-      if (isMessageBoxDomExists(dto.chatRoomId)) {
-        const messageBoxElement = document.querySelector(".message-box");
-        const statusSpan = messageBoxElement.querySelector(".online-status");
-        if (statusSpan) statusSpan.remove();
-
-        const chatData = updated.find((c) => c.chatDTO.id === dto.chatRoomId);
-
-        await onlineInfo(chatData, messageBoxElement);
-      }
-    });
-
-    // READ MESSAGES
-    chatWS.subscribe(readMessagesChannel, (msg) => {
-      const json = JSON.parse(msg.body);
-
-      const first = json[0];
-
-      const updated = chatStore.chatList.map((chat) => {
-        if (chat.chatDTO.id === first.chatRoomId) {
-          chat.chatDTO.messages[0].isSeen = true;
-        }
-        return chat;
-      });
-
-      chatStore.setChatList(updated);
-
-      const messageBox = document.querySelector(".message-box1");
-      if (messageBox) {
-        messageBoxElementMessagesReadTick(
-          json,
-          messageBox.data.userProfileResponseDTO.privacySettings
-        );
-      }
-    });
-
-    // RECEIVED MESSAGE
-    chatWS.subscribe(recipientMessageChannel, async (msg) => {
-      const dto = JSON.parse(msg.body);
-
-      dto.decryptedMessage = await decryptMessage(dto);
-
-      let chat = chatStore.chatList.find(
-        (c) => c.chatDTO.id === dto.chatRoomId
-      );
-
-      if (!chat) {
-        await createChatBoxWithFirstMessage(dto);
-        return;
-      }
-
-      const incoming = new MessageDTO({ ...dto });
-
-      chat.chatDTO.messages[0] = incoming;
-      chat.userChatSettingsDTO.unreadMessageCount = dto.unreadMessageCount;
-
-      updateChatBox(chat);
-
-      const chatElements = [...document.querySelectorAll(".chat1")];
-      const chatElement = chatElements.find(
-        (el) => el.chatData.chatDTO.id === dto.chatRoomId
-      );
-
-      // unread badge update
-      if (chatElement) {
-        const options = chatElement.querySelector(".chat-options");
-        const span = chatElement.querySelector(".unread-message-count-span");
-
-        if (span) {
-          span.textContent = dto.unreadMessageCount;
-        } else {
-          const div = createElement("div", "unread-message-count-div");
-          const spanNew = createElement(
-            "span",
-            "unread-message-count-span",
-            {},
-            { "aria-label": `${dto.unreadMessageCount} unread messages` },
-            dto.unreadMessageCount
-          );
-          div.append(spanNew);
-          options.firstElementChild.append(div);
-        }
-      }
-
-      // message box açıkken read-message gönder
-      if (isMessageBoxDomExists(dto.chatRoomId)) {
-        const msgDto = {
-          recipientId: dto.recipientId,
-          userChatSettingsId: chat.userChatSettingsDTO.id,
-          chatRoomId: dto.chatRoomId,
-          senderId: dto.senderId,
-        };
-
-        renderMessage(
-          { messages: incoming, lastPage: null },
-          chat.userProfileResponseDTO.privacySettings,
-          true,
-          chatStore.user.id
-        );
-
-        chatStore.chatWS.send("read-message", msgDto);
-      }
-
-      lastMessageChange(
-        dto.chatRoomId,
-        chatElement,
-        dto.decryptedMessage,
-        dto.fullDateTime
-      );
-    });
-
-    // TYPING
-    chatWS.subscribe(typingChannel, async (msg) => {
-      const status = JSON.parse(msg.body);
-
-      const visible = [...document.querySelectorAll(".chat1")];
-      const chatElement = visible.find(
-        (el) => el.chatData.chatDTO.id === status.chatRoomId
-      );
-
-      if (!chatElement) return;
-
-      const chat = chatElement.chatData;
-      if (
-        chat.userChatSettingsDTO.isBlocked ||
-        chat.userChatSettingsDTO.isBlockedMe
-      )
-        return;
-
-      const messageSpan = chatElement.querySelector(".message-span");
-      const messageText = chatElement.querySelector(".message-span-span");
-
-      const lastMsg = chat.chatDTO.messages[chat.chatDTO.messages.length - 1];
-
-      const isSender = lastMsg.senderId === chatStore.user.id;
-
-      if (status.typing) {
-        if (isSender) {
-          messageSpan.removeChild(messageSpan.firstElementChild);
-        }
-        messageText.textContent = i18n.t("messageBox.typing");
-      } else {
-        if (isSender) {
-          const tick = createMessageDeliveredTickElement();
-          if (lastMsg.isSeen) {
-            tick.firstElementChild.className = "message-seen-tick-span";
-            tick.firstElementChild.ariaLabel = "Seen";
-          }
-          messageSpan.prepend(tick);
-        }
-
-        messageText.textContent =
-          lastMsg.decryptedMessage ?? (await decryptMessage(lastMsg, isSender));
-      }
     });
   }
 
@@ -793,8 +795,7 @@ export default class Chat extends AbstractView {
     }
 
     try {
-      chatStore.chatWS?.disconnect();
-      chatStore.contactsWS?.disconnect();
+      chatStore.ws?.disconnect();
     } catch {}
 
     sessionStorage.clear();
@@ -803,66 +804,49 @@ export default class Chat extends AbstractView {
 
     navigateTo("/login");
   }
-
-  visibilityHandlers() {
-    if (window.__chatVisibilityBound) return;
-    window.__chatVisibilityBound = true;
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) this.handleAway();
-      else this.handleOnline();
-    });
-
-    window.addEventListener("focus", () => this.handleOnline());
-    window.addEventListener("blur", () => this.handleAway());
-
-    window.addEventListener("beforeunload", () => {
-      try {
-        this.handleOffline();
-      } catch {}
-
-      try {
-        chatStore.chatWS?.disconnect();
-      } catch {}
-
-      try {
-        chatStore.contactsWS?.disconnect();
-      } catch {}
-
-      // const access = sessionStorage.getItem("access_token");
-      // if (access) {
-      //   navigator.sendBeacon(
-      //     `${AUTH_SERVICE_URL}/logout`,
-      //     JSON.stringify({ token: access })
-      //   );
-      // }
-    });
+  destroy() {
+    webSocketService.destroy();
   }
 
-  sendStatus(status) {
-    if (chatStore.lastUserStatus === status) return;
+  // visibilityHandlers() {
+  //   document.addEventListener("visibilitychange", () => {
+  //     if (!document.hidden) this.sendStatus("online");
+  //   });
 
-    chatStore.setLastUserStatus(status);
+  //   window.addEventListener("focus", () => {
+  //     this.sendStatus("online");
+  //   });
 
-    chatStore.contactsWS?.send("/user-status", { status });
-  }
+  //   window.addEventListener("blur", () => {
+  //     this.sendStatus("away");
+  //   });
+  // }
 
-  handleOnline() {
-    if (!chatStore.contactsWS?.isConnected) return;
-    this.sendStatus("online");
-  }
+  // sendStatus(status) {
+  //   if (!chatStore.ws?.isConnected) return;
+  //   if (chatStore.lastUserStatus === status) return;
 
-  handleAway() {
-    if (!chatStore.contactsWS?.isConnected) return;
-    this.sendStatus("away");
-  }
+  //   chatStore.setLastUserStatus(status);
+  //   chatStore.ws.send("user-status", { status });
+  // }
+  // handleOnline() {
+  //   if (!chatStore.ws?.isConnected) return;
+  //   this.sendStatus("online");
+  // }
 
-  handleOffline() {
-    if (!chatStore.contactsWS?.isConnected) return;
-    this.sendStatus("offline");
-  }
+  // handleAway() {
+  //   if (!chatStore.ws?.isConnected) return;
+  //   this.sendStatus("away");
+  // }
 }
+function getContactDisplayName(c) {
+  if (c.contactsDTO?.userContactName) return c.contactsDTO.userContactName;
 
+  if (c.invitationResponseDTO?.contactName)
+    return c.invitationResponseDTO.contactName;
+
+  return "";
+}
 export const handleLastSeenVisibilityChange = (newContactPrivacy) => {
   const user = chatStore.user;
 
@@ -902,7 +886,6 @@ export const handleLastSeenVisibilityChange = (newContactPrivacy) => {
   }
 };
 
-
 export const handleOnlineStatusVisibilityChange = (newContactPrivacy) => {
   const user = chatStore.user;
 
@@ -941,7 +924,6 @@ export const handleOnlineStatusVisibilityChange = (newContactPrivacy) => {
     }
   }
 };
-
 
 export const handleProfilePhotoVisibilityChange = (newValue, image) => {
   const privacy =

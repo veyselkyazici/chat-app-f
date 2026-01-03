@@ -7,12 +7,19 @@ class ChatStore {
       selectedChatUserId: null,
       visibleItemCount: 0,
       lastUserStatus: null,
-
-      ws: {
-        chat: null,
-        contacts: null,
-      },
+      ws: null,
     };
+    this.logoutHandler = null;
+  }
+
+  setLogoutHandler(cb) {
+    this.logoutHandler = cb;
+  }
+
+  async logout() {
+    if (this.logoutHandler) {
+      return await this.logoutHandler();
+    }
   }
 
   setUser(user) {
@@ -56,17 +63,12 @@ class ChatStore {
   set selectedChatUserId(value) {
     this.state.selectedChatUserId = value;
   }
-  setWebSocketManagers(chatWS, contactsWS) {
-    this.state.ws.chat = chatWS;
-    this.state.ws.contacts = contactsWS;
+  setWebSocketManagers(ws) {
+    this.state.ws = ws;
   }
 
-  get chatWS() {
-    return this.state.ws.chat;
-  }
-
-  get contactsWS() {
-    return this.state.ws.contacts;
+  get ws() {
+    return this.state.ws;
   }
 
   setLastUserStatus(status) {

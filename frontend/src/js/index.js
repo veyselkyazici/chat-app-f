@@ -10,7 +10,7 @@ import VerificationFailed from "./pages/VerificationFailed.js";
 import { ChatLayout } from "./layouts/ChatLayout.js";
 import { DefaultLayout } from "./layouts/DefaultLayout.js";
 import Verify from "./pages/Verify.js";
-
+let currentView = null;
 const routes = [
   { path: "/", view: Home, layout: DefaultLayout },
   { path: "/register", view: Register, layout: DefaultLayout },
@@ -40,6 +40,9 @@ const navigateTo = (url) => {
 };
 
 const router = async () => {
+  if (currentView?.destroy) {
+    currentView.destroy();
+  }
   const potentialMatches = routes.map((route) => ({
     route,
     result: location.pathname.match(pathToRegex(route.path)),
@@ -57,7 +60,7 @@ const router = async () => {
     return navigateTo("/login");
   }
   const view = new match.route.view();
-
+  currentView = view;
   const html = await view.getHtml();
   const layoutHtml = match.route.layout(html);
   document.querySelector("#app").innerHTML = layoutHtml;

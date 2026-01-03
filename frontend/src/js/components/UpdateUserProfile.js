@@ -201,7 +201,7 @@ async function toggleEditName(user) {
         });
       } else {
         const response = await userService.updateUserName(updateUserDTO);
-        webSocketService.contactsWS.send("updated-user-profile-send-message", {
+        webSocketService.ws.send("updated-user-profile-send-message", {
           userId: chatStore.user.id,
           url: chatStore.user.imagee,
           about: chatStore.user.about,
@@ -233,7 +233,7 @@ async function toggleEditAbout() {
         });
       } else {
         const response = await userService.updateUserAbout(updateUserDTO);
-        webSocketService.contactsWS.send("updated-user-profile-send-message", {
+        webSocketService.ws.send("updated-user-profile-send-message", {
           userId: chatStore.user.id,
           url: chatStore.user.imagee,
           about: response.data.value,
@@ -851,7 +851,7 @@ async function cropImage(canvas1, userId, originalFile) {
         );
         userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
         userProfilePhotoElement.append(image);
-        webSocketService.contactsWS.send("updated-user-profile-send-message", {
+        webSocketService.ws.send("updated-user-profile-send-message", {
           userId: userId,
           url: chatStore.user.imagee,
           about: chatStore.user.about,
@@ -905,7 +905,7 @@ async function removePhoto() {
       photoElement.append(createDefaultImage());
       userProfilePhotoElement.append(createDefaultImage());
       chatStore.user.imagee = null;
-      webSocketService.contactsWS.send("updated-user-profile-send-message", {
+      webSocketService.ws.send("updated-user-profile-send-message", {
         userId: chatStore.user.id,
         url: chatStore.user.imagee,
         about: chatStore.user.about,

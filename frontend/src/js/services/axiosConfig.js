@@ -54,6 +54,13 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
+    
+    const backendErrorCode = error.response?.data?.data?.errorCode;
+
+    if (backendErrorCode) {
+      handleErrorCode(backendErrorCode, null, i18n);
+      return Promise.reject(error);
+    }
 
     switch (status) {
       case 400:
@@ -74,6 +81,7 @@ axiosInstance.interceptors.response.use(
       default:
         handleErrorCode(9999, null, i18n);
     }
+
     return Promise.reject(error);
   }
 );

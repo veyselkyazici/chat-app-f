@@ -61,7 +61,7 @@ async function createMessageBox(chatData) {
 }
 
 const typingStatusSubscribe = (chat, messageBoxElement) => {
-  webSocketService.chatWS.subscribe(
+  webSocketService.ws.subscribe(
     `/user/${chat.contactsDTO.userId}/queue/message-box-typing`,
     async (typingMessage) => {
       const status = JSON.parse(typingMessage.body);
@@ -77,7 +77,8 @@ const typingStatusSubscribe = (chat, messageBoxElement) => {
 };
 const typingsStatus = async (status, chat, messageBoxElement) => {
   setTimeout(async () => {
-    const statusSpan = messageBoxElement.querySelector(".online-status-1");
+    const statusContainer = getStatusContainer();
+    const statusSpan = statusContainer?.querySelector(".online-status-1");
     if (statusSpan) {
       if (status.typing) {
         statusSpan.textContent = i18n.t("messageBox.typing");
@@ -88,7 +89,7 @@ const typingsStatus = async (status, chat, messageBoxElement) => {
   }, 1000);
 };
 const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
-  webSocketService.contactsWS.subscribe(
+  webSocketService.ws.subscribe(
     `/user/queue/online-status`,
     async (statusMessage) => {
       onlineStatus(statusMessage, chat, messageBoxElement);
@@ -96,56 +97,46 @@ const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
   );
 };
 const createStatusElement = (type, value = null) => {
-  const messageBoxOnlineStatus = document.querySelector(".online-status-1");
+  const container = document.querySelector(".message-box1-2-2");
+
+  if (!container) return;
+
+  const old = container.querySelector(".online-status");
+  if (old) old.remove();
 
   let text = "";
+  if (type === "typing") text = i18n.t("messageBox.typing");
+  if (type === "online") text = i18n.t("messageBox.online");
+  if (type === "lastSeen") text = formatDateTime(value);
 
-  switch (type) {
-    case "typing":
-      text = i18n.t("messageBox.typing");
-      break;
+  const statusDiv = document.createElement("div");
+  statusDiv.className = "online-status";
 
-    case "online":
-      text = i18n.t("messageBox.online");
-      break;
+  const span = document.createElement("span");
+  span.className = "online-status-1";
+  span.textContent = text;
 
-    case "lastSeen":
-      text = formatDateTime(value);
-      break;
-  }
-  if (messageBoxOnlineStatus) {
-    messageBoxOnlineStatus.textContent = text;
-  } else {
-    const statusDiv = createElement("div", "online-status");
-    const statusSpan = createElement(
-      "div",
-      "online-status-1",
-      { "min-height": "0px" },
-      { "aria-label": "", title: "" },
-      text
-    );
-
-    statusDiv.append(statusSpan);
-    const messageBoxOnlineStatusParent =
-      document.querySelector(".message-box1-2-2");
-    messageBoxOnlineStatusParent.append(statusDiv);
-  }
+  statusDiv.append(span);
+  container.append(statusDiv);
 };
 
-const onlineStatus = async (statusMessage, chat, messageBoxElement) => {
+const getStatusContainer = () => document.querySelector(".message-box1-2-2");
+const onlineStatus = async (statusMessage, chat) => {
   const statusInfo = JSON.parse(statusMessage.body);
-  const statusSpan = messageBoxElement.querySelector(".online-status-1");
-  if (statusSpan) {
-    messageBoxElement.removeChild(statusSpan.parentElement);
-  }
-  if (statusInfo.status === "online") {
-    isOnlineStatus(chat.userProfileResponseDTO, chat.contactsDTO);
-  } else {
-    lastSeenStatus(
-      chat.userProfileResponseDTO,
-      chat.contactsDTO,
-      statusInfo.lastSeen
-    );
+
+  if (statusInfo.userId !== chat.userProfileResponseDTO.id) return;
+
+  switch (statusInfo.status) {
+    case "online":
+      createStatusElement("online");
+      break;
+
+    case "offline":
+    case "away":
+      if (statusInfo.lastSeen) {
+        createStatusElement("lastSeen", statusInfo.lastSeen);
+      }
+      break;
   }
 };
 
@@ -153,7 +144,7 @@ const handleTextBlur = (chat, typingStatus, textArea) => {
   const currentText = textArea.textContent.trim();
   // Boşsa veya placeholder varsa typing false gönder
   if (typingStatus.isTyping) {
-    webSocketService.chatWS.send("typing", {
+    webSocketService.ws.send("typing", {
       userId: chat.contactsDTO.userId,
       chatRoomId: chat.chatDTO.id,
       typing: false,
@@ -173,7 +164,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
     currentText === i18n.t("messageBox.messageBoxPlaceHolder")
   ) {
     if (typingStatus.isTyping) {
-      webSocketService.chatWS.send("typing", {
+      webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
         typing: false,
@@ -186,7 +177,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
 
   // Eğer yazıyorsa typing true
   if (!typingStatus.isTyping && currentText.length > 0) {
-    webSocketService.chatWS.send("typing", {
+    webSocketService.ws.send("typing", {
       userId: chat.contactsDTO.userId,
       chatRoomId: chat.chatDTO.id,
       typing: true,
@@ -210,7 +201,7 @@ function handleTextInput(textArea, chat, typingStatus, event) {
   ) {
     // Boşsa veya placeholder varsa false gönder
     if (typingStatus.isTyping) {
-      webSocketService.chatWS.send("typing", {
+      webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
         typing: false,
@@ -221,7 +212,7 @@ function handleTextInput(textArea, chat, typingStatus, event) {
   } else {
     // Yazıyorsa true gönder
     if (!typingStatus.isTyping) {
-      webSocketService.chatWS.send("typing", {
+      webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
         typing: true,
@@ -1072,11 +1063,15 @@ const onlineInfo = async (chat, messageBoxDiv2) => {
     !chat.userChatSettingsDTO.isBlocked &&
     !chat.userChatSettingsDTO.isBlockedMe
   ) {
-    await isOnline(chat.userProfileResponseDTO, chat.contactsDTO);
     onlineVisibilitySubscribe(chat, messageBoxDiv2);
     typingStatusSubscribe(chat, messageBoxDiv2);
+
+    chatStore.ws.send("/request-status-snapshot", {
+      targetUserId: chat.userProfileResponseDTO.id,
+    });
   }
 };
+
 const getFirstMessageDate = () => {
   const firstMessageElement = document.querySelector(
     '.message-box1-5-1-2-2 [role="row"][class=""]'
@@ -1354,31 +1349,31 @@ const scrollToBottom = () => {
   const messageRenderDOM = document.querySelector(".message-box1-5-1-2");
   messageRenderDOM.scrollTop = messageRenderDOM.scrollHeight;
 };
-const isOnline = async (userContact, contact) => {
-  try {
-    if (
-      (userContact.privacySettings.lastSeenVisibility !== "NOBODY" ||
-        userContact.privacySettings.onlineStatusVisibility !== "NOBODY") &&
-      (chatStore.user.privacySettings.lastSeenVisibility !== "NOBODY" ||
-        chatStore.user.privacySettings.onlineStatusVisibility !== "NOBODY")
-    ) {
-      const friendStatus = await contactService.userOnlineStatus(
-        userContact.id
-      );
-      if (friendStatus.status === "online") {
-        const typingDTO = await chatService.isTypingStatus(userContact.id);
-        if (typingDTO.typing) {
-          createStatusElement("typing");
-        }
-        isOnlineStatus(userContact, contact);
-      } else {
-        lastSeenStatus(userContact, contact, friendStatus.lastSeen);
-      }
-    }
-  } catch (error) {
-    console.error("Online status error:", error);
-  }
-};
+// const isOnline = async (userContact, contact) => {
+//   try {
+//     if (
+//       (userContact.privacySettings.lastSeenVisibility !== "NOBODY" ||
+//         userContact.privacySettings.onlineStatusVisibility !== "NOBODY") &&
+//       (chatStore.user.privacySettings.lastSeenVisibility !== "NOBODY" ||
+//         chatStore.user.privacySettings.onlineStatusVisibility !== "NOBODY")
+//     ) {
+//       const friendStatus = await contactService.userOnlineStatus(
+//         userContact.id
+//       );
+//       if (friendStatus.status === "online") {
+//         const typingDTO = await chatService.isTypingStatus(userContact.id);
+//         if (typingDTO.typing) {
+//           createStatusElement("typing");
+//         }
+//         isOnlineStatus(userContact, contact);
+//       } else {
+//         lastSeenStatus(userContact, contact, friendStatus.lastSeen);
+//       }
+//     }
+//   } catch (error) {
+//     console.error("Online status error:", error);
+//   }
+// };
 const isOnlineStatus = (userContact, contact) => {
   if (
     (userContact.privacySettings.onlineStatusVisibility === "EVERYONE" ||
@@ -1451,14 +1446,14 @@ const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = async (
     } else {
       lastSeen = false;
     }
-    if (lastSeen || online) {
-      const messageBoxDiv2 =
-        messageBoxElement.querySelector(".message-box1-2-2");
-      await isOnline(
-        messageBoxDiv2.data.userProfileResponseDTO,
-        messageBoxDiv2.data.contactsDTO
-      );
-    }
+    // if (lastSeen || online) {
+    //   const messageBoxDiv2 =
+    //     messageBoxElement.querySelector(".message-box1-2-2");
+    //   await isOnline(
+    //     messageBoxDiv2.data.userProfileResponseDTO,
+    //     messageBoxDiv2.data.contactsDTO
+    //   );
+    // }
   }
 };
 
@@ -1565,8 +1560,6 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
       });
 
       updateChatBox(newChatSummaryDTO);
-
-      webSocketService.chatWS.send("send-message", newEncryptedMessageDTO);
     } else {
       const existingChatSummary = chatStore.chatList[chatIndex];
 
@@ -1574,15 +1567,15 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 
       updateChatBox(existingChatSummary);
 
-      webSocketService.chatWS.send("typing", {
+      webSocketService.ws.send("typing", {
         userId: chatStore.user.id,
         chatRoomId: chatSummaryDTO.chatDTO.id,
         typing: false,
         friendId: chatSummaryDTO.userProfileResponseDTO.id,
       });
-
-      webSocketService.chatWS.send("send-message", newEncryptedMessageDTO);
     }
+
+    webSocketService.ws.send("send-message", newEncryptedMessageDTO);
 
     renderMessage(
       { messages: [newMessageDTO], lastPage: null },
@@ -1726,8 +1719,8 @@ const removeMessageBoxAndUnsubscribe = async () => {
   // const startMessageElement = messageBoxElement.querySelector(".start-message");
   if (messageBox) {
     messageBoxElement.removeChild(messageBox);
-    webSocketService.contactsWS.unsubscribe(`/user/queue/online-status`);
-    webSocketService.chatWS.unsubscribe(
+    webSocketService.ws.unsubscribe(`/user/queue/online-status`);
+    webSocketService.ws.unsubscribe(
       `/user/${chatStore.user.id}/queue/message-box-typing`
     );
   }
