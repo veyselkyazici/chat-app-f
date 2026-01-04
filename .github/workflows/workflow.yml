@@ -64,5 +64,6 @@ jobs:
             docker rm vkychatapp-frontend || true
             docker run -d \
               --network frontend-network \
+              -p 127.0.0.1:3000:80 \
               --name vkychatapp-frontend \
               ${{ secrets.DOCKER_HUB_USERNAME }}/${{ secrets.DOCKER_HUB_IMAGE }}:latest
