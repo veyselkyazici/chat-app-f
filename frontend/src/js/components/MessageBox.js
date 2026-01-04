@@ -75,6 +75,7 @@ const typingStatusSubscribe = (chat, messageBoxElement) => {
     }
   );
 };
+
 const typingsStatus = async (status, chat, messageBoxElement) => {
   setTimeout(async () => {
     const statusContainer = getStatusContainer();
