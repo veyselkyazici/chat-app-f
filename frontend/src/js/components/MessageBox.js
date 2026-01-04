@@ -88,6 +88,7 @@ const typingsStatus = async (status, chat, messageBoxElement) => {
     }
   }, 1000);
 };
+
 const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
   webSocketService.ws.subscribe(
     `/user/queue/online-status`,
