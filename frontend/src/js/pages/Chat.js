@@ -87,7 +87,6 @@ export default class Chat extends AbstractView {
     const response = await userService.getUserWithUserKeyByAuthId(storageId);
 
     chatStore.setUser(response.data);
-    console.log(chatStore.user.id);
     if (!chatStore.user) {
       return navigateTo("/login");
     }

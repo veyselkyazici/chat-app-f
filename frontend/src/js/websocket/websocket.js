@@ -14,11 +14,11 @@ export default class WebSocketManager {
     this._onDisconnect = null;
     this._onForceLogout = null;
 
+    
     this._pingIntervalId = null;
     this._visibilityHandler = null;
     this._focusHandler = null;
     this._visibilityBound = false;
-    console.log(this.url);
     this.client = new Client({
       brokerURL: this.url,
 
