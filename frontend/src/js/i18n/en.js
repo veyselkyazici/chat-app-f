@@ -154,6 +154,8 @@ export default {
     loadingErrorMessage: "An error occurred. Please try again later.",
     senderBlocked: "You are blocked and cannot send messages to this user",
     recipientBlocked: "Recipient has blocked you from sending messages",
+    read: " Read ",
+    delivered: " Delivered ",
   },
   verificationFailed: {
     successMessage:
@@ -234,6 +236,6 @@ export default {
   },
   lastSeen: {
     today: "Today",
-    yesterday: "Yesterday"
+    yesterday: "Yesterday",
   },
 };

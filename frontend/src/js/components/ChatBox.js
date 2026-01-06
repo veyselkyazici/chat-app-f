@@ -233,8 +233,7 @@ function moveChatToTop(chatRoomId) {
           .replace("px)", "")
       );
       if (
-        chatElement.chatData.chatDTO.messages[0].senderId ===
-        chatStore.user.id
+        chatElement.chatData.chatDTO.messages[0].senderId === chatStore.user.id
       ) {
         const messageTickElement = chatElement.chatData.chatDTO.messages[0]
           .isSeen
@@ -446,8 +445,7 @@ const updateChatInstance = (chatId, blockedStatus) => {
     (chat) => chat.chatDTO.id === chatId
   );
   if (chatIndex !== -1) {
-    chatStore.chatList[chatIndex].userChatSettingsDTO.isBlocked =
-      blockedStatus;
+    chatStore.chatList[chatIndex].userChatSettingsDTO.isBlocked = blockedStatus;
   }
 };
 const toggleBlockUser = async (chatData) => {
@@ -755,8 +753,7 @@ function updateChatBoxElement(chatElement, newChatData, newIndex) {
 }
 function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
   const tickElement = chatElement.querySelector(".message-delivered-tick-div");
-  const isSender =
-    chatData.chatDTO.messages[0].senderId === chatStore.user.id;
+  const isSender = chatData.chatDTO.messages[0].senderId === chatStore.user.id;
   const isSeen = chatData.chatDTO.messages[0].isSeen;
   if (chatData.userChatSettingsDTO.unreadMessageCount !== 0) {
     const unreadMessageCountElement = chatElement.querySelector(
@@ -849,13 +846,14 @@ async function handleChatClick(event) {
     return;
   }
   ariaSelected(chatElement, chatStore.selectedChatUserId, innerDiv);
-  webSocketService.ws.unsubscribe(
-    `/user/queue/read-confirmation-recipient`
-  );
+  
+  webSocketService.ws.unsubscribe(`/user/queue/read-confirmation-recipient`);
   const readConfirmationRecipientChannel = `/user/queue/read-confirmation-recipient`;
+
   webSocketService.ws.subscribe(
     readConfirmationRecipientChannel,
     async (message) => {
+      
       removeUnreadMessageCountElement(chatElement);
       if (!isMessageBoxDomExists(chatElement.chatData.chatDTO.id))
         await fetchMessages(chatElement.chatData);
@@ -863,6 +861,7 @@ async function handleChatClick(event) {
   );
 
   if (chatData.userChatSettingsDTO.unreadMessageCount > 0) {
+    
     if (
       chatData.userProfileResponseDTO.privacySettings.readReceipts &&
       chatStore.user.privacySettings.readReceipts
@@ -871,6 +870,7 @@ async function handleChatClick(event) {
     }
     chatData.userChatSettingsDTO.unreadMessageCount = 0;
   } else {
+    
     await fetchMessages(chatData);
   }
 }
@@ -894,6 +894,7 @@ const removeUnreadMessageCountElement = (chatElement) => {
   unreadMessageCountDiv.remove();
 };
 async function fetchMessages(chatSummaryData) {
+  
   const chatRoomLast30Messages = new ChatDTO(
     await chatService.getLast30Messages(chatSummaryData.chatDTO.id)
   );
@@ -924,8 +925,7 @@ async function createChatBoxWithFirstMessage(recipientJSON) {
   result.chatDTO.messages[0].decryptedMessage = recipientJSON.decryptedMessage;
   chatStore.chatList.unshift(result);
   const chatListContentElement = document.querySelector(".chat-list-content");
-  chatListContentElement.style.height =
-    chatStore.chatList.length * 72 + "px";
+  chatListContentElement.style.height = chatStore.chatList.length * 72 + "px";
   const paneSideElement = document.querySelector("#pane-side");
   const scrollTop = paneSideElement.scrollTop;
   const newStart = Math.max(Math.floor(scrollTop / 72) - 2, 0);
@@ -1062,8 +1062,9 @@ const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
   }
   chatElementDOM.querySelector(".chat").classList.add("selected-chat");
   innerDiv.setAttribute("aria-selected", "true");
-  chatStore.selectedChatUserId =
-    chatElementDOM.chatData.userProfileResponseDTO.id;
+  chatStore.setSelectedChatUserId(
+    chatElementDOM.chatData.userProfileResponseDTO.id
+  );
 };
 
 const ariaSelectedRemove = (selectedChat, newSelectedId) => {
@@ -1082,7 +1083,7 @@ const ariaSelectedRemove = (selectedChat, newSelectedId) => {
 
   // selectedChat.querySelector(".chat").classList.remove("selected-chat");
   // previouslySelectedInnerDiv.setAttribute("aria-selected", "false");
-  chatStore.selectedChatUserId = newSelectedId ? newSelectedId : null;
+  chatStore.setSelectedChatUserId(newSelectedId ? newSelectedId : null);
 };
 
 export {

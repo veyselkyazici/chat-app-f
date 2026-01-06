@@ -60,7 +60,7 @@ class ChatStore {
     return this.state.selectedChatUserId;
   }
 
-  set selectedChatUserId(value) {
+  setSelectedChatUserId(value) {
     this.state.selectedChatUserId = value;
   }
   setWebSocketManagers(ws) {

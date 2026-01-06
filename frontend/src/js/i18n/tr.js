@@ -160,6 +160,8 @@ export default {
     senderBlocked:
       "Bu kullanıcı tarafından engellendiğiniz için mesaj gönderemezsiniz",
     recipientBlocked: "Alıcı sizi engellediği için mesaj gönderemezsiniz",
+    read: " Okundu ",
+    delivered: " İletildi "
   },
   verificationFailed: {
     successMessage:

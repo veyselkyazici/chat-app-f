@@ -819,7 +819,7 @@ const blockInput = (userName, main, footer) => {
     "block-message-input",
     null,
     null,
-    i18n.t("messageBox.blockInputMessage")
+    i18n.t("messageBox.blockInputMessage")(userName)
   );
   footer.append(blockMessageInputDiv);
   main.append(footer);
@@ -1475,7 +1475,7 @@ function messageBoxElementMessagesReadTick(messages, privacySettings) {
         ".message-delivered-tick-span"
       );
       messageTickSpan.className = "message-seen-tick-span";
-      messageTickSpan.ariaLabel = " Okundu ";
+      messageTickSpan.ariaLabel = i18n.t("chat.read");
     }
   }
 }
@@ -1619,7 +1619,7 @@ function createMessageDeliveredTickElement() {
     {},
     {
       "aria-hidden": "true",
-      "aria-label": " İletildi ",
+      "aria-label": i18n.t("chat.delivered"),
       "data-icon": "status-dblcheck",
     }
   );

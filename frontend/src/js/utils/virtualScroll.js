@@ -105,8 +105,9 @@ function chatsVirtualScroll(item, listItem, newIndex) {
   }
   item.chatData = listItem;
   if (chatStore.selectedChatUserId !== null) {
-    const isSelected =
-      chatStore.selectedChatUserId === listItem.userProfileResponseDTO.id;
+    const isSelected = chatStore.setSelectedChatUserId(
+      listItem.userProfileResponseDTO.id
+    );
     if (isSelected) {
       item.setAttribute("aria-selected", "true");
       item.querySelector(".chat").classList.add("selected-chat");

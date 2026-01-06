@@ -318,6 +318,14 @@ export default class Chat extends AbstractView {
       const updated = chatStore.chatList.map((chat) => {
         if (chat.chatDTO.id === first.chatRoomId) {
           chat.chatDTO.messages[0].isSeen = true;
+          const chatEl = [...document.querySelectorAll(".chat1")].find(
+            (el) => el.chatData.chatDTO.id === first.chatRoomId
+          );
+          const deliveredTick = chatEl.querySelector(
+            ".message-delivered-tick-span"
+          );
+          deliveredTick.className = "message-seen-tick-span";
+          deliveredTick.ariaLabel = i18n.t("chat.read");
         }
         return chat;
       });
