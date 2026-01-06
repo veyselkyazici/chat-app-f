@@ -9,7 +9,7 @@ import { userService } from "../services/userService.js";
 import { UpdateUserDTO } from "../dtos/user/request/UpdateUserDTO.js";
 import { i18n } from "../i18n/i18n.js";
 import { chatStore } from "../store/chatStore.js";
-
+import { webSocketService } from "../websocket/websocketService.js";
 async function userUpdateModal(user, bool) {
   const updateProfileForm = createElement("form", "");
   updateProfileForm.id = "updateForm";
