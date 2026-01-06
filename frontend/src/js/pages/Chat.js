@@ -792,8 +792,15 @@ export default class Chat extends AbstractView {
   }
 
   async logout() {
+    
     const overlay = document.querySelector(".overlay-spinner");
     overlay.classList.remove("hidden");
+
+    try {
+      chatStore.ws?.destroy();
+    } catch {}
+
+    sessionStorage.clear();
 
     try {
       await authService.logout();
@@ -801,19 +808,13 @@ export default class Chat extends AbstractView {
       console.error("Logout error:", e);
     }
 
-    try {
-      chatStore.ws?.disconnect();
-    } catch {}
-
-    sessionStorage.clear();
-
     overlay.classList.add("hidden");
-
     navigateTo("/login");
   }
-  destroy() {
-    webSocketService.destroy();
-  }
+  // destroy() {
+  //   
+  //   webSocketService.destroy();
+  // }
 
   // visibilityHandlers() {
   //   document.addEventListener("visibilitychange", () => {

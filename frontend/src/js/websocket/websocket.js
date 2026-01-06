@@ -14,24 +14,31 @@ export default class WebSocketManager {
     this._onDisconnect = null;
     this._onForceLogout = null;
 
-    
     this._pingIntervalId = null;
     this._visibilityHandler = null;
     this._focusHandler = null;
     this._visibilityBound = false;
+    this._freezeHandler = null;
     this.client = new Client({
       brokerURL: this.url,
 
       beforeConnect: () => {
+        const token = sessionStorage.getItem("access_token");
+
+        if (!token) {
+          this.disableReconnect = true;
+          throw new Error("No access token, cancel websocket connect");
+        }
+
         this.client.connectHeaders = {
-          Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
+          Authorization: `Bearer ${token}`,
         };
       },
 
       // heartbeatIncoming: 20000,
       // heartbeatOutgoing: 20000,
 
-      reconnectDelay: () => (this.disableReconnect ? 0 : 3000),
+      reconnectDelay: () => (this.disableReconnect ? null : 3000),
 
       debug: () => {},
 
@@ -138,16 +145,14 @@ export default class WebSocketManager {
   }
 
   resubscribeAll() {
-    for (const [channel, data] of this.subscriptions.entries()) {
+    for (const [, data] of this.subscriptions.entries()) {
       try {
+        data.stompSubscription?.unsubscribe();
         const stompSub = this.client.subscribe(channel, data.callback);
         data.stompSubscription = stompSub;
-      } catch (e) {
-        console.warn("resubscribe error:", e);
-      }
+      } catch {}
     }
   }
-
   unsubscribe(channel) {
     const data = this.subscriptions.get(channel);
     if (!data) return;
@@ -183,6 +188,8 @@ export default class WebSocketManager {
   }
 
   async reconnectCheck() {
+    if (this.disableReconnect) return;
+
     if (!this.isConnected) {
       this.client.deactivate().then(() => this.client.activate());
       return;
@@ -193,15 +200,15 @@ export default class WebSocketManager {
         destination: "/app/ping",
         body: "{}",
       });
-    } catch (e) {
+    } catch {
       this.client.deactivate().then(() => this.client.activate());
     }
   }
 
   startPing(intervalMs) {
-    setInterval(() => {
-      if (!this.isConnected) return;
-      if (!this.isActive) return;
+    if (this._pingIntervalId) return;
+    this._pingIntervalId = setInterval(() => {
+      if (!this.isConnected || !this.isActive) return;
       try {
         this.client.publish({
           destination: "/app/ping",
@@ -223,29 +230,36 @@ export default class WebSocketManager {
 
     updateActiveState();
 
-    document.addEventListener("visibilitychange", () => {
+    this._visibilityHandler = () => {
       updateActiveState();
-      if (this.isActive) {
+      if (this.isActive && !this.disableReconnect) {
         setTimeout(() => this.reconnectCheck(), 300);
       }
-    });
+    };
 
-    window.addEventListener("focus", () => {
+    this._focusHandler = () => {
       updateActiveState();
-      if (this.isActive) {
+      if (this.isActive && !this.disableReconnect) {
         setTimeout(() => this.reconnectCheck(), 200);
       }
-    });
+    };
 
-    document.addEventListener("freeze", () => {
+    document.addEventListener("visibilitychange", this._visibilityHandler);
+    window.addEventListener("focus", this._focusHandler);
+
+    this._blurHandler = () => updateActiveState();
+    window.addEventListener("blur", this._blurHandler);
+
+    this._freezeHandler = () => {
       this.isActive = false;
-    });
-
-    window.addEventListener("blur", () => {
-      updateActiveState();
-    });
+    };
+    document.addEventListener("freeze", this._freezeHandler);
   }
+
   destroy() {
+    this.disableReconnect = true;
+    this.isConnected = false;
+
     if (this._pingIntervalId) {
       clearInterval(this._pingIntervalId);
       this._pingIntervalId = null;
@@ -261,6 +275,16 @@ export default class WebSocketManager {
       this._focusHandler = null;
     }
 
+    if (this._blurHandler) {
+      window.removeEventListener("blur", this._blurHandler);
+      this._blurHandler = null;
+    }
+
+    if (this._freezeHandler) {
+      document.removeEventListener("freeze", this._freezeHandler);
+      this._freezeHandler = null;
+    }
+
     this._visibilityBound = false;
 
     for (const [, data] of this.subscriptions.entries()) {
@@ -269,9 +293,6 @@ export default class WebSocketManager {
       } catch {}
     }
     this.subscriptions.clear();
-
-    this.disableReconnect = true;
-    this.isConnected = false;
 
     try {
       this.client.deactivate();
