@@ -41,62 +41,24 @@ const emojiRegex =
 async function createMessageBox(chatData) {
   const startMessage = document.querySelector(".start-message");
   startMessage.style.display = "none";
-  // <div class="contact-information profile"><span class="contact-information-span"></span></div>
   const confirmationElement = document.querySelector(".profile-span-div");
   if (confirmationElement) {
     closeProfileFunc();
   }
   let typingStatus = { isTyping: false, previousText: "" };
+  chatStore.setActiveMessageBox(chatData);
   await createMessageBoxHTML(chatData, typingStatus);
-  // ToDo lastPage bakilacak renderMessage // Scroll parametresi bakılacak
+
   await renderMessage(
     {
       messages: chatData.chatDTO.messages,
       lastPage: chatData.chatDTO.isLastPage,
     },
     chatData.userProfileResponseDTO.privacySettings,
-    true,
-    chatData.contactsDTO.userId
+    true
   );
 }
 
-const typingStatusSubscribe = (chat, messageBoxElement) => {
-  webSocketService.ws.subscribe(
-    `/user/${chat.contactsDTO.userId}/queue/message-box-typing`,
-    async (typingMessage) => {
-      const status = JSON.parse(typingMessage.body);
-      const messageBoxMainElement = document.querySelector("#main");
-      if (
-        messageBoxMainElement &&
-        messageBoxMainElement.data.chatDTO.id === status.chatRoomId
-      ) {
-        typingsStatus(status, chat, messageBoxElement);
-      }
-    }
-  );
-};
-
-const typingsStatus = async (status, chat, messageBoxElement) => {
-  setTimeout(async () => {
-    const statusContainer = getStatusContainer();
-    const statusSpan = statusContainer?.querySelector(".online-status-1");
-    if (statusSpan) {
-      if (status.typing) {
-        statusSpan.textContent = i18n.t("messageBox.typing");
-      } else {
-        await isOnline(chat.userProfileResponseDTO);
-      }
-    }
-  }, 1000);
-};
-const onlineVisibilitySubscribe = (chat, messageBoxElement) => {
-  webSocketService.ws.subscribe(
-    `/user/queue/online-status`,
-    async (statusMessage) => {
-      onlineStatus(statusMessage, chat, messageBoxElement);
-    }
-  );
-};
 const createStatusElement = (type, value = null) => {
   const container = document.querySelector(".message-box1-2-2");
 
@@ -121,29 +83,8 @@ const createStatusElement = (type, value = null) => {
   container.append(statusDiv);
 };
 
-const getStatusContainer = () => document.querySelector(".message-box1-2-2");
-const onlineStatus = async (statusMessage, chat) => {
-  const statusInfo = JSON.parse(statusMessage.body);
-
-  if (statusInfo.userId !== chat.userProfileResponseDTO.id) return;
-
-  switch (statusInfo.status) {
-    case "online":
-      createStatusElement("online");
-      break;
-
-    case "offline":
-    case "away":
-      if (statusInfo.lastSeen) {
-        createStatusElement("lastSeen", statusInfo.lastSeen);
-      }
-      break;
-  }
-};
-
 const handleTextBlur = (chat, typingStatus, textArea) => {
   const currentText = textArea.textContent.trim();
-  // Boşsa veya placeholder varsa typing false gönder
   if (typingStatus.isTyping) {
     webSocketService.ws.send("typing", {
       userId: chat.contactsDTO.userId,
@@ -153,8 +94,6 @@ const handleTextBlur = (chat, typingStatus, textArea) => {
     });
     typingStatus.isTyping = false;
   }
-
-  // previousText güncelle
   typingStatus.previousText = currentText;
 };
 const handleTextFocus = (chat, typingStatus, textArea) => {
@@ -176,7 +115,6 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
     return;
   }
 
-  // Eğer yazıyorsa typing true
   if (!typingStatus.isTyping && currentText.length > 0) {
     webSocketService.ws.send("typing", {
       userId: chat.contactsDTO.userId,
@@ -190,7 +128,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
   typingStatus.previousText = currentText;
 };
 function handlePaste(event) {
-  event.preventDefault(); // Tarayıcının varsayılan yapıştırma işlemini engelle
+  event.preventDefault(); 
 }
 
 function handleTextInput(textArea, chat, typingStatus, event) {
@@ -200,7 +138,6 @@ function handleTextInput(textArea, chat, typingStatus, event) {
     !currentText ||
     currentText === i18n.t("messageBox.messageBoxPlaceHolder")
   ) {
-    // Boşsa veya placeholder varsa false gönder
     if (typingStatus.isTyping) {
       webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
@@ -211,7 +148,6 @@ function handleTextInput(textArea, chat, typingStatus, event) {
       typingStatus.isTyping = false;
     }
   } else {
-    // Yazıyorsa true gönder
     if (!typingStatus.isTyping) {
       webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
@@ -370,7 +306,6 @@ const insertEmoji = (emoji) => {
     const parentSpan = caretNode.parentNode;
 
     if (before !== "" && after !== "") {
-      // saginda solunda text var ise 123😀4
       if (before !== "") {
         const beforeSpan = document.createElement("span");
         beforeSpan.className = "message-box1-7-1-1-1-2-1-1-1-1";
@@ -400,23 +335,19 @@ const insertEmoji = (emoji) => {
       caretNode = ABC;
     } else {
       if (parentSpan.parentNode.nextSibling) {
-        // sagında bir şey varsa
         const ABC = parentSpan.parentNode.parentNode.insertBefore(
           emojiOuterSpan,
           parentSpan.parentNode.nextSibling
         );
         caretNode = ABC;
       }
-      // 1234😀
       else if (parentSpan.nextSibling === null) {
-        // saginda bir şey yoksa
         const ABC = parentSpan.parentNode.append(emojiOuterSpan);
         caretNode = ABC;
       } else if (
         parentSpan.className === "message-box1-7-1-1-1-2-1-1-1-1" &&
         parentSpan.nextSibling.className === "message-emoji-span"
       ) {
-        // solunda yazi saginda emoji varsa
         const ABC = parentSpan.parentNode.insertBefore(
           emojiOuterSpan,
           parentSpan.nextSibling
@@ -425,7 +356,6 @@ const insertEmoji = (emoji) => {
       }
     }
   } else {
-    // 1234😀😂 NODE TYPE 1 OLURSA (MOUSE İLE EMOJİ NİN SAGINA TIKLARSAM)
 
     const parentSpan = caretNode;
     if (parentSpan.nextSibling) {
@@ -551,19 +481,39 @@ function generateEmojiHTML() {
 const createMessageBoxHTML = async (chatData, typingStatus) => {
   const messageBoxElement = document.querySelector(".message-box");
   const main = createElement("div", "message-box1", null, { id: "main" });
-  main.data = chatData;
+  main.dataset.chatId = chatData.chatDTO.id;
   const divMessageBox1_1 = createElement("div", "message-box1-1", {
     opacity: "0.4",
   });
   main.append(divMessageBox1_1);
   const header = createElement("header", "message-box1-2");
+
+  const backBtn = createElement("div", "message-box-back-btn");
+  const backSvg = createSvgElement("svg", {
+      "viewBox": "0 0 24 24",
+      "height": "24",
+      "width": "24",
+      "preserveAspectRatio": "xMidYMid meet",
+  });
+  const backPath = createSvgElement("path", {
+      "fill": "currentColor",
+      "d": "M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"
+  });
+  backSvg.append(backPath);
+  backBtn.append(backSvg);
+  backBtn.addEventListener("click", () => {
+      chatStore.setMobileView('chats');
+      ariaSelectedRemove(chatStore.selectedChatUserId);
+  });
+  header.append(backBtn);
+
   const messageBoxDiv1 = createElement(
     "div",
     "message-box1-2-1",
     {},
     { title: "Profil Detayları", role: "button" },
     null,
-    () =>
+    () => {
       createContactInformation(
         new ContactInformationDTO({
           name: chatData.contactsDTO.userContactName
@@ -578,7 +528,9 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
           image: chatData.userProfileResponseDTO.imagee,
         }),
         chatData
-      )
+      );
+      chatStore.setMobileView('profile');
+    }
   );
 
   const profileImgContainer = createElement("div", "message-box1-2-1-1", {
@@ -591,6 +543,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
   );
   profileImgContainer.append(imgElement);
   messageBoxDiv1.append(profileImgContainer);
+  header.append(messageBoxDiv1);
 
   const messageBoxDiv2 = createElement(
     "div",
@@ -598,7 +551,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
     {},
     { role: "button" },
     null,
-    () =>
+    () => {
       createContactInformation(
         new ContactInformationDTO({
           name: chatData.contactsDTO.userContactName
@@ -613,11 +566,13 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
           image: chatData.userProfileResponseDTO.imagee,
         }),
         chatData
-      )
+      );
+      chatStore.setMobileView('profile');
+    }
   );
-  messageBoxDiv2.data = chatData;
+  messageBoxDiv2.dataset.chatId = chatData.chatDTO.id;
   const innerMessageBoxDiv1 = createElement("div", "message-box1-2-2-1");
-  const innerMessageBoxDiv2 = createElement("div", "message-box1-2-2-1-1");
+  const innerMessageBoxDiv2 = createElement("div", "message1-2-2-1-1");
 
   const nameContainer = createElement("div", "message-box1-2-2-1-1-1");
   const nameSpan = createElement(
@@ -656,7 +611,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
       "aria-expanded": "false",
     },
     null,
-    (event) => handleOptionsBtnClick(event, chatData)
+    (event) => handleOptionsBtnClick(event)
   );
 
   const optionsIcon = createElement(
@@ -666,7 +621,6 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
     { "data-icon": "menu" }
   );
 
-  // Create SVG for the menu icon
   const svgOptions = createSvgElement("svg", {
     viewBox: "0 0 24 24",
     height: "24",
@@ -759,12 +713,6 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
     tabindex: "-1",
     role: "application",
   });
-  // const todayDiv = createElement("div", "message-box1-5-1-2-2-1", null, { "tabindex": "-1" });
-
-  // const todaySpan = createElement("span", "message-box1-5-1-2-2-1-1", { "minHeight": "0px" }, { "dir": "auto", "aria-label": "" }, "BUGÜN");
-
-  // todayDiv.append(todaySpan);
-  // applicationDiv.append(todayDiv);
 
   messageBox1_2.append(applicationDiv);
   messageBox1.append(messageBox1_2);
@@ -780,13 +728,17 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
   const span = createElement("span", "");
   main.append(span);
   messageBoxElement.append(main);
-  await onlineInfo(chatData, messageBoxDiv2);
+  await onlineInfo(chatData);
 
   if (chatData.userChatSettingsDTO.isBlocked) {
-    blockInput(chatData.contactsDTO.userContactName, main, footer);
+    blockInput(
+      chatData.contactsDTO.userContactName ||
+        chatData.userProfileResponseDTO.email,
+      main,
+      footer
+    );
   } else {
     unBlockInput(chatData, main, footer, typingStatus);
-    // divContenteditable.focus();
   }
 
   messageBox1_2.addEventListener("scroll", async () => {
@@ -805,8 +757,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
         renderMessage(
           older30Messages,
           chatData.userProfileResponseDTO.privacySettings,
-          false,
-          chatData.contactsDTO.userId
+          false
         );
       }
     }
@@ -1055,22 +1006,25 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
   divContenteditable.focus();
   div1_7_1_1_1_1_1.addEventListener("click", () => {
     updateCaretPosition();
-    // showEmojiPicker(panel, thirdChild);
   });
 };
 
-const onlineInfo = async (chat, messageBoxDiv2) => {
-  if (
-    !chat.userChatSettingsDTO.isBlocked &&
-    !chat.userChatSettingsDTO.isBlockedMe
-  ) {
-    onlineVisibilitySubscribe(chat, messageBoxDiv2);
-    typingStatusSubscribe(chat, messageBoxDiv2);
+const onlineInfo = async (chat) => {
+  if (!chatStore.ws) return;
 
-    chatStore.ws.send("/request-status-snapshot", {
-      targetUserId: chat.userProfileResponseDTO.id,
-    });
-  }
+  if (
+    chat.userChatSettingsDTO.isBlocked ||
+    chat.userChatSettingsDTO.isBlockedMe
+  )
+    return;
+
+  chatStore.setActiveMessageBox(chat);
+
+  bindMessageBoxRealtime();
+
+  chatStore.ws.send("/request-status-snapshot", {
+    targetUserId: chat.userProfileResponseDTO.id,
+  });
 };
 
 const getFirstMessageDate = () => {
@@ -1090,7 +1044,7 @@ const isMessageBoxDomExists = (chatRoomId) => {
     return false;
   }
 };
-const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
+const renderMessage = async (messageDTO, privacySettings, scroll) => {
   const messageRenderDOM = document.querySelector(".message-box1-5-1-2-2");
   let messagesArray, lastPage;
   if (Array.isArray(messageDTO.messages)) {
@@ -1099,17 +1053,16 @@ const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
   } else {
     messagesArray = [messageDTO.messages];
   }
+  const currentUserId = chatStore.user.id;
   const oldHeight = messageRenderDOM.clientHeight;
 
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
 
-  // Gün başlıklarını kontrol etmek için kullanılan değişken
   const getLastRenderedDate = () => {
     const allRows = messageRenderDOM.querySelectorAll('div[role="row"]');
     if (allRows.length > 0) {
-      // Son mesajın tarihini al (scroll true ise en alttaki, false ise en üstteki)
       const lastRow = scroll ? allRows[allRows.length - 1] : allRows[0];
       if (lastRow.messageData && lastRow.messageData.messageDTO) {
         return new Date(
@@ -1138,7 +1091,6 @@ const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
     );
     todayDiv.append(todaySpan);
 
-    // scroll durumuna göre ekleme yöntemini belirle
     if (scroll) {
       applicationDiv.append(todayDiv);
     } else {
@@ -1152,7 +1104,7 @@ const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
         if (message.encryptedMessage) {
           const decryptedMessage = await decryptMessage(
             message,
-            message.senderId === userId
+            message.senderId === chatStore.user.id
           );
           return { ...message, decryptedMessage: decryptedMessage };
         } else {
@@ -1167,6 +1119,8 @@ const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
       }
     })
   );
+
+
 
   decryptedMessages.forEach((message) => {
     const messageDate = new Date(message.fullDateTime).toDateString();
@@ -1187,7 +1141,6 @@ const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
       isLastPage: !lastPage ? lastPage : true,
     };
     const divMessage = createElement("div", "message1");
-    // divMessage.data = message;
     const divMessage12 = createElement("div", "");
     const spanFirst = createElement("span", "");
     const divMessage1_1_1 = createElement("div", "message1-1-1");
@@ -1274,11 +1227,10 @@ const renderMessage = async (messageDTO, privacySettings, scroll, userId) => {
       "div",
       "message1-1-1-2-1-2-1-2"
     );
-    if (message.senderId === userId) {
+    if (message.senderId === currentUserId) {
       const messageDeliveredTickDiv = createMessageDeliveredTickElement();
       divMessage1_1_1_2_1_2_1_2.append(messageDeliveredTickDiv);
 
-      // span1_1_1_2_1_2_1_1.append(divMessage1_1_1_2_1_2_1_2);
       divMessage1_1_1_2_1_2_1.append(span1_1_1_2_1_2_1_1);
       divMessage1_1_1_2_1_2_1.append(divMessage1_1_1_2_1_2_1_2);
       if (
@@ -1350,39 +1302,17 @@ const scrollToBottom = () => {
   const messageRenderDOM = document.querySelector(".message-box1-5-1-2");
   messageRenderDOM.scrollTop = messageRenderDOM.scrollHeight;
 };
-// const isOnline = async (userContact, contact) => {
-//   try {
-//     if (
-//       (userContact.privacySettings.lastSeenVisibility !== "NOBODY" ||
-//         userContact.privacySettings.onlineStatusVisibility !== "NOBODY") &&
-//       (chatStore.user.privacySettings.lastSeenVisibility !== "NOBODY" ||
-//         chatStore.user.privacySettings.onlineStatusVisibility !== "NOBODY")
-//     ) {
-//       const friendStatus = await contactService.userOnlineStatus(
-//         userContact.id
-//       );
-//       if (friendStatus.status === "online") {
-//         const typingDTO = await chatService.isTypingStatus(userContact.id);
-//         if (typingDTO.typing) {
-//           createStatusElement("typing");
-//         }
-//         isOnlineStatus(userContact, contact);
-//       } else {
-//         lastSeenStatus(userContact, contact, friendStatus.lastSeen);
-//       }
-//     }
-//   } catch (error) {
-//     console.error("Online status error:", error);
-//   }
-// };
+
 const isOnlineStatus = (userContact, contact) => {
   if (
     (userContact.privacySettings.onlineStatusVisibility === "EVERYONE" ||
       (contact.relatedUserHasAddedUser &&
-        userContact.privacySettings.onlineStatusVisibility === "CONTACTS")) &&
+        userContact.privacySettings.onlineStatusVisibility ===
+          "MY_CONTACTS")) &&
     (chatStore.user.privacySettings.onlineStatusVisibility === "EVERYONE" ||
       (contact.userHasAddedRelatedUser &&
-        chatStore.user.privacySettings.onlineStatusVisibility === "CONTACTS"))
+        chatStore.user.privacySettings.onlineStatusVisibility ===
+          "MY_CONTACTS"))
   ) {
     createStatusElement("online");
   }
@@ -1392,10 +1322,10 @@ const lastSeenStatus = (userContact, contact, lastSeen) => {
     (chatStore.user.privacySettings.lastSeenVisibility === "EVERYONE" ||
       (contact.relatedUserHasAddedUser &&
         chatStore.user.user.privacySettings.lastSeenVisibility ===
-          "CONTACTS")) &&
+          "MY_CONTACTS")) &&
     (userContact.privacySettings.lastSeenVisibility === "EVERYONE" ||
       (contact.userHasAddedRelatedUser &&
-        userContact.privacySettings.lastSeenVisibility === "CONTACTS"))
+        userContact.privacySettings.lastSeenVisibility === "MY_CONTACTS"))
   ) {
     createStatusElement("lastSeen", lastSeen);
   } else {
@@ -1419,12 +1349,12 @@ const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = async (
       (newPrivacySettings.privacySettings.onlineStatusVisibility ===
         "EVERYONE" ||
         (newPrivacySettings.privacySettings.onlineStatusVisibility ===
-          "CONTACTS" &&
+          "MY_CONTACTS" &&
           messageBoxElement.data.contactsDTO.userHasAddedRelatedUser) ||
         messageBoxElement.data.userProfileResponseDTO.privacySettings
           .onlineStatusVisibility === "EVERYONE" ||
         (messageBoxElement.data.userProfileResponseDTO.privacySettings
-          .onlineStatusVisibility === "CONTACTS" &&
+          .onlineStatusVisibility === "MY_CONTACTS" &&
           messageBoxElement.data.contactsDTO.relatedUserHasAddedUser))
     ) {
       online = true;
@@ -1435,26 +1365,19 @@ const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = async (
       newPrivacySettings.privacySettings.lastSeenVisibility !==
         oldPrivacySettings.privacySettings.lastSeenVisibility &&
       (newPrivacySettings.privacySettings.lastSeenVisibility === "EVERYONE" ||
-        (newPrivacySettings.privacySettings.lastSeenVisibility === "CONTACTS" &&
+        (newPrivacySettings.privacySettings.lastSeenVisibility ===
+          "MY_CONTACTS" &&
           messageBoxElement.data.contactsDTO.userHasAddedRelatedUser) ||
         messageBoxElement.data.userProfileResponseDTO.privacySettings
           .lastSeenVisibility === "EVERYONE" ||
         (messageBoxElement.data.userProfileResponseDTO.privacySettings
-          .lastSeenVisibility === "CONTACTS" &&
+          .lastSeenVisibility === "MY_CONTACTS" &&
           messageBoxElement.data.contactsDTO.relatedUserHasAddedUser))
     ) {
       lastSeen = true;
     } else {
       lastSeen = false;
     }
-    // if (lastSeen || online) {
-    //   const messageBoxDiv2 =
-    //     messageBoxElement.querySelector(".message-box1-2-2");
-    //   await isOnline(
-    //     messageBoxDiv2.data.userProfileResponseDTO,
-    //     messageBoxDiv2.data.contactsDTO
-    //   );
-    // }
   }
 };
 
@@ -1581,8 +1504,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
     renderMessage(
       { messages: [newMessageDTO], lastPage: null },
       chatSummaryDTO.userProfileResponseDTO.privacySettings,
-      true,
-      chatSummaryDTO.contactsDTO.userId
+      true
     );
 
     messageContentElement.innerHTML = "<br>";
@@ -1717,20 +1639,71 @@ function formatDateTime(utcDateTimeString) {
 const removeMessageBoxAndUnsubscribe = async () => {
   const messageBoxElement = document.querySelector(".message-box");
   const messageBox = messageBoxElement?.querySelector(".message-box1");
-  // const startMessageElement = messageBoxElement.querySelector(".start-message");
+
   if (messageBox) {
     messageBoxElement.removeChild(messageBox);
-    webSocketService.ws.unsubscribe(`/user/queue/online-status`);
-    webSocketService.ws.unsubscribe(
-      `/user/${chatStore.user.id}/queue/message-box-typing`
-    );
+    unbindMessageBoxRealtime();
+    chatStore.clearActiveMessageBox();
   }
-  // else {
-  //   messageBoxElement.removeChild(startMessageElement);
-  // }
 };
-function handleOptionsBtnClick(event, chat) {
+const bindMessageBoxRealtime = () => {
+  if (msgBoxBound) return;
+  msgBoxBound = true;
+
+  chatStore.ws.subscribe("/user/queue/online-status", (msg) => {
+    const info = JSON.parse(msg.body);
+    
+    chatStore.applyPresence(info);
+    renderHeaderStatus();
+  });
+
+  chatStore.ws.subscribe("/user/queue/message-box-typing", (msg) => {
+    
+    const status = JSON.parse(msg.body);
+    chatStore.applyTyping(status);
+    renderHeaderStatus();
+  });
+};
+let msgBoxBound = false;
+const getStatusContainer = () => document.querySelector(".message-box1-2-2");
+
+const renderHeaderStatus = () => {
+  const container = getStatusContainer();
+  if (!container) return;
+
+  const old = container.querySelector(".online-status");
+  if (old) old.remove();
+
+  const s = chatStore.state.messageBoxStatus;
+
+  if (s.hidden) return;
+
+  let text = "";
+  if (s.typing) text = i18n.t("messageBox.typing");
+  else if (s.online) text = i18n.t("messageBox.online");
+  else if (s.lastSeen) text = formatDateTime(s.lastSeen);
+
+  if (!text) return;
+
+  const statusDiv = document.createElement("div");
+  statusDiv.className = "online-status";
+  const span = document.createElement("span");
+  span.className = "online-status-1";
+  span.textContent = text;
+  statusDiv.append(span);
+  container.append(statusDiv);
+};
+const unbindMessageBoxRealtime = () => {
+  if (!msgBoxBound) return;
+  msgBoxBound = false;
+
+  chatStore.ws.unsubscribe("/user/queue/online-status");
+  chatStore.ws.unsubscribe("/user/queue/message-box-typing");
+};
+function handleOptionsBtnClick(event) {
   event.stopPropagation();
+  const chat = chatStore.activeChat;
+  if (!chat) return;
   const spans = document.querySelectorAll(".content span");
   const showChatOptions = spans[2];
   const target = event.currentTarget;
@@ -1759,13 +1732,6 @@ function handleOptionsBtnClick(event, chat) {
 
       const ulElement = createElement("ul", "ul1");
       const divElement = createElement("div", "");
-
-      // const formatChatData = {
-      //   chatDTO: { id: chat.chatDTO.id },
-      //   userChatSettingsDTO: { ...chat.userChatSettingsDTO },
-      //   userProfileResponseDTO: { ...chat.userProfileResponseDTO },
-      //   contactsDTO: { ...chat.contactsDTO },
-      // };
 
       const blockLiElement = createElement(
         "li",
@@ -1824,7 +1790,7 @@ function handleOptionsBtnClick(event, chat) {
       );
       const chatElements = document.querySelectorAll(".chat1");
       const chatElement = Array.from(chatElements).find(
-        (chatItem) => chatItem.chatData.chatDTO.id === chat.chatDTO.id
+        (chatItem) => chatItem.dataset.chatId == chat.chatDTO.id
       );
 
       const deleteLiDivElement = createElement(
@@ -1892,6 +1858,47 @@ class ContactInformationDTO {
     this.image = image;
   }
 }
+const getRenderedMessageIds = () => {
+    const messageElements = document.querySelectorAll(".message-box1-5-1-2-2 div[role='row']");
+    const ids = new Set();
+    messageElements.forEach(el => {
+        if (el.messageData && el.messageData.messageDTO && el.messageData.messageDTO.id) {
+            ids.add(el.messageData.messageDTO.id);
+        }
+    });
+    return ids;
+};
+
+const syncActiveChat = async () => {
+  debugger;
+  if (!chatStore.activeChatRoomId) return;
+    
+    try {
+        const last30Messages = await chatService.getLast30Messages(chatStore.activeChatRoomId);
+        
+        const incomingMessages = last30Messages.messages || [];
+        
+        const existingIds = getRenderedMessageIds();
+        const newMessages = incomingMessages.filter(msg => !existingIds.has(msg.id));
+        
+        if (newMessages.length > 0) {
+           
+            const messageBoxScroll = document.querySelector(".message-box1-5-1-2");
+            const isAtBottom = messageBoxScroll ? (Math.abs((messageBoxScroll.scrollHeight - messageBoxScroll.clientHeight) - messageBoxScroll.scrollTop) < 50) : true;
+            
+            const chatDTO = new ChatDTO({ messages: newMessages, isLastPage: null });
+
+            await renderMessage(chatDTO, chatStore.activeChat.userProfileResponseDTO.privacySettings, true);
+            
+            if (isAtBottom && messageBoxScroll) {
+                 messageBoxScroll.scrollTop = messageBoxScroll.scrollHeight;
+            }
+        }
+    } catch (error) {
+        console.error("Sync active chat error:", error);
+    }
+};
+
 export {
   blockInput,
   createMessageBox,
@@ -1905,4 +1912,5 @@ export {
   removeMessageBoxAndUnsubscribe,
   renderMessage,
   unBlockInput,
+  syncActiveChat,
 };

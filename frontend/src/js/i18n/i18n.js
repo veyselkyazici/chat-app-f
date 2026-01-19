@@ -17,7 +17,7 @@ export const i18n = {
     if (languages[lang]) {
       currentLang = lang;
       localStorage.setItem("lang", lang);
-      window.dispatchEvent(new Event("languagechange")); // SPA içinde canlı değişim
+      window.dispatchEvent(new Event("languagechange"));
     }
   },
   getLang: () => currentLang,

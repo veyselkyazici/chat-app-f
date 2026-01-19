@@ -1,3 +1,4 @@
+import { chatStore } from "../store/chatStore.js";
 import { createElement, createDefaultImage } from "../utils/util.js";
 import { viewPhoto } from "./UpdateUserProfile.js";
 import { toggleBlockUser } from "./ChatBox.js";
@@ -422,25 +423,21 @@ function createContactInformation(contact, chatData) {
       style.parentNode.removeChild(style);
     }
     profileSpanDiv.remove();
+    chatStore.setMobileView('message');
+    document.removeEventListener("keydown", keydownHandler);
   });
   function closeProfile() {
     if (style && style.parentNode) style.parentNode.removeChild(style);
     if (profileSpanDiv && profileSpanDiv.parentNode)
       profileSpanDiv.parentNode.removeChild(profileSpanDiv);
+    chatStore.setMobileView('message');
+    document.removeEventListener("keydown", keydownHandler);
   }
   closeProfileFn = closeProfile;
   function keydownHandler(event) {
     if (event.key === "Escape") closeProfile();
   }
   document.addEventListener("keydown", keydownHandler);
-  // document.addEventListener("keydown", function (event) {
-  //   if (event.key === "Escape" && profileCloseDivButton) {
-  //     if (style && style.parentNode) {
-  //       style.parentNode.removeChild(style);
-  //     }
-  //     profileSpanDiv.remove();
-  //   }
-  // });
   blockButton.addEventListener("click", () => toggleBlockUser(chatData));
 }
 

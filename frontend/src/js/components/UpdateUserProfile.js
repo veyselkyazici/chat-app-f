@@ -600,22 +600,18 @@ function uploadPhoto(event, userId) {
       deneme6.append(deneme7);
       deneme5.append(deneme6);
 
-      // uploadPhotoModalContentZoom2.addEventListener('click', () => zoomIn(canvas1));
-      // uploadPhotoModalContentZoom3.addEventListener('click', () => zoomOut(canvas1));
-      // canvas1.addEventListener('wheel', (e) => handleScrollZoom(e, canvas1));
 
       uploadPhotoModalContentZoom2.addEventListener("click", () => {
-        zoomImage(1.1, canvas1); // 1.1x yakınlaştır
+        zoomImage(1.1, canvas1);
       });
 
-      // Uzaklaştırma (-) butonu
       uploadPhotoModalContentZoom3.addEventListener("click", () => {
-        zoomImage(0.9, canvas1); // 0.9x uzaklaştır
+        zoomImage(0.9, canvas1);
       });
 
       canvas1.addEventListener("wheel", (e) => {
         e.preventDefault();
-        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9; // Yukarı kaydır = yakınlaştır, Aşağı kaydır = uzaklaştır
+        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9; 
         zoomImage(zoomFactor, canvas1);
       });
       const uploadPhotoHeader = createElement("div", "upload-photo-header");
@@ -851,12 +847,19 @@ async function cropImage(canvas1, userId, originalFile) {
         );
         userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
         userProfilePhotoElement.append(image);
-        webSocketService.ws.send("updated-user-profile-send-message", {
-          userId: userId,
-          url: chatStore.user.imagee,
-          about: chatStore.user.about,
+        const payload = {
+          id: chatStore.user.id,
+          email: chatStore.user.email,
           firstName: chatStore.user.firstName,
-        });
+          lastName: chatStore.user.lastName,
+          imagee: chatStore.user.imagee,
+          about: chatStore.user.about,
+          updatedAt: new Date().toISOString(),
+          privacySettings: chatStore.user.privacySettings,
+          userKey: null,
+        };
+
+        webSocketService.ws.send("updated-user-profile-send-message", payload);
       }
     } catch (error) {
       console.error("Error uploading photo:", error);

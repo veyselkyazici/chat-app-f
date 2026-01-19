@@ -160,7 +160,7 @@ section {
   text-align: center;
   gap: 20px;
 }
-/* REGEEX */
+
 .regex-rule {
   position: relative;
   font-size: 0.9rem;
@@ -318,15 +318,15 @@ strong {
   z-index: 1;
   flex-direction: column;
   align-items: flex-start;
-  min-width: 200px; /* ✅ Eklendi */
+  min-width: 200px; 
 }
 
 #photoOptions li {
   cursor: pointer;
   font-size: 15px;
   list-style-type: none;
-  line-height: 40px; /* ✅ Dikey hizalama için */
-  white-space: nowrap; /* ✅ Satır kaymasını engeller */
+  line-height: 40px; 
+  white-space: nowrap; 
   height: 40px;
   min-width: 170px;
 }
@@ -835,9 +835,9 @@ button {
   list-style: none;
 }
 
-.list-item1:hover {
-  background-color: #f5f6f6;
-}
+  .list-item1:hover {
+    background-color: #f5f6f6;
+  }
 
 .list-item1 {
   position: relative;
@@ -1172,19 +1172,19 @@ button {
   background-color: transparent;
 }
 
-.chat:hover,
-.cursor:focus {
-  background-color: #f5f6f6;
-}
+  .chat:hover,
+  .cursor:focus {
+    background-color: #f5f6f6;
+  }
 
-.chat:hover:after {
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 100%;
-  height: 0;
-  content: "";
-  border-top: #f5f6f6;
+  .chat:hover:after {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 0;
+    content: "";
+    border-top: #f5f6f6;
 }
 
 .selected-chat {
@@ -5139,3 +5139,190 @@ form h1 {
   top: 10px;
   right: 14px;
 }
+
+/* MOBILE RESPONSIVE */
+
+@media screen and (max-width: 900px) {
+    
+    .chat-container {
+        display: block !important; 
+        position: relative;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+    }
+
+   
+    .chats {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        height: 100% !important;
+        display: flex;
+        z-index: 10;
+        background: #fff;
+    }
+    
+    .message-box {
+        display: none !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0; 
+        bottom: 0; 
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 20;
+        background: #efe7dd;
+        border: none !important; 
+    }
+
+    .message-box1 {
+        height: 100% !important;
+        width: 100% !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .contact-information.profile {
+        display: none !important; 
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        z-index: 30; 
+        background: #f7f8fa;
+    }
+
+
+    
+    .chat-container.view-chats .chats {
+        display: flex !important;
+    }
+    .chat-container.view-chats .message-box,
+    .chat-container.view-chats .contact-information.profile,
+    .chat-container.view-chats .a1 {
+        display: none !important;
+    }
+
+    .chat-container.view-message .chats {
+        display: none !important;
+    }
+    .chat-container.view-message .message-box {
+        display: flex !important;
+        animation: slideInRight 0.3s ease-out;
+    }
+    .chat-container.view-message .contact-information.profile {
+        display: none !important;
+    }
+
+    .chat-container.view-profile .chats,
+    .chat-container.view-profile .message-box {
+        display: none !important; 
+    }
+
+    
+    .chat-container.view-profile .contact-information.profile {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        position: relative !important;
+        animation-name: slideInRight;
+        animation-duration: 0.3s;
+    }
+
+    .chat-container.view-contacts .chats {
+        display: none !important;
+    }
+    .chat-container.view-contacts .message-box {
+        display: none !important;
+    }
+    .chat-container.view-contacts .contact-information.profile {
+        display: none !important;
+    }
+    .chat-container.view-contacts .a1, 
+    .chat-container.view-contacts .a1-1, 
+    .chat-container.view-contacts .a1-1-1, 
+    .chat-container.view-contacts .a1-1-1-1 {
+         display: block !important;
+         width: 100% !important;
+         max-width: 100% !important;
+    }
+    .message-box-back-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+        cursor: pointer;
+        color: #54656f;
+    }
+    
+    .message-box1-2 {
+        padding-left: 0 !important;
+    }
+
+    .profile-close-button {
+        display: flex !important; 
+    }
+}
+
+.message-box-back-btn {
+    display: none;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .contact-information.profile {
+        animation: none !important; 
+        transform: none !important;
+    }
+    
+    .profile-span-div {
+       width: 100% !important;
+       max-width: 100% !important;
+    }
+
+    .modal1-3 {
+        min-width: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important;
+    }
+    .modal1-4, .modal-body-upload-photo {
+        width: 90% !important;
+        max-width: 90% !important;
+        height: auto !important; 
+        max-height: 90vh;
+        margin: auto;
+        border-radius: 8px !important;
+    }
+    .modal1-2 {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         width: 100%;
+         height: 100%;
+    }
+}
+
+
+

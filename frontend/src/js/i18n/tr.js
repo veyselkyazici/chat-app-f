@@ -94,7 +94,7 @@ export default {
     toasterUnblockError: (email) =>
       `Bir hata oluştu ${email} kullanıcısının engeli kaldırılamadı.`,
     deleteMessage: (email) =>
-      `${email} kullanıcıso ile olan sohbetinizi silmek istiyor musunuz?`,
+      `${email} kullanıcısı ile olan sohbetinizi silmek istiyor musunuz?`,
     deleteSuccess: "Sohbet silindi",
     deleteFailed: "Sohbet silinemedi. Lütfen tekrar deneyin",
     deleteChat: "Sohbeti sil",
@@ -224,8 +224,8 @@ export default {
   },
   contactInformation: {
     contactInformation: "Kişi bilgisi",
-    block: "engelle",
-    unBlock: "engeli kaldır",
+    block: " engelle",
+    unBlock: " engeli kaldır",
   },
   errors: {
     status400: "İstek hatalı. Lütfen girdiğiniz bilgileri kontrol edin.",

@@ -25,7 +25,7 @@ import {
 import { UpdateItemsDTO, virtualScroll } from "../utils/virtualScroll.js";
 import { i18n } from "../i18n/i18n.js";
 import { chatStore } from "../store/chatStore.js";
-
+import { decryptMessage } from "../utils/e2ee.js";
 async function createContactOrInvitation(user, index) {
   const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
 
@@ -36,7 +36,9 @@ async function createContactOrInvitation(user, index) {
   contactElementDOM.style.transition = "none 0s ease 0s";
   contactElementDOM.style.height = "72px";
   contactElementDOM.style.transform = `translateY(${index * 72}px)`;
-  contactElementDOM.contactData = user;
+  contactElementDOM.dataset.contactId = user.contactsDTO
+    ? user.contactsDTO.id
+    : user.invitationResponseDTO.id;
   if (user.contactsDTO) {
     const chatBox = createContactsHTML(user);
     contactElementDOM.dataset.user = user.contactsDTO.userContactName;
@@ -116,7 +118,7 @@ const createContactsHTML = (user) => {
       "EVERYONE" ||
     (user.contactsDTO.relatedUserHasAddedUser &&
       user.userProfileResponseDTO.privacySettings.aboutVisibility ===
-        "CONTACTS")
+        "MY_CONTACTS")
   ) {
     const messageSpan = createElement(
       "span",
@@ -327,20 +329,57 @@ function initContactList(contactList) {
     createContactOrInvitation(contactList[i], i);
   }
 
-  const updateItemsDTO = new UpdateItemsDTO({
-    list: contactList,
-    itemsToUpdate: Array.from(document.querySelectorAll(".contact1")),
-    removeEventListeners: removeEventListeners,
-    addEventListeners: addEventListeners,
-  });
+  chatStore.setUpdateItemsDTO(
+    new UpdateItemsDTO({
+      list: contactList,
+      itemsToUpdate: Array.from(document.querySelectorAll(".contact1")),
+      removeEventListeners: removeEventListeners,
+      addEventListeners: addEventListeners,
+    })
+  );
 
-  virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount);
+  virtualScroll(chatStore.updateItemsDTO, paneSideElement, visibleItemCount);
+}
+
+const isTouchDevice = () => window.matchMedia("(pointer: coarse)").matches;
+
+function createChatOptionsButton(contactElementDOM) {
+  const chatOptionsSpan = contactElementDOM.querySelectorAll(
+    ".chat-options-contact span"
+  )[2];
+  if (chatOptionsSpan && !chatOptionsSpan.querySelector(".chat-options-btn")) {
+    const chatOptionsButton = document.createElement("button");
+    chatOptionsButton.className = "chat-options-btn";
+    chatOptionsButton.setAttribute("aria-label", "Open chat context menu");
+    chatOptionsButton.tabIndex = 0;
+    chatOptionsButton.style.width = "20px";
+    chatOptionsButton.style.opacity = "1";
+    chatOptionsButton.dataset.contactId = contactElementDOM.dataset.contactId;
+    const spanHTML = `
+    <span data-icon="down">
+        <svg viewBox="0 0 19 20" height="20" width="19" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px">
+            <title>down</title>
+            <path fill="currentColor" d="M3.8,6.7l5.7,5.7l5.7-5.7l1.6,1.6l-7.3,7.2L2.2,8.3L3.8,6.7z"></path>
+        </svg>
+    </span>`;
+    chatOptionsButton.innerHTML = spanHTML;
+    chatOptionsSpan.append(chatOptionsButton);
+    chatOptionsButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      handleOptionsBtnClick(event);
+    });
+  }
 }
 
 function addEventListeners(contactElement) {
   contactElement.addEventListener("click", handleContactClick);
-  contactElement.addEventListener("mouseenter", handleMouseover);
-  contactElement.addEventListener("mouseleave", handleMouseout);
+  
+  if (isTouchDevice()) {
+    createChatOptionsButton(contactElement);
+  } else {
+    contactElement.addEventListener("mouseenter", handleMouseover);
+    contactElement.addEventListener("mouseleave", handleMouseout);
+  }
 }
 
 function removeEventListeners(contactElement) {
@@ -371,7 +410,10 @@ async function renderContactListViewHTML(contactList) {
 
   const div2 = createElement("div", "a1-1-1-1-1-1-1-1-1");
   div1.append(div2);
-  const backButtonn = backButton(contactsSideDiv, handleBackBtnClick);
+  const backButtonn = backButton(contactsSideDiv, (element) => {
+      handleBackBtnClick(element);
+      chatStore.setMobileView('chats');
+  });
   div2.append(backButtonn);
 
   const newChatDiv = createElement("div", "a1-1-1-1-1-1-1-1-2", {
@@ -533,10 +575,35 @@ async function renderContactListViewHTML(contactList) {
 }
 async function handleContactClick(event) {
   const contactElementDOM = event.currentTarget;
-  const contactData = contactElementDOM.contactData;
+  const contactId = contactElementDOM.dataset.contactId;
+
+  let contactData = null;
+  if (
+    chatStore.activeContact &&
+    ((chatStore.activeContact.contactsDTO &&
+      chatStore.activeContact.contactsDTO.id == contactId) ||
+      (chatStore.activeContact.invitationResponseDTO &&
+        chatStore.activeContact.invitationResponseDTO.id == contactId))
+  ) {
+    contactData = chatStore.activeContact;
+  } else {
+    contactData = chatStore.contactList.find(
+      (c) =>
+        (c.contactsDTO && c.contactsDTO.id == contactId) ||
+        (c.invitationResponseDTO && c.invitationResponseDTO.id == contactId)
+    );
+  }
+
+  if (!contactData) {
+    console.warn(`Contact with ID ${contactId} not found in store.`);
+    return;
+  }
+
+  chatStore.setActiveContact(contactData);
+
   if (contactData.contactsDTO) {
     const chatBoxElement = findChatRoomElement(
-      contactData.contactsDTO.userId,
+      chatStore.user.id,
       contactData.contactsDTO.userContactId
     );
     const innerDiv = chatBoxElement?.querySelector(".chat-box > div");
@@ -551,11 +618,7 @@ async function handleContactClick(event) {
     }
     if (chatStore.selectedChatUserId || chatBoxElement) {
       chatBoxElement != null
-        ? ariaSelected(
-            chatBoxElement,
-            chatStore.selectedChatUserId,
-            innerDiv
-          )
+        ? ariaSelected(chatBoxElement, chatStore.selectedChatUserId, innerDiv)
         : ariaSelectedRemove(
             chatStore.selectedChatUserId,
             contactData.userProfileResponseDTO.id
@@ -596,20 +659,37 @@ async function handleContactClick(event) {
         findChat.chatDTO.id
       );
 
-      findChat.chatDTO.messages = (messagesResponse.messages || []).map(
+      const messages = (messagesResponse.messages || []).map(
         (msg) => new MessageDTO(msg)
       );
+      if (messages.length > 0) {
+        const isSender = messages[0].senderId === chatStore.user.id;
+        messages[0].decryptedMessage = await decryptMessage(
+          messages[0],
+          isSender
+        );
+      }
+      findChat.chatDTO.messages = messages;
       findChat.chatDTO.isLastPage = messagesResponse.isLastPage ?? true;
 
       chatSummaryDTO = findChat;
     }
 
     const messageBoxElement = document.querySelector(".message-box1");
-    if (
-      messageBoxElement &&
-      messageBoxElement?.data.userProfileResponseDTO.id !==
-        contactData.userProfileResponseDTO.id
-    ) {
+    let isDifferentChat = false;
+    if (messageBoxElement) {
+      
+      const currentChat = chatStore.activeChat;
+      if (
+        currentChat &&
+        currentChat.userProfileResponseDTO?.id !==
+          contactData.userProfileResponseDTO?.id
+      ) {
+        isDifferentChat = true;
+      }
+    }
+
+    if (isDifferentChat) {
       await removeMessageBoxAndUnsubscribe();
     }
     await createMessageBox(chatSummaryDTO);
@@ -669,33 +749,22 @@ async function handleContactClick(event) {
   }
 }
 
-function scrollToChat(userId) {
-  const paneSideElement = document.querySelector("#pane-side");
-  const chatList = chatStore.chatList;
-  const index = chatList.findIndex(
-    (c) => c.userProfileResponseDTO.id === userId
-  );
-
-  if (index >= 0) {
-    const itemHeight = 72;
-    paneSideElement.scrollTop = index * itemHeight;
-  }
-}
-
 function findChatRoomElement(userId, friendId) {
-  const chatBoxDivs = [
-    ...document.querySelectorAll(".chat-list-content > .chat1"),
-  ];
-  return chatBoxDivs.find((chatBoxDiv) => {
-    const participants = chatBoxDiv.chatData.chatDTO.participantIds;
-    return (
-      participants.includes(userId) &&
-      participants.includes(friendId) &&
-      participants.length === 2
-    );
-  });
+  const chat = findChatRoom(userId, friendId);
+  if (!chat) return undefined;
+  return document.querySelector(`.chat1[data-chat-id="${chat.chatDTO.id}"]`);
 }
 function findChatRoom(userId, friendId) {
+  const activeChat = chatStore.activeChat;
+  if (
+    activeChat &&
+    activeChat.chatDTO.participantIds.includes(userId) &&
+    activeChat.chatDTO.participantIds.includes(friendId) &&
+    activeChat.chatDTO.participantIds.length === 2
+  ) {
+    return activeChat;
+  }
+
   return chatStore.chatList.find((chat) => {
     const participants = chat.chatDTO.participantIds;
     return (
@@ -707,32 +776,7 @@ function findChatRoom(userId, friendId) {
 }
 function handleMouseover(event) {
   const contactElementDOM = event.currentTarget;
-  const chatOptionsSpan = contactElementDOM.querySelectorAll(
-    ".chat-options-contact span"
-  )[2];
-  if (chatOptionsSpan) {
-    const chatOptionsButton = document.createElement("button");
-    chatOptionsButton.className = "chat-options-btn";
-    chatOptionsButton.setAttribute("aria-label", "Open chat context menu");
-    // chatOptionsButton.setAttribute("aria-hidden", "true");
-    chatOptionsButton.tabIndex = 0;
-    chatOptionsButton.style.width = "20px";
-    chatOptionsButton.style.opacity = "1";
-    chatOptionsButton.contactData = contactElementDOM.contactData;
-    const spanHTML = `
-    <span data-icon="down">
-        <svg viewBox="0 0 19 20" height="20" width="19" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px">
-            <title>down</title>
-            <path fill="currentColor" d="M3.8,6.7l5.7,5.7l5.7-5.7l1.6,1.6l-7.3,7.2L2.2,8.3L3.8,6.7z"></path>
-        </svg>
-    </span>`;
-    chatOptionsButton.innerHTML = spanHTML;
-    chatOptionsSpan.append(chatOptionsButton);
-    chatOptionsButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      handleOptionsBtnClick(event);
-    });
-  }
+  createChatOptionsButton(contactElementDOM);
 }
 
 function handleMouseout(event) {
@@ -749,6 +793,11 @@ function handleMouseout(event) {
 function handleOptionsBtnClick(event) {
   const target = event.currentTarget;
   const contactElement = target.closest(".contact1");
+  const contactId = contactElement
+    ? contactElement.dataset.contactId
+    : target.dataset.contactId;
+
+
   const spans = document.querySelectorAll(".app span");
   const showChatOptions = spans[1];
 
@@ -765,7 +814,14 @@ function handleOptionsBtnClick(event) {
       chatOptionsDiv.setAttribute("role", "application");
       chatOptionsDiv.style.transformOrigin = "left top";
       chatOptionsDiv.style.top = rect.top + window.scrollY + "px";
-      chatOptionsDiv.style.left = rect.left + window.scrollX + "px";
+      chatOptionsDiv.style.top = rect.top + window.scrollY + "px";
+      
+      if (rect.left > window.innerWidth / 2) {
+         chatOptionsDiv.style.left = "auto";
+         chatOptionsDiv.style.right = (window.innerWidth - rect.right) + "px";
+      } else {
+         chatOptionsDiv.style.left = rect.left + window.scrollX + "px";
+      }
       chatOptionsDiv.style.transform = "scale(1)";
       chatOptionsDiv.style.opacity = "1";
 
@@ -792,7 +848,12 @@ function handleOptionsBtnClick(event) {
       });
       listItem.addEventListener("click", async () => {
         showChatOptions.innerHTML = "";
-        const contactData = contactElement.contactData;
+        const contactId = contactElement.dataset.contactId;
+        const contactData = chatStore.contactList.find(
+          (c) =>
+            (c.contactsDTO && c.contactsDTO.id == contactId) ||
+            (c.invitationResponseDTO && c.invitationResponseDTO.id == contactId)
+        );
         new Modal({
           contentText: contactData.contactsDTO
             ? i18n.t("contacts.deleteUserModalMessage")(
@@ -881,19 +942,37 @@ function removeContact(contactElement, contactData) {
     }
     if (contactData.userProfileResponseDTO) {
       const findChat = chatStore.chatList.find(
-        (chat) => chat.contactsDTO.id === contactData.contactsDTO.id
-      );
-      const chatElements = [...document.querySelectorAll(".chat1")];
-      const chatElement = chatElements.find(
-        (chat) => chat.chatData.contactsDTO.id === contactData.contactsDTO.id
+        (chat) => chat.contactsDTO?.id === contactData.contactsDTO?.id
       );
       if (findChat) {
+        const chatElements = [...document.querySelectorAll(".chat1")];
+        const chatElement = chatElements.find(
+          (el) => el.dataset.chatId === findChat.chatDTO.id
+        );
         findChat.contactsDTO.userHasAddedRelatedUser = false;
         findChat.contactsDTO.userContactName = null;
+
+        if (chatElement) {
+          const nameSpan = chatElement.querySelector(".name-span");
+          nameSpan.textContent = findChat.userProfileResponseDTO.email;
+        }
       }
-      if (chatElement) {
-        const nameSpan = chatElement.querySelector(".name-span");
-        nameSpan.textContent = findChat.userProfileResponseDTO.email;
+
+      const activeChat = chatStore.activeChat;
+      if (
+        activeChat &&
+        activeChat.contactsDTO &&
+        activeChat.contactsDTO.id === contactData.contactsDTO.id
+      ) {
+        activeChat.contactsDTO.userHasAddedRelatedUser = false;
+        activeChat.contactsDTO.userContactName = null;
+        const messageBoxNameSpan = document.querySelector(
+          ".message-box1-2-2-1-1-1-1"
+        );
+        if (messageBoxNameSpan) {
+          messageBoxNameSpan.textContent =
+            contactData.userProfileResponseDTO.email;
+        }
       }
     }
   }
@@ -925,11 +1004,13 @@ function updateTranslateYAfterDelete(deletedContactTranslateY) {
   };
 }
 function updateContact(contactElement, newContactData, nameSpan, messageSpan) {
-  if (!contactElement.contactData.contactsDTO) {
+
+  const invetBtn = contactElement.querySelector(".invitation-btn");
+  if (invetBtn) {
     const invetBtnParent = contactElement.querySelector(
       ".chat-name-and-last-message-time"
     );
-    invetBtnParent.removeChild(invetBtnParent.lastElementChild);
+    invetBtnParent.removeChild(invetBtn);
   }
   nameSpan.textContent = newContactData.contactsDTO.userContactName;
   contactElement.dataset.user = newContactData.contactsDTO.userContactName;
@@ -954,7 +1035,7 @@ function updateInvitation(
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        i18n.t("inivteUser.invite")
+        i18n.t("inviteUser.invite")
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -967,7 +1048,7 @@ function updateInvitation(
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        i18n.t("inivteUser.invited")
+        i18n.t("inviteUser.invited")
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -982,10 +1063,10 @@ function updateInvitation(
     const buttonDiv2 = invitationButton.querySelector(".invitation-button-1-1");
     if (!isInvite) {
       invitationButton.removeAttribute("disabled");
-      buttonDiv2.textContent = i18n.t("inivteUser.invite");
+      buttonDiv2.textContent = i18n.t("inviteUser.invite");
     } else {
       invitationButton.setAttribute("disabled", "disabled");
-      buttonDiv2.textContent = i18n.t("inivteUser.invited");
+      buttonDiv2.textContent = i18n.t("inviteUser.invited");
     }
   }
 }
@@ -997,7 +1078,9 @@ function updateContactElement(contactElement, newContactData, newIndex) {
   } else {
     updateInvitation(contactElement, newContactData, nameSpan, messageSpan);
   }
-  contactElement.contactData = newContactData;
+  contactElement.dataset.contactId = newContactData.contactsDTO
+    ? newContactData.contactsDTO.id
+    : newContactData.invitationResponseDTO.id;
   contactElement.style.transform = `translateY(${newIndex * 72}px)`;
   contactElement.style.zIndex = chatStore.contactList.length - newIndex;
 }

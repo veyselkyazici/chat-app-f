@@ -137,7 +137,7 @@ const createVisibilityProfilePhoto = (userProfileResponseDTO, contacts) => {
       "EVERYONE" ||
       (contacts.relatedUserHasAddedUser &&
         userProfileResponseDTO.privacySettings.profilePhotoVisibility ===
-          "CONTACTS")) &&
+          "MY_CONTACTS")) &&
     userProfileResponseDTO.imagee
   ) {
     return createProfileImage(userProfileResponseDTO);
@@ -284,7 +284,7 @@ function messageBoxFormatDateTime(dateTime) {
   return formattedDate;
 }
 
-function backButton(removeElement) {
+function backButton(removeElement, clickHandler) {
   const divBackBtn = createElement("div", "back-btn");
   const divBackBtn1 = createElement(
     "div",
@@ -292,7 +292,13 @@ function backButton(removeElement) {
     null,
     { role: "button", "aria-label": "Geri", tabIndex: "0" },
     null,
-    () => handleBackBtnClick(removeElement)
+    () => {
+        if (clickHandler) {
+            clickHandler(removeElement);
+        } else {
+            handleBackBtnClick(removeElement);
+        }
+    }
   );
 
   const spanBackIcon = document.createElement("span", "", null, {

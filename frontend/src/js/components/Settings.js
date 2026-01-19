@@ -108,17 +108,6 @@ function createSettingsHtml() {
       false
     )
   );
-  // divListItemsInnerDiv.append(
-  //   createButton(
-  //     '<svg viewBox="0 0 24 24" height="27" width="27" preserveAspectRatio="xMidYMid meet" fill="none" x="0px" y="0px"><path d="M 12 21.7 c 0.9 0 1.7 -0.8 1.7 -1.7 h -3.4 C 10.3 20.9 11.1 21.7 12 21.7 Z M 17.6 16.5 v -4.7 c 0 -2.7 -1.8 -4.8 -4.3 -5.4 V 5.8 c 0 -0.7 -0.6 -1.3 -1.3 -1.3 s -1.3 0.6 -1.3 1.3 v 0.6 C 8.2 7 6.4 9.1 6.4 11.8 v 4.7 l -1.7 1.7 v 0.9 h 14.6 v -0.9 L 17.6 16.5 Z" fill="currentColor"></path></svg>',
-  //     "Notifications",
-  //     "",
-  //     "",
-  //     "settings-notifications",
-  //     () => handleNotificationsClick(),
-  //     false
-  //   )
-  // );
   divListItemsInnerDiv.append(
     createButton(
       '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 32 32" fill="#000000"><path fill="#000000" d="M21 2a8.998 8.998 0 0 0-8.612 11.612L2 24v6h6l10.388-10.388A9 9 0 1 0 21 2Zm0 16a7.013 7.013 0 0 1-2.032-.302l-1.147-.348l-.847.847l-3.181 3.181L12.414 20L11 21.414l1.379 1.379l-1.586 1.586L9.414 23L8 24.414l1.379 1.379L7.172 28H4v-3.172l9.802-9.802l.848-.847l-.348-1.147A7 7 0 1 1 21 18Z"/><circle cx="22" cy="10" r="2" fill="#000000"/></svg>',
@@ -434,7 +423,6 @@ const handlePrivacyClick = () => {
   divPrivacy2_1_2_1_1.append(divPrivacy2_1_2_1_1_2);
   divPrivacy2_1_2_1.append(divPrivacy2_1_2_1_1);
 
-  // Ok tuşunu ekle
   const divPrivacy2_1_2_1_2 = createElement("div", "privacy-2-1-2-1-2");
   const spanChevronIcon = createElement("span", "", null, {
     "data-icon": "chevron",
@@ -467,8 +455,7 @@ const handlePrivacyClick = () => {
   divPrivacy2_1_2_1.append(divPrivacy2_1_2_1_2);
   divPrivacy2_1_2.append(divPrivacy2_1_2_1);
   divPrivacy2_1.append(divPrivacy2_1_2);
-  // Aynı işlemi diğer div'ler için de tekrar et
-  // Profil fotoğrafı
+
   const divPrivacy2_1_3 = createElement(
     "div",
     "privacy-2-1-2",
@@ -543,7 +530,6 @@ const handlePrivacyClick = () => {
   divPrivacy2_1.append(divPrivacy2_1_4);
   divPrivacy2_1_4_1.append(divPrivacy2_1_4_1_2);
 
-  // Okundu bilgisi
   if (chatStore.user.privacySettings.readReceipts) {
     const divPrivacy2_1_6 = readReceiptsTrue();
     divPrivacy2_1.append(divPrivacy2_1_6);
@@ -551,7 +537,6 @@ const handlePrivacyClick = () => {
     const divPrivacy2_1_6 = readReceiptsFalse();
     divPrivacy2_1.append(divPrivacy2_1_6);
   }
-  // Engellenmiş kişiler
   const divPrivacy2_2 = createElement("div", "privacy-2-2");
 
   const divPrivacy2_2_2 = createElement(
@@ -584,7 +569,6 @@ const handlePrivacyClick = () => {
   divPrivacy2_2_2_1.append(divPrivacy2_2_2_1_2);
   divPrivacy2_2_2.append(divPrivacy2_2_2_1);
   divPrivacy2_2.append(divPrivacy2_2_2);
-  // divPrivacy2.append(divPrivacy2_2);
 
   divSettings1.append(header);
   divSettings1.append(divPrivacy2);
@@ -595,7 +579,7 @@ const handlePrivacyClick = () => {
     createSettingsHtml();
   });
 };
-// const handleNotificationsClick = () => {};
+
 
 const handleChangePassword = () => {
   const content = document.createElement("div");
@@ -817,10 +801,7 @@ const handleReadReceiptsClick = async () => {
       readReceiptsBox1.className = "privacy-2-1-6-1-2-1-2-1-1";
     }
     chatStore.user.privacySettings.readReceipts = newReadReceiptsValue;
-    webSocketService.ws.send(
-      "updated-privacy-send-message",
-      result.data
-    );
+    webSocketService.ws.send("updated-privacy-send-message", result.data);
   }
 };
 const readReceiptsTrue = () => {
@@ -858,7 +839,6 @@ const readReceiptsTrue = () => {
   divPrivacy2_1_6_1_1.append(divPrivacy2_1_6_1_1_1);
   divPrivacy2_1_6_1_1.append(divPrivacy2_1_6_1_1_2);
   divPrivacy2_1_6_1.append(divPrivacy2_1_6_1_1);
-  // Checkbox ekleprivacy-2-1-6-1-2-1-2-1
   const divPrivacy2_1_6_1_2 = createElement("div", "privacy-2-1-6-1-2");
   const divCheckboxWrapper = createElement("div", "privacy-2-1-6-1-2-1");
   const checkbox = createElement("input", "privacy-2-1-6-1-2-1-1", null, {
@@ -924,7 +904,6 @@ const readReceiptsFalse = () => {
   divPrivacy2_1_6_1_1.append(divPrivacy2_1_6_1_1_2);
   divPrivacy2_1_6_1.append(divPrivacy2_1_6_1_1);
 
-  // Checkbox ekle
   const divPrivacy2_1_6_1_2 = createElement("div", "privacy-2-1-6-1-2");
   const divCheckboxWrapper = createElement("div", "privacy-2-1-6-1-2-1");
   const checkbox = createElement("input", "privacy-2-1-6-1-2-1-1", null, {
@@ -1032,7 +1011,7 @@ const handleLastSeenAndOnlineClick = () => {
     "lastSeenVisibility"
   );
   const buttonMyContacts = createRadioButton(
-    "Contacts",
+    "My Contacts",
     i18n.t("settings.myContacts"),
     "lastSeenVisibility"
   );
@@ -1198,7 +1177,7 @@ const handleProfilePhotoClick = () => {
     "profilePhotoVisibility"
   );
   const buttonMyContacts = createRadioButton(
-    "Contacts",
+    "My Contacts",
     i18n.t("settings.myContacts"),
     "profilePhotoVisibility"
   );
@@ -1300,7 +1279,7 @@ const handleAboutMeClick = () => {
     "aboutVisibility"
   );
   const buttonMyContacts = createRadioButton(
-    "Contacts",
+    "My Contacts",
     i18n.t("settings.myContacts"),
     "aboutVisibility"
   );
@@ -1397,7 +1376,7 @@ const handleGroupsClick = () => {
   });
 
   const buttonEveryone = createRadioButton("Everyone", "Everyone");
-  const buttonMyContacts = createRadioButton("My contacts", "My contacts");
+  const buttonMyContacts = createRadioButton("My Contacts", "My Contacts");
   radioGroup.append(buttonEveryone);
   radioGroup.append(buttonMyContacts);
 
@@ -1419,7 +1398,6 @@ const handleGroupsClick = () => {
     handlePrivacyClick();
   });
 };
-// ToDo BlockList
 const handleBlockedContactsClick = () => {
   const backBtnElement = document.querySelector(".settings-back-btn-1");
   backBtnElement.addEventListener("click", () => {
@@ -1472,8 +1450,7 @@ function createRadioIcon(ariaLabel, optionName) {
 
   if (optionName === "onlineStatusVisibility" && ariaLabel !== "Everyone") {
     isSelected =
-      chatStore.user.privacySettings[optionName] !==
-      VisibilityOption.EVERYONE;
+      chatStore.user.privacySettings[optionName] !== VisibilityOption.EVERYONE;
   }
 
   const radioButton = createElement(
@@ -1486,7 +1463,6 @@ function createRadioIcon(ariaLabel, optionName) {
       "aria-label": ariaLabel,
     }
   );
-  radioButton.data = ariaLabel;
   const spanHidden = createElement("span", "", null, {
     "aria-hidden": true,
     "data-icon": isSelected
@@ -1557,7 +1533,8 @@ const updateRadioButtonState = (radioButton, isChecked) => {
 };
 
 const handleRadioButtonClick = async (radioButton, optionName) => {
-  let visibilityOption = mapAriaLabelToEnum(radioButton.data);
+  
+  let visibilityOption = mapAriaLabelToEnum(radioButton.getAttribute("aria-label"));
   if (!visibilityOption) {
     visibilityOption =
       chatStore.user.privacySettings[PrivacySettings.LAST_SEEN_VISIBILITY];
@@ -1595,28 +1572,29 @@ const handleRadioButtonClick = async (radioButton, optionName) => {
       }
     }
   }
-
+  
   const oldPrivacySettings = { ...chatStore.user };
-  const result = await userService.updatePrivacy(updatedPrivacySettingsDTO);
+  const privacy = getPrivacyField(optionName);
+  const result = await userService.updatePrivacy({...updatedPrivacySettingsDTO, privacy: privacy});
   if (result.data) {
-    chatStore.user = { ...chatStore.user, ...result.data };
+    chatStore.setUser({
+      ...chatStore.user,
+      privacySettings: result.data.privacySettings,
+      updatedAt: result.data.updatedAt,
+    });
     if (document.querySelector(".message-box1")) {
       ifVisibilitySettingsChangeWhileMessageBoxIsOpen(
         oldPrivacySettings,
         result.data
       );
     }
-
-    webSocketService.ws.send(
-      "updated-privacy-send-message",
-      result.data
-    );
+  
   }
 };
 
 const VisibilityOption = {
   EVERYONE: "EVERYONE",
-  CONTACTS: "CONTACTS",
+  MY_CONTACTS: "MY_CONTACTS",
   NOBODY: "NOBODY",
 };
 
@@ -1624,8 +1602,8 @@ const mapAriaLabelToEnum = (ariaLabel) => {
   switch (ariaLabel) {
     case "Everyone":
       return VisibilityOption.EVERYONE;
-    case "Contacts":
-      return VisibilityOption.CONTACTS;
+    case "My Contacts":
+      return VisibilityOption.MY_CONTACTS;
     case "Nobody":
       return VisibilityOption.NOBODY;
     default:
@@ -1637,7 +1615,7 @@ const mapEnumToAriaLabel = (visibilityOption) => {
   switch (visibilityOption) {
     case VisibilityOption.EVERYONE:
       return i18n.t("settings.everyone");
-    case VisibilityOption.CONTACTS:
+    case VisibilityOption.MY_CONTACTS:
       return i18n.t("settings.myContacts");
     case VisibilityOption.NOBODY:
       return i18n.t("settings.nobody");
@@ -1645,7 +1623,16 @@ const mapEnumToAriaLabel = (visibilityOption) => {
       return null;
   }
 };
-
+function getPrivacyField(fieldKey) {
+  return PrivacyFieldMap[fieldKey] ?? null;
+}
+const PrivacyFieldMap = {
+  profilePhotoVisibility: "PROFILE_PHOTO",
+  lastSeenVisibility: "LAST_SEEN",
+  onlineStatusVisibility: "ONLINE_STATUS",
+  aboutVisibility: "ABOUT",
+  readReceipts: "READ_RECEIPTS",
+};
 const PrivacySettings = {
   LAST_SEEN_VISIBILITY: "lastSeenVisibility",
   ONLINE_STATUS_VISIBILITY: "onlineStatusVisibility",

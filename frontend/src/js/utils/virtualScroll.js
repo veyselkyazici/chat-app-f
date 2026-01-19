@@ -16,7 +16,14 @@ export function virtualScroll(
   let start = 0;
   let end = visibleItemCount;
 
-  const onScroll = () => {
+  if (paneSideElement._scrollHandler) {
+    paneSideElement.removeEventListener(
+      "scroll",
+      paneSideElement._scrollHandler
+    );
+  }
+
+  const scrollHandler = () => {
     const scrollTop = paneSideElement.scrollTop;
     const newStart = Math.max(Math.floor(scrollTop / 72) - 2, 0);
     const newEnd = newStart + visibleItemCount;
@@ -28,8 +35,8 @@ export function virtualScroll(
     }
   };
 
-  paneSideElement.removeEventListener("scroll", onScroll);
-  paneSideElement.addEventListener("scroll", onScroll);
+  paneSideElement._scrollHandler = scrollHandler;
+  paneSideElement.addEventListener("scroll", scrollHandler);
 }
 
 // Todo PrivacySettings islemleri yapilacak
@@ -69,6 +76,36 @@ export function updateItems(updateItemsDTO, newStart, newEnd) {
   itemsToUpdate.forEach((item) => updateItemsDTO.addEventListeners(item));
 }
 
+export function refreshVisibleItems(updateItemsDTO) {
+  const visibleItems = updateItemsDTO.itemsToUpdate;
+
+  visibleItems.forEach((item) => updateItemsDTO.removeEventListeners(item));
+
+  visibleItems.forEach((item) => {
+    const translateY = parseInt(
+      item.style.transform.replace("translateY(", "").replace("px)", "")
+    );
+    const index = Math.floor(translateY / 72);
+
+    const listItem = updateItemsDTO.list[index];
+    if (listItem) {
+      if (!("invitationResponseDTO" in listItem)) {
+        chatsVirtualScroll(item, listItem, index);
+      } else {
+        if (!listItem.invitationResponseDTO) {
+          contactsVirtualScroll(item, listItem);
+        } else {
+          invitationVirtualScroll(item, listItem);
+        }
+        item.style.transform = `translateY(${index * 72}px)`;
+        item.style.zIndex = updateItemsDTO.list.length - index;
+      }
+    }
+  });
+
+  visibleItems.forEach((item) => updateItemsDTO.addEventListeners(item));
+}
+
 export class UpdateItemsDTO {
   constructor({
     list = [],
@@ -103,11 +140,10 @@ function chatsVirtualScroll(item, listItem, newIndex) {
         listItem.userProfileResponseDTO.imagee;
     }
   }
-  item.chatData = listItem;
+  item.dataset.chatId = listItem.chatDTO.id;
   if (chatStore.selectedChatUserId !== null) {
-    const isSelected = chatStore.setSelectedChatUserId(
-      listItem.userProfileResponseDTO.id
-    );
+    const isSelected =
+      chatStore.selectedChatUserId === listItem.userProfileResponseDTO.id;
     if (isSelected) {
       item.setAttribute("aria-selected", "true");
       item.querySelector(".chat").classList.add("selected-chat");
@@ -135,6 +171,7 @@ function chatsVirtualScroll(item, listItem, newIndex) {
     ? listItem.contactsDTO.userContactName
     : listItem.userProfileResponseDTO.email;
   item.style.transform = `translateY(${newIndex * 72}px)`;
+  item.style.zIndex = chatStore.chatList.length - newIndex;
 }
 
 function contactsVirtualScroll(item, listItem) {
@@ -158,7 +195,7 @@ function contactsVirtualScroll(item, listItem) {
         listItem.userProfileResponseDTO.imagee;
     }
   }
-  item.contactData = listItem;
+  item.dataset.contactId = listItem.contactsDTO.id;
   const messageSpan = item.querySelector(".message-span-span");
   nameSpan.textContent = listItem.contactsDTO.userContactName;
   if (messageSpan) {
@@ -173,7 +210,7 @@ function contactsVirtualScroll(item, listItem) {
 
 function invitationVirtualScroll(item, listItem) {
   const nameSpan = item.querySelector(".name-span");
-  item.contactData = listItem;
+  item.dataset.contactId = listItem.invitationResponseDTO.id;
   const messageSpan = item.querySelector(".message-span-span");
   nameSpan.textContent = listItem.invitationResponseDTO.contactName;
   messageSpan.textContent = "";
@@ -190,7 +227,7 @@ function invitationVirtualScroll(item, listItem) {
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        i18n.t("inivteUser.invite")
+        i18n.t("inviteUser.invite")
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -203,7 +240,7 @@ function invitationVirtualScroll(item, listItem) {
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        i18n.t("inivteUser.invited")
+        i18n.t("inviteUser.invited")
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -215,11 +252,11 @@ function invitationVirtualScroll(item, listItem) {
     const buttonDiv2 = invitationButton.querySelector(".invitation-button-1-1");
     if (!isInvite) {
       invitationButton.removeAttribute("disabled");
-      buttonDiv2.textContent = i18n.t("inivteUser.invite");
+      buttonDiv2.textContent = i18n.t("inviteUser.invite");
     } else {
       invitationButton.setAttribute("disabled", "disabled");
-      buttonDiv2.textContent = i18n.t("inivteUser.invited");
+      buttonDiv2.textContent = i18n.t("inviteUser.invited");
     }
   }
-  nameSpan.textContent = item.contactData.invitationResponseDTO.contactName;
+  nameSpan.textContent = item.querySelector(".name-span").textContent;
 }

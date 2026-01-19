@@ -15,6 +15,7 @@ import {
   createChatBoxWithFirstMessage,
   lastMessageChange,
   updateChatBox,
+  ariaSelectedRemove,
 } from "../components/ChatBox.js";
 import {
   isOnlineStatus,
@@ -23,6 +24,7 @@ import {
   messageBoxElementMessagesReadTick,
   createMessageDeliveredTickElement,
   onlineInfo,
+  syncActiveChat,
 } from "../components/MessageBox.js";
 import { navigateTo } from "../index.js";
 import { userService } from "../services/userService.js";
@@ -45,20 +47,36 @@ import { ContactResponseDTO } from "../dtos/contact/response/ContactResponseDTO.
 import { i18n } from "../i18n/i18n.js";
 import { webSocketService } from "../websocket/websocketService.js";
 import { chatStore } from "../store/chatStore.js";
+import { canShowOnline, canShowLastSeen } from "../utils/privacyVisibility.js";
 
 export default class Chat extends AbstractView {
   constructor(params) {
     super(params);
     this.setTitle("Chat");
     this.chatSearchHandler = null;
+    this.currentView = "chats"; 
+  }
+
+  updateViewState(viewName) {
+    this.currentView = viewName;
+    const container = document.querySelector(".chat-container");
+    if (container) {
+      container.classList.remove(
+        "view-chats",
+        "view-message",
+        "view-profile",
+        "view-contacts"
+      );
+      container.classList.add(`view-${viewName}`);
+    }
   }
 
   async getHtml() {
     return `<div class="overlay-spinner hidden">
   <div class="spinner"></div>
-</div><div id="chat-loading-screen" class="chat-loading-screen"><span></span><div class="loading-container"><div class="loading-logo"><div class="whatsapp-logo"><i class="fas fa-comments fa-2x"></i></div></div><div class="loading-text"><p>Please wait</p></div><div class="loading-spinner"><div class="spinner"></div></div></div></div><span class></span><span class></span><span class></span><div class="chat-container"><div class="xixxii4"></div><div class="a1"><div class="a1-1"><span class="a1-1-1"></span></div><div class="a1-2"><span class="a1-2-1"></span></div></div><div class="chats"><header><header class="chat-list-header"><div class="user-photo">
+</div><div id="chat-loading-screen" class="chat-loading-screen"><span></span><div class="loading-container"><div class="loading-logo"><div class="whatsapp-logo"><i class="fas fa-comments fa-2x"></i></div></div><div class="loading-text"><p>Please wait</p></div><div class="loading-spinner"><div class="spinner"></div></div></div></div><span class></span><span class></span><span class></span><div class="chat-container view-chats"><div class="xixxii4"></div><div class="a1"><div class="a1-1"><span class="a1-1-1"></span></div><div class="a1-2"><span class="a1-2-1"></span></div></div><div class="chats"><header><header class="chat-list-header"><div class="user-photo">
 <div class="user-profile-photo"  style="height: 49px; width: 49px;" role="button"><div class="svg-div"><span class="" aria-hidden="true" data-icon="default-user"><svg class="svg-element" viewBox="0 0 212 212" height="212" width="212" preserveAspectRatio="xMidYMid meet" version="1.1" x="0px" y="0px" enable-background="new 0 0 212 212"><title>default-user</title><path fill="#DFE5E7" class="background" d="M106.251,0.5C164.653,0.5,212,47.846,212,106.25S164.653,212,106.25,212C47.846,212,0.5,164.654,0.5,106.25 S47.846,0.5,106.251,0.5z"></path><g><path fill="#FFFFFF" class="primary" d="M173.561,171.615c-0.601-0.915-1.287-1.907-2.065-2.955c-0.777-1.049-1.645-2.155-2.608-3.299 c-0.964-1.144-2.024-2.326-3.184-3.527c-1.741-1.802-3.71-3.646-5.924-5.47c-2.952-2.431-6.339-4.824-10.204-7.026 c-1.877-1.07-3.873-2.092-5.98-3.055c-0.062-0.028-0.118-0.059-0.18-0.087c-9.792-4.44-22.106-7.529-37.416-7.529 s-27.624,3.089-37.416,7.529c-0.338,0.153-0.653,0.318-0.985,0.474c-1.431,0.674-2.806,1.376-4.128,2.101 c-0.716,0.393-1.417,0.792-2.101,1.197c-3.421,2.027-6.475,4.191-9.15,6.395c-2.213,1.823-4.182,3.668-5.924,5.47 c-1.161,1.201-2.22,2.384-3.184,3.527c-0.964,1.144-1.832,2.25-2.609,3.299c-0.778,1.049-1.464,2.04-2.065,2.955 c-0.557,0.848-1.033,1.622-1.447,2.324c-0.033,0.056-0.073,0.119-0.104,0.174c-0.435,0.744-0.79,1.392-1.07,1.926 c-0.559,1.068-0.818,1.678-0.818,1.678v0.398c18.285,17.927,43.322,28.985,70.945,28.985c27.678,0,52.761-11.103,71.055-29.095 v-0.289c0,0-0.619-1.45-1.992-3.778C174.594,173.238,174.117,172.463,173.561,171.615z"></path><path fill="#FFFFFF" class="primary" d="M106.002,125.5c2.645,0,5.212-0.253,7.68-0.737c1.234-0.242,2.443-0.542,3.624-0.896 c1.772-0.532,3.482-1.188,5.12-1.958c2.184-1.027,4.242-2.258,6.15-3.67c2.863-2.119,5.39-4.646,7.509-7.509 c0.706-0.954,1.367-1.945,1.98-2.971c0.919-1.539,1.729-3.155,2.422-4.84c0.462-1.123,0.872-2.277,1.226-3.458 c0.177-0.591,0.341-1.188,0.49-1.792c0.299-1.208,0.542-2.443,0.725-3.701c0.275-1.887,0.417-3.827,0.417-5.811 c0-1.984-0.142-3.925-0.417-5.811c-0.184-1.258-0.426-2.493-0.725-3.701c-0.15-0.604-0.313-1.202-0.49-1.793 c-0.354-1.181-0.764-2.335-1.226-3.458c-0.693-1.685-1.504-3.301-2.422-4.84c-0.613-1.026-1.274-2.017-1.98-2.971 c-2.119-2.863-4.646-5.39-7.509-7.509c-1.909-1.412-3.966-2.643-6.15-3.67c-1.638-0.77-3.348-1.426-5.12-1.958 c-1.181-0.355-2.39-0.655-3.624-0.896c-2.468-0.484-5.035-0.737-7.68-0.737c-21.162,0-37.345,16.183-37.345,37.345 C68.657,109.317,84.84,125.5,106.002,125.5z"></path></g></svg></span></div></div>
-</div><div class="options-div"><div class="options"><div class="friend-list-btn option" tabindex="0" role="button" title="Yeni Sohbet Başlat" aria-label="Yeni Sohbet Başlat"><span class="friend-list-icon option material-symbols-outlined">chat_add_on</span></div><div class="add-friendd option" tabindex="0" role="button" title=${i18n.t(
+</div><div class="options-div"><div class="options"><div class="contact-list-btn option" tabindex="0" role="button" title="Yeni Sohbet Başlat" aria-label="Yeni Sohbet Başlat"><span class="contact-list-icon option material-symbols-outlined">chat_add_on</span></div><div class="add-friendd option" tabindex="0" role="button" title=${i18n.t(
       "addContacts.addContact"
     )} aria-label="Add contact"><i class="fa-solid fa-plus"></i></div><div class="settings-btn option" tabindex="0" role="button" title="Options" aria-label="Options"> <i class="fa-solid fa-gear"></i></div></div></div></header></header><div class="chat-content side">
 <div tabindex="-1" class="css1"><div class="chats-search-bar search-bar" id="chats-search-bar"><div></div><div class="css2"><button class="css3" tabindex="-1"><div class="css5"><span data-icon="search" class=""><svg viewBox="0 0 20 20" height="20" width="20" preserveAspectRatio="xMidYMid meet" fill="none"><title>search</title><path fill-rule="evenodd" clip-rule="evenodd" d="M4.36653 4.3664C5.36341 3.36953 6.57714 2.87 8.00012 2.87C9.42309 2.87 10.6368 3.36953 11.6337 4.3664C12.6306 5.36329 13.1301 6.57724 13.1301 8.00062C13.1301 8.57523 13.0412 9.11883 12.8624 9.63057C12.6972 10.1038 12.4733 10.5419 12.1909 10.9444L16.5712 15.3247C16.7454 15.4989 16.8385 15.7046 16.8385 15.9375C16.8385 16.1704 16.7454 16.3761 16.5712 16.5503C16.396 16.7254 16.1866 16.8175 15.948 16.8175C15.7095 16.8175 15.5001 16.7254 15.3249 16.5503L10.9448 12.1906C10.5421 12.4731 10.104 12.697 9.63069 12.8623C9.11895 13.041 8.57535 13.13 8.00074 13.13C6.57736 13.13 5.36341 12.6305 4.36653 11.6336C3.36965 10.6367 2.87012 9.42297 2.87012 8C2.87012 6.57702 3.36965 5.36328 4.36653 4.3664ZM8.00012 4.63C7.06198 4.63 6.26877 4.95685 5.61287 5.61275C4.95698 6.26865 4.63012 7.06186 4.63012 8C4.63012 8.93813 4.95698 9.73134 5.61287 10.3872C6.26877 11.0431 7.06198 11.37 8.00012 11.37C8.93826 11.37 9.73146 11.0431 10.3874 10.3872C11.0433 9.73134 11.3701 8.93813 11.3701 8C11.3701 7.06186 11.0433 6.26865 10.3874 5.61275C9.73146 4.95685 8.93826 4.63 8.00012 4.63Z" fill="currentColor"></path></svg></span></div></button><span></span><div class="css7"><div class="css8"><div class="css9" contenteditable="true" role="textbox" title="Arama metni giriş alanı" tabindex="3" aria-placeholder="Search" style="min-height: 1.47em; user-select: text; white-space: pre-wrap; word-break: break-word;"><p class="selectable-text1"><br></p></div><div class="css12"><div class="css122">${i18n.t(
@@ -73,6 +91,10 @@ export default class Chat extends AbstractView {
       this.updateLoadingProgress(i18n.t("chat.loadingMessage"));
 
       this.addEventListeners();
+
+      chatStore.setMobileViewHandler((view) => this.updateViewState(view));
+      this.updateViewState("chats"); 
+
       await this.initialData();
       this.chatSearchInit();
       this.hideLoadingScreen();
@@ -97,7 +119,6 @@ export default class Chat extends AbstractView {
       this.hideLoadingScreen();
       userUpdateModal(chatStore.user, false);
     }
-
     if (!getUserKey()) {
       try {
         await this.handleMissingUserKey();
@@ -174,8 +195,7 @@ export default class Chat extends AbstractView {
     );
 
     chatStore.setChatList(finalList);
-
-    await handleChats(chatStore.chatList);
+    await handleChats();
   }
   initializeWebSockets() {
     webSocketService.init();
@@ -186,13 +206,20 @@ export default class Chat extends AbstractView {
 
     ws.connect(() => {
       this.subscribeToWebSocketChannels();
-      // if (document.hidden) {
-      //   this.sendStatus("away");
-      // }
+
+    });
+
+    ws.onReconnect(async () => {
+      try {
+        await this.getChatList();
+        await syncActiveChat();
+      } catch (e) {
+        console.error("Reconnect sync error:", e);
+      }
     });
 
     ws.onForceLogout(() => this.logout());
-    // this.visibilityHandlers();
+    
   }
 
   chatSearchInit() {
@@ -236,7 +263,7 @@ export default class Chat extends AbstractView {
   }
 
   subscribeToWebSocketChannels() {
-    // CAHAT
+    
     const ws = chatStore.ws;
 
     const recipientMessageChannel = `/user/queue/received-message`;
@@ -318,8 +345,8 @@ export default class Chat extends AbstractView {
       const updated = chatStore.chatList.map((chat) => {
         if (chat.chatDTO.id === first.chatRoomId) {
           chat.chatDTO.messages[0].isSeen = true;
-          const chatEl = [...document.querySelectorAll(".chat1")].find(
-            (el) => el.chatData.chatDTO.id === first.chatRoomId
+          const chatEl = document.querySelector(
+            `.chat1[data-chat-id="${first.chatRoomId}"]`
           );
           const deliveredTick = chatEl.querySelector(
             ".message-delivered-tick-span"
@@ -336,7 +363,7 @@ export default class Chat extends AbstractView {
       if (messageBox) {
         messageBoxElementMessagesReadTick(
           json,
-          messageBox.data.userProfileResponseDTO.privacySettings
+          chatStore.activeChat.userProfileResponseDTO.privacySettings
         );
       }
     });
@@ -363,9 +390,8 @@ export default class Chat extends AbstractView {
 
       updateChatBox(chat);
 
-      const chatElements = [...document.querySelectorAll(".chat1")];
-      const chatElement = chatElements.find(
-        (el) => el.chatData.chatDTO.id === dto.chatRoomId
+      const chatElement = document.querySelector(
+        `.chat1[data-chat-id="${dto.chatRoomId}"]`
       );
 
       // unread badge update
@@ -401,8 +427,7 @@ export default class Chat extends AbstractView {
         renderMessage(
           { messages: incoming, lastPage: null },
           chat.userProfileResponseDTO.privacySettings,
-          true,
-          chatStore.user.id
+          true
         );
 
         chatStore.ws.send("read-message", msgDto);
@@ -419,15 +444,16 @@ export default class Chat extends AbstractView {
     // TYPING
     ws.subscribe(typingChannel, async (msg) => {
       const status = JSON.parse(msg.body);
-
-      const visible = [...document.querySelectorAll(".chat1")];
-      const chatElement = visible.find(
-        (el) => el.chatData.chatDTO.id === status.chatRoomId
+      const chatElement = document.querySelector(
+        `.chat1[data-chat-id="${status.chatRoomId}"]`
       );
 
       if (!chatElement) return;
 
-      const chat = chatElement.chatData;
+      const chat = chatStore.chatList.find(
+        (c) => c.chatDTO.id === status.chatRoomId
+      );
+      if (!chat) return;
       if (
         chat.userChatSettingsDTO.isBlocked ||
         chat.userChatSettingsDTO.isBlockedMe
@@ -473,7 +499,7 @@ export default class Chat extends AbstractView {
     ws.subscribe(invitedUserJoined, async (msg) => {
       const dto = new ContactResponseDTO(JSON.parse(msg.body));
 
-      // 1) varolan invitation'lardan sil
+      
       let updatedList = chatStore.contactList.filter((c) => {
         if (c.contactsDTO) return true;
         return (
@@ -482,7 +508,6 @@ export default class Chat extends AbstractView {
         );
       });
 
-      // 2) doğru yere ekle
       let inserted = false;
       const newName = dto.contactsDTO.userContactName;
 
@@ -502,7 +527,7 @@ export default class Chat extends AbstractView {
       chatStore.setContactList(updatedList);
     });
 
-    // disconnect → logout
+    // disconnect logout
     ws.subscribe(disconnect, async () => {
       await this.logout();
     });
@@ -520,7 +545,6 @@ export default class Chat extends AbstractView {
     ws.subscribe(addContact, async (msg) => {
       const newContact = JSON.parse(msg.body);
 
-      /* -------- CHAT LIST GÜNCELLE -------- */
       const updatedChatList = chatStore.chatList.map((chat) => {
         if (
           chat.userProfileResponseDTO.id ===
@@ -535,26 +559,19 @@ export default class Chat extends AbstractView {
 
       chatStore.setChatList(updatedChatList);
 
-      /* -------- CONTACT LIST -------- */
-
-      // 1️⃣ Sadece gerçek contact’lar
       const contacts = chatStore.contactList.filter((c) => c.contactsDTO);
 
-      // 2️⃣ Invitation’lar
       const invitations = chatStore.contactList.filter(
         (c) => c.invitationResponseDTO
       );
 
-      // 3️⃣ Aynı contact varsa çıkar (WS duplicate guard)
       const filteredContacts = contacts.filter(
         (c) =>
           c.userProfileResponseDTO.id !== newContact.userProfileResponseDTO.id
       );
 
-      // 4️⃣ Yeni contact ekle
       filteredContacts.push(newContact);
 
-      // 5️⃣ ALFABETİK SIRALA (🔥 kritik)
       filteredContacts.sort((a, b) =>
         getContactDisplayName(a).localeCompare(
           getContactDisplayName(b),
@@ -563,11 +580,9 @@ export default class Chat extends AbstractView {
         )
       );
 
-      // 6️⃣ Store’a yaz
       chatStore.setContactList([...filteredContacts, ...invitations]);
     });
 
-    // add-contact-user (karşı taraf seni ekledi)
     ws.subscribe(addContactUser, async (msg) => {
       const newContact = JSON.parse(msg.body);
 
@@ -622,7 +637,6 @@ export default class Chat extends AbstractView {
       chatStore.setContactList(updatedContacts);
     });
 
-    // add-invitation
     ws.subscribe(addInvitation, async (msg) => {
       const newInvitation = JSON.parse(msg.body);
 
@@ -647,7 +661,6 @@ export default class Chat extends AbstractView {
       chatStore.setContactList([...contacts, ...invitations]);
     });
 
-    // update-privacy
     ws.subscribe(updatePrivacy, async (msg) => {
       const dto = JSON.parse(msg.body);
 
@@ -662,30 +675,14 @@ export default class Chat extends AbstractView {
           ) {
             handleProfilePhotoVisibilityChange(
               { contact: { ...chat.contactsDTO }, userProfileResponseDTO: dto },
-              dto.imagee
+              chat.userProfileResponseDTO.imagee
             );
           }
 
-          if (
-            old.onlineStatusVisibility !==
-            dto.privacySettings.onlineStatusVisibility
-          ) {
-            handleOnlineStatusVisibilityChange(chatStore.user, {
-              contactsDTO: {
-                contact: chat.contactsDTO,
-                userProfileResponseDTO: dto,
-              },
-            });
-          }
-
-          if (
-            old.lastSeenVisibility !== dto.privacySettings.lastSeenVisibility
-          ) {
-            handleLastSeenVisibilityChange(chatStore.user, {
-              contactsDTO: {
-                contact: chat.contactsDTO,
-                userProfileResponseDTO: dto,
-              },
+          if (old.aboutVisibility !== dto.privacySettings.aboutVisibility) {
+            handleAboutVisibilityChange({
+              contact: chat.contactsDTO,
+              userProfileResponseDTO: dto,
             });
           }
         }
@@ -708,8 +705,10 @@ export default class Chat extends AbstractView {
         }
         return c;
       });
-
       chatStore.setContactList(contacts);
+      if (chatStore.state.activeFriendId === dto.id) {
+        chatStore.ws.send("/request-status-snapshot", { targetUserId: dto.id });
+      }
     });
 
     // updated-user-profile
@@ -750,49 +749,62 @@ export default class Chat extends AbstractView {
 
   addEventListeners() {
     const addFriendButton = document.querySelector(".add-friendd");
-    const contactListButton = document.querySelector(".friend-list-btn");
+    const contactListButton = document.querySelector(".contact-list-btn");
     const settingsButton = document.querySelector(".settings-btn");
     const profilePhotoButton = document.querySelector(".user-profile-photo");
     const searchInput = document.querySelector(".css9");
 
-    // Search
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
         this.chatSearchHandler.handleSearch(e);
       });
     }
 
-    // Profile modal
     if (profilePhotoButton) {
       profilePhotoButton.addEventListener("click", () => {
         userUpdateModal(chatStore.user, true);
       });
     }
 
-    // Add friend modal
     if (addFriendButton) {
       addFriendButton.addEventListener("click", () => {
         addContactModal(chatStore.user); // ← user store'dan geliyor
       });
     }
 
-    // Contact list
     if (contactListButton) {
       contactListButton.addEventListener("click", () => {
         renderContactList(chatStore.contactList);
+        chatStore.setMobileView("contacts");
       });
     }
 
-    // Settings
     if (settingsButton) {
       settingsButton.addEventListener("click", () => {
         createSettingsHtml();
       });
     }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (document.querySelector(".modal1")) return;
+
+
+        if (document.querySelector(".profile-span-div")) return;
+
+        if (this.currentView === "message") {
+          chatStore.setMobileView("chats");
+          ariaSelectedRemove(chatStore.selectedChatUserId);
+        } else if (this.currentView === "contacts") {
+          chatStore.setMobileView("chats");
+          const contactListEl = document.querySelector(".a1-1-1-1");
+          if (contactListEl) contactListEl.remove();
+        }
+      }
+    });
   }
 
   async logout() {
-    
     const overlay = document.querySelector(".overlay-spinner");
     overlay.classList.remove("hidden");
 
@@ -811,41 +823,9 @@ export default class Chat extends AbstractView {
     overlay.classList.add("hidden");
     navigateTo("/login");
   }
-  // destroy() {
-  //   
-  //   webSocketService.destroy();
-  // }
-
-  // visibilityHandlers() {
-  //   document.addEventListener("visibilitychange", () => {
-  //     if (!document.hidden) this.sendStatus("online");
-  //   });
-
-  //   window.addEventListener("focus", () => {
-  //     this.sendStatus("online");
-  //   });
-
-  //   window.addEventListener("blur", () => {
-  //     this.sendStatus("away");
-  //   });
-  // }
-
-  // sendStatus(status) {
-  //   if (!chatStore.ws?.isConnected) return;
-  //   if (chatStore.lastUserStatus === status) return;
-
-  //   chatStore.setLastUserStatus(status);
-  //   chatStore.ws.send("user-status", { status });
-  // }
-  // handleOnline() {
-  //   if (!chatStore.ws?.isConnected) return;
-  //   this.sendStatus("online");
-  // }
-
-  // handleAway() {
-  //   if (!chatStore.ws?.isConnected) return;
-  //   this.sendStatus("away");
-  // }
+  destroy() {
+    webSocketService.destroy();
+  }
 }
 function getContactDisplayName(c) {
   if (c.contactsDTO?.userContactName) return c.contactsDTO.userContactName;
@@ -858,18 +838,19 @@ function getContactDisplayName(c) {
 export const handleLastSeenVisibilityChange = (newContactPrivacy) => {
   const user = chatStore.user;
 
-  const messageBoxElement = document.querySelector(".message-box1");
   if (
-    messageBoxElement &&
-    messageBoxElement.data.userProfileResponseDTO.id ===
+    chatStore.activeChat &&
+    chatStore.activeChat.userProfileResponseDTO.id ===
       newContactPrivacy.contactsDTO.userProfileResponseDTO.id
   ) {
+    const messageBoxElement = document.querySelector(".message-box1");
+    if (!messageBoxElement) return;
     const statusElement = messageBoxElement.querySelector(".online-status");
 
     const showForUser =
       user.privacySettings.lastSeenVisibility === "EVERYONE" ||
       (newContactPrivacy.contactsDTO.contact.userHasAddedRelatedUser &&
-        user.privacySettings.lastSeenVisibility === "CONTACTS");
+        user.privacySettings.lastSeenVisibility === "MY_CONTACTS");
 
     if (showForUser) {
       const contactPrivacy =
@@ -877,7 +858,7 @@ export const handleLastSeenVisibilityChange = (newContactPrivacy) => {
 
       const allow =
         contactPrivacy.lastSeenVisibility === "EVERYONE" ||
-        (contactPrivacy.lastSeenVisibility === "CONTACTS" &&
+        (contactPrivacy.lastSeenVisibility === "MY_CONTACTS" &&
           newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser);
 
       if (allow) {
@@ -897,18 +878,19 @@ export const handleLastSeenVisibilityChange = (newContactPrivacy) => {
 export const handleOnlineStatusVisibilityChange = (newContactPrivacy) => {
   const user = chatStore.user;
 
-  const messageBoxElement = document.querySelector(".message-box1");
   if (
-    messageBoxElement &&
-    messageBoxElement.data.userProfileResponseDTO.id ===
+    chatStore.activeChat &&
+    chatStore.activeChat.userProfileResponseDTO.id ===
       newContactPrivacy.contactsDTO.userProfileResponseDTO.id
   ) {
+    const messageBoxElement = document.querySelector(".message-box1");
+    if (!messageBoxElement) return;
     const statusElement = messageBoxElement.querySelector(".online-status");
 
     const showForUser =
       user.privacySettings.onlineStatusVisibility === "EVERYONE" ||
       (newContactPrivacy.contactsDTO.contact.userHasAddedRelatedUser &&
-        user.privacySettings.onlineStatusVisibility === "CONTACTS");
+        user.privacySettings.onlineStatusVisibility === "MY_CONTACTS");
 
     if (showForUser) {
       const contactPrivacy =
@@ -916,7 +898,7 @@ export const handleOnlineStatusVisibilityChange = (newContactPrivacy) => {
 
       const allow =
         contactPrivacy.onlineStatusVisibility === "EVERYONE" ||
-        (contactPrivacy.onlineStatusVisibility === "CONTACTS" &&
+        (contactPrivacy.onlineStatusVisibility === "MY_CONTACTS" &&
           newContactPrivacy.contactsDTO.contact.relatedUserHasAddedUser);
 
       if (allow) {
@@ -939,15 +921,15 @@ export const handleProfilePhotoVisibilityChange = (newValue, image) => {
 
   const bool =
     privacy === "EVERYONE" ||
-    (privacy === "CONTACTS" && newValue.contact.relatedUserHasAddedUser);
+    (privacy === "MY_CONTACTS" && newValue.contact.relatedUserHasAddedUser);
 
   // CHAT LIST
-  const visibleChats = [...document.querySelectorAll(".chat1")];
-  const chatElement = visibleChats.find(
-    (chat) =>
-      chat.chatData.userProfileResponseDTO.id ===
-      newValue.userProfileResponseDTO.id
+  const chatData = chatStore.chatList.find(
+    (c) => c.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id
   );
+  const chatElement = chatData
+    ? document.querySelector(`.chat1[data-chat-id="${chatData.chatDTO.id}"]`)
+    : null;
   if (chatElement) {
     const imageElement = chatElement.querySelector(".image");
     changesVisibilityProfilePhoto(bool, imageElement, image);
@@ -955,21 +937,21 @@ export const handleProfilePhotoVisibilityChange = (newValue, image) => {
 
   // CONTACT LIST
   if (document.querySelector(".a1-1-1-1-1-1-3")) {
-    const visibleContacts = [...document.querySelectorAll(".contact1")];
-    const contact = visibleContacts.find(
-      (c) => c.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id
+    const contact = document.querySelector(
+      `.contact1[data-contact-id="${newValue.contactsDTO.id}"]`
     );
     const imageElement = contact?.querySelector(".image");
     changesVisibilityProfilePhoto(bool, imageElement, image);
   }
 
   // MESSAGE BOX
-  const messageBoxElement = document.querySelector(".message-box1");
   if (
-    messageBoxElement &&
-    messageBoxElement.data.userProfileResponseDTO.id ===
+    chatStore.activeChat &&
+    chatStore.activeChat.userProfileResponseDTO.id ===
       newValue.userProfileResponseDTO.id
   ) {
+    const messageBoxElement = document.querySelector(".message-box1");
+    if (!messageBoxElement) return;
     const imageElement = messageBoxElement.querySelector(".message-box1-2-1-1");
     changesVisibilityProfilePhoto(bool, imageElement, image);
   }
@@ -1018,26 +1000,47 @@ export const changesVisibilityProfilePhoto = (bool, imageElement, image) => {
   }
 };
 
+export const applyMessageBoxStatusVisibility = (updatedUserDto) => {
+  const openChat = chatStore.activeChat; 
+  if (!openChat || openChat.userProfileResponseDTO.id !== updatedUserDto.id)
+    return;
+
+  const me = chatStore.user;
+  const rel = openChat.contactsDTO;
+  const contactPrivacy = updatedUserDto.privacySettings;
+
+  const allowOnline = canShowOnline(me, contactPrivacy, rel);
+  const allowLastSeen = canShowLastSeen(me, contactPrivacy, rel);
+
+  const statusEl = document.querySelector(".message-box1 .online-status");
+
+  if (!allowOnline && !allowLastSeen) {
+    statusEl?.remove();
+    return;
+  }
+
+  // Görünüyorsa backend'den güncel snapshot iste
+  chatStore.ws.send("/request-status-snapshot", {
+    targetUserId: updatedUserDto.id,
+  });
+};
 export const handleAboutVisibilityChange = (newValue) => {
   const privacy =
     newValue.userProfileResponseDTO.privacySettings.aboutVisibility;
 
   const bool =
     privacy === "EVERYONE" ||
-    (privacy === "CONTACTS" && newValue.contact.userHasAddedRelatedUser);
+    (privacy === "MY_CONTACTS" && newValue.contact.userHasAddedRelatedUser);
 
-  if (document.querySelector(".a1-1-1-1-1-1-3")) {
-    const visibleContacts = [...document.querySelectorAll(".contact1")];
-    const contact = visibleContacts.find(
-      (c) => c.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id
-    );
-    const aboutElement = contact?.querySelector(".message");
-    changesVisibilityAbout(
-      bool,
-      aboutElement,
-      newValue.userProfileResponseDTO.about
-    );
-  }
+  const contact = document.querySelector(
+    `.contact1[data-contact-id="${newValue.contactsDTO.id}"]`
+  );
+  const aboutElement = contact?.querySelector(".message");
+  changesVisibilityAbout(
+    bool,
+    aboutElement,
+    newValue.userProfileResponseDTO.about
+  );
 };
 
 export const changesVisibilityAbout = (bool, element, about) => {

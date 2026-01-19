@@ -35,9 +35,6 @@ export default class WebSocketManager {
         };
       },
 
-      // heartbeatIncoming: 20000,
-      // heartbeatOutgoing: 20000,
-
       reconnectDelay: () => (this.disableReconnect ? null : 3000),
 
       debug: () => {},
@@ -133,26 +130,37 @@ export default class WebSocketManager {
   }
 
   subscribe(channel, callback) {
-    this.subscriptions.set(channel, {
-      callback,
-      stompSubscription: null,
-    });
+    const existing = this.subscriptions.get(channel);
+    if (existing?.stompSubscription) {
+      try {
+        existing.stompSubscription.unsubscribe();
+      } catch {}
+    }
+
+    this.subscriptions.set(channel, { callback, stompSubscription: null });
 
     if (this.isConnected) {
       const stompSub = this.client.subscribe(channel, callback);
       this.subscriptions.get(channel).stompSubscription = stompSub;
+      return stompSub;
     }
+
+    return null;
   }
 
   resubscribeAll() {
-    for (const [, data] of this.subscriptions.entries()) {
+    for (const [channel, data] of this.subscriptions.entries()) {
       try {
         data.stompSubscription?.unsubscribe();
+      } catch {}
+
+      try {
         const stompSub = this.client.subscribe(channel, data.callback);
         data.stompSubscription = stompSub;
       } catch {}
     }
   }
+
   unsubscribe(channel) {
     const data = this.subscriptions.get(channel);
     if (!data) return;

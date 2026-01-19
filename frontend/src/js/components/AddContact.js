@@ -8,7 +8,7 @@ import { contactService } from "../services/contactsService.js";
 import { Modal } from "../utils/showModal.js";
 import { AddContactRequestDTO } from "../dtos/contact/request/AddContactRequestDTO.js";
 import { i18n } from "../i18n/i18n.js";
-const addContactModal = (addedByUser, email) => {
+const addContactModal = (addedByUser, email, successCallback) => {
   const generalErrorDiv = createElement("div", "input-icon");
   const generalErrorMessage = createElement(
     "div",
@@ -48,7 +48,8 @@ const addContactModal = (addedByUser, email) => {
   new Modal({
     title: i18n.t("addContacts.addContact"),
     buttonText: i18n.t("addContacts.addContact"),
-    mainCallback: () => addContact(addedByUser, emailInput, nameInput),
+    mainCallback: () =>
+      addContact(addedByUser, emailInput, nameInput, successCallback),
     showBorders: false,
     secondOptionButton: false,
     headerHtml: null,
@@ -68,7 +69,7 @@ const addContactModal = (addedByUser, email) => {
     emailDOM.readOnly = true;
   }
 };
-const addContact = async (addedByUser, emailDOM, nameDOM) => {
+const addContact = async (addedByUser, emailDOM, nameDOM, successCallback) => {
   const email = emailDOM.value.trim();
   const name = nameDOM.value;
   const formElements = {
@@ -101,6 +102,9 @@ const addContact = async (addedByUser, emailDOM, nameDOM) => {
       toastr.success(i18n.t("contacts.contactAddedSuccessfully"));
       const modal = document.querySelector(".content > span");
       modal.firstElementChild.remove();
+      if (successCallback) {
+        successCallback(name);
+      }
     }
   } catch (error) {
     const errorResponse = error.response?.data;

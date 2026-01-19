@@ -193,7 +193,7 @@ export default {
     whoCanSeeMyLastSeen: "Who can see my last seen",
     everyone: "Everyone",
     myContacts: "My contacts",
-    noOne: "Nobody",
+    nobody: "Nobody",
     whoCanSeeOnlineInfo: "Who can see when I’m online?",
     sameAsLastSeen: "Same as last seen",
     lastSeenAndOnlineInfo:
@@ -217,8 +217,8 @@ export default {
   },
   contactInformation: {
     contactInformation: "Contact info",
-    block: "block",
-    unBlock: "unblock",
+    block: " block",
+    unBlock: " unblock",
   },
   errors: {
     status400: "Bad request. Please check your input.",
