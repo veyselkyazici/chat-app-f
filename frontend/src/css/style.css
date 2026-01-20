@@ -5301,6 +5301,7 @@ form h1 {
     .message-box1-5 {
         flex: 1 1 auto;
         min-height: 0; /* Allow shrinking for scroll */
+        overscroll-behavior: contain;
     }
 }
 

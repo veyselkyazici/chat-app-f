@@ -1003,7 +1003,9 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
   divContenteditable.addEventListener("focus", () =>
     handleTextFocus(chat, typingStatus, textArea)
   );
-  divContenteditable.focus();
+  if (window.innerWidth > 900) {
+    divContenteditable.focus();
+  }
   div1_7_1_1_1_1_1.addEventListener("click", () => {
     updateCaretPosition();
   });
