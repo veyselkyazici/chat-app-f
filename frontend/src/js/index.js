@@ -49,7 +49,7 @@ const router = async () => {
   }));
 
   let match = potentialMatches.find(
-    (potentialMatch) => potentialMatch.result !== null
+    (potentialMatch) => potentialMatch.result !== null,
   );
 
   if (!match) {
@@ -70,14 +70,7 @@ const router = async () => {
   }
 };
 
-window.addEventListener("popstate", (event) => {
-  if (currentView && typeof currentView.onPopState === "function") {
-    if (currentView.onPopState(event)) {
-      return;
-    }
-  }
-  router();
-});
+window.addEventListener("popstate", router);
 
 document.addEventListener("DOMContentLoaded", () => {
   document.body.addEventListener("click", (e) => {
