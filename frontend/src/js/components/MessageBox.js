@@ -89,7 +89,7 @@ const handleTextBlur = (chat, typingStatus, textArea) => {
     webSocketService.ws.send("typing", {
       userId: chat.contactsDTO.userId,
       chatRoomId: chat.chatDTO.id,
-      typing: false,
+      isTyping: false,
       friendId: chat.userProfileResponseDTO.id,
     });
     typingStatus.isTyping = false;
@@ -107,7 +107,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
       webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
-        typing: false,
+        isTyping: false,
         friendId: chat.userProfileResponseDTO.id,
       });
       typingStatus.isTyping = false;
@@ -119,7 +119,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
     webSocketService.ws.send("typing", {
       userId: chat.contactsDTO.userId,
       chatRoomId: chat.chatDTO.id,
-      typing: true,
+      isTyping: true,
       friendId: chat.userProfileResponseDTO.id,
     });
     typingStatus.isTyping = true;
@@ -142,7 +142,7 @@ function handleTextInput(textArea, chat, typingStatus, event) {
       webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
-        typing: false,
+        isTyping: false,
         friendId: chat.userProfileResponseDTO.id,
       });
       typingStatus.isTyping = false;
@@ -152,7 +152,7 @@ function handleTextInput(textArea, chat, typingStatus, event) {
       webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
         chatRoomId: chat.chatDTO.id,
-        typing: true,
+        isTyping: true,
         friendId: chat.userProfileResponseDTO.id,
       });
       typingStatus.isTyping = true;
@@ -1658,7 +1658,6 @@ const bindMessageBoxRealtime = () => {
   });
 
   chatStore.ws.subscribe("/user/queue/message-box-typing", (msg) => {
-    
     const status = JSON.parse(msg.body);
     chatStore.applyTyping(status);
     renderHeaderStatus();
@@ -1870,7 +1869,7 @@ const getRenderedMessageIds = () => {
 };
 
 const syncActiveChat = async () => {
-  debugger;
+  
   if (!chatStore.activeChatRoomId) return;
     
     try {

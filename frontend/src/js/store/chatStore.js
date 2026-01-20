@@ -43,7 +43,7 @@ class ChatStore {
 
   setMobileView(viewName) {
     if (this.mobileViewHandler) {
-        this.mobileViewHandler(viewName);
+      this.mobileViewHandler(viewName);
     }
   }
 
@@ -65,7 +65,10 @@ class ChatStore {
   setContactList(list) {
     const oldList = this.state.contactList;
     this.state.contactList = list || [];
-    if (this.state.updateItemsDTO && this.state.updateItemsDTO.list === oldList) {
+    if (
+      this.state.updateItemsDTO &&
+      this.state.updateItemsDTO.list === oldList
+    ) {
       this.state.updateItemsDTO.list = this.state.contactList;
     }
   }
@@ -77,14 +80,17 @@ class ChatStore {
   setChatList(list) {
     const oldList = this.state.chatList;
     this.state.chatList = list || [];
-    if (this.state.updateItemsDTO && this.state.updateItemsDTO.list === oldList) {
+    if (
+      this.state.updateItemsDTO &&
+      this.state.updateItemsDTO.list === oldList
+    ) {
       this.state.updateItemsDTO.list = this.state.chatList;
     }
   }
 
   updateChatSummary(chatRoomId, summaryDTO) {
     const idx = this.state.chatList.findIndex(
-      (c) => c.chatDTO.id === chatRoomId
+      (c) => c.chatDTO.id === chatRoomId,
     );
 
     if (idx !== -1) {
@@ -126,10 +132,10 @@ class ChatStore {
     }
 
     this.state.activeChat = chatData;
-    
+
     this.state.activeChatRoomId = chatData.chatDTO?.id || null;
     this.state.activeFriendId = chatData.userProfileResponseDTO?.id || null;
-    
+
     this.resetMessageBoxStatus();
   }
 
@@ -193,11 +199,19 @@ class ChatStore {
     this.state.messageBoxStatus.lastSeen = lastSeen ?? null;
   }
 
-  applyTyping({ chatRoomId, friendId, isTyping }) {
-    if (!this.state.activeChatRoomId) return;
-    if (chatRoomId !== this.state.activeChatRoomId) return;
-    if (friendId !== this.state.activeFriendId) return;
-    if (this.state.messageBoxStatus.hidden) return;
+  applyTyping({ userId, chatRoomId, isTyping }) {
+    if (!this.state.activeChatRoomId) {
+      return;
+    }
+    if (chatRoomId !== this.state.activeChatRoomId) {
+      return;
+    }
+    if (userId !== this.state.activeFriendId) {
+      return;
+    }
+    if (this.state.messageBoxStatus.hidden) {
+      return;
+    }
 
     this.state.messageBoxStatus.typing = !!isTyping;
   }

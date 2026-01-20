@@ -467,7 +467,7 @@ export default class Chat extends AbstractView {
 
       const isSender = lastMsg.senderId === chatStore.user.id;
 
-      if (status.typing) {
+      if (status.isTyping) {
         if (isSender) {
           messageSpan.removeChild(messageSpan.firstElementChild);
         }
