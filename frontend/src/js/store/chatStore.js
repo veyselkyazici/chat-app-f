@@ -41,9 +41,9 @@ class ChatStore {
     this.mobileViewHandler = cb;
   }
 
-  setMobileView(viewName) {
+  setMobileView(viewName, pushState = true) {
     if (this.mobileViewHandler) {
-      this.mobileViewHandler(viewName);
+      this.mobileViewHandler(viewName, pushState);
     }
   }
 

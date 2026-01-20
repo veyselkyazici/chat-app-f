@@ -57,7 +57,21 @@ export default class Chat extends AbstractView {
     this.currentView = "chats"; 
   }
 
-  updateViewState(viewName) {
+  onPopState(event) {
+    if (event.state && event.state.view) {
+      chatStore.setMobileView(event.state.view, false); 
+      return true;
+    } else {
+      // If no state (e.g. initial load or back to root), check our local view
+      if (this.currentView !== "chats") {
+        chatStore.setMobileView("chats", false);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  updateViewState(viewName, pushState = true) {
     this.currentView = viewName;
     const container = document.querySelector(".chat-container");
     if (container) {
@@ -68,6 +82,10 @@ export default class Chat extends AbstractView {
         "view-contacts"
       );
       container.classList.add(`view-${viewName}`);
+    }
+
+    if (pushState && viewName !== "chats") {
+      history.pushState({ view: viewName }, null, "");
     }
   }
 
@@ -92,7 +110,9 @@ export default class Chat extends AbstractView {
 
       this.addEventListeners();
 
-      chatStore.setMobileViewHandler((view) => this.updateViewState(view));
+      chatStore.setMobileViewHandler((view, pushState = true) =>
+        this.updateViewState(view, pushState)
+      );
       this.updateViewState("chats"); 
 
       await this.initialData();

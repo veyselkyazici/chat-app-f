@@ -70,7 +70,14 @@ const router = async () => {
   }
 };
 
-window.addEventListener("popstate", router);
+window.addEventListener("popstate", (event) => {
+  if (currentView && typeof currentView.onPopState === "function") {
+    if (currentView.onPopState(event)) {
+      return;
+    }
+  }
+  router();
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   document.body.addEventListener("click", (e) => {
