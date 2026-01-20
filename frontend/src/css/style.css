@@ -5268,14 +5268,22 @@ form h1 {
     
     .message-box1-2 {
         padding-left: 0 !important;
-        flex-shrink: 0; /* Header should not shrink */
+        flex-shrink: 0; 
     }
 
     .profile-close-button {
         display: flex !important; 
     }
 
-    /* Fix Settings Full Screen on Mobile */
+    /* Mobil 100dvh fix */
+    .chat-container, 
+    .message-box, 
+    .message-box1,
+    .settings {
+        height: 100dvh !important;
+        min-height: 100dvh !important;
+    }
+
     .settings {
         position: fixed !important;
         top: 0;
@@ -5293,14 +5301,13 @@ form h1 {
         height: 100% !important;
     }
 
-    /* Message Box Flex Fixes */
     .message-box1-7 {
-        flex-shrink: 0; /* Input/Footer should not shrink */
+        flex-shrink: 0; 
     }
 
     .message-box1-5 {
         flex: 1 1 auto;
-        min-height: 0; /* Allow shrinking for scroll */
+        min-height: 0; 
         overscroll-behavior: contain;
     }
 }
