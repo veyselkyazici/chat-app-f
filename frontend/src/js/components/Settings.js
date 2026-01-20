@@ -41,7 +41,10 @@ function createSettingsHtml() {
   const header = createElement("header", "settings-1-1-1");
 
   const divSettingsHeader = createElement("div", "settings-1-1-1-1");
-  const divBackBtnn = backButton(settingsDiv, handleBackBtnClick);
+  const divBackBtnn = backButton(settingsDiv, (element) => {
+    handleBackBtnClick(element);
+    chatStore.setMobileView("chats");
+  });
 
   const divTitle = createElement("div", "settings-1-1-1-1-1", null, {
     title: i18n.t("settings.settings"),

@@ -65,7 +65,9 @@ export default class Chat extends AbstractView {
         "view-chats",
         "view-message",
         "view-profile",
+        "view-profile",
         "view-contacts",
+        "view-settings",
       );
       container.classList.add(`view-${viewName}`);
     }
@@ -778,6 +780,7 @@ export default class Chat extends AbstractView {
     if (settingsButton) {
       settingsButton.addEventListener("click", () => {
         createSettingsHtml();
+        chatStore.setMobileView("settings");
       });
     }
 
@@ -793,7 +796,10 @@ export default class Chat extends AbstractView {
         } else if (this.currentView === "contacts") {
           chatStore.setMobileView("chats");
           const contactListEl = document.querySelector(".a1-1-1-1");
-          if (contactListEl) contactListEl.remove();
+        } else if (this.currentView === "settings") {
+          chatStore.setMobileView("chats");
+          const settingsEl = document.querySelector(".settings");
+          if (settingsEl) settingsEl.remove();
         }
       }
     });

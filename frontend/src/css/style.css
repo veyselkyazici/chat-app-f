@@ -5233,19 +5233,26 @@ form h1 {
         animation-duration: 0.3s;
     }
 
-    .chat-container.view-contacts .chats {
+    .chat-container.view-contacts .chats,
+    .chat-container.view-settings .chats {
         display: none !important;
     }
-    .chat-container.view-contacts .message-box {
+    .chat-container.view-contacts .message-box,
+    .chat-container.view-settings .message-box {
         display: none !important;
     }
-    .chat-container.view-contacts .contact-information.profile {
+    .chat-container.view-contacts .contact-information.profile,
+    .chat-container.view-settings .contact-information.profile {
         display: none !important;
     }
     .chat-container.view-contacts .a1, 
     .chat-container.view-contacts .a1-1, 
     .chat-container.view-contacts .a1-1-1, 
-    .chat-container.view-contacts .a1-1-1-1 {
+    .chat-container.view-contacts .a1-1-1-1,
+    .chat-container.view-settings .a1, 
+    .chat-container.view-settings .a1-1, 
+    .chat-container.view-settings .a1-1-1, 
+    .chat-container.view-settings .a1-1-1-1 {
          display: block !important;
          width: 100% !important;
          max-width: 100% !important;
@@ -5261,10 +5268,39 @@ form h1 {
     
     .message-box1-2 {
         padding-left: 0 !important;
+        flex-shrink: 0; /* Header should not shrink */
     }
 
     .profile-close-button {
         display: flex !important; 
+    }
+
+    /* Fix Settings Full Screen on Mobile */
+    .settings {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 2000;
+        background-color: #fff;
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .settings-1-1 {
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* Message Box Flex Fixes */
+    .message-box1-7 {
+        flex-shrink: 0; /* Input/Footer should not shrink */
+    }
+
+    .message-box1-5 {
+        flex: 1 1 auto;
+        min-height: 0; /* Allow shrinking for scroll */
     }
 }
 
