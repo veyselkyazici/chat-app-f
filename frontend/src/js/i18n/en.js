@@ -25,11 +25,13 @@ export default {
     success: "Login successful",
     errorCode1000: "Incorrect email address or password",
     errorCode1003: "Email needs verification. Please check your inbox",
+    noAccount: "Don't have an account?",
   },
   register: {
     registerSuccess:
       "Sign up successful. Please check your email to activate your account.",
     errorCode1002: "Email address already registered",
+    haveAccount: "Already have an account?",
   },
   forgotPassword: {
     forgotPassword: "Forgot password",
@@ -125,6 +127,7 @@ export default {
   messageBox: {
     typing: "typing...",
     messageBoxPlaceHolder: "Write a message",
+    allEmojis: "All Emojis",
     blockInputMessage: (userName) =>
       `You cannot send a message to blocked user ${userName}.`,
     decryptedErrorMessage: "Failed to decrypt the message.",

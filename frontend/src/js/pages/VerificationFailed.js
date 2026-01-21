@@ -12,29 +12,28 @@ export default class extends AbstractView {
 
   async getHtml() {
     return `
-      <div class="register-login" style="text-align: center; max-width: 400px; margin: 50px auto;">
-        <div style="font-size: 60px; color: #721c24;">❌</div>
-        <h2 style="color: #721c24;">${i18n.t(
+      <div class="register-login">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+        <h2 style="color: var(--error-color); margin-bottom: 1rem;">${i18n.t(
           "verificationFailed.verificationFailedMessage"
         )}</h2>
 
-        <p style="margin-bottom: 20px;">${i18n.t(
+        <p style="margin-bottom: 1.5rem; color: var(--text-dark);">${i18n.t(
           "verificationFailed.expiredLink"
         )}</p>
 
-        <div class="input-icon">
+        <div class="input-icon" style="width: 100%; max-width: 100%;">
           <i class="fa-solid fa-envelope"></i>
           <div class="error-message"></div>
-          <input id="confirmationEmail" name="email" placeholder="E-posta" >
+          <input id="confirmationEmail" name="email" placeholder="E-posta" />
         </div>
 
-        <button id="resendVerification" 
-          style="background-color: #007bff; color: #fff; padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer;">
+        <button class="button" id="resendVerification" style="width: 100%; margin-top: 1rem;">
           ${i18n.t("verificationFailed.resendVerificationMessage")}
         </button>
 
-        <div style="margin-top: 15px;">
-          <a href="/" data-link style="color: black; text-decoration: none;">${i18n.t(
+        <div style="margin-top: 1.5rem;">
+          <a href="/" data-link style="color: var(--text-light); transition: var(--transition);">${i18n.t(
             "verificationFailed.backToHome"
           )}</a>
         </div>
@@ -43,10 +42,6 @@ export default class extends AbstractView {
   }
 
   async init() {
-    const failed = sessionStorage.getItem("verificationFailed");
-    if (!failed) {
-      return navigateTo("/");
-    }
     sessionStorage.removeItem("verificationFailed");
 
     const resendButton = document.getElementById("resendVerification");

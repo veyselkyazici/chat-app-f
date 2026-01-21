@@ -26,19 +26,19 @@ import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
 import { i18n } from "../i18n/i18n.js";
 import { webSocketService } from "../websocket/websocketService.js";
 import { chatStore } from "../store/chatStore.js";
-async function handleChats() {
+async function handleChats(chatList = chatStore.chatList) {
   const paneSideElement = document.querySelector("#pane-side");
   const chatListContentElement =
     paneSideElement.querySelector(".chat-list-content");
   chatListContentElement.innerHTML = "";
-  chatListContentElement.style.height = chatStore.chatList.length * 72 + "px";
+  chatListContentElement.style.height = chatList.length * 72 + "px";
   const visibleItemCount = calculateVisibleItemCount();
-  for (let i = 0; i < visibleItemCount && i < chatStore.chatList.length; i++) {
-    createChatBox(chatStore.chatList[i], i);
+  for (let i = 0; i < visibleItemCount && i < chatList.length; i++) {
+    createChatBox(chatList[i], i);
   }
   chatStore.setUpdateItemsDTO(
     new UpdateItemsDTO({
-      list: chatStore.chatList,
+      list: chatList,
       itemsToUpdate: Array.from(document.querySelectorAll(".chat1")),
       removeEventListeners,
       addEventListeners,
@@ -933,9 +933,8 @@ async function handleChatClick(event) {
       await markMessagesAsReadAndFetchMessages();
     }
     chatData.userChatSettingsDTO.unreadMessageCount = 0;
-  } else {
-    await fetchMessages(chatData);
   }
+  await fetchMessages(chatData);
 }
 
 async function markMessagesAsReadAndFetchMessages() {
@@ -960,7 +959,6 @@ const removeUnreadMessageCountElement = (chatElement) => {
   unreadMessageCountDiv.remove();
 };
 async function fetchMessages(chatSummaryData) {
-  
   const chatRoomLast30Messages = new ChatDTO(
     await chatService.getLast30Messages(chatSummaryData.chatDTO.id),
   );

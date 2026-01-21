@@ -26,68 +26,68 @@ export default class extends AbstractView {
     this.setTitle("Register");
   }
 
+
   async getHtml() {
     return `
-    <div class="overlay-spinner hidden">
-  <div class="spinner"></div>
-</div>
+      <div class="register-login">
+        <div class="overlay-spinner hidden">
+          <div class="spinner"></div>
+        </div>
         <form id="registerForm">
-        <h1>${i18n.t("home.signUp")}</h1>
-        <div class="input-icon">
-            <div class="error-message" id="generalError"></div>
-        </div>
-        <div class="input-icon">
-          <i class="fa-solid fa-envelope"></i>
-          <div class="error-message"></div>
-          <input id="registerEmail" name="email" placeholder="E-posta" >
-        </div>
-    
-        
-        <div class="input-icon">
-          <i class="fa-solid fa-lock"></i>
-          <div class="error-message"></div>
+          <h1>${i18n.t("home.signUp")}</h1>
           
-          <input type="password" id="registerPassword" name="password" placeholder="${i18n.t(
-            "login.password"
-          )}" >
-  <button
-    type="button"
-    class="toggle-visibility"
-    aria-label="Show password"
-    tabindex="-1"
-    data-target="registerPassword"
-  >
-    <i class="fa-solid fa-eye"></i>
-  </button>
-        </div>
-        <div class="regex-rule"></div>
-        <div class="input-icon">
-          <i class="fa-solid fa-lock"></i>
-          <div class="error-message"></div>
-          <input type="password" id="registerConfirmPassword" name="confirmPassword" placeholder="${i18n.t(
-            "forgotPassword.confirmPassword"
-          )}">
-          <button
-    type="button" tabindex="-1"
-    class="toggle-visibility"
-    aria-label="Show password"
-    tabindex="-1"
-    data-target="registerConfirmPassword"
-  >
-    <i class="fa-solid fa-eye"></i>
-  </button>
+          <div class="input-icon">
+            <div class="error-message" id="generalError"></div>
+          </div>
+          
+          <div class="input-icon">
+            <i class="fa-solid fa-envelope"></i>
+            <div class="error-message"></div>
+            <input id="registerEmail" name="email" placeholder="E-posta" />
+          </div>
+        
+          <div class="input-icon">
+            <i class="fa-solid fa-lock"></i>
+            <div class="error-message"></div>
+            <input type="password" id="registerPassword" name="password" placeholder="${i18n.t("login.password")}" />
+            <button
+              type="button"
+              class="toggle-visibility"
+              aria-label="Show password"
+              tabindex="-1"
+              data-target="registerPassword"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+          
+          <div class="regex-rule"></div>
+          
+          <div class="input-icon">
+            <i class="fa-solid fa-lock"></i>
+            <div class="error-message"></div>
+            <input type="password" id="registerConfirmPassword" name="confirmPassword" placeholder="${i18n.t("forgotPassword.confirmPassword")}" />
+            <button
+              type="button"
+              class="toggle-visibility"
+              aria-label="Show password"
+              tabindex="-1"
+              data-target="registerConfirmPassword"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
           </div>
     
-        <div class="buttons">
-          <button class="button" id="registerFormButton" type="submit">${i18n.t(
-            "home.signUp"
-          )}</button>
-        </div>
-        
-      </form>
-      
-
-        `;
+          <div class="buttons">
+            <button class="button" id="registerFormButton" type="submit">${i18n.t("home.signUp")}</button>
+             <p style="text-align: center; margin-top: 1rem; color: var(--text-light);">
+              ${i18n.t("register.haveAccount")} 
+              <a href="/login" data-link style="color: var(--primary-color); font-weight: 600;">${i18n.t("home.signIn")}</a>
+            </p>
+          </div>
+        </form>
+      </div>
+    `;
   }
 
   async init() {

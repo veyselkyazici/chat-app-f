@@ -417,7 +417,7 @@ async function renderContactListViewHTML(contactList) {
   div2.append(backButtonn);
 
   const newChatDiv = createElement("div", "a1-1-1-1-1-1-1-1-2", {
-    title: "Yeni sohbet",
+    title: "Kişilerim",
   });
   div1.append(newChatDiv);
 
@@ -426,7 +426,7 @@ async function renderContactListViewHTML(contactList) {
     "a1-1-1-1-1-1-1-1-2-1",
     {},
     { "aria-label": "" },
-    "Yeni sohbet"
+    "Kişilerim"
   );
   newChatDiv.append(h1);
 
@@ -490,7 +490,7 @@ async function renderContactListViewHTML(contactList) {
     }
   );
   const contactSearchHandler = new SearchHandler({
-    listData: contactList,
+    getDataFunction: () => chatStore.contactList,
     listContentSelector: ".a1-1-1-1-1-1-3-2-1-1",
     createItemFunction: initContactList,
     filterFunction: (contact, value) => {

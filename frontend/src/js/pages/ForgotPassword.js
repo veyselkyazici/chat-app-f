@@ -34,10 +34,15 @@ export default class extends AbstractView {
 
   async getHtml() {
     return `
-            <div id="forgotPasswordContainer">
-                ${this.renderCurrentStep()}
-            </div>
-        `;
+      <div class="register-login">
+         <div class="overlay-spinner hidden">
+          <div class="spinner"></div>
+        </div>
+        <div id="forgotPasswordContainer" style="width: 100%;">
+            ${this.renderCurrentStep()}
+        </div>
+      </div>
+    `;
   }
 
   renderCurrentStep() {

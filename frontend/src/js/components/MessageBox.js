@@ -37,6 +37,7 @@ let range = null;
 let selection = null;
 const emojiRegex =
   /([\u{1F600}-\u{1F64F}|\u{1F300}-\u{1F5FF}|\u{1F680}-\u{1F6FF}|\u{1F700}-\u{1F77F}|\u{1F780}-\u{1F7FF}|\u{1F800}-\u{1F8FF}|\u{1F900}-\u{1F9FF}|\u{1FA00}-\u{1FA6F}|\u{1FA70}-\u{1FAFF}])/gu;
+let savedRange = null;
 
 async function createMessageBox(chatData) {
   const startMessage = document.querySelector(".start-message");
@@ -61,7 +62,7 @@ async function createMessageBox(chatData) {
       lastPage: chatData.chatDTO.isLastPage,
     },
     chatData.userProfileResponseDTO.privacySettings,
-    true
+    true,
   );
 }
 
@@ -90,6 +91,10 @@ const createStatusElement = (type, value = null) => {
 };
 
 const handleTextBlur = (chat, typingStatus, textArea) => {
+  const selection = window.getSelection();
+  if (selection.rangeCount > 0) {
+    savedRange = selection.getRangeAt(0).cloneRange();
+  }
   const currentText = textArea.textContent.trim();
   if (typingStatus.isTyping) {
     webSocketService.ws.send("typing", {
@@ -134,7 +139,7 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
   typingStatus.previousText = currentText;
 };
 function handlePaste(event) {
-  event.preventDefault(); 
+  event.preventDefault();
 }
 
 function handleTextInput(textArea, chat, typingStatus, event) {
@@ -173,209 +178,265 @@ function handleTextInput(textArea, chat, typingStatus, event) {
   } else {
     input(event.data, textArea);
   }
+
+  if (event.inputType === "deleteContentBackward") {
+    handleDeleteContentBackward(event);
+  } else {
+    input(event.data, textArea);
+  }
+
+  ensureMessageBoxStructure(textArea);
 }
 
-function handleDeleteContentBackward(event) {
-  if (caretNode) {
-    if (
-      caretNode.parentNode.nextSibling &&
-      caretNode.parentNode.className === "message-box1-7-1-1-1-2-1-1-1-1" &&
-      caretNode.parentNode.nextSibling.className ===
-        "message-box1-7-1-1-1-2-1-1-1-1"
-    ) {
-      const textLength = caretNode.parentNode.textContent.length;
-      const combinedContent =
-        caretNode.parentNode.textContent +
-        caretNode.parentNode.nextSibling.textContent;
+const ensureMessageBoxStructure = (textAreaWrapper) => {
+  const contentEditable = textAreaWrapper.querySelector(
+    ".message-box1-7-1-1-1-2-1-1-1",
+  );
 
-      const textNode = document.createTextNode(combinedContent);
-      const newSpan = document.createElement("span");
-      newSpan.className = "message-box1-7-1-1-1-2-1-1-1-1";
-      newSpan.append(textNode);
-
-      const parent = caretNode.parentNode.parentNode;
-      parent.replaceChild(newSpan, caretNode.parentNode);
-      caretNode = newSpan.firstChild;
-      newSpan.nextSibling.remove();
-
-      caretPosition = textLength;
-      setStartRange(newSpan.firstChild, textLength);
+  let targetContainer = contentEditable;
+  if (!targetContainer) {
+    if (textAreaWrapper.classList.contains("message-box1-7-1-1-1-2-1-1-1")) {
+      targetContainer = textAreaWrapper;
+    } else {
+      return;
     }
   }
-}
+
+  let p = targetContainer.querySelector(".message-box1-7-1-1-1-2-1-1-1-1");
+  if (!p) {
+    p = document.createElement("p");
+    p.className = "message-box1-7-1-1-1-2-1-1-1-1";
+
+    while (targetContainer.firstChild) {
+      p.appendChild(targetContainer.firstChild);
+    }
+    targetContainer.appendChild(p);
+  }
+
+  if (p.innerHTML === "" || p.textContent === "") {
+    p.innerHTML = "<br>";
+  }
+};
+
+const handleDeleteContentBackward = (event) => {
+  const selection = window.getSelection();
+
+  const p = document.querySelector(".message-box1-7-1-1-1-2-1-1-1-1");
+  if (p) {
+    const spans = Array.from(
+      p.querySelectorAll(".message-box1-7-1-1-1-2-1-1-1-1"),
+    );
+    spans.forEach((span) => {
+      if (span.textContent.length === 0) {
+        span.remove();
+      }
+    });
+
+    let node = p.firstChild;
+    while (node && node.nextSibling) {
+      const next = node.nextSibling;
+      if (
+        node.nodeType === Node.ELEMENT_NODE &&
+        node.classList.contains("message-box1-7-1-1-1-2-1-1-1-1") &&
+        next.nodeType === Node.ELEMENT_NODE &&
+        next.classList.contains("message-box1-7-1-1-1-2-1-1-1-1")
+      ) {
+        const isCaretInNext =
+          selection.focusNode === next || next.contains(selection.focusNode);
+        const isCaretInNode =
+          selection.focusNode === node || node.contains(selection.focusNode);
+        const nodeOffset = selection.focusOffset;
+        const nextOffset = selection.focusOffset;
+
+        const originalLength = node.textContent.length;
+        node.textContent += next.textContent;
+        next.remove();
+
+        const newRange = document.createRange();
+        if (isCaretInNext) {
+          if (!node.firstChild) {
+            node.textContent = node.textContent;
+          }
+          newRange.setStart(node.firstChild, originalLength + nextOffset);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        } else if (isCaretInNode) {
+          if (!node.firstChild) {
+            node.textContent = node.textContent;
+          }
+          newRange.setStart(node.firstChild, nodeOffset);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+      } else {
+        node = next;
+      }
+    }
+  }
+
+  updateCaretPosition(event);
+};
 
 function handleTextKeyDown(event) {
   keydown(event, event.target);
 }
 
-function showEmojiPicker(panel, showEmojiDOM) {
+function showEmojiPicker(
+  panel,
+  showEmojiDOM,
+  textArea,
+  sendButton,
+  typingStatus,
+) {
   panel.style.height = "320px";
   showEmojiDOM.innerHTML = generateEmojiHTML();
-  const emojiPickerDOM = document.querySelector(
-    ".emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1-1-1-1"
-  );
-  emojiPickerDOM.addEventListener("click", (event) => {
-    if (event.target.classList.contains("emojik")) {
-      insertEmoji(event.target.textContent);
-      updateCaretPosition();
+
+  const pickerContainer = showEmojiDOM.querySelector(".emoji-picker-container");
+
+  pickerContainer.addEventListener("click", (event) => {
+    const emojiItem = event.target.closest(".emoji-item");
+    if (emojiItem) {
+      insertEmoji(emojiItem.textContent);
+      updatePlaceholder(textArea, sendButton, typingStatus);
     }
   });
 }
 
 const input = (data, textArea) => {
-  const p = textArea.querySelector(".message-box1-7-1-1-1-2-1-1-1-1");
-  const childNodes = Array.from(p.childNodes);
-  for (const node of childNodes) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      p.removeChild(node);
+  let p = textArea.querySelector(".message-box1-7-1-1-1-2-1-1-1-1");
+
+  if (!p) return;
+
+  let textNodes = [];
+  p.childNodes.forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE && node.textContent.length > 0) {
+      textNodes.push(node);
     }
-  }
-  let parentSpan = null;
-  if (caretNode) {
-    if (caretNode.nodeType === Node.TEXT_NODE) {
-      const text = caretNode.textContent;
-      const before = text.slice(0, caretPosition);
-      const after = text.slice(caretPosition);
-      parentSpan = caretNode.parentNode;
-      if (parentSpan) {
-        if (parentSpan.parentNode.nextSibling) {
-          if (
-            parentSpan.parentNode.nextSibling.className === "message-emoji-span"
-          ) {
-            const bukim = parentSpan.parentNode;
-            const spans = bukim.querySelector(".message-emoji-span-1");
-            const emoji = bukim.getAttribute("data-emoji");
-            spans.innerText = emoji;
-            const textSpan = document.createElement("span");
-            textSpan.className = "message-box1-7-1-1-1-2-1-1-1-1";
-            textSpan.textContent = data;
+  });
 
-            p.insertBefore(textSpan, parentSpan.parentNode.nextSibling);
-            setStartAfter(textSpan);
-          } else {
-            const bukim = parentSpan.parentNode;
-            const spans = bukim.querySelector(".message-emoji-span-1");
-            const emoji = bukim.getAttribute("data-emoji");
-            spans.innerText = emoji;
-            const text = parentSpan.parentNode.nextSibling.textContent;
-            caretNode = parentSpan.parentNode.nextSibling.firstChild;
-            caretNode.textContent = data + text;
-            caretPosition = caretNode.textContent.length - text.length;
-            setStartRange(caretNode, caretPosition);
-          }
-        } else if (parentSpan.className === "message-emoji-span-1") {
-          const bukim = parentSpan.parentNode;
-          const spans = bukim.querySelector(".message-emoji-span-1");
-          const emoji = bukim.getAttribute("data-emoji");
-          spans.innerText = emoji;
+  textNodes.forEach((node) => {
+    const span = document.createElement("span");
+    span.className = "message-box1-7-1-1-1-2-1-1-1-1";
+    span.textContent = node.textContent;
 
-          const textSpan = document.createElement("span");
-          textSpan.className = "message-box1-7-1-1-1-2-1-1-1-1";
-          textSpan.textContent = data;
+    p.replaceChild(span, node);
 
-          const ABC = p.insertBefore(
-            textSpan,
-            parentSpan.parentNode.nextSibling
-          );
-          caretNode = ABC;
-          setStartAfter(textSpan);
-        } else if (
-          parentSpan.className === "message-box1-7-1-1-1-2-1-1-1-1-1"
-        ) {
-          setStartRange(textSpan.firstChild, caretPosition);
-        }
-      } else {
-        const pElement = textArea.querySelector("p");
-        if (pElement) {
-          const textSpan = document.createElement("span");
-          textSpan.className = "message-box1-7-1-1-1-2-1-1-1-1";
-          textSpan.textContent = data;
-          pElement.append(textSpan);
-          setStartRange(textSpan, caretPosition);
-        }
-      }
-    }
-  }
+    const range = document.createRange();
+    range.setStart(span.firstChild, span.textContent.length);
+    range.collapse(true);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    updateCaretPosition();
+  });
 };
+
 const insertEmoji = (emoji) => {
+  const selection = window.getSelection();
+  let range = savedRange;
+
+  if (!range) {
+    const p = document.querySelector(".message-box1-7-1-1-1-2-1-1-1-1");
+    if (p) {
+      if (p.innerHTML === "<br>" || p.textContent.trim() === "") {
+        p.innerHTML = "";
+      }
+      range = document.createRange();
+      range.selectNodeContents(p);
+      range.collapse(false);
+    } else {
+      return;
+    }
+  }
+
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  const messageBoxInput = document.querySelector(
+    ".message-box1-7-1-1-1-2-1-1-1-1",
+  );
+  if (
+    messageBoxInput &&
+    !messageBoxInput.contains(range.commonAncestorContainer) &&
+    messageBoxInput !== range.commonAncestorContainer
+  ) {
+    range = document.createRange();
+    range.selectNodeContents(messageBoxInput);
+    range.collapse(false);
+  }
+
+  range.deleteContents();
+
   const emojiOuterSpan = document.createElement("span");
   emojiOuterSpan.className = "message-emoji-span";
   emojiOuterSpan.setAttribute("data-emoji", emoji);
+  emojiOuterSpan.contentEditable = "false";
+
   const emojiInnerSpan = document.createElement("span");
   emojiInnerSpan.className = "message-emoji-span-1";
   emojiInnerSpan.textContent = emoji;
-  emojiOuterSpan.append(emojiInnerSpan);
-  if (caretNode && caretNode.nodeType === Node.TEXT_NODE) {
-    const text = caretNode.textContent;
-    const before = text.slice(0, caretPosition);
-    const after = text.slice(caretPosition);
-    const parentSpan = caretNode.parentNode;
+  emojiOuterSpan.appendChild(emojiInnerSpan);
 
-    if (before !== "" && after !== "") {
-      if (before !== "") {
-        const beforeSpan = document.createElement("span");
-        beforeSpan.className = "message-box1-7-1-1-1-2-1-1-1-1";
-        beforeSpan.textContent = before;
-        parentSpan.parentNode.insertBefore(beforeSpan, parentSpan);
-      }
+  let container = range.startContainer;
+  let offset = range.startOffset;
 
-      const ABC = parentSpan.parentNode.insertBefore(
-        emojiOuterSpan,
-        parentSpan
-      );
+  if (
+    container.nodeType === Node.TEXT_NODE &&
+    container.parentNode.classList.contains("message-box1-7-1-1-1-2-1-1-1-1")
+  ) {
+    const textSpan = container.parentNode;
+    const text = container.textContent;
+    const beforeText = text.slice(0, offset);
+    const afterText = text.slice(offset);
 
-      if (after !== "") {
-        const afterSpan = document.createElement("span");
-        afterSpan.className = "message-box1-7-1-1-1-2-1-1-1-1";
-        afterSpan.textContent = after;
-        const ABC = parentSpan.parentNode.insertBefore(afterSpan, parentSpan);
-        parentSpan.remove();
+    if (beforeText.length > 0) {
+      container.textContent = beforeText;
+      if (textSpan.nextSibling) {
+        textSpan.parentNode.insertBefore(emojiOuterSpan, textSpan.nextSibling);
       } else {
-        const ABC = parentSpan.parentNode.insertBefore(
-          emojiOuterSpan,
-          parentSpan
-        );
-        caretNode = ABC;
-        parentSpan.remove();
+        textSpan.parentNode.appendChild(emojiOuterSpan);
       }
-      caretNode = ABC;
     } else {
-      if (parentSpan.parentNode.nextSibling) {
-        const ABC = parentSpan.parentNode.parentNode.insertBefore(
-          emojiOuterSpan,
-          parentSpan.parentNode.nextSibling
-        );
-        caretNode = ABC;
+      textSpan.parentNode.insertBefore(emojiOuterSpan, textSpan);
+    }
+
+    if (afterText.length > 0) {
+      if (beforeText.length > 0) {
+        const newTextSpan = document.createElement("span");
+        newTextSpan.className = "message-box1-7-1-1-1-2-1-1-1-1";
+        newTextSpan.textContent = afterText;
+
+        if (emojiOuterSpan.nextSibling) {
+          emojiOuterSpan.parentNode.insertBefore(
+            newTextSpan,
+            emojiOuterSpan.nextSibling,
+          );
+        } else {
+          emojiOuterSpan.parentNode.appendChild(newTextSpan);
+        }
+      } else {
+        container.textContent = afterText;
       }
-      else if (parentSpan.nextSibling === null) {
-        const ABC = parentSpan.parentNode.append(emojiOuterSpan);
-        caretNode = ABC;
-      } else if (
-        parentSpan.className === "message-box1-7-1-1-1-2-1-1-1-1" &&
-        parentSpan.nextSibling.className === "message-emoji-span"
-      ) {
-        const ABC = parentSpan.parentNode.insertBefore(
-          emojiOuterSpan,
-          parentSpan.nextSibling
-        );
-        caretNode = ABC;
+    } else {
+      if (beforeText.length === 0) {
+        textSpan.parentNode.replaceChild(emojiOuterSpan, textSpan);
       }
     }
   } else {
-
-    const parentSpan = caretNode;
-    if (parentSpan.nextSibling) {
-      const deneme = parentSpan.parentNode.insertBefore(
-        emojiOuterSpan,
-        parentSpan.nextSibling
-      );
-      caretNode = deneme;
-    } else if (parentSpan.nextSibling === null) {
-      const deneme = parentSpan.parentNode.append(emojiOuterSpan);
-      caretNode = deneme;
-    }
+    range.insertNode(emojiOuterSpan);
   }
-  setStartAfter(emojiOuterSpan);
+
+  range = document.createRange();
+  range.setStartAfter(emojiOuterSpan);
+  range.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  savedRange = range.cloneRange();
+
+  updateCaretPosition();
 };
 function keydown(event, textArea) {
   if (event.key === "Backspace") {
@@ -388,7 +449,11 @@ function keydown(event, textArea) {
 const updatePlaceholder = (textArea, sendButton, typingStatus) => {
   const placeholderClass = "message-box1-7-1-1-1-2-1-1-1-2";
   let placeholder = textArea.querySelector(`.${placeholderClass}`);
-  const hasText = textArea.textContent.trim().length > 0;
+  const editor = textArea.querySelector(".message-box1-7-1-1-1-2-1-1-1");
+  const hasText =
+    editor &&
+    (editor.textContent.trim().length > 0 ||
+      editor.querySelector(".message-emoji-span"));
 
   if (!placeholder && !hasText) {
     placeholder = document.createElement("div");
@@ -455,39 +520,523 @@ const setStartAfter = (startAfterNode) => {
 };
 
 function generateEmojiHTML() {
-  return ` <div class="emoji-box1-1-7-2-1-1-1" style="transform: translateY(0px);">
-        <div class="emoji-box1-1-7-2-1-1-1-1" role="grid">
-            <div class="emoji-box1-1-7-2-1-1-1-1-1">
-                <div class="emoji-box1-1-7-2-1-1-1-1-1-1">
-                    <div class="emoji-box1-1-7-2-1-1-1-1-1-1-1">
-                        <div class="emoji-box1-1-7-2-1-1-1-1-1-1-1-1">
-                            <div tabindex="-1">
-                                <div class="emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1" style="height: 71px;">
-                                    <div class="emoji-1box1-1-7-2-1-1-1-1-1-1-1-1-1" role="listitem" style="z-index: 83; transition: none 0s ease 0s; height: 27px; transform: translateY(0px);"><div class="emoji-1box1-1-7-2-1-1-1-1-1-1-1-1-1-1">Emojiler</div></div>
-                                <div class="emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1-1" role="listitem"
-                                        style="z-index: 76; transition: none 0s ease 0s; height: 44px; transform: translateY(27px);">
-                                        <div class="emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1-1-1">
-                                            <div class="">
-                                                <div class="emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1-1-1-1" role="row">    <span class="emojik wa">😀</span>
-    <span class="emojik wa">😂</span>
-    <span class="emojik wa">😍</span>
-    <span class="emojik wa">😎</span></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  const emojis = [
+    "😀",
+    "😃",
+    "😄",
+    "😁",
+    "😆",
+    "😅",
+    "😂",
+    "🤣",
+    "🥲",
+    "☺️",
+    "😊",
+    "😇",
+    "🙂",
+    "🙃",
+    "😉",
+    "😌",
+    "😍",
+    "🥰",
+    "😘",
+    "😗",
+    "😙",
+    "😚",
+    "😋",
+    "😛",
+    "😝",
+    "😜",
+    "🤪",
+    "🤨",
+    "🧐",
+    "🤓",
+    "😎",
+    "🥸",
+    "🤩",
+    "🥳",
+    "😏",
+    "😒",
+    "😞",
+    "😔",
+    "😟",
+    "😕",
+    "🙁",
+    "☹️",
+    "😣",
+    "😖",
+    "😫",
+    "😩",
+    "🥺",
+    "😢",
+    "😭",
+    "😤",
+    "😠",
+    "😡",
+    "🤬",
+    "🤯",
+    "😳",
+    "🥵",
+    "🥶",
+    "😱",
+    "😨",
+    "😰",
+    "😥",
+    "😓",
+    "🤗",
+    "🤔",
+    "🤭",
+    "🤫",
+    "🤥",
+    "😶",
+    "😐",
+    "😑",
+    "😬",
+    "🙄",
+    "😯",
+    "😦",
+    "😧",
+    "😮",
+    "😲",
+    "🥱",
+    "😴",
+    "🤤",
+    "😪",
+    "😵",
+    "🤐",
+    "🥴",
+    "🤢",
+    "🤮",
+    "🤧",
+    "😷",
+    "🤒",
+    "🤕",
+    "🤑",
+    "🤠",
+    "😈",
+    "👿",
+    "👍",
+    "👎",
+    "👊",
+    "✊",
+    "🤛",
+    "🤜",
+    "🤞",
+    "✌️",
+    "🤟",
+    "🤘",
+    "👌",
+    "🤌",
+    "🤏",
+    "👈",
+    "👉",
+    "👆",
+    "👇",
+    "☝️",
+    "✋",
+    "🤚",
+    "🖐️",
+    "🖖",
+    "👋",
+    "🤙",
+    "💪",
+    "🦾",
+    "🖕",
+    "✍️",
+    "🙏",
+    "🦶",
+    "🦵",
+    "🦿",
+    "💄",
+    "💋",
+    "👄",
+    "🦷",
+    "👅",
+    "👂",
+    "🦻",
+    "👃",
+    "👣",
+    "👁️",
+    "👀",
+    "🧠",
+    "🫀",
+    "🫁",
+    "🦴",
+    "🗣️",
+    "👤",
+    "👥",
+    "🫂",
+    "❤️",
+    "🧡",
+    "💛",
+    "💚",
+    "💙",
+    "💜",
+    "🖤",
+    "🤍",
+    "🤎",
+    "💔",
+    "❣️",
+    "💕",
+    "💞",
+    "💓",
+    "💗",
+    "💖",
+    "💘",
+    "💝",
+    "❤️‍🔥",
+    "❤️‍🩹",
+    "💟",
+    "🐶",
+    "🐱",
+    "🐭",
+    "🐹",
+    "🐰",
+    "🦊",
+    "🐻",
+    "🐼",
+    "🐻‍❄️",
+    "🐨",
+    "🐯",
+    "🦁",
+    "🐮",
+    "🐷",
+    "🐽",
+    "🐸",
+    "🐵",
+    "🙈",
+    "🙉",
+    "🙊",
+    "🐒",
+    "🐔",
+    "🐧",
+    "🐦",
+    "🐤",
+    "🐣",
+    "🐥",
+    "🦆",
+    "🦅",
+    "🦉",
+    "🦇",
+    "🐺",
+    "🐗",
+    "🐴",
+    "🦄",
+    "🐝",
+    "🪱",
+    "🐛",
+    "🦋",
+    "🐌",
+    "🐞",
+    "🐜",
+    "🪰",
+    "🪲",
+    "🪳",
+    "🦟",
+    "🦗",
+    "🕷️",
+    "🕸️",
+    "🦂",
+    "🐢",
+    "🐍",
+    "🦎",
+    "🦖",
+    "🦕",
+    "🐙",
+    "🦑",
+    "🦐",
+    "🦞",
+    "🦀",
+    "🐡",
+    "🐠",
+    "🐟",
+    "🐬",
+    "🐳",
+    "🐋",
+    "🦈",
+    "🦭",
+    "🐊",
+    "🐅",
+    "🐆",
+    "🦓",
+    "🦍",
+    "🦧",
+    "🦣",
+    "🐘",
+    "🦛",
+    "🦏",
+    "🐪",
+    "🐫",
+    "🦒",
+    "🦘",
+    "🦬",
+    "🐃",
+    "🐂",
+    "🐄",
+    "🐎",
+    "🐖",
+    "🐏",
+    "🐑",
+    "🦙",
+    "🐐",
+    "🦌",
+    "🐕",
+    "🐩",
+    "🦮",
+    "🐕‍🦺",
+    "🐈",
+    "🐈‍⬛",
+    "🐓",
+    "🦃",
+    "🦚",
+    "🦜",
+    "🦢",
+    "🦩",
+    "🕊️",
+    "🐇",
+    "🦝",
+    "🦨",
+    "🦡",
+    "🦫",
+    "🦦",
+    "🦥",
+    "🐁",
+    "🐀",
+    "🐿️",
+    "🦔",
+    "🐾",
+    "🐉",
+    "🐲",
+    "🍏",
+    "🍎",
+    "🍐",
+    "🍊",
+    "🍋",
+    "🍌",
+    "🍉",
+    "🍇",
+    "🍓",
+    "🫐",
+    "🍈",
+    "🍒",
+    "🍑",
+    "🥭",
+    "🍍",
+    "🥥",
+    "🥝",
+    "🍅",
+    "🍆",
+    "🥑",
+    "🥦",
+    "🥬",
+    "🥒",
+    "🌶️",
+    "🫑",
+    "🌽",
+    "🥕",
+    "🫒",
+    "🧄",
+    "🧅",
+    "🥔",
+    "🍠",
+    "🥐",
+    "🥯",
+    "🍞",
+    "🥖",
+    "🥨",
+    "🧀",
+    "🥚",
+    "🍳",
+    "🧈",
+    "🥞",
+    "🧇",
+    "🥓",
+    "🥩",
+    "🍗",
+    "🍖",
+    "🦴",
+    "🌭",
+    "🍔",
+    "🍟",
+    "🍕",
+    "🫓",
+    "🥪",
+    "🥙",
+    "🧆",
+    "🌮",
+    "🌯",
+    "🫔",
+    "🥗",
+    "🥘",
+    "🫕",
+    "🥫",
+    "🍝",
+    "🍜",
+    "🍲",
+    "🍛",
+    "🍣",
+    "🍱",
+    "🥟",
+    "🦪",
+    "🍤",
+    "🍙",
+    "🍚",
+    "🍘",
+    "🍥",
+    "🥠",
+    "🥮",
+    "🍢",
+    "🍡",
+    "🍧",
+    "🍨",
+    "🍦",
+    "🥧",
+    "🧁",
+    "🍰",
+    "🎂",
+    "🍮",
+    "🍭",
+    "🍬",
+    "🍫",
+    "🍿",
+    "🍩",
+    "🍪",
+    "🌰",
+    "🥜",
+    "🍯",
+    "🥛",
+    "🍼",
+    "☕",
+    "🍵",
+    "🧃",
+    "🥤",
+    "🧋",
+    "🍶",
+    "🍺",
+    "🍻",
+    "🥂",
+    "🍷",
+    "🥃",
+    "🍸",
+    "🍹",
+    "🧉",
+    "🍾",
+    "🧊",
+    "🥄",
+    "🍴",
+    "🍽️",
+    "🥣",
+    "🥡",
+    "🥢",
+    "🧂",
+    "⚽",
+    "🏀",
+    "🏈",
+    "⚾",
+    "🥎",
+    "🎾",
+    "🏐",
+    "🏉",
+    "🥏",
+    "🎱",
+    "🪀",
+    "🏓",
+    "🏸",
+    "🏒",
+    "🏑",
+    "🥍",
+    "🏏",
+    "🪃",
+    "🥅",
+    "⛳",
+    "🪁",
+    "🏹",
+    "🎣",
+    "🤿",
+    "🥊",
+    "🥋",
+    "🎽",
+    "🛹",
+    "🛼",
+    "🛷",
+    "⛸️",
+    "🥌",
+    "🎿",
+    "⛷️",
+    "🏂",
+    "🪂",
+    "🏋️",
+    "🤼",
+    "🤸",
+    "⛹️",
+    "🤺",
+    "🤾",
+    "🏌️",
+    "🏇",
+    "🧘",
+    "🏄",
+    "🏊",
+    "🤽",
+    "🚣",
+    "🧗",
+    "🚵",
+    "🚴",
+    "🏆",
+    "🥇",
+    "🥈",
+    "🥉",
+    "🏅",
+    "🎖️",
+    "🏵️",
+    "🎗️",
+    "🎫",
+    "🎟️",
+    "🎪",
+    "🤹",
+    "🎭",
+    "🩰",
+    "🎨",
+    "🎬",
+    "🎤",
+    "🎧",
+    "🎼",
+    "🎹",
+    "🥁",
+    "🪘",
+    "🎷",
+    "🎺",
+    "🪗",
+    "🎸",
+    "🪕",
+    "🎻",
+    "🎲",
+    "♟️",
+    "🎯",
+    "🎳",
+    "🎮",
+    "🎰",
+    "🧩",
+  ];
+
+  let emojiSpans = "";
+  emojis.forEach((emoji) => {
+    emojiSpans += `<span class="emoji-item">${emoji}</span>`;
+  });
+
+  return `
+    <div class="emoji-picker-container">
+        <div class="emoji-category-title">${i18n.t("messageBox.allEmojis")}</div>
+        <div class="emoji-grid">
+            ${emojiSpans}
         </div>
-    </div>`;
+    </div>
+  `;
 }
 const createMessageBoxHTML = async (chatData, typingStatus) => {
   const messageBoxElement = document.querySelector(".message-box");
   const main = createElement("div", "message-box1", null, { id: "main" });
   main.dataset.chatId = chatData.chatDTO.id;
+  main.data = chatData;
   const divMessageBox1_1 = createElement("div", "message-box1-1", {
     opacity: "0.4",
   });
@@ -496,20 +1045,20 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
 
   const backBtn = createElement("div", "message-box-back-btn");
   const backSvg = createSvgElement("svg", {
-      "viewBox": "0 0 24 24",
-      "height": "24",
-      "width": "24",
-      "preserveAspectRatio": "xMidYMid meet",
+    viewBox: "0 0 24 24",
+    height: "24",
+    width: "24",
+    preserveAspectRatio: "xMidYMid meet",
   });
   const backPath = createSvgElement("path", {
-      "fill": "currentColor",
-      "d": "M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z"
+    fill: "currentColor",
+    d: "M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z",
   });
   backSvg.append(backPath);
   backBtn.append(backSvg);
   backBtn.addEventListener("click", () => {
-      chatStore.setMobileView('chats');
-      ariaSelectedRemove(chatStore.selectedChatUserId);
+    chatStore.setMobileView("chats");
+    ariaSelectedRemove(chatStore.selectedChatUserId);
   });
   header.append(backBtn);
 
@@ -533,10 +1082,10 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
           about: chatData.userProfileResponseDTO.about,
           image: chatData.userProfileResponseDTO.imagee,
         }),
-        chatData
+        chatData,
       );
-      chatStore.setMobileView('profile');
-    }
+      chatStore.setMobileView("profile");
+    },
   );
 
   const profileImgContainer = createElement("div", "message-box1-2-1-1", {
@@ -545,7 +1094,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
   });
   const imgElement = createVisibilityProfilePhoto(
     chatData.userProfileResponseDTO,
-    chatData.contactsDTO
+    chatData.contactsDTO,
   );
   profileImgContainer.append(imgElement);
   messageBoxDiv1.append(profileImgContainer);
@@ -571,10 +1120,10 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
           about: chatData.userProfileResponseDTO.about,
           image: chatData.userProfileResponseDTO.imagee,
         }),
-        chatData
+        chatData,
       );
-      chatStore.setMobileView('profile');
-    }
+      chatStore.setMobileView("profile");
+    },
   );
   messageBoxDiv2.dataset.chatId = chatData.chatDTO.id;
   const innerMessageBoxDiv1 = createElement("div", "message-box1-2-2-1");
@@ -588,7 +1137,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
     { dir: "auto", "aria-label": "" },
     chatData.contactsDTO.userContactName
       ? chatData.contactsDTO.userContactName
-      : chatData.userProfileResponseDTO.email
+      : chatData.userProfileResponseDTO.email,
   );
   nameContainer.append(nameSpan);
   innerMessageBoxDiv2.append(nameContainer);
@@ -617,14 +1166,14 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
       "aria-expanded": "false",
     },
     null,
-    (event) => handleOptionsBtnClick(event)
+    (event) => handleOptionsBtnClick(event),
   );
 
   const optionsIcon = createElement(
     "span",
     "message-box1-2-3-1-3-1-1-1",
     {},
-    { "data-icon": "menu" }
+    { "data-icon": "menu" },
   );
 
   const svgOptions = createSvgElement("svg", {
@@ -675,7 +1224,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
     "div",
     "message-box1-5-1-1-1",
     { transform: "scaleX(1) scaleY(1)", opacity: "1" },
-    { role: "button", "aria-label": "Aşağı kaydır" }
+    { role: "button", "aria-label": "Aşağı kaydır" },
   );
 
   const innerSpan = createElement("span", "message-box1-5-1-1-1-1");
@@ -741,7 +1290,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
       chatData.contactsDTO.userContactName ||
         chatData.userProfileResponseDTO.email,
       main,
-      footer
+      footer,
     );
   } else {
     unBlockInput(chatData, main, footer, typingStatus);
@@ -755,15 +1304,15 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
         await chatService.getOlder30Messages(
           visibleFirstMessageData.messageDTO.chatRoomId,
           visibleFirstMessageData.messageDTO.fullDateTime,
-          chatData.userProfileResponseDTO.id
-        )
+          chatData.userProfileResponseDTO.id,
+        ),
       );
 
       if (older30Messages) {
         renderMessage(
           older30Messages,
           chatData.userProfileResponseDTO.privacySettings,
-          false
+          false,
         );
       }
     }
@@ -776,7 +1325,7 @@ const blockInput = (userName, main, footer) => {
     "block-message-input",
     null,
     null,
-    i18n.t("messageBox.blockInputMessage")(userName)
+    i18n.t("messageBox.blockInputMessage")(userName),
   );
   footer.append(blockMessageInputDiv);
   main.append(footer);
@@ -798,7 +1347,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     "div",
     "message-box1-7-1-1-1-1-1",
     null,
-    { "data-state": "closed" }
+    { "data-state": "closed" },
   );
 
   const button1 = createElement("button", "message-box1-7-1-1-1-1-1-1", null, {
@@ -808,7 +1357,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
 
   const div1_7_1_1_1_1_1_1_1 = createElement(
     "div",
-    "message-box1-7-1-1-1-1-1-1-1"
+    "message-box1-7-1-1-1-1-1-1-1",
   );
   button1.append(div1_7_1_1_1_1_1_1_1);
   const closedSpan = createElement("span", "", null, { "data-icon": "x" });
@@ -836,7 +1385,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     "button",
     "message-box1-7-1-1-1-1-1-2",
     { transform: "translateX(0px)" },
-    { tabindex: "-1", "data-tab": "10", "aria-label": "Emoji panelini aç" }
+    { tabindex: "-1", "data-tab": "10", "aria-label": "Emoji panelini aç" },
   );
 
   const nullDiv = createElement("div", "");
@@ -876,7 +1425,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
   const inputDiv = createElement("div", "message-box1-7-1-1-1-2-1");
   const textArea = createElement(
     "div",
-    "message-box1-7-1-1-1-2-1-1 lexical-rich-text-input"
+    "message-box1-7-1-1-1-2-1-1 lexical-rich-text-input",
   );
 
   const divContenteditable = createElement(
@@ -899,7 +1448,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
       "aria-autocomplete": "list",
       "aria-owns": "emoji-suggestion",
       "data-lexical-editor": "true",
-    }
+    },
   );
 
   const inputPTag = createElement("p", "message-box1-7-1-1-1-2-1-1-1-1");
@@ -914,7 +1463,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     "message-box1-7-1-1-1-2-1-1-1-2",
     null,
     null,
-    i18n.t("messageBox.messageBoxPlaceHolder")
+    i18n.t("messageBox.messageBoxPlaceHolder"),
   );
 
   textArea.append(divContenteditable);
@@ -934,7 +1483,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     null,
     { "data-tab": "11", "aria-label": "Gönder" },
     "",
-    () => sendMessage(chat, sendButton, typingStatus)
+    () => sendMessage(chat, sendButton, typingStatus),
   );
   sendButton.disabled = true;
   const sendBtnSVG = createSvgElement("svg", {
@@ -1004,16 +1553,23 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
   divContenteditable.addEventListener("paste", handlePaste);
 
   divContenteditable.addEventListener("blur", () =>
-    handleTextBlur(chat, typingStatus, textArea)
+    handleTextBlur(chat, typingStatus, textArea),
   );
   divContenteditable.addEventListener("focus", () =>
-    handleTextFocus(chat, typingStatus, textArea)
+    handleTextFocus(chat, typingStatus, textArea),
   );
   if (window.innerWidth > 900) {
     divContenteditable.focus();
   }
   div1_7_1_1_1_1_1.addEventListener("click", () => {
-    updateCaretPosition();
+    const pane = main.querySelector(".message-box1-6");
+    if (pane.innerHTML === "") {
+      // Is closed
+      showEmojiPicker(pane, pane, textArea, sendButton, typingStatus);
+    } else {
+      pane.innerHTML = "";
+      pane.style.height = "0px";
+    }
   });
 };
 
@@ -1037,7 +1593,7 @@ const onlineInfo = async (chat) => {
 
 const getFirstMessageDate = () => {
   const firstMessageElement = document.querySelector(
-    '.message-box1-5-1-2-2 [role="row"][class=""]'
+    '.message-box1-5-1-2-2 [role="row"][class=""]',
   );
   return firstMessageElement?.messageData;
 };
@@ -1054,6 +1610,10 @@ const isMessageBoxDomExists = (chatRoomId) => {
 };
 const renderMessage = async (messageDTO, privacySettings, scroll) => {
   const messageRenderDOM = document.querySelector(".message-box1-5-1-2-2");
+  if (!messageRenderDOM) {
+    console.warn("Message render DOM not found, skipping render.");
+    return;
+  }
   let messagesArray, lastPage;
   if (Array.isArray(messageDTO.messages)) {
     messagesArray = messageDTO.messages;
@@ -1074,7 +1634,7 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
       const lastRow = scroll ? allRows[allRows.length - 1] : allRows[0];
       if (lastRow.messageData && lastRow.messageData.messageDTO) {
         return new Date(
-          lastRow.messageData.messageDTO.fullDateTime
+          lastRow.messageData.messageDTO.fullDateTime,
         ).toDateString();
       }
     }
@@ -1085,7 +1645,6 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
 
   const addDateHeader = (dateString) => {
     const formatDate = messageBoxFormatDateTime(dateString);
-    const applicationDiv = document.querySelector(".message-box1-5-1-2-2");
 
     const todayDiv = createElement("div", "message-box1-5-1-2-2-1", null, {
       tabindex: "-1",
@@ -1095,14 +1654,14 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
       "message-box1-5-1-2-2-1-1",
       { minHeight: "0px" },
       { dir: "auto", "aria-label": "" },
-      formatDate
+      formatDate,
     );
     todayDiv.append(todaySpan);
 
     if (scroll) {
-      applicationDiv.append(todayDiv);
+      messageRenderDOM.append(todayDiv);
     } else {
-      applicationDiv.prepend(todayDiv);
+      messageRenderDOM.prepend(todayDiv);
     }
   };
 
@@ -1112,7 +1671,7 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
         if (message.encryptedMessage) {
           const decryptedMessage = await decryptMessage(
             message,
-            message.senderId === chatStore.user.id
+            message.senderId === chatStore.user.id,
           );
           return { ...message, decryptedMessage: decryptedMessage };
         } else {
@@ -1125,14 +1684,13 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
           decryptedMessage: i18n.t("messageBox.decryptedErrorMessage"),
         };
       }
-    })
+    }),
   );
 
-
-
   decryptedMessages.forEach((message) => {
+    console.log(message);
     const messageDate = new Date(message.fullDateTime).toDateString();
-
+    debugger;
     if (lastRenderedDate) {
       if (lastRenderedDate !== messageDate) {
         addDateHeader(message.fullDateTime);
@@ -1167,44 +1725,44 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
       "div",
       "message1-1-1-2-1-1",
       null,
-      { "data-pre-plain-text": "" }
+      { "data-pre-plain-text": "" },
     );
     const divMessage1_1_1_2_1_1_1 = createElement(
       "div",
-      "message1-1-1-2-1-1-1"
+      "message1-1-1-2-1-1-1",
     );
     const spanMessage1_1_1_2_1_1_1_1 = createElement(
       "span",
       "message1-1-1-2-1-1-1-1",
       { "min-height": "0px" },
-      { dir: "ltr" }
+      { dir: "ltr" },
     );
     const spanMessageContent = createElement(
       "span",
       "",
       null,
       null,
-      message.decryptedMessage
+      message.decryptedMessage,
     );
     const span1_1 = createElement("span", "");
     const span1_1_1_2_1_1_1_2 = createElement(
       "span",
       "message1-1-1-2-1-1-1-2",
       null,
-      { "aria-hidden": "true" }
+      { "aria-hidden": "true" },
     );
     const span1_1_1_2_1_1_1_2_1 = createElement(
       "span",
       "message1-1-1-2-1-1-1-2-1",
       null,
-      null
+      null,
     );
     const span1_1_1_2_1_1_1_2_2 = createElement(
       "span",
       "message1-1-1-2-1-1-1-2-2",
       null,
       null,
-      messageFormatDate
+      messageFormatDate,
     );
     span1_1_1_2_1_1_1_2.append(span1_1_1_2_1_1_1_2_1);
     span1_1_1_2_1_1_1_2.append(span1_1_1_2_1_1_1_2_2);
@@ -1221,19 +1779,19 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
       "div",
       "message1-1-1-2-1-2-1",
       null,
-      { role: "button" }
+      { role: "button" },
     );
     const span1_1_1_2_1_2_1_1 = createElement(
       "span",
       "message1-1-1-2-1-2-1-1",
       null,
       { dir: "auto" },
-      messageFormatDate
+      messageFormatDate,
     );
 
     const divMessage1_1_1_2_1_2_1_2 = createElement(
       "div",
-      "message1-1-1-2-1-2-1-2"
+      "message1-1-1-2-1-2-1-2",
     );
     if (message.senderId === currentUserId) {
       const messageDeliveredTickDiv = createMessageDeliveredTickElement();
@@ -1247,7 +1805,7 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
         privacySettings.readReceipts
       ) {
         const messageTickSpan = divMessage1_1_1_2_1_2_1.querySelector(
-          ".message-delivered-tick-span"
+          ".message-delivered-tick-span",
         );
         messageTickSpan.className = "message-seen-tick-span";
         messageTickSpan.ariaLabel = " Okundu ";
@@ -1280,8 +1838,6 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
     divMessage.append(divMessage12);
     rowDOM.append(divMessage);
 
-    const divDOM = rowDOM.querySelector(".message1-1-1-2");
-    divDOM.append(div);
     if (scroll) {
       messageRenderDOM.append(rowDOM);
     } else {
@@ -1308,7 +1864,11 @@ const scrollToPercentage = (percent) => {
 
 const scrollToBottom = () => {
   const messageRenderDOM = document.querySelector(".message-box1-5-1-2");
-  messageRenderDOM.scrollTop = messageRenderDOM.scrollHeight;
+  if (messageRenderDOM) {
+    setTimeout(() => {
+      messageRenderDOM.scrollTop = messageRenderDOM.scrollHeight;
+    }, 0);
+  }
 };
 
 const isOnlineStatus = (userContact, contact) => {
@@ -1345,7 +1905,7 @@ const lastSeenStatus = (userContact, contact, lastSeen) => {
 };
 const ifVisibilitySettingsChangeWhileMessageBoxIsOpen = async (
   oldPrivacySettings,
-  newPrivacySettings
+  newPrivacySettings,
 ) => {
   const messageBoxElement = document.querySelector(".message-box1");
   let online;
@@ -1403,7 +1963,7 @@ function messageBoxElementMessagesReadTick(messages, privacySettings) {
       privacySettings.readReceipts
     ) {
       const messageTickSpan = messageElement.querySelector(
-        ".message-delivered-tick-span"
+        ".message-delivered-tick-span",
       );
       messageTickSpan.className = "message-seen-tick-span";
       messageTickSpan.ariaLabel = i18n.t("chat.read");
@@ -1415,7 +1975,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
   const MAX_MESSAGE_LENGTH = 1000;
 
   const messageContentElement = document.querySelector(
-    ".message-box1-7-1-1-1-2-1-1-1-1"
+    ".message-box1-7-1-1-1-2-1-1-1-1",
   );
   const messageContent = messageContentElement.textContent.trim();
 
@@ -1427,8 +1987,8 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
     toastr.error(
       i18n.t("messageBox.sendMessageContentLengthError")(
         MAX_MESSAGE_LENGTH,
-        messageContent.length
-      )
+        messageContent.length,
+      ),
     );
     return;
   }
@@ -1439,12 +1999,12 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
       messageContent,
       await importPublicKey(
         base64ToUint8Array(
-          chatSummaryDTO.userProfileResponseDTO.userKey.publicKey
-        )
+          chatSummaryDTO.userProfileResponseDTO.userKey.publicKey,
+        ),
       ),
       await importPublicKey(
-        base64ToUint8Array(chatStore.user.userKey.publicKey)
-      )
+        base64ToUint8Array(chatStore.user.userKey.publicKey),
+      ),
     );
 
     const newEncryptedMessageDTO = new MessageDTO({
@@ -1473,7 +2033,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
     });
 
     const chatIndex = chatStore.chatList.findIndex(
-      (c) => c.chatDTO.id === chatSummaryDTO.chatDTO.id
+      (c) => c.chatDTO.id === chatSummaryDTO.chatDTO.id,
     );
     if (chatIndex === -1) {
       const newChatSummaryDTO = new ChatSummaryDTO({
@@ -1512,7 +2072,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
     renderMessage(
       { messages: [newMessageDTO], lastPage: null },
       chatSummaryDTO.userProfileResponseDTO.privacySettings,
-      true
+      true,
     );
 
     messageContentElement.innerHTML = "<br>";
@@ -1521,7 +2081,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
       messageContentElement.parentElement.parentElement,
       messageContentElement.parentElement,
       sendButton,
-      typingStatus
+      typingStatus,
     );
     typingStatus.isTyping = false;
     messageContentElement.parentElement.focus();
@@ -1540,7 +2100,7 @@ const sendMessage = async (chatSummaryDTO, sendButton, typingStatus) => {
 function createMessageDeliveredTickElement() {
   const messageDeliveredTickDiv = createElement(
     "div",
-    "message-delivered-tick-div"
+    "message-delivered-tick-div",
   );
 
   const messageDeliveredTickSpan = createElement(
@@ -1551,12 +2111,12 @@ function createMessageDeliveredTickElement() {
       "aria-hidden": "true",
       "aria-label": i18n.t("chat.delivered"),
       "data-icon": "status-dblcheck",
-    }
+    },
   );
 
   const messageDeliveredTickSvg = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "svg"
+    "svg",
   );
   messageDeliveredTickSvg.setAttribute("viewBox", "0 0 18 18");
   messageDeliveredTickSvg.setAttribute("height", "18");
@@ -1573,17 +2133,17 @@ function createMessageDeliveredTickElement() {
     "",
     {},
     {},
-    "status-dblcheck"
+    "status-dblcheck",
   );
 
   const messageDeliveredTickPath = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "path"
+    "path",
   );
   messageDeliveredTickPath.setAttribute("fill", "currentColor");
   messageDeliveredTickPath.setAttribute(
     "d",
-    "M17.394,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-0.427-0.388c-0.171-0.167-0.431-0.15-0.578,0.038L7.792,13.13 c-0.147,0.188-0.128,0.478,0.043,0.645l1.575,1.51c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C17.616,5.456,17.582,5.182,17.394,5.035z M12.502,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-2.614-2.556c-0.171-0.167-0.447-0.164-0.614,0.007l-0.505,0.516 c-0.167,0.171-0.164,0.447,0.007,0.614l3.887,3.8c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C12.724,5.456,12.69,5.182,12.502,5.035z"
+    "M17.394,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-0.427-0.388c-0.171-0.167-0.431-0.15-0.578,0.038L7.792,13.13 c-0.147,0.188-0.128,0.478,0.043,0.645l1.575,1.51c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C17.616,5.456,17.582,5.182,17.394,5.035z M12.502,5.035l-0.57-0.444c-0.188-0.147-0.462-0.113-0.609,0.076l-6.39,8.198 c-0.147,0.188-0.406,0.206-0.577,0.039l-2.614-2.556c-0.171-0.167-0.447-0.164-0.614,0.007l-0.505,0.516 c-0.167,0.171-0.164,0.447,0.007,0.614l3.887,3.8c0.171,0.167,0.43,0.149,0.577-0.039l7.483-9.602 C12.724,5.456,12.69,5.182,12.502,5.035z",
   );
 
   messageDeliveredTickSvg.append(messageDeliveredTickTitle);
@@ -1660,7 +2220,7 @@ const bindMessageBoxRealtime = () => {
 
   chatStore.ws.subscribe("/user/queue/online-status", (msg) => {
     const info = JSON.parse(msg.body);
-    
+
     chatStore.applyPresence(info);
     renderHeaderStatus();
   });
@@ -1744,7 +2304,7 @@ function handleOptionsBtnClick(event) {
         "li",
         "list-item1",
         { opacity: "1" },
-        { "data-animate-dropdown-item": "true" }
+        { "data-animate-dropdown-item": "true" },
       );
       const blockLiDivElement = createElement(
         "div",
@@ -1752,14 +2312,14 @@ function handleOptionsBtnClick(event) {
         null,
         { role: "button", "aria-label": `${blockLabel}` },
         blockLabel,
-        () => toggleBlockUser(chat)
+        () => toggleBlockUser(chat),
       );
 
       const contactInformationLiElement = createElement(
         "li",
         "list-item1",
         { opacity: "1" },
-        { "data-animate-dropdown-item": "true" }
+        { "data-animate-dropdown-item": "true" },
       );
       const contactInformationDivElement = createElement(
         "div",
@@ -1780,8 +2340,8 @@ function handleOptionsBtnClick(event) {
               chatRoomId: chat.chatDTO.id,
               about: chat.userProfileResponseDTO.about,
             }),
-            chat
-          )
+            chat,
+          ),
       );
       const chatDTO = {
         userProfileResponseDTO: chat.userProfileResponseDTO,
@@ -1793,11 +2353,11 @@ function handleOptionsBtnClick(event) {
         "li",
         "list-item1",
         { opacity: "1" },
-        { "data-animate-dropdown-item": "true" }
+        { "data-animate-dropdown-item": "true" },
       );
       const chatElements = document.querySelectorAll(".chat1");
       const chatElement = Array.from(chatElements).find(
-        (chatItem) => chatItem.dataset.chatId == chat.chatDTO.id
+        (chatItem) => chatItem.dataset.chatId == chat.chatDTO.id,
       );
 
       const deleteLiDivElement = createElement(
@@ -1806,7 +2366,7 @@ function handleOptionsBtnClick(event) {
         null,
         { role: "button", "aria-label": `${deleteChatLabel}` },
         deleteChatLabel,
-        () => deleteChat(chatDTO, showChatOptions, chatElement)
+        () => deleteChat(chatDTO, showChatOptions, chatElement),
       );
       contactInformationLiElement.append(contactInformationDivElement);
       blockLiElement.append(blockLiDivElement);
@@ -1866,44 +2426,62 @@ class ContactInformationDTO {
   }
 }
 const getRenderedMessageIds = () => {
-    const messageElements = document.querySelectorAll(".message-box1-5-1-2-2 div[role='row']");
-    const ids = new Set();
-    messageElements.forEach(el => {
-        if (el.messageData && el.messageData.messageDTO && el.messageData.messageDTO.id) {
-            ids.add(el.messageData.messageDTO.id);
-        }
-    });
-    return ids;
+  const messageElements = document.querySelectorAll(
+    ".message-box1-5-1-2-2 div[role='row']",
+  );
+  const ids = new Set();
+  messageElements.forEach((el) => {
+    if (
+      el.messageData &&
+      el.messageData.messageDTO &&
+      el.messageData.messageDTO.id
+    ) {
+      ids.add(el.messageData.messageDTO.id);
+    }
+  });
+  return ids;
 };
 
 const syncActiveChat = async () => {
-  
   if (!chatStore.activeChatRoomId) return;
-    
-    try {
-        const last30Messages = await chatService.getLast30Messages(chatStore.activeChatRoomId);
-        
-        const incomingMessages = last30Messages.messages || [];
-        
-        const existingIds = getRenderedMessageIds();
-        const newMessages = incomingMessages.filter(msg => !existingIds.has(msg.id));
-        
-        if (newMessages.length > 0) {
-           
-            const messageBoxScroll = document.querySelector(".message-box1-5-1-2");
-            const isAtBottom = messageBoxScroll ? (Math.abs((messageBoxScroll.scrollHeight - messageBoxScroll.clientHeight) - messageBoxScroll.scrollTop) < 50) : true;
-            
-            const chatDTO = new ChatDTO({ messages: newMessages, isLastPage: null });
 
-            await renderMessage(chatDTO, chatStore.activeChat.userProfileResponseDTO.privacySettings, true);
-            
-            if (isAtBottom && messageBoxScroll) {
-                 messageBoxScroll.scrollTop = messageBoxScroll.scrollHeight;
-            }
-        }
-    } catch (error) {
-        console.error("Sync active chat error:", error);
+  try {
+    const last30Messages = await chatService.getLast30Messages(
+      chatStore.activeChatRoomId,
+    );
+
+    const incomingMessages = last30Messages.messages || [];
+
+    const existingIds = getRenderedMessageIds();
+    const newMessages = incomingMessages.filter(
+      (msg) => !existingIds.has(msg.id),
+    );
+
+    if (newMessages.length > 0) {
+      const messageBoxScroll = document.querySelector(".message-box1-5-1-2");
+      const isAtBottom = messageBoxScroll
+        ? Math.abs(
+            messageBoxScroll.scrollHeight -
+              messageBoxScroll.clientHeight -
+              messageBoxScroll.scrollTop,
+          ) < 50
+        : true;
+
+      const chatDTO = new ChatDTO({ messages: newMessages, isLastPage: null });
+
+      await renderMessage(
+        chatDTO,
+        chatStore.activeChat.userProfileResponseDTO.privacySettings,
+        true,
+      );
+
+      if (isAtBottom && messageBoxScroll) {
+        messageBoxScroll.scrollTop = messageBoxScroll.scrollHeight;
+      }
     }
+  } catch (error) {
+    console.error("Sync active chat error:", error);
+  }
 };
 
 export {

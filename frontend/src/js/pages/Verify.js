@@ -10,17 +10,17 @@ export default class extends AbstractView {
 
   async getHtml() {
     return `
-    <div style="text-align:center; padding:50px;">
-      <h2 style="
-        font-size: 28px; 
-        font-weight: bold; 
-        color: #ffffff; 
-        text-shadow: 1px 1px 4px rgba(0,0,0,0.6);
-      ">
-        ${i18n.t("verify.verifyMessage")}
-      </h2>
-    </div>
-  `;
+      <div class="register-login">
+        <div class="spinner" style="border-top-color: var(--primary-color); width: 50px; height: 50px; margin-bottom: 2rem;"></div>
+        <h2 style="
+          font-size: 1.5rem; 
+          font-weight: 600; 
+          color: var(--text-dark);
+        ">
+          ${i18n.t("verify.verifyMessage")}
+        </h2>
+      </div>
+    `;
   }
 
   async init() {

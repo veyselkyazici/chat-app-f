@@ -10,49 +10,40 @@ export default class extends AbstractView {
 
   async getHtml() {
     return `
-        <div class="register-login">
-            <div style="text-align: center; max-width: 500px; margin: 0 auto;">
-                <div style="
-                    background-color: #d4edda;
-                    color: #155724;
-                    padding: 30px;
-                    border: 1px solid #c3e6cb;
-                    border-radius: 12px;
-                    margin: 20px 0;
-                ">
-                    <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
-                    <h2 style="margin: 0 0 15px 0; color: #155724;">Email Verified Successfully!</h2>
-                    <p style="margin: 10px 0; font-size: 16px;">
-                        ${i18n.t("verificationSuccess.successMessage")}
-                    </p>
-                </div>
-                
-                <div class="buttons">
-                    <a href="/login" class="button" data-link 
-                       style="background-color: #28a745; padding: 12px 30px; font-size: 16px;">
-                        ${i18n.t("verificationSuccess.goToLogin")}
-                    </a>
-                </div>
-                
-                <p style="margin-top: 20px; color: #6c757d;">
-                    <a href="/" data-link style="color: #007bff; text-decoration: none;">
-                        ${i18n.t("verificationFailed.backToHome")}
-                    </a>
-                </p>
-            </div>
+      <div class="register-login">
+        <div style="
+            background: rgba(16, 185, 129, 0.1); 
+            color: var(--success-color); 
+            padding: 2rem; 
+            border-radius: var(--radius-lg); 
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            margin-bottom: 2rem;
+            width: 100%;
+        ">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+            <h2 style="margin-bottom: 1rem; color: var(--success-color);">Email Verified Successfully!</h2>
+            <p style="font-size: 1rem; opacity: 0.9;">
+                ${i18n.t("verificationSuccess.successMessage")}
+            </p>
         </div>
-        `;
+        
+        <div class="buttons" style="width: 100%;">
+            <a href="/login" class="button" data-link style="background: var(--success-color);">
+                ${i18n.t("verificationSuccess.goToLogin")}
+            </a>
+        </div>
+        
+        <p style="margin-top: 1.5rem;">
+            <a href="/" data-link style="color: var(--text-light);">${i18n.t("verificationFailed.backToHome")}</a>
+        </p>
+      </div>
+    `;
   }
 
   async init() {
-    const verified = sessionStorage.getItem("verified");
-    if (!verified) {
-      navigateTo("/");
-    } else {
-      sessionStorage.removeItem("verified");
-      setTimeout(() => {
-        navigateTo("/login");
-      }, 5000);
-    }
+    sessionStorage.removeItem("verified");
+    setTimeout(() => {
+      navigateTo("/login");
+    }, 5000);
   }
 }

@@ -1,7 +1,7 @@
 import { createElement, createSvgElement } from "./util.js";
 export class SearchHandler {
   constructor(config) {
-    this.listData = config.listData || [];
+    this.getDataFunction = config.getDataFunction;
     this.listContentSelector = config.listContentSelector;
     this.createItemFunction = config.createItemFunction;
     this.filterFunction = config.filterFunction;
@@ -26,7 +26,8 @@ export class SearchHandler {
         placeholder.remove();
       }
 
-      const filteredItems = this.listData.filter((item) => {
+      const listData = this.getDataFunction();
+      const filteredItems = listData.filter((item) => {
         return this.filterFunction(item, value);
       });
       if (filteredItems) {
@@ -119,7 +120,7 @@ export class SearchHandler {
     e.target.parentElement.append(createPlaceholder);
 
     if (this.restoreFunction) {
-      this.restoreFunction(this.listData);
+      this.restoreFunction(this.getDataFunction());
     }
   }
 }

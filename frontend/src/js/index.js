@@ -22,11 +22,17 @@ const routes = [
     path: "/verification-success",
     view: VerificationSuccess,
     layout: DefaultLayout,
+    guard: () => {
+      return sessionStorage.getItem("verified") === "true";
+    },
   },
   {
     path: "/verification-failed",
     view: VerificationFailed,
     layout: DefaultLayout,
+    guard: () => {
+      return sessionStorage.getItem("verificationFailed") === "true";
+    },
   },
 
   { path: "/verify", view: Verify, layout: DefaultLayout },
@@ -59,6 +65,11 @@ const router = async () => {
   if (match.route.authRequired && !(await authService.isAuthenticated())) {
     return navigateTo("/login");
   }
+
+  if (match.route.guard && !match.route.guard()) {
+    return navigateTo("/");
+  }
+
   const view = new match.route.view();
   currentView = view;
   const html = await view.getHtml();

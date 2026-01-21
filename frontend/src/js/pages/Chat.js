@@ -197,6 +197,7 @@ export default class Chat extends AbstractView {
     );
 
     chatStore.setChatList(finalList);
+    console.log(chatStore.chatList);
     await handleChats();
   }
   initializeWebSockets() {
@@ -224,7 +225,7 @@ export default class Chat extends AbstractView {
 
   chatSearchInit() {
     this.chatSearchHandler = new SearchHandler({
-      listData: chatStore.chatList,
+      getDataFunction: () => chatStore.chatList,
       listContentSelector: ".chat-list-content",
       createItemFunction: handleChats,
       filterFunction: (chat, value) => {

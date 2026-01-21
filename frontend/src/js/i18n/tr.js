@@ -27,11 +27,13 @@ export default {
     errorCode1000: "Email veya şifre yanlış",
     errorCode1003:
       "E-postanın doğrulanması gerekiyor. Lütfen gelen kutunuzu kontrol edin.",
+    noAccount: "Hesabınız yok mu?",
   },
   register: {
     registerSuccess:
       "Kayıt başarılı! Hesabınızı etkinleştirmek için lütfen e-postanızı kontrol edin.",
     errorCode1002: "Email zaten mevcut",
+    haveAccount: "Zaten bir hesabınız var mı?",
   },
   forgotPassword: {
     forgotPassword: "Şifremi unuttum",
@@ -130,6 +132,7 @@ export default {
   messageBox: {
     typing: "yazıyor...",
     messageBoxPlaceHolder: "Bir mesaj yazın",
+    allEmojis: "Tüm Emojiler",
     blockInputMessage: (userName) =>
       `${userName} kullanıcısını engellediniz. Mesaj gönderemezsiniz.`,
     decryptedErrorMessage: "Şifreli mesaj çözülemedi",
