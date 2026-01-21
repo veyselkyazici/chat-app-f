@@ -26,7 +26,6 @@ export default class extends AbstractView {
     this.setTitle("Register");
   }
 
-
   async getHtml() {
     return `
       <div class="register-login">
@@ -126,9 +125,10 @@ export default class extends AbstractView {
       const icon = btn.querySelector("i");
       const input = document.getElementById(btn.dataset.target);
       btn.addEventListener("mousedown", (e) => e.preventDefault());
-      btn.addEventListener("click", () =>
-        toggleVisibilityPassword(btn, icon, input)
-      );
+      btn.addEventListener("click", () => {
+
+        toggleVisibilityPassword(btn, icon, input);
+      });
     });
     const registerForm = document.getElementById("registerForm");
     if (registerForm) {
@@ -154,11 +154,11 @@ export default class extends AbstractView {
     ) {
       showError(
         formElements.confirmPassword,
-        i18n.t("forgotPassword.passwordsNotMatch")
+        i18n.t("forgotPassword.passwordsNotMatch"),
       );
       showError(
         formElements.password,
-        i18n.t("forgotPassword.passwordsNotMatch")
+        i18n.t("forgotPassword.passwordsNotMatch"),
       );
       return;
     }
@@ -171,12 +171,12 @@ export default class extends AbstractView {
       const { publicKey, privateKey } = await generateKeyPair();
       const aesKey = await deriveAESKey(
         formElements.password.value.trim(),
-        salt
+        salt,
       );
       const encryptedPrivateKey = await encryptPrivateKey(
         privateKey,
         aesKey,
-        iv
+        iv,
       );
       const exportedPublicKey = await exportPublicKey(publicKey);
       const registerRequestDTO = new RegisterRequestDTO(
@@ -186,7 +186,7 @@ export default class extends AbstractView {
         Array.from(new Uint8Array(encryptedPrivateKey)),
         Array.from(salt),
         Array.from(iv),
-        recaptchaToken
+        recaptchaToken,
       );
 
       const validationErrors = registerRequestDTO.validate();

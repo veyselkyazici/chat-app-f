@@ -229,7 +229,7 @@ form h1 {
   width: 100%;
 }
 
-.input-icon i {
+.input-icon > i {
   position: absolute;
   left: 1rem;
   top: 50%;
