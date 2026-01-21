@@ -898,6 +898,19 @@ async function handleChatClick(event) {
 
   chatStore.setActiveMessageBox(chatData);
   chatStore.setMobileView("message");
+
+  const startMessage = document.querySelector(".start-message");
+  if (startMessage) {
+    startMessage.style.display = "none";
+  }
+  const messageBox = document.querySelector(".message-box");
+  if (messageBox && !messageBox.querySelector(".message-box-loading")) {
+    const spinner = document.createElement("div");
+    spinner.className = "message-box-loading";
+    spinner.innerHTML = '<div class="message-box-spinner"></div>';
+    messageBox.append(spinner);
+  }
+
   ariaSelected(chatElement, chatStore.selectedChatUserId, innerDiv);
 
   webSocketService.ws.unsubscribe(`/user/queue/read-confirmation-recipient`);

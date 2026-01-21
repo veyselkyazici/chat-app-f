@@ -41,6 +41,12 @@ const emojiRegex =
 async function createMessageBox(chatData) {
   const startMessage = document.querySelector(".start-message");
   startMessage.style.display = "none";
+
+  const messageBoxElement = document.querySelector(".message-box");
+  const spinner = messageBoxElement.querySelector(".message-box-loading");
+  if (spinner) {
+    spinner.remove();
+  }
   const confirmationElement = document.querySelector(".profile-span-div");
   if (confirmationElement) {
     closeProfileFunc();
