@@ -23,7 +23,7 @@ function createSettingsHtml() {
   const span = document.querySelector(".a1-1-1");
   const existingSettingsDiv = span.querySelector(".settings");
   if (existingSettingsDiv) {
-    existingSettingsDiv.remove(); // Varsa önce kaldır
+    existingSettingsDiv.remove();
   }
   const settingsDiv = createElement(
     "div",
@@ -77,13 +77,12 @@ function createSettingsHtml() {
   const divListItems = createElement("div", "settings-1-1-2-1-1-1-1");
 
   const divListItemsInnerDiv = createElement("div", "settings-1-1-2-1-1-1-1-1");
-  // ToDo profileUrl gelecek
   divListItemsInnerDiv.append(
     createButton(
       "",
       chatStore.user.firstName,
       chatStore.user.about,
-      chatStore.user.imagee,
+      chatStore.user.image,
       null,
       () => userUpdateModal(chatStore.user, true),
       true

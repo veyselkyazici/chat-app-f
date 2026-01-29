@@ -9,6 +9,7 @@ import {
   createSvgElement,
   createProfileImage,
   handleErrorCode,
+  createDefaultImage,
 } from "../utils/util.js";
 import {
   handleChats,
@@ -130,8 +131,8 @@ export default class Chat extends AbstractView {
       }
     }
 
-    if (chatStore.user.imagee) {
-      const image = createProfileImage(chatStore.user);
+    if (chatStore.user.image) {
+      const image = createProfileImage(chatStore.user.image);
       const userProfile = document.querySelector(".user-profile-photo");
       userProfile.firstChild.remove();
       userProfile.append(image);
@@ -197,7 +198,6 @@ export default class Chat extends AbstractView {
     );
 
     chatStore.setChatList(finalList);
-    console.log(chatStore.chatList);
     await handleChats();
   }
   initializeWebSockets() {
@@ -209,15 +209,6 @@ export default class Chat extends AbstractView {
 
     ws.connect(() => {
       this.subscribeToWebSocketChannels();
-    });
-
-    ws.onReconnect(async () => {
-      try {
-        await this.getChatList();
-        await syncActiveChat();
-      } catch (e) {
-        console.error("Reconnect sync error:", e);
-      }
     });
 
     ws.onForceLogout(() => this.logout());
@@ -273,16 +264,21 @@ export default class Chat extends AbstractView {
     const chatUnBlock = `/user/queue/unblock`;
     const error = `/user/queue/error-message`;
     const disconnect = `/user/queue/disconnect`;
+    const syncRequired = `/user/queue/sync-required`;
 
-    ws.subscribe(disconnect, async () => this.logout());
-
-    ws.subscribe(`/user/queue/error`, (msg) => {
-      try {
-        console.error("WS error:", JSON.parse(msg.body));
-      } catch {
-        console.error("WS error(raw):", msg.body);
+    ws.subscribe(syncRequired, async (msg) => {
+      if (msg.body === "SNAPSHOT_REQUIRED") {
+        try {
+          await this.getContactList();
+          await this.getChatList();
+          await syncActiveChat();
+          return;
+        } catch (e) {
+          window.location.reload();
+        }
       }
     });
+    ws.subscribe(disconnect, async () => this.logout());
 
     ws.subscribe(error, (msg) => {
       const err = JSON.parse(msg.body);
@@ -526,20 +522,6 @@ export default class Chat extends AbstractView {
       chatStore.setContactList(updatedList);
     });
 
-    // disconnect logout
-    ws.subscribe(disconnect, async () => {
-      await this.logout();
-    });
-
-    // error
-    ws.subscribe(`/user/queue/error`, (msg) => {
-      try {
-        console.error("❌ WS Error:", JSON.parse(msg.body));
-      } catch {
-        console.error("❌ WS Error (raw):", msg.body);
-      }
-    });
-
     // add-contact
     ws.subscribe(addContact, async (msg) => {
       const newContact = JSON.parse(msg.body);
@@ -590,16 +572,16 @@ export default class Chat extends AbstractView {
           chat.contactsDTO.relatedUserHasAddedUser =
             newContact.contactsDTO.userHasAddedRelatedUser;
 
-          chat.userProfileResponseDTO.imagee =
-            newContact.userProfileResponseDTO.imagee;
+          chat.userProfileResponseDTO.image =
+            newContact.userProfileResponseDTO.image;
 
-          if (chat.userProfileResponseDTO.imagee) {
+          if (chat.userProfileResponseDTO.image) {
             handleProfilePhotoVisibilityChange(
               {
                 contact: { ...chat.contactsDTO },
                 userProfileResponseDTO: { ...chat.userProfileResponseDTO },
               },
-              chat.userProfileResponseDTO.imagee,
+              chat.userProfileResponseDTO.image,
             );
           }
         }
@@ -615,10 +597,10 @@ export default class Chat extends AbstractView {
           contact.contactsDTO.relatedUserHasAddedUser =
             newContact.contactsDTO.userHasAddedRelatedUser;
 
-          contact.userProfileResponseDTO.imagee =
-            newContact.userProfileResponseDTO.imagee;
+          contact.userProfileResponseDTO.image =
+            newContact.userProfileResponseDTO.image;
 
-          if (contact.userProfileResponseDTO.imagee) {
+          if (contact.userProfileResponseDTO.image) {
             handleProfilePhotoVisibilityChange(
               {
                 contact: { ...contact.contactsDTO },
@@ -626,7 +608,7 @@ export default class Chat extends AbstractView {
                   ...contact.userProfileResponseDTO,
                 },
               },
-              contact.userProfileResponseDTO.imagee,
+              contact.userProfileResponseDTO.image,
             );
           }
         }
@@ -674,7 +656,7 @@ export default class Chat extends AbstractView {
           ) {
             handleProfilePhotoVisibilityChange(
               { contact: { ...chat.contactsDTO }, userProfileResponseDTO: dto },
-              chat.userProfileResponseDTO.imagee,
+              chat.userProfileResponseDTO.image,
             );
           }
 
@@ -706,7 +688,7 @@ export default class Chat extends AbstractView {
       });
       chatStore.setContactList(contacts);
       if (chatStore.state.activeFriendId === dto.id) {
-        chatStore.ws.send("/request-status-snapshot", { targetUserId: dto.id });
+        chatStore.ws.send("request-status-snapshot", { targetUserId: dto.id });
       }
     });
 
@@ -716,7 +698,7 @@ export default class Chat extends AbstractView {
 
       const chats = chatStore.chatList.map((chat) => {
         if (chat.userProfileResponseDTO.id === dto.userId) {
-          chat.userProfileResponseDTO.imagee = dto.url;
+          chat.userProfileResponseDTO.image = dto.url;
           chat.userProfileResponseDTO.about = dto.about;
           chat.userProfileResponseDTO.firstName = dto.firstName;
 
@@ -725,7 +707,7 @@ export default class Chat extends AbstractView {
               contact: chat.contactsDTO,
               userProfileResponseDTO: chat.userProfileResponseDTO,
             },
-            chat.userProfileResponseDTO.imagee,
+            chat.userProfileResponseDTO.image,
           );
         }
         return chat;
@@ -735,7 +717,7 @@ export default class Chat extends AbstractView {
 
       const contacts = chatStore.contactList.map((contact) => {
         if (contact.userProfileResponseDTO?.id === dto.userId) {
-          contact.userProfileResponseDTO.imagee = dto.url;
+          contact.userProfileResponseDTO.image = dto.url;
           contact.userProfileResponseDTO.about = dto.about;
           contact.userProfileResponseDTO.firstName = dto.firstName;
         }
@@ -767,7 +749,7 @@ export default class Chat extends AbstractView {
 
     if (addFriendButton) {
       addFriendButton.addEventListener("click", () => {
-        addContactModal(chatStore.user); // ← user store'dan geliyor
+        addContactModal(chatStore.user);
       });
     }
 
@@ -918,35 +900,26 @@ export const handleOnlineStatusVisibilityChange = (newContactPrivacy) => {
 };
 
 export const handleProfilePhotoVisibilityChange = (newValue, image) => {
-  const privacy =
-    newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility;
-
-  const bool =
-    privacy === "EVERYONE" ||
-    (privacy === "MY_CONTACTS" && newValue.contact.relatedUserHasAddedUser);
-
-  // CHAT LIST
   const chatData = chatStore.chatList.find(
     (c) => c.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id,
   );
   const chatElement = chatData
     ? document.querySelector(`.chat1[data-chat-id="${chatData.chatDTO.id}"]`)
     : null;
+
   if (chatElement) {
     const imageElement = chatElement.querySelector(".image");
-    changesVisibilityProfilePhoto(bool, imageElement, image);
+    changesVisibilityProfilePhoto(imageElement, image);
   }
 
-  // CONTACT LIST
   if (document.querySelector(".a1-1-1-1-1-1-3")) {
     const contact = document.querySelector(
       `.contact1[data-contact-id="${newValue.contactsDTO.id}"]`,
     );
     const imageElement = contact?.querySelector(".image");
-    changesVisibilityProfilePhoto(bool, imageElement, image);
+    changesVisibilityProfilePhoto(imageElement, image);
   }
 
-  // MESSAGE BOX
   if (
     chatStore.activeChat &&
     chatStore.activeChat.userProfileResponseDTO.id ===
@@ -955,50 +928,29 @@ export const handleProfilePhotoVisibilityChange = (newValue, image) => {
     const messageBoxElement = document.querySelector(".message-box1");
     if (!messageBoxElement) return;
     const imageElement = messageBoxElement.querySelector(".message-box1-2-1-1");
-    changesVisibilityProfilePhoto(bool, imageElement, image);
+    changesVisibilityProfilePhoto(imageElement, image);
   }
 };
 
-export const changesVisibilityProfilePhoto = (bool, imageElement, image) => {
-  if (!imageElement) return;
+export const changesVisibilityProfilePhoto = (imagelement, image) => {
+  if (!imagelement) return;
 
-  if (bool && image) {
-    // göster
-    if (imageElement.firstElementChild?.className === "svg-div") {
-      imageElement.removeChild(imageElement.firstElementChild);
+  if (image) {
+    if (imagelement.firstElementChild?.className === "svg-div") {
+      imagelement.removeChild(imagelement.firstElementChild);
 
-      const img = createElement(
-        "img",
-        "user-image",
-        {},
-        { src: image, draggable: "false", tabindex: "-1", alt: "" },
-      );
-      imageElement.append(img);
+      const img = createProfileImage(image);
+      imagelement.append(img);
     } else {
-      imageElement.firstElementChild.src = image;
+      imagelement.firstElementChild.src = image;
     }
-  } else {
-    if (imageElement.firstElementChild?.className === "user-image") {
-      imageElement.removeChild(imageElement.firstElementChild);
+    return;
+  }
 
-      const svgDiv = createElement("div", "svg-div");
-      const svgSpan = createElement(
-        "span",
-        "",
-        {},
-        { "aria-hidden": "true", "data-icon": "default-user" },
-      );
-      const svgElement = createSvgElement("svg", {
-        class: "svg-element",
-        viewBox: "0 0 212 212",
-        height: "212",
-        width: "212",
-      });
-
-      svgSpan.append(svgElement);
-      svgDiv.append(svgSpan);
-      imageElement.append(svgDiv);
-    }
+  if (imagelement.firstElementChild?.className === "user-image") {
+    imagelement.removeChild(imagelement.firstElementChild);
+    const svgDiv = createDefaultImage();
+    imagelement.append(svgDiv);
   }
 };
 
@@ -1022,7 +974,7 @@ export const applyMessageBoxStatusVisibility = (updatedUserDto) => {
   }
 
   // Görünüyorsa backend'den güncel snapshot iste
-  chatStore.ws.send("/request-status-snapshot", {
+  chatStore.ws.send("request-status-snapshot", {
     targetUserId: updatedUserDto.id,
   });
 };

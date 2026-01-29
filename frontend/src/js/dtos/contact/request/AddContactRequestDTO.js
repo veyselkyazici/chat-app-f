@@ -1,8 +1,8 @@
 import { isValidEmail } from "../../../utils/util.js";
 import { i18n } from "../../../i18n/i18n.js";
 export class AddContactRequestDTO {
-  constructor(imagee, userContactName, userContactEmail, addedByEmail) {
-    this.imagee = imagee;
+  constructor(image, userContactName, userContactEmail, addedByEmail) {
+    this.image = image;
     this.userContactName = userContactName;
     this.userContactEmail = userContactEmail;
     this.addedByEmail = addedByEmail;

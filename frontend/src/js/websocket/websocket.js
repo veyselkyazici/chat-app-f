@@ -6,19 +6,25 @@ export default class WebSocketManager {
   constructor(url) {
     this.url = url;
     this.isConnected = false;
+    this.isActive = true;
     this.disableReconnect = false;
+    this._pingSentCount = 0;
     this.subscriptions = new Map();
-    this.activate = null;
+
     this._onConnect = null;
-    this._onReconnect = null;
     this._onDisconnect = null;
     this._onForceLogout = null;
 
     this._pingIntervalId = null;
+
     this._visibilityHandler = null;
     this._focusHandler = null;
-    this._visibilityBound = false;
+    this._blurHandler = null;
     this._freezeHandler = null;
+    this._visibilityBound = false;
+
+    this._lastForegroundKickAt = 0;
+
     this.client = new Client({
       brokerURL: this.url,
 
@@ -40,16 +46,17 @@ export default class WebSocketManager {
       debug: () => {},
 
       onConnect: () => {
-        const wasConnectedBefore = this.isConnected;
         this.isConnected = true;
-
         this.resubscribeAll();
 
-        if (!wasConnectedBefore && this._onConnect) {
-          this._onConnect();
-        } else if (wasConnectedBefore && this._onReconnect) {
-          this._onReconnect();
-        }
+        if (this._onConnect) this._onConnect();
+
+        try {
+          this.send("ping", {});
+        } catch {}
+        try {
+          this.send("sync", {});
+        } catch {}
       },
 
       onWebSocketClose: () => {
@@ -57,9 +64,7 @@ export default class WebSocketManager {
         this.isConnected = false;
 
         if (!this.disableReconnect) {
-          if (wasConnected && this._onDisconnect) {
-            this._onDisconnect();
-          }
+          if (wasConnected && this._onDisconnect) this._onDisconnect();
         }
       },
 
@@ -81,22 +86,19 @@ export default class WebSocketManager {
 
             this.refreshToken();
             return;
-          } catch (e) {
+          } catch {
             if (this._onForceLogout) this._onForceLogout();
             return;
           }
         }
 
-        if (code === "INVALID_SESSION") {
-          if (this._onForceLogout) this._onForceLogout();
-        }
-
-        if (code === "INVALID_TOKEN") {
+        if (code === "INVALID_SESSION" || code === "INVALID_TOKEN") {
           if (this._onForceLogout) this._onForceLogout();
         }
       },
     });
   }
+
   onForceLogout(cb) {
     this._onForceLogout = cb;
   }
@@ -104,10 +106,6 @@ export default class WebSocketManager {
   connect(onConnectCallback) {
     this._onConnect = onConnectCallback;
     this.client.activate();
-  }
-
-  onReconnect(cb) {
-    this._onReconnect = cb;
   }
 
   onDisconnect(cb) {
@@ -137,10 +135,46 @@ export default class WebSocketManager {
       } catch {}
     }
 
-    this.subscriptions.set(channel, { callback, stompSubscription: null });
+    const wrappedCallback = (msg) => {
+      let parsed = null;
+      try {
+        parsed = JSON.parse(msg.body);
+      } catch {
+        return callback(msg);
+      }
+
+      if (
+        parsed &&
+        parsed.eventId &&
+        Object.prototype.hasOwnProperty.call(parsed, "data")
+      ) {
+        const forwarded = Object.assign({}, msg, {
+          body: JSON.stringify(parsed.data),
+        });
+
+        try {
+          const res = callback(forwarded);
+          Promise.resolve(res).finally(() => {
+            try {
+              this.send("ack", { eventId: parsed.eventId });
+            } catch {}
+          });
+        } catch (e) {
+          throw e;
+        }
+        return;
+      }
+
+      return callback(msg);
+    };
+
+    this.subscriptions.set(channel, {
+      callback: wrappedCallback,
+      stompSubscription: null,
+    });
 
     if (this.isConnected) {
-      const stompSub = this.client.subscribe(channel, callback);
+      const stompSub = this.client.subscribe(channel, wrappedCallback);
       this.subscriptions.get(channel).stompSubscription = stompSub;
       return stompSub;
     }
@@ -149,11 +183,13 @@ export default class WebSocketManager {
   }
 
   resubscribeAll() {
-    for (const [channel, data] of this.subscriptions.entries()) {
+    for (const [, data] of this.subscriptions.entries()) {
       try {
         data.stompSubscription?.unsubscribe();
       } catch {}
+    }
 
+    for (const [channel, data] of this.subscriptions.entries()) {
       try {
         const stompSub = this.client.subscribe(channel, data.callback);
         data.stompSubscription = stompSub;
@@ -190,7 +226,6 @@ export default class WebSocketManager {
       this.client.connectHeaders = {
         Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
       };
-
       this.client.activate();
     });
   }
@@ -215,6 +250,7 @@ export default class WebSocketManager {
 
   startPing(intervalMs) {
     if (this._pingIntervalId) return;
+
     this._pingIntervalId = setInterval(() => {
       if (!this.isConnected || !this.isActive) return;
       try {
@@ -222,10 +258,29 @@ export default class WebSocketManager {
           destination: "/app/ping",
           body: "{}",
         });
-      } catch (e) {
+      } catch {
         this.reconnectCheck();
       }
     }, intervalMs);
+  }
+
+  _foregroundKick(delayMs) {
+    const now = Date.now();
+    if (now - this._lastForegroundKickAt < 800) return;
+    this._lastForegroundKickAt = now;
+
+    setTimeout(() => {
+      if (this.disableReconnect) return;
+
+      this.reconnectCheck();
+
+      try {
+        this.send("ping", {});
+      } catch {}
+      try {
+        this.send("sync", {});
+      } catch {}
+    }, delayMs);
   }
 
   bindVisibilityReconnect() {
@@ -241,21 +296,21 @@ export default class WebSocketManager {
     this._visibilityHandler = () => {
       updateActiveState();
       if (this.isActive && !this.disableReconnect) {
-        setTimeout(() => this.reconnectCheck(), 300);
+        this._foregroundKick(300);
       }
     };
 
     this._focusHandler = () => {
       updateActiveState();
       if (this.isActive && !this.disableReconnect) {
-        setTimeout(() => this.reconnectCheck(), 200);
+        this._foregroundKick(200);
       }
     };
 
+    this._blurHandler = () => updateActiveState();
+
     document.addEventListener("visibilitychange", this._visibilityHandler);
     window.addEventListener("focus", this._focusHandler);
-
-    this._blurHandler = () => updateActiveState();
     window.addEventListener("blur", this._blurHandler);
 
     this._freezeHandler = () => {
@@ -307,7 +362,6 @@ export default class WebSocketManager {
     } catch {}
 
     this._onConnect = null;
-    this._onReconnect = null;
     this._onDisconnect = null;
     this._onForceLogout = null;
   }

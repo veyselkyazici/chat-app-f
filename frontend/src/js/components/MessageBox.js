@@ -1,4 +1,4 @@
-// MessageBox.js
+﻿// MessageBox.js
 import { chatService } from "../services/chatService.js";
 import {
   base64ToUint8Array,
@@ -138,8 +138,36 @@ const handleTextFocus = (chat, typingStatus, textArea) => {
 
   typingStatus.previousText = currentText;
 };
-function handlePaste(event) {
+const TEXT_SPAN_CLASS = "message-box1-7-1-1-1-2-1-1-1-1";
+const EMOJI_SPAN_CLASS = "message-emoji-span";
+const EMOJI_INNER_SPAN_CLASS = "message-emoji-span-1";
+const ROOT_CLASS = "message-box1-7-1-1-1-2-1-1-1";
+
+function handlePaste(event, textArea, sendButton, typingStatus) {
   event.preventDefault();
+  const text = (event.clipboardData || window.clipboardData).getData("text");
+
+  if (!text) return;
+
+  const selection = window.getSelection();
+  if (!selection.rangeCount) return;
+  const range = selection.getRangeAt(0);
+
+  range.deleteContents();
+  const textNode = document.createTextNode(text);
+  range.insertNode(textNode);
+
+  range.setStart(textNode, textNode.textContent.length);
+  range.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  const editor = document.querySelector(`.${ROOT_CLASS}`);
+  if (editor) {
+    normalizeMessageBox(editor);
+    updateCaretPosition(event);
+    updatePlaceholder(textArea, sendButton, typingStatus);
+  }
 }
 
 function handleTextInput(textArea, chat, typingStatus, event) {
@@ -172,111 +200,269 @@ function handleTextInput(textArea, chat, typingStatus, event) {
 
   typingStatus.previousText = currentText;
 
+  normalizeMessageBox(textArea);
   updateCaretPosition(event);
-  if (event.inputType === "deleteContentBackward") {
-    handleDeleteContentBackward(event);
-  } else {
-    input(event.data, textArea);
-  }
-
-  if (event.inputType === "deleteContentBackward") {
-    handleDeleteContentBackward(event);
-  } else {
-    input(event.data, textArea);
-  }
-
-  ensureMessageBoxStructure(textArea);
 }
 
 const ensureMessageBoxStructure = (textAreaWrapper) => {
-  const contentEditable = textAreaWrapper.querySelector(
-    ".message-box1-7-1-1-1-2-1-1-1",
-  );
-
-  let targetContainer = contentEditable;
+  let targetContainer = textAreaWrapper.querySelector(`.${ROOT_CLASS}`);
   if (!targetContainer) {
-    if (textAreaWrapper.classList.contains("message-box1-7-1-1-1-2-1-1-1")) {
+    if (textAreaWrapper.classList.contains(ROOT_CLASS)) {
       targetContainer = textAreaWrapper;
     } else {
       return;
     }
   }
 
-  let p = targetContainer.querySelector(".message-box1-7-1-1-1-2-1-1-1-1");
+  let p = targetContainer.querySelector(`p.${TEXT_SPAN_CLASS}`);
   if (!p) {
-    p = document.createElement("p");
-    p.className = "message-box1-7-1-1-1-2-1-1-1-1";
-
-    while (targetContainer.firstChild) {
-      p.appendChild(targetContainer.firstChild);
+    p = targetContainer.querySelector("p");
+    if (p) {
+      p.className = TEXT_SPAN_CLASS;
+    } else {
+      p = document.createElement("p");
+      p.className = TEXT_SPAN_CLASS;
+      while (targetContainer.firstChild) {
+        p.appendChild(targetContainer.firstChild);
+      }
+      targetContainer.appendChild(p);
     }
-    targetContainer.appendChild(p);
   }
 
-  if (p.innerHTML === "" || p.textContent === "") {
+  Array.from(targetContainer.childNodes).forEach((child) => {
+    if (child !== p) child.remove();
+  });
+
+  normalizeMessageBox(targetContainer);
+};
+
+const normalizeMessageBox = (rootElement) => {
+  const p = rootElement.querySelector(`p.${TEXT_SPAN_CLASS}`);
+  if (!p) return;
+
+  const selection = window.getSelection();
+  let savedCaret = null;
+
+  if (selection.rangeCount > 0 && rootElement.contains(selection.anchorNode)) {
+    const range = selection.getRangeAt(0);
+    savedCaret = { node: range.startContainer, offset: range.startOffset };
+  }
+
+  let node = p.firstChild;
+  while (node) {
+    const nextNode = node.nextSibling;
+
+    const trySplit = (targetNode, text) => {
+      const regex = new RegExp(emojiRegex.source, "gu");
+      if (regex.test(text)) {
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        let match;
+        const freshRegex = new RegExp(emojiRegex.source, "gu");
+        let firstNewNode = null;
+        let caretMapped = false;
+
+        let absoluteCaret = -1;
+        if (savedCaret && savedCaret.node === targetNode) {
+          absoluteCaret = savedCaret.offset;
+        } else if (
+          savedCaret &&
+          targetNode.nodeType === Node.ELEMENT_NODE &&
+          savedCaret.node === targetNode.firstChild
+        ) {
+          absoluteCaret = savedCaret.offset;
+        }
+
+        while ((match = freshRegex.exec(text)) !== null) {
+          const index = match.index;
+          const emoji = match[0];
+
+          if (index > lastIndex) {
+            const t = text.substring(lastIndex, index);
+            const span = createTextSpan(t);
+            fragment.appendChild(span);
+            if (!firstNewNode) firstNewNode = span;
+
+            if (
+              !caretMapped &&
+              absoluteCaret !== -1 &&
+              absoluteCaret <= index
+            ) {
+              savedCaret.node = span.firstChild;
+              savedCaret.offset = absoluteCaret - lastIndex;
+              caretMapped = true;
+            }
+          } else if (
+            !caretMapped &&
+            absoluteCaret !== -1 &&
+            absoluteCaret === index
+          ) {
+            const span = createTextSpan("");
+            const txt = document.createTextNode("");
+            span.appendChild(txt);
+            fragment.appendChild(span);
+
+            savedCaret.node = txt;
+            savedCaret.offset = 0;
+            caretMapped = true;
+          }
+
+          const eSpan = createEmojiSpan(emoji);
+          fragment.appendChild(eSpan);
+          if (!firstNewNode) firstNewNode = eSpan;
+
+          lastIndex = index + emoji.length;
+        }
+
+        if (lastIndex < text.length) {
+          const t = text.substring(lastIndex);
+          const span = createTextSpan(t);
+          fragment.appendChild(span);
+
+          if (!caretMapped && absoluteCaret !== -1) {
+            savedCaret.node = span.firstChild;
+            savedCaret.offset = absoluteCaret - lastIndex;
+            caretMapped = true;
+          }
+        } else if (
+          !caretMapped &&
+          absoluteCaret !== -1 &&
+          absoluteCaret >= lastIndex
+        ) {
+          const span = createTextSpan("");
+          const txt = document.createTextNode("");
+          span.appendChild(txt);
+          fragment.appendChild(span);
+
+          savedCaret.node = txt;
+          savedCaret.offset = 0;
+          caretMapped = true;
+        }
+
+        p.replaceChild(fragment, targetNode);
+        return true;
+      }
+      return false;
+    };
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      if (node.textContent.length === 0) {
+        node.remove();
+      } else {
+        const text = node.textContent;
+        if (trySplit(node, text)) {
+        } else {
+          const prev = node.previousSibling;
+          if (prev && isTextSpan(prev)) {
+            const prevLen = prev.textContent.length;
+            prev.textContent += text;
+            if (savedCaret && savedCaret.node === node) {
+              savedCaret.node = prev.firstChild;
+              savedCaret.offset += prevLen;
+            }
+            node.remove();
+          } else {
+            const span = createTextSpan(text);
+            p.insertBefore(span, node);
+            node.remove();
+            if (savedCaret && savedCaret.node === node) {
+              savedCaret.node = span.firstChild;
+            }
+          }
+        }
+      }
+    } else if (isTextSpan(node)) {
+      if (node.textContent.length === 0) {
+        node.remove();
+      } else {
+        if (trySplit(node, node.textContent)) {
+        } else {
+          const prev = node.previousSibling;
+          if (prev && isTextSpan(prev)) {
+            const prevLen = prev.textContent.length;
+            prev.textContent += node.textContent;
+            if (
+              savedCaret &&
+              (savedCaret.node === node || savedCaret.node === node.firstChild)
+            ) {
+              savedCaret.node = prev.firstChild;
+              savedCaret.offset += prevLen;
+            }
+            node.remove();
+          }
+        }
+      }
+    } else if (isEmojiSpan(node)) {
+      const inner = node.querySelector(`.${EMOJI_INNER_SPAN_CLASS}`);
+      const dataEmoji = node.getAttribute("data-emoji");
+      if (!inner || !dataEmoji || node.textContent !== dataEmoji) {
+        const text = createTextSpan(node.textContent);
+
+        if (savedCaret && node.contains(savedCaret.node)) {
+          savedCaret.node = text.firstChild;
+        }
+
+        p.replaceChild(text, node);
+        node = text;
+        continue;
+      }
+    } else {
+      if (node.textContent) {
+        const span = createTextSpan(node.textContent);
+        p.replaceChild(span, node);
+      } else {
+        node.remove();
+      }
+    }
+    node = nextNode;
+  }
+
+  if (
+    !p.hasChildNodes() ||
+    (p.childNodes.length === 1 && p.firstChild.textContent === "")
+  ) {
     p.innerHTML = "<br>";
+  } else {
+    const brs = p.querySelectorAll("br");
+    if (brs.length > 0 && p.textContent.length > 0) {
+      brs.forEach((br) => br.remove());
+    }
+  }
+
+  if (
+    savedCaret &&
+    savedCaret.node &&
+    document.body.contains(savedCaret.node)
+  ) {
+    try {
+      const newRange = document.createRange();
+      newRange.setStart(savedCaret.node, savedCaret.offset);
+      newRange.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    } catch (e) {}
   }
 };
 
-const handleDeleteContentBackward = (event) => {
-  const selection = window.getSelection();
-
-  const p = document.querySelector(".message-box1-7-1-1-1-2-1-1-1-1");
-  if (p) {
-    const spans = Array.from(
-      p.querySelectorAll(".message-box1-7-1-1-1-2-1-1-1-1"),
-    );
-    spans.forEach((span) => {
-      if (span.textContent.length === 0) {
-        span.remove();
-      }
-    });
-
-    let node = p.firstChild;
-    while (node && node.nextSibling) {
-      const next = node.nextSibling;
-      if (
-        node.nodeType === Node.ELEMENT_NODE &&
-        node.classList.contains("message-box1-7-1-1-1-2-1-1-1-1") &&
-        next.nodeType === Node.ELEMENT_NODE &&
-        next.classList.contains("message-box1-7-1-1-1-2-1-1-1-1")
-      ) {
-        const isCaretInNext =
-          selection.focusNode === next || next.contains(selection.focusNode);
-        const isCaretInNode =
-          selection.focusNode === node || node.contains(selection.focusNode);
-        const nodeOffset = selection.focusOffset;
-        const nextOffset = selection.focusOffset;
-
-        const originalLength = node.textContent.length;
-        node.textContent += next.textContent;
-        next.remove();
-
-        const newRange = document.createRange();
-        if (isCaretInNext) {
-          if (!node.firstChild) {
-            node.textContent = node.textContent;
-          }
-          newRange.setStart(node.firstChild, originalLength + nextOffset);
-          newRange.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        } else if (isCaretInNode) {
-          if (!node.firstChild) {
-            node.textContent = node.textContent;
-          }
-          newRange.setStart(node.firstChild, nodeOffset);
-          newRange.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        }
-      } else {
-        node = next;
-      }
-    }
-  }
-
-  updateCaretPosition(event);
+const isTextSpan = (n) =>
+  n.nodeType === Node.ELEMENT_NODE && n.classList.contains(TEXT_SPAN_CLASS);
+const isEmojiSpan = (n) =>
+  n.nodeType === Node.ELEMENT_NODE && n.classList.contains(EMOJI_SPAN_CLASS);
+const createTextSpan = (txt) => {
+  const s = document.createElement("span");
+  s.className = TEXT_SPAN_CLASS;
+  s.textContent = txt;
+  return s;
+};
+const createEmojiSpan = (emoji) => {
+  const s = document.createElement("span");
+  s.className = EMOJI_SPAN_CLASS;
+  s.setAttribute("data-emoji", emoji);
+  const i = document.createElement("span");
+  i.className = EMOJI_INNER_SPAN_CLASS;
+  i.textContent = emoji;
+  s.appendChild(i);
+  return s;
 };
 
 function handleTextKeyDown(event) {
@@ -290,7 +476,7 @@ function showEmojiPicker(
   sendButton,
   typingStatus,
 ) {
-  panel.style.height = "320px";
+  panel.style.height = "220px";
   showEmojiDOM.innerHTML = generateEmojiHTML();
 
   const pickerContainer = showEmojiDOM.querySelector(".emoji-picker-container");
@@ -304,144 +490,134 @@ function showEmojiPicker(
   });
 }
 
-const input = (data, textArea) => {
-  let p = textArea.querySelector(".message-box1-7-1-1-1-2-1-1-1-1");
-
-  if (!p) return;
-
-  let textNodes = [];
-  p.childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE && node.textContent.length > 0) {
-      textNodes.push(node);
-    }
-  });
-
-  textNodes.forEach((node) => {
-    const span = document.createElement("span");
-    span.className = "message-box1-7-1-1-1-2-1-1-1-1";
-    span.textContent = node.textContent;
-
-    p.replaceChild(span, node);
-
-    const range = document.createRange();
-    range.setStart(span.firstChild, span.textContent.length);
-    range.collapse(true);
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(range);
-    updateCaretPosition();
-  });
-};
-
 const insertEmoji = (emoji) => {
   const selection = window.getSelection();
   let range = savedRange;
 
   if (!range) {
-    const p = document.querySelector(".message-box1-7-1-1-1-2-1-1-1-1");
-    if (p) {
-      if (p.innerHTML === "<br>" || p.textContent.trim() === "") {
-        p.innerHTML = "";
-      }
-      range = document.createRange();
-      range.selectNodeContents(p);
-      range.collapse(false);
+    if (selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
     } else {
-      return;
+      range = document.createRange();
+      const p = document.querySelector(`.${ROOT_CLASS} p`);
+      if (p) {
+        range.selectNodeContents(p);
+        range.collapse(false);
+      } else {
+        return;
+      }
     }
   }
 
-  selection.removeAllRanges();
-  selection.addRange(range);
+  const editor = document.querySelector(`.${ROOT_CLASS}`);
+  if (!editor) return;
+  ensureMessageBoxStructure(editor.parentNode);
 
-  const messageBoxInput = document.querySelector(
-    ".message-box1-7-1-1-1-2-1-1-1-1",
-  );
-  if (
-    messageBoxInput &&
-    !messageBoxInput.contains(range.commonAncestorContainer) &&
-    messageBoxInput !== range.commonAncestorContainer
-  ) {
+  if (!editor.contains(range.commonAncestorContainer)) {
+    const p = editor.querySelector("p");
     range = document.createRange();
-    range.selectNodeContents(messageBoxInput);
+    range.selectNodeContents(p);
     range.collapse(false);
   }
-
-  range.deleteContents();
-
-  const emojiOuterSpan = document.createElement("span");
-  emojiOuterSpan.className = "message-emoji-span";
-  emojiOuterSpan.setAttribute("data-emoji", emoji);
-  emojiOuterSpan.contentEditable = "false";
-
-  const emojiInnerSpan = document.createElement("span");
-  emojiInnerSpan.className = "message-emoji-span-1";
-  emojiInnerSpan.textContent = emoji;
-  emojiOuterSpan.appendChild(emojiInnerSpan);
 
   let container = range.startContainer;
   let offset = range.startOffset;
 
-  if (
-    container.nodeType === Node.TEXT_NODE &&
-    container.parentNode.classList.contains("message-box1-7-1-1-1-2-1-1-1-1")
-  ) {
-    const textSpan = container.parentNode;
-    const text = container.textContent;
-    const beforeText = text.slice(0, offset);
-    const afterText = text.slice(offset);
-
-    if (beforeText.length > 0) {
-      container.textContent = beforeText;
-      if (textSpan.nextSibling) {
-        textSpan.parentNode.insertBefore(emojiOuterSpan, textSpan.nextSibling);
-      } else {
-        textSpan.parentNode.appendChild(emojiOuterSpan);
-      }
-    } else {
-      textSpan.parentNode.insertBefore(emojiOuterSpan, textSpan);
-    }
-
-    if (afterText.length > 0) {
-      if (beforeText.length > 0) {
-        const newTextSpan = document.createElement("span");
-        newTextSpan.className = "message-box1-7-1-1-1-2-1-1-1-1";
-        newTextSpan.textContent = afterText;
-
-        if (emojiOuterSpan.nextSibling) {
-          emojiOuterSpan.parentNode.insertBefore(
-            newTextSpan,
-            emojiOuterSpan.nextSibling,
-          );
-        } else {
-          emojiOuterSpan.parentNode.appendChild(newTextSpan);
-        }
-      } else {
-        container.textContent = afterText;
-      }
-    } else {
-      if (beforeText.length === 0) {
-        textSpan.parentNode.replaceChild(emojiOuterSpan, textSpan);
-      }
-    }
+  let emojiAncestor = null;
+  if (container.nodeType === Node.TEXT_NODE) {
+    emojiAncestor = container.parentNode.closest(`.${EMOJI_SPAN_CLASS}`);
   } else {
-    range.insertNode(emojiOuterSpan);
+    emojiAncestor = container.closest(`.${EMOJI_SPAN_CLASS}`);
   }
 
-  range = document.createRange();
-  range.setStartAfter(emojiOuterSpan);
-  range.collapse(true);
-  selection.removeAllRanges();
-  selection.addRange(range);
+  if (emojiAncestor) {
+    range.setStartAfter(emojiAncestor);
+    range.collapse(true);
+    container = range.startContainer;
+    offset = range.startOffset;
+  }
 
-  savedRange = range.cloneRange();
+  range.deleteContents();
+
+  const emojiSpan = createEmojiSpan(emoji);
+
+  if (container.nodeType === Node.TEXT_NODE) {
+    const textNode = container;
+    const parentSpan = textNode.parentNode;
+
+    if (isTextSpan(parentSpan)) {
+      const secondPartText = textNode.textContent.slice(offset);
+      textNode.textContent = textNode.textContent.slice(0, offset);
+
+      if (secondPartText.length > 0) {
+        const newTextSpan = createTextSpan(secondPartText);
+        if (parentSpan.nextSibling) {
+          parentSpan.parentNode.insertBefore(
+            newTextSpan,
+            parentSpan.nextSibling,
+          );
+        } else {
+          parentSpan.parentNode.appendChild(newTextSpan);
+        }
+        parentSpan.parentNode.insertBefore(emojiSpan, newTextSpan);
+      } else {
+        if (parentSpan.nextSibling) {
+          parentSpan.parentNode.insertBefore(emojiSpan, parentSpan.nextSibling);
+        } else {
+          parentSpan.parentNode.appendChild(emojiSpan);
+        }
+      }
+    } else {
+      range.insertNode(emojiSpan);
+    }
+  } else if (container.nodeType === Node.ELEMENT_NODE) {
+    const child = container.childNodes[offset];
+    if (child) {
+      container.insertBefore(emojiSpan, child);
+    } else {
+      container.appendChild(emojiSpan);
+    }
+  }
+  const newRange = document.createRange();
+  newRange.setStartAfter(emojiSpan);
+  newRange.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(newRange);
+
+  savedRange = newRange.cloneRange();
+
+  const p = editor.querySelector("p");
+  const children = Array.from(p.childNodes);
+  children.forEach((c) => {
+    if (isTextSpan(c) && c.textContent.length === 0) c.remove();
+  });
 
   updateCaretPosition();
 };
+
 function keydown(event, textArea) {
   if (event.key === "Backspace") {
-    if (textArea.innerText.trim() === "") {
-      event.preventDefault();
+    const sel = window.getSelection();
+    if (sel.rangeCount > 0 && sel.isCollapsed) {
+      const range = sel.getRangeAt(0);
+      const node = range.startContainer;
+      const offset = range.startOffset;
+
+      let toDelete = null;
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const child = node.childNodes[offset - 1];
+        if (child && isEmojiSpan(child)) toDelete = child;
+      } else if (node.nodeType === Node.TEXT_NODE && offset === 0) {
+        const parent = node.parentNode;
+        const prev = parent.previousSibling;
+        if (prev && isEmojiSpan(prev)) toDelete = prev;
+      }
+
+      if (toDelete) {
+        event.preventDefault();
+        toDelete.remove();
+        normalizeMessageBox(textArea);
+      }
     }
   }
 }
@@ -505,47 +681,22 @@ const updateCaretPosition = (event) => {
     console.error("Selection rangeCount is 0.");
   }
 };
-
-const setStartRange = (startNode, startOffset) => {
-  range.setStart(startNode, startOffset);
-  range.collapse(true);
-  selection.removeAllRanges();
-  selection.addRange(range);
-};
-const setStartAfter = (startAfterNode) => {
-  range.setStartAfter(startAfterNode);
-  range.collapse(true);
-  selection.removeAllRanges();
-  selection.addRange(range);
-};
-
 function generateEmojiHTML() {
   const emojis = [
-    "😀",
     "😃",
     "😄",
     "😁",
-    "😆",
-    "😅",
     "😂",
-    "🤣",
     "🥲",
     "☺️",
     "😊",
-    "😇",
     "🙂",
-    "🙃",
     "😉",
     "😌",
     "😍",
     "🥰",
-    "😘",
     "😗",
-    "😙",
     "😚",
-    "😋",
-    "😛",
-    "😝",
     "😜",
     "🤪",
     "🤨",
@@ -572,17 +723,10 @@ function generateEmojiHTML() {
     "😭",
     "😤",
     "😠",
-    "😡",
-    "🤬",
     "🤯",
     "😳",
-    "🥵",
     "🥶",
     "😱",
-    "😨",
-    "😰",
-    "😥",
-    "😓",
     "🤗",
     "🤔",
     "🤭",
@@ -595,26 +739,6 @@ function generateEmojiHTML() {
     "🙄",
     "😯",
     "😦",
-    "😧",
-    "😮",
-    "😲",
-    "🥱",
-    "😴",
-    "🤤",
-    "😪",
-    "😵",
-    "🤐",
-    "🥴",
-    "🤢",
-    "🤮",
-    "🤧",
-    "😷",
-    "🤒",
-    "🤕",
-    "🤑",
-    "🤠",
-    "😈",
-    "👿",
     "👍",
     "👎",
     "👊",
@@ -635,387 +759,12 @@ function generateEmojiHTML() {
     "☝️",
     "✋",
     "🤚",
-    "🖐️",
-    "🖖",
     "👋",
     "🤙",
-    "💪",
-    "🦾",
     "🖕",
     "✍️",
     "🙏",
-    "🦶",
-    "🦵",
-    "🦿",
-    "💄",
-    "💋",
-    "👄",
-    "🦷",
-    "👅",
-    "👂",
-    "🦻",
-    "👃",
-    "👣",
-    "👁️",
-    "👀",
-    "🧠",
-    "🫀",
-    "🫁",
-    "🦴",
-    "🗣️",
-    "👤",
-    "👥",
-    "🫂",
     "❤️",
-    "🧡",
-    "💛",
-    "💚",
-    "💙",
-    "💜",
-    "🖤",
-    "🤍",
-    "🤎",
-    "💔",
-    "❣️",
-    "💕",
-    "💞",
-    "💓",
-    "💗",
-    "💖",
-    "💘",
-    "💝",
-    "❤️‍🔥",
-    "❤️‍🩹",
-    "💟",
-    "🐶",
-    "🐱",
-    "🐭",
-    "🐹",
-    "🐰",
-    "🦊",
-    "🐻",
-    "🐼",
-    "🐻‍❄️",
-    "🐨",
-    "🐯",
-    "🦁",
-    "🐮",
-    "🐷",
-    "🐽",
-    "🐸",
-    "🐵",
-    "🙈",
-    "🙉",
-    "🙊",
-    "🐒",
-    "🐔",
-    "🐧",
-    "🐦",
-    "🐤",
-    "🐣",
-    "🐥",
-    "🦆",
-    "🦅",
-    "🦉",
-    "🦇",
-    "🐺",
-    "🐗",
-    "🐴",
-    "🦄",
-    "🐝",
-    "🪱",
-    "🐛",
-    "🦋",
-    "🐌",
-    "🐞",
-    "🐜",
-    "🪰",
-    "🪲",
-    "🪳",
-    "🦟",
-    "🦗",
-    "🕷️",
-    "🕸️",
-    "🦂",
-    "🐢",
-    "🐍",
-    "🦎",
-    "🦖",
-    "🦕",
-    "🐙",
-    "🦑",
-    "🦐",
-    "🦞",
-    "🦀",
-    "🐡",
-    "🐠",
-    "🐟",
-    "🐬",
-    "🐳",
-    "🐋",
-    "🦈",
-    "🦭",
-    "🐊",
-    "🐅",
-    "🐆",
-    "🦓",
-    "🦍",
-    "🦧",
-    "🦣",
-    "🐘",
-    "🦛",
-    "🦏",
-    "🐪",
-    "🐫",
-    "🦒",
-    "🦘",
-    "🦬",
-    "🐃",
-    "🐂",
-    "🐄",
-    "🐎",
-    "🐖",
-    "🐏",
-    "🐑",
-    "🦙",
-    "🐐",
-    "🦌",
-    "🐕",
-    "🐩",
-    "🦮",
-    "🐕‍🦺",
-    "🐈",
-    "🐈‍⬛",
-    "🐓",
-    "🦃",
-    "🦚",
-    "🦜",
-    "🦢",
-    "🦩",
-    "🕊️",
-    "🐇",
-    "🦝",
-    "🦨",
-    "🦡",
-    "🦫",
-    "🦦",
-    "🦥",
-    "🐁",
-    "🐀",
-    "🐿️",
-    "🦔",
-    "🐾",
-    "🐉",
-    "🐲",
-    "🍏",
-    "🍎",
-    "🍐",
-    "🍊",
-    "🍋",
-    "🍌",
-    "🍉",
-    "🍇",
-    "🍓",
-    "🫐",
-    "🍈",
-    "🍒",
-    "🍑",
-    "🥭",
-    "🍍",
-    "🥥",
-    "🥝",
-    "🍅",
-    "🍆",
-    "🥑",
-    "🥦",
-    "🥬",
-    "🥒",
-    "🌶️",
-    "🫑",
-    "🌽",
-    "🥕",
-    "🫒",
-    "🧄",
-    "🧅",
-    "🥔",
-    "🍠",
-    "🥐",
-    "🥯",
-    "🍞",
-    "🥖",
-    "🥨",
-    "🧀",
-    "🥚",
-    "🍳",
-    "🧈",
-    "🥞",
-    "🧇",
-    "🥓",
-    "🥩",
-    "🍗",
-    "🍖",
-    "🦴",
-    "🌭",
-    "🍔",
-    "🍟",
-    "🍕",
-    "🫓",
-    "🥪",
-    "🥙",
-    "🧆",
-    "🌮",
-    "🌯",
-    "🫔",
-    "🥗",
-    "🥘",
-    "🫕",
-    "🥫",
-    "🍝",
-    "🍜",
-    "🍲",
-    "🍛",
-    "🍣",
-    "🍱",
-    "🥟",
-    "🦪",
-    "🍤",
-    "🍙",
-    "🍚",
-    "🍘",
-    "🍥",
-    "🥠",
-    "🥮",
-    "🍢",
-    "🍡",
-    "🍧",
-    "🍨",
-    "🍦",
-    "🥧",
-    "🧁",
-    "🍰",
-    "🎂",
-    "🍮",
-    "🍭",
-    "🍬",
-    "🍫",
-    "🍿",
-    "🍩",
-    "🍪",
-    "🌰",
-    "🥜",
-    "🍯",
-    "🥛",
-    "🍼",
-    "☕",
-    "🍵",
-    "🧃",
-    "🥤",
-    "🧋",
-    "🍶",
-    "🍺",
-    "🍻",
-    "🥂",
-    "🍷",
-    "🥃",
-    "🍸",
-    "🍹",
-    "🧉",
-    "🍾",
-    "🧊",
-    "🥄",
-    "🍴",
-    "🍽️",
-    "🥣",
-    "🥡",
-    "🥢",
-    "🧂",
-    "⚽",
-    "🏀",
-    "🏈",
-    "⚾",
-    "🥎",
-    "🎾",
-    "🏐",
-    "🏉",
-    "🥏",
-    "🎱",
-    "🪀",
-    "🏓",
-    "🏸",
-    "🏒",
-    "🏑",
-    "🥍",
-    "🏏",
-    "🪃",
-    "🥅",
-    "⛳",
-    "🪁",
-    "🏹",
-    "🎣",
-    "🤿",
-    "🥊",
-    "🥋",
-    "🎽",
-    "🛹",
-    "🛼",
-    "🛷",
-    "⛸️",
-    "🥌",
-    "🎿",
-    "⛷️",
-    "🏂",
-    "🪂",
-    "🏋️",
-    "🤼",
-    "🤸",
-    "⛹️",
-    "🤺",
-    "🤾",
-    "🏌️",
-    "🏇",
-    "🧘",
-    "🏄",
-    "🏊",
-    "🤽",
-    "🚣",
-    "🧗",
-    "🚵",
-    "🚴",
-    "🏆",
-    "🥇",
-    "🥈",
-    "🥉",
-    "🏅",
-    "🎖️",
-    "🏵️",
-    "🎗️",
-    "🎫",
-    "🎟️",
-    "🎪",
-    "🤹",
-    "🎭",
-    "🩰",
-    "🎨",
-    "🎬",
-    "🎤",
-    "🎧",
-    "🎼",
-    "🎹",
-    "🥁",
-    "🪘",
-    "🎷",
-    "🎺",
-    "🪗",
-    "🎸",
-    "🪕",
-    "🎻",
-    "🎲",
-    "♟️",
-    "🎯",
-    "🎳",
-    "🎮",
-    "🎰",
-    "🧩",
   ];
 
   let emojiSpans = "";
@@ -1080,7 +829,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
           contactId: chatData.userProfileResponseDTO.id,
           chatRoomId: chatData.chatDTO.id,
           about: chatData.userProfileResponseDTO.about,
-          image: chatData.userProfileResponseDTO.imagee,
+          image: chatData.userProfileResponseDTO.image,
         }),
         chatData,
       );
@@ -1118,7 +867,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
           contactId: chatData.userProfileResponseDTO.id,
           chatRoomId: chatData.chatDTO.id,
           about: chatData.userProfileResponseDTO.about,
-          image: chatData.userProfileResponseDTO.imagee,
+          image: chatData.userProfileResponseDTO.image,
         }),
         chatData,
       );
@@ -1274,11 +1023,11 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
   messageBox.append(messageBox1);
   main.append(messageBox);
 
+  const footer = createElement("footer", "message-box1-7");
   const divMessageBox1_6 = createElement("div", "message-box1-6", {
     height: "0px",
   });
-  main.append(divMessageBox1_6);
-  const footer = createElement("footer", "message-box1-7");
+  footer.append(divMessageBox1_6);
 
   const span = createElement("span", "");
   main.append(span);
@@ -1298,7 +1047,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
 
   messageBox1_2.addEventListener("scroll", async () => {
     if (messageBox1_2.scrollTop === 0) {
-      // ToDo getOlder30Messages
+      // Yapılacak: Eski 30 mesajı getir
       const visibleFirstMessageData = getFirstMessageDate();
       const older30Messages = new ChatDTO(
         await chatService.getOlder30Messages(
@@ -1550,7 +1299,9 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
   });
   divContenteditable.addEventListener("keydown", handleTextKeyDown);
   divContenteditable.addEventListener("mouseup", updateCaretPosition);
-  divContenteditable.addEventListener("paste", handlePaste);
+  divContenteditable.addEventListener("paste", (event) =>
+    handlePaste(event, textArea, sendButton, typingStatus),
+  );
 
   divContenteditable.addEventListener("blur", () =>
     handleTextBlur(chat, typingStatus, textArea),
@@ -1561,14 +1312,36 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
   if (window.innerWidth > 900) {
     divContenteditable.focus();
   }
-  div1_7_1_1_1_1_1.addEventListener("click", () => {
+  const closePanel = () => {
     const pane = main.querySelector(".message-box1-6");
-    if (pane.innerHTML === "") {
-      // Is closed
-      showEmojiPicker(pane, pane, textArea, sendButton, typingStatus);
-    } else {
+    if (pane) {
       pane.innerHTML = "";
       pane.style.height = "0px";
+    }
+    document.removeEventListener("click", documentClickListener);
+  };
+
+  const documentClickListener = (event) => {
+    const pane = main.querySelector(".message-box1-6");
+    const toggleBtn = div1_7_1_1_1_1_1;
+
+    if (!pane) {
+      document.removeEventListener("click", documentClickListener);
+      return;
+    }
+    if (!pane.contains(event.target) && !toggleBtn.contains(event.target)) {
+      closePanel();
+    }
+  };
+
+  div1_7_1_1_1_1_1.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const pane = main.querySelector(".message-box1-6");
+    if (pane.innerHTML === "") {
+      showEmojiPicker(pane, pane, textArea, sendButton, typingStatus);
+      document.addEventListener("click", documentClickListener);
+    } else {
+      closePanel();
     }
   });
 };
@@ -1586,7 +1359,7 @@ const onlineInfo = async (chat) => {
 
   bindMessageBoxRealtime();
 
-  chatStore.ws.send("/request-status-snapshot", {
+  chatStore.ws.send("request-status-snapshot", {
     targetUserId: chat.userProfileResponseDTO.id,
   });
 };
@@ -1688,9 +1461,8 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
   );
 
   decryptedMessages.forEach((message) => {
-    console.log(message);
     const messageDate = new Date(message.fullDateTime).toDateString();
-    debugger;
+
     if (lastRenderedDate) {
       if (lastRenderedDate !== messageDate) {
         addDateHeader(message.fullDateTime);

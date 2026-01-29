@@ -46,30 +46,6 @@ async function handleChats(chatList = chatStore.chatList) {
   );
   virtualScroll(chatStore.updateItemsDTO, paneSideElement, visibleItemCount);
 }
-// function rerenderVirtualChatList() {
-//   const paneSideElement = document.querySelector("#pane-side");
-//   const chatListContentElement =
-//     paneSideElement.querySelector(".chat-list-content");
-
-//   chatListContentElement.innerHTML = "";
-
-//   chatListContentElement.style.height = chatStore.chatList.length * 72 + "px";
-
-//   const visibleItemCount = calculateVisibleItemCount();
-
-//   for (let i = 0; i < visibleItemCount; i++) {
-//     createChatBox(chatStore.chatList[i], i);
-//   }
-
-//   const updateItemsDTO = new UpdateItemsDTO({
-//     list: chatStore.chatList,
-//     itemsToUpdate: Array.from(document.querySelectorAll(".chat1")),
-//     removeEventListeners,
-//     addEventListeners,
-//   });
-
-//   virtualScroll(updateItemsDTO, paneSideElement, visibleItemCount);
-// }
 const calculateVisibleItemCount = () => {
   const boxElement = document.querySelector(".chats");
   const boxHeight = boxElement.clientHeight;
@@ -239,72 +215,6 @@ function updateChatBox(chat) {
   moveChatToTop(chat.chatDTO.id);
 }
 
-// function moveChatToTop(chatRoomId) {
-//   const chatIndex = chatStore.chatList.findIndex(
-//     (chat) => chat.chatDTO.id === chatRoomId
-//   );
-
-//   if (chatIndex !== -1) {
-//     let chat = null;
-//     if (chatStore.chatList.length !== 1) {
-//       chat = chatStore.chatList.splice(chatIndex, 1)[0];
-//       chatStore.chatList.unshift(chat);
-//     } else {
-//       chat = chatStore.chatList[0];
-//     }
-//     const chatElements = document.querySelectorAll(".chat1");
-//     const chatElement = Array.from(chatElements).find(
-//       (el) => el.chatData.chatDTO.id === chatRoomId
-//     );
-//     if (chatElement) {
-//       const targetChatElement = parseInt(
-//         chatElement.style.transform
-//           .replace("translateY(", "")
-//           .replace("px)", "")
-//       );
-//       if (
-//         chatElement.chatData.chatDTO.messages[0].senderId === chatStore.user.id
-//       ) {
-//         const messageTickElement = chatElement.chatData.chatDTO.messages[0]
-//           .isSeen
-//           ? chatBoxLastMessageDeliveredBlueTick()
-//           : createMessageDeliveredTickElement();
-//         const messageElement = chatElement.querySelector(".message-span");
-//         if (messageElement.childElementCount > 1) {
-//           messageElement.firstElementChild.remove();
-//           messageElement.prepend(messageTickElement);
-//         } else {
-//           messageElement.prepend(messageTickElement);
-//         }
-//       }
-//       chatElement.querySelector(".message-span-span").textContent =
-//         chat.chatDTO.messages[0].decryptedMessage;
-//       chatElement.querySelector(".time").textContent =
-//         chatBoxLastMessageFormatDateTime(chat.chatDTO.messages[0].fullDateTime);
-//       translateYChatsDown(targetChatElement);
-//     } else {
-//       if (isChatListLengthGreaterThanVisibleItemCount()) {
-//         const maxTranslateYChatElement = findMaxTranslateYChatElement();
-//         updateChatBoxElement(maxTranslateYChatElement, chat, 0);
-//       } else {
-//         const chatListContentElement =
-//           document.querySelector(".chat-list-content");
-
-//         const currentHeight = parseInt(
-//           chatListContentElement.style.height || 0,
-//           10
-//         );
-
-//         chatListContentElement.style.height = currentHeight + 72 + "px";
-//         createChatBox(chat, 0);
-//         normalizeTranslateY();
-//         if (chat.chatDTO.messages[0].senderId === chatStore.user.id) {
-//           scrollTop();
-//         }
-//       }
-//     }
-//   }
-// }
 function moveChatToTop(chatRoomId) {
   const chatIndex = chatStore.chatList.findIndex(
     (chat) => chat.chatDTO.id === chatRoomId,

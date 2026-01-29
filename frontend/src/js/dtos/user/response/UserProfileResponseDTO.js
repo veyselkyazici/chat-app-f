@@ -6,7 +6,7 @@ export class UserProfileResponseDTO {
     this.email = data.email;
     this.firstName = data.firstName;
     this.lastName = data.lastName;
-    this.imagee = data.imagee;
+    this.image = data.image;
     this.about = data.about;
     this.privacySettings = new PrivacySettingsResponseDTO(data.privacySettings);
     this.userKey = new UserKeyResponseDTO(data.userKey);

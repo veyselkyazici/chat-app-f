@@ -79,7 +79,7 @@ const addContact = async (addedByUser, emailDOM, nameDOM, successCallback) => {
   };
 
   const addContactRequestDTO = new AddContactRequestDTO(
-    addedByUser.imagee,
+    addedByUser.image,
     name,
     email,
     addedByUser.email

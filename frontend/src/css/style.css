@@ -2118,12 +2118,14 @@ button.chat-options-btn:focus {
 }
 
 .message-box1-6 {
-  flex-basis: auto;
-  flex-shrink: 0;
-  flex-grow: 0;
-  order: 2;
-  position: relative; /* Ensure z-index works */
-  z-index: 1000; /* Bring partially above other elements if needed */
+  position: absolute;
+  bottom: 100%;
+  left: 10px;
+  width: 300px;
+  max-width: calc(100% - 20px);
+  z-index: 1000;
+  height: 0;
+  transition: all 0.3s ease;
 }
 
 .message-box1-7 {
@@ -5565,11 +5567,28 @@ form h1 {
   background-color: #fff; /* Fallback */
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
-  max-height: 320px;
+  max-height: 220px;
+  overflow-y: hidden; /* Don't scroll container */
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto; /* Ensure clicks are registered */
+}
+
+.emoji-grid {
   overflow-y: auto;
+  overflow-x: hidden; /* Remove horizontal scrollbar */
+  flex: 1;
   scrollbar-width: thin;
   scrollbar-color: var(--primary-color) transparent;
-  pointer-events: auto; /* Ensure clicks are registered */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  gap: 8px;
+  justify-items: center;
+  padding-right: 4px; /* Prevent scrollbar overlapping content */
+}
+
+.emoji-grid::-webkit-scrollbar {
+  width: 6px;
 }
 
 .emoji-picker-container::-webkit-scrollbar {
@@ -5592,20 +5611,12 @@ form h1 {
   margin-bottom: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  position: sticky;
-  top: 0;
-  background: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
   padding: 5px 0;
   z-index: 10;
-  backdrop-filter: blur(4px);
 }
 
-.emoji-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
-  gap: 8px;
-  justify-items: center;
-}
+
 
 .emoji-item {
   font-size: 1.5rem;

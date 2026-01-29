@@ -59,7 +59,7 @@ export default class extends AbstractView {
               class="toggle-visibility"
               tabindex="-1"
               aria-label="Show password"
-              data-target="loginPassword" // Changed to loginPassword, was targeting registerPassword in original? No, looking at original code...
+              data-target="loginPassword"
             >
               <i class="fa-solid fa-eye"></i>
             </button>

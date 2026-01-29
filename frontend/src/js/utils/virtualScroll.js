@@ -122,22 +122,22 @@ export class UpdateItemsDTO {
 
 function chatsVirtualScroll(item, listItem, newIndex) {
   const profileImage = item.querySelector(".image");
-  const profileImageElement = createVisibilityProfilePhoto(
+  const profileimagelement = createVisibilityProfilePhoto(
     listItem.userProfileResponseDTO,
     listItem.contactsDTO
   );
   if (profileImage.firstElementChild.className === "svg-div") {
-    if (profileImageElement.className !== "svg-div") {
+    if (profileimagelement.className !== "svg-div") {
       profileImage.firstElementChild.remove();
-      profileImage.append(profileImageElement);
+      profileImage.append(profileimagelement);
     }
   } else {
-    if (profileImageElement.className === "svg-div") {
+    if (profileimagelement.className === "svg-div") {
       profileImage.firstElementChild.remove();
-      profileImage.append(profileImageElement);
+      profileImage.append(profileimagelement);
     } else {
-      profileImageElement.firstElementChild.src =
-        listItem.userProfileResponseDTO.imagee;
+      profileimagelement.src =
+        listItem.userProfileResponseDTO.image;
     }
   }
   item.dataset.chatId = listItem.chatDTO.id;
@@ -177,22 +177,22 @@ function chatsVirtualScroll(item, listItem, newIndex) {
 function contactsVirtualScroll(item, listItem) {
   const nameSpan = item.querySelector(".name-span");
   const profileImage = item.querySelector(".image");
-  const profileImageElement = createVisibilityProfilePhoto(
+  const profileimagelement = createVisibilityProfilePhoto(
     listItem.userProfileResponseDTO,
     listItem.contactsDTO
   );
   if (profileImage.firstElementChild.className === "svg-div") {
-    if (profileImageElement.className !== "svg-div") {
+    if (profileimagelement.className !== "svg-div") {
       profileImage.firstElementChild.remove();
-      profileImage.append(profileImageElement);
+      profileImage.append(profileimagelement);
     }
   } else {
-    if (profileImageElement.className === "svg-div") {
+    if (profileimagelement.className === "svg-div") {
       profileImage.firstElementChild.remove();
-      profileImage.append(profileImageElement);
+      profileImage.append(profileimagelement);
     } else {
-      profileImageElement.firstElementChild.src =
-        listItem.userProfileResponseDTO.imagee;
+      profileimagelement.firstElementChild.src =
+        listItem.userProfileResponseDTO.image;
     }
   }
   item.dataset.contactId = listItem.contactsDTO.id;

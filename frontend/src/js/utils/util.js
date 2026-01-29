@@ -43,7 +43,6 @@ function handleErrorCode(code, targetSelector = null, i18n) {
     503: i18n.t("errors.status503"),
     504: i18n.t("errors.status504"),
 
-
     3008: i18n.t("errors.status3008"),
     9999: i18n.t("errors.unexpectedError"),
   };
@@ -100,7 +99,7 @@ const createElement = (
   styles = {},
   attributes = {},
   textContent,
-  clickHandler
+  clickHandler,
 ) => {
   const element = document.createElement(elementType);
   element.className = className;
@@ -123,7 +122,7 @@ const createElement = (
 const createSvgElement = (elementType, attributes = {}) => {
   const element = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    elementType
+    elementType,
   );
   for (let key in attributes) {
     element.setAttribute(key, attributes[key]);
@@ -138,21 +137,20 @@ const createVisibilityProfilePhoto = (userProfileResponseDTO, contacts) => {
       (contacts.relatedUserHasAddedUser &&
         userProfileResponseDTO.privacySettings.profilePhotoVisibility ===
           "MY_CONTACTS")) &&
-    userProfileResponseDTO.imagee
+    userProfileResponseDTO.image
   ) {
-    return createProfileImage(userProfileResponseDTO);
+    return createProfileImage(userProfileResponseDTO.image);
   } else {
     return createDefaultImage();
   }
 };
-function createProfileImage(userProfileResponseDTO) {
+function createProfileImage(url) {
   const imgElement = createElement(
     "img",
     "user-image",
     {},
-    { alt: "", draggable: "false", tabindex: "-1" }
+    { alt: "", draggable: "false", tabindex: "-1", src: url },
   );
-  imgElement.src = userProfileResponseDTO.imagee;
   return imgElement;
 }
 function createDefaultImage() {
@@ -162,7 +160,7 @@ function createDefaultImage() {
     "span",
     "",
     {},
-    { "aria-hidden": "true", "data-icon": "default-user" }
+    { "aria-hidden": "true", "data-icon": "default-user" },
   );
   const svgElement = createSvgElement("svg", {
     class: "svg-element",
@@ -293,12 +291,12 @@ function backButton(removeElement, clickHandler) {
     { role: "button", "aria-label": "Geri", tabIndex: "0" },
     null,
     () => {
-        if (clickHandler) {
-            clickHandler(removeElement);
-        } else {
-            handleBackBtnClick(removeElement);
-        }
-    }
+      if (clickHandler) {
+        clickHandler(removeElement);
+      } else {
+        handleBackBtnClick(removeElement);
+      }
+    },
   );
 
   const spanBackIcon = document.createElement("span", "", null, {
@@ -316,12 +314,12 @@ function backButton(removeElement, clickHandler) {
 
   const pathBack = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "path"
+    "path",
   );
   pathBack.setAttribute("fill", "currentColor");
   pathBack.setAttribute(
     "d",
-    "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z"
+    "M 12 4 l 1.4 1.4 L 7.8 11 H 20 v 2 H 7.8 l 5.6 5.6 L 12 20 l -8 -8 L 12 4 Z",
   );
 
   svgBack.append(titleBack);
@@ -357,7 +355,7 @@ async function getRecaptchaToken(actionValue) {
       "6Ld9XMgrAAAAALex7svxEKzI4wbni9P3WQOBfxTa",
       {
         action: actionValue,
-      }
+      },
     );
     return token;
   } catch (error) {

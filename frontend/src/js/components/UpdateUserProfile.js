@@ -24,7 +24,7 @@ async function userUpdateModal(user, bool) {
     null,
     {
       role: "button",
-    }
+    },
   );
   const spinner = createElement("span", "spinner hidden");
   profilePhotoButton.id = "profilePhotoInput";
@@ -35,12 +35,12 @@ async function userUpdateModal(user, bool) {
     null,
     {
       role: "img",
-    }
+    },
   );
 
   const profilePhotoButtonDivDiv = createElement(
     "div",
-    "profile-photo-button-div-div"
+    "profile-photo-button-div-div",
   );
 
   const inputFile = createElement(
@@ -52,10 +52,10 @@ async function userUpdateModal(user, bool) {
       id: "imageInput",
       accept: "image/png, image/jpeg, image/jpg",
     },
-    ""
+    "",
   );
   updateProfileForm.append(inputFile);
-  if (user.imagee) {
+  if (user.image) {
     const profilePhotoUrlElement = createElement("div", "image", {
       height: "128px",
       width: "128px",
@@ -70,7 +70,7 @@ async function userUpdateModal(user, bool) {
     });
     imgElement.id = "profilePhoto";
     imgElement.setAttribute("alt", "Profile photo");
-    imgElement.setAttribute("src", user.imagee);
+    imgElement.setAttribute("src", user.image);
     profilePhotoUrlElement.append(imgElement);
     profilePhotoButtonDivDiv.append(profilePhotoUrlElement);
     profilePhotoButtonDiv.append(profilePhotoButtonDivDiv);
@@ -98,7 +98,7 @@ async function userUpdateModal(user, bool) {
     null,
     { id: "editButtonName" },
     "✎",
-    () => toggleEditName(user)
+    () => toggleEditName(user),
   );
   const errorMessageElement = createElement("div", "error-message");
 
@@ -123,7 +123,7 @@ async function userUpdateModal(user, bool) {
     null,
     { id: "editButtonAbout" },
     "✎",
-    toggleEditAbout
+    toggleEditAbout,
   );
   const aboutErrorMessageElement = createElement("div", "error-message");
 
@@ -163,7 +163,7 @@ async function userUpdateModal(user, bool) {
   }
 
   profilePhotoButton.addEventListener("click", (event) =>
-    toggleOptions(event, user.imagee)
+    toggleOptions(event, user.image),
   );
   inputFile.addEventListener("change", (event) => uploadPhoto(event, user.id));
 }
@@ -203,7 +203,7 @@ async function toggleEditName(user) {
         const response = await userService.updateUserName(updateUserDTO);
         webSocketService.ws.send("updated-user-profile-send-message", {
           userId: chatStore.user.id,
-          url: chatStore.user.imagee,
+          url: chatStore.user.image,
           about: chatStore.user.about,
           firstName: response.data.value,
         });
@@ -235,13 +235,13 @@ async function toggleEditAbout() {
         const response = await userService.updateUserAbout(updateUserDTO);
         webSocketService.ws.send("updated-user-profile-send-message", {
           userId: chatStore.user.id,
-          url: chatStore.user.imagee,
+          url: chatStore.user.image,
           about: response.data.value,
           firstName: chatStore.user.firstName,
         });
         chatStore.user.about = response.data.value;
         const settingsAbout = document.querySelector(
-          ".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1"
+          ".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1",
         );
         if (settingsAbout) {
           settingsAbout.textContent = response.data.value;
@@ -260,7 +260,7 @@ const toggleOptions = (event, image) => {
   const content = document.querySelector(".content");
 
   const spans = Array.from(content.children).filter(
-    (el) => el.tagName.toLowerCase() === "span"
+    (el) => el.tagName.toLowerCase() === "span",
   );
 
   const optionsSpan = spans[1];
@@ -288,7 +288,7 @@ const toggleOptions = (event, image) => {
         {},
         { tabIndex: "0" },
         i18n.t("updateUserProfile.viewProfilePhoto"),
-        () => viewPhoto(image)
+        () => viewPhoto(image),
       );
 
       uploadPhotoOption = createElement(
@@ -296,7 +296,7 @@ const toggleOptions = (event, image) => {
         "",
         {},
         { tabIndex: "0" },
-        i18n.t("updateUserProfile.uploadProfilePhoto")
+        i18n.t("updateUserProfile.uploadProfilePhoto"),
       );
 
       const removePhotoOption = createElement(
@@ -305,7 +305,7 @@ const toggleOptions = (event, image) => {
         {},
         { tabIndex: "0" },
         i18n.t("updateUserProfile.removeProfilePhoto"),
-        () => removePhoto(image)
+        () => removePhoto(image),
       );
 
       photoOptions.append(viewPhotoOption);
@@ -320,7 +320,7 @@ const toggleOptions = (event, image) => {
         "",
         {},
         { tabIndex: "0" },
-        i18n.t("updateUserProfile.uploadProfilePhoto")
+        i18n.t("updateUserProfile.uploadProfilePhoto"),
       );
 
       photoOptions.append(uploadPhotoOption);
@@ -346,15 +346,15 @@ const viewPhoto = (image) => {
       "transform 500ms cubic-bezier(0.1, 0.82, 0.25, 1), border-radius 500ms cubic-bezier(0.1, 0.82, 0.25, 1)",
     "border - radius": "0 % ",
   });
-  const imageElement = createElement(
+  const imagelement = createElement(
     "img",
     "view-user-image",
     {},
-    { alt: "", draggable: "false", tabindex: "-1" }
+    { alt: "", draggable: "false", tabindex: "-1" },
   );
-  imageElement.src = image;
+  imagelement.src = image;
 
-  viewPhotoChildElement.append(imageElement);
+  viewPhotoChildElement.append(imagelement);
   viewPhotoElement.append(viewPhotoChildElement);
   new Modal({
     title: "",
@@ -406,7 +406,7 @@ function uploadPhoto(event, userId) {
           "warning-text",
           {},
           {},
-          i18n.t("updateUserProfile.warningMessage")
+          i18n.t("updateUserProfile.warningMessage"),
         );
 
         new Modal({
@@ -444,16 +444,16 @@ function uploadPhoto(event, userId) {
       const deneme7 = createElement("div", "deneme7");
       const uploadPhotoModalContent = createElement(
         "div",
-        "upload-photo-modal-content"
+        "upload-photo-modal-content",
       );
       const uploadPhotoModalContentZoom = createElement(
         "div",
-        "upload-photo-modal-content-zoom"
+        "upload-photo-modal-content-zoom",
       );
 
       const uploadPhotoModalContentZoom1 = createElement(
         "div",
-        "upload-photo-modal-content-zoom1"
+        "upload-photo-modal-content-zoom1",
       );
       uploadPhotoModalContentZoom.append(uploadPhotoModalContentZoom1);
 
@@ -461,14 +461,14 @@ function uploadPhoto(event, userId) {
         "button",
         "upload-photo-modal-content-zoom2",
         {},
-        { tabIndex: "0", type: "button" }
+        { tabIndex: "0", type: "button" },
       );
       uploadPhotoModalContentZoom.append(uploadPhotoModalContentZoom2);
       const uploadPhotoModalContentZoom2_span = createElement(
         "span",
         "",
         {},
-        { "aria-hidden": "true", "data-icon": "plus" }
+        { "aria-hidden": "true", "data-icon": "plus" },
       );
 
       const uploadPhotoModalContentZoom2_span_svg = createSvgElement("svg", {
@@ -483,30 +483,30 @@ function uploadPhoto(event, userId) {
       uploadPhotoModalContentZoom2_span_svg_title.textContent = "plus";
       const uploadPhotoModalContentZoom2_span_svg_path = createSvgElement(
         "path",
-        { fill: "currentColor", d: "M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z" }
+        { fill: "currentColor", d: "M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z" },
       );
       uploadPhotoModalContentZoom2_span_svg.append(
-        uploadPhotoModalContentZoom2_span_svg_title
+        uploadPhotoModalContentZoom2_span_svg_title,
       );
       uploadPhotoModalContentZoom2_span_svg.append(
-        uploadPhotoModalContentZoom2_span_svg_path
+        uploadPhotoModalContentZoom2_span_svg_path,
       );
       uploadPhotoModalContentZoom2_span.append(
-        uploadPhotoModalContentZoom2_span_svg
+        uploadPhotoModalContentZoom2_span_svg,
       );
       uploadPhotoModalContentZoom2.append(uploadPhotoModalContentZoom2_span);
 
       const uploadPhotoModalContentZoom3 = createElement(
         "button",
         "upload-photo-modal-content-zoom3",
-        { tabIndex: "0", type: "button" }
+        { tabIndex: "0", type: "button" },
       );
       uploadPhotoModalContentZoom.append(uploadPhotoModalContentZoom3);
       const uploadPhotoModalContentZoom3_span = createElement(
         "span",
         "",
         {},
-        { "aria-hidden": "true", "data-icon": "minus" }
+        { "aria-hidden": "true", "data-icon": "minus" },
       );
 
       const uploadPhotoModalContentZoom3_span_svg = createSvgElement("svg", {
@@ -528,28 +528,28 @@ function uploadPhoto(event, userId) {
         {
           fill: "currentColor",
           d: "M8.381,14.803v-1.605h11.237v1.605C19.618,14.803,8.381,14.803,8.381,14.803z",
-        }
+        },
       );
       uploadPhotoModalContentZoom3_span_svg.append(
-        uploadPhotoModalContentZoom3_span_svg_title
+        uploadPhotoModalContentZoom3_span_svg_title,
       );
       uploadPhotoModalContentZoom3_span_svg.append(
-        uploadPhotoModalContentZoom3_span_svg_path
+        uploadPhotoModalContentZoom3_span_svg_path,
       );
       uploadPhotoModalContentZoom3_span.append(
-        uploadPhotoModalContentZoom3_span_svg
+        uploadPhotoModalContentZoom3_span_svg,
       );
       uploadPhotoModalContentZoom3.append(uploadPhotoModalContentZoom3_span);
       uploadPhotoModalContent.append(uploadPhotoModalContentZoom);
 
       const uploadPhotoModalContent_1 = createElement(
         "div",
-        "upload-photo-modal-content-1"
+        "upload-photo-modal-content-1",
       );
       const uploadPhotoModalContent_1_1 = createElement("span", "");
       const uploadPhotoModalContent_1_1_1 = createElement(
         "div",
-        "upload-photo-modal-content-1-1-1"
+        "upload-photo-modal-content-1-1-1",
       );
       const uploadPhotoModalContent_1_1_1_1 = createElement(
         "div",
@@ -560,15 +560,15 @@ function uploadPhoto(event, userId) {
           height: `${parentHeight}px`,
           top: "0px",
           left: "-3.4626px",
-        }
+        },
       );
       const uploadPhotoModalContent_1_1_1_1_1 = createElement(
         "div",
-        "upload-photo-modal-content-1-1-1-1-1"
+        "upload-photo-modal-content-1-1-1-1-1",
       );
       const uploadPhotoModalContent_1_1_1_1_1_1 = createElement(
         "div",
-        "upload-photo-modal-content-1-1-1-1-1-1"
+        "upload-photo-modal-content-1-1-1-1-1-1",
       );
       const uploadPhotoModalContent_1_1_1_1_1_1_1 = createElement(
         "div",
@@ -579,17 +579,17 @@ function uploadPhoto(event, userId) {
           height: `${height}px`,
           top: `${top}px`,
           left: `${left}px`,
-        }
+        },
       );
       const canvas1 = createElement("canvas", "canvas-1", { display: "block" });
       const canvas2 = createElement("canvas", "canvas-2");
       uploadPhotoModalContent_1_1_1_1_1_1_1.append(canvas1);
       uploadPhotoModalContent_1_1_1_1_1_1_1.append(canvas2);
       uploadPhotoModalContent_1_1_1_1_1_1.append(
-        uploadPhotoModalContent_1_1_1_1_1_1_1
+        uploadPhotoModalContent_1_1_1_1_1_1_1,
       );
       uploadPhotoModalContent_1_1_1_1_1.append(
-        uploadPhotoModalContent_1_1_1_1_1_1
+        uploadPhotoModalContent_1_1_1_1_1_1,
       );
       uploadPhotoModalContent_1_1_1_1.append(uploadPhotoModalContent_1_1_1_1_1);
       uploadPhotoModalContent_1_1_1.append(uploadPhotoModalContent_1_1_1_1);
@@ -599,7 +599,6 @@ function uploadPhoto(event, userId) {
       deneme7.append(uploadPhotoModalContent);
       deneme6.append(deneme7);
       deneme5.append(deneme6);
-
 
       uploadPhotoModalContentZoom2.addEventListener("click", () => {
         zoomImage(1.1, canvas1);
@@ -611,7 +610,7 @@ function uploadPhoto(event, userId) {
 
       canvas1.addEventListener("wheel", (e) => {
         e.preventDefault();
-        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9; 
+        const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
         zoomImage(zoomFactor, canvas1);
       });
       const uploadPhotoHeader = createElement("div", "upload-photo-header");
@@ -620,7 +619,7 @@ function uploadPhoto(event, userId) {
         "div",
         "close-button-1",
         null,
-        { ariaLabel: "Kapat", tabIndex: "0", role: "button" }
+        { ariaLabel: "Kapat", tabIndex: "0", role: "button" },
       );
       const uploadPhotoSpan = createElement("span", "", null, {
         "data-icon": "x",
@@ -629,7 +628,7 @@ function uploadPhoto(event, userId) {
 
       const uploadPhotoCloseSvg = document.createElementNS(
         "http://www.w3.org/2000/svg",
-        "svg"
+        "svg",
       );
       uploadPhotoCloseSvg.setAttribute("viewBox", "0 0 24 24");
       uploadPhotoCloseSvg.setAttribute("height", "24");
@@ -640,25 +639,25 @@ function uploadPhoto(event, userId) {
 
       const uploadPhotoClosePath = document.createElementNS(
         "http://www.w3.org/2000/svg",
-        "path"
+        "path",
       );
       uploadPhotoClosePath.setAttribute(
         "d",
-        "M19.6004 17.2L14.3004 11.9L19.6004 6.60005L17.8004 4.80005L12.5004 10.2L7.20039 4.90005L5.40039 6.60005L10.7004 11.9L5.40039 17.2L7.20039 19L12.5004 13.7L17.8004 19L19.6004 17.2Z"
+        "M19.6004 17.2L14.3004 11.9L19.6004 6.60005L17.8004 4.80005L12.5004 10.2L7.20039 4.90005L5.40039 6.60005L10.7004 11.9L5.40039 17.2L7.20039 19L12.5004 13.7L17.8004 19L19.6004 17.2Z",
       );
 
       const uploadPhotoTitle = createElement(
         "div",
         "upload-photo-title",
         null,
-        { title: "Ayarlamak için resmi sürükleyin" }
+        { title: "Ayarlamak için resmi sürükleyin" },
       );
       const uploadPhotoH1 = createElement(
         "div",
         "upload-photo-h1",
         null,
         null,
-        "Ayarlamak için resmi sürükleyin"
+        "Ayarlamak için resmi sürükleyin",
       );
 
       uploadPhotoTitle.append(uploadPhotoH1);
@@ -729,7 +728,7 @@ function drawImage(canvas1) {
     circleRadius,
     0,
     Math.PI * 2,
-    true
+    true,
   );
   ctx.fill("evenodd");
   ctx.restore();
@@ -789,7 +788,7 @@ async function cropImage(canvas1, userId, originalFile) {
     0,
     0,
     cropSize,
-    cropSize
+    cropSize,
   );
   const originalFileName = originalFile.name;
 
@@ -802,7 +801,7 @@ async function cropImage(canvas1, userId, originalFile) {
       const response = await userService.uploadPhoto(formData, userId);
       if (response.success) {
         const profilePhotoButton = document.querySelector(
-          ".profile-photo-button"
+          ".profile-photo-button",
         );
         profilePhotoButton.firstElementChild.remove();
 
@@ -812,12 +811,12 @@ async function cropImage(canvas1, userId, originalFile) {
           null,
           {
             role: "img",
-          }
+          },
         );
 
         const profilePhotoButtonDivDiv = createElement(
           "div",
-          "profile-photo-button-div-div"
+          "profile-photo-button-div-div",
         );
 
         const profilePhotoUrlElement = createElement("div", "image", {
@@ -840,10 +839,10 @@ async function cropImage(canvas1, userId, originalFile) {
         profilePhotoButtonDiv.append(profilePhotoButtonDivDiv);
         profilePhotoButton.append(profilePhotoButtonDiv);
 
-        chatStore.user.imagee = response.data.url;
-        const image = createProfileImage({ imagee: response.data.url });
+        chatStore.user.image = response.data.url;
+        const image = createProfileImage(response.data.url);
         const userProfilePhotoElement = document.querySelector(
-          ".user-profile-photo"
+          ".user-profile-photo",
         );
         userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
         userProfilePhotoElement.append(image);
@@ -852,7 +851,7 @@ async function cropImage(canvas1, userId, originalFile) {
           email: chatStore.user.email,
           firstName: chatStore.user.firstName,
           lastName: chatStore.user.lastName,
-          imagee: chatStore.user.imagee,
+          image: chatStore.user.image,
           about: chatStore.user.about,
           updatedAt: new Date().toISOString(),
           privacySettings: chatStore.user.privacySettings,
@@ -907,10 +906,10 @@ async function removePhoto() {
       photoElement.innerHTML = "";
       photoElement.append(createDefaultImage());
       userProfilePhotoElement.append(createDefaultImage());
-      chatStore.user.imagee = null;
+      chatStore.user.image = null;
       webSocketService.ws.send("updated-user-profile-send-message", {
         userId: chatStore.user.id,
-        url: chatStore.user.imagee,
+        url: chatStore.user.image,
         about: chatStore.user.about,
         firstName: chatStore.user.firstName,
       });
