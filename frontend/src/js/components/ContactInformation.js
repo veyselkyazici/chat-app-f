@@ -54,7 +54,9 @@ function createContactInformation(contact, chatData) {
   overflow-y: hidden;
   box-sizing: border-box;
   flex-shrink: 0;
+  border-inline-start-width: 1px;
   border-inline-start-style: solid;
+  border-inline-start-color: rgba(0, 0, 0, .1);
   position: relative;
   flex-grow: 0;
   animation-fill-mode: forwards;
@@ -71,22 +73,22 @@ function createContactInformation(contact, chatData) {
   const profileSpanDivSpan = createElement("span", "profile-span-div-span");
   const profileSpanDivSpanDiv = createElement(
     "div",
-    "profile-span-div-span-div"
+    "profile-span-div-span-div",
   );
   const profileSpanDivSpanDivHeader = createElement(
     "header",
-    "profile-span-div-span-div-header"
+    "profile-span-div-span-div-header",
   );
   const profileSpanDivSpanDivHeaderDiv = createElement(
     "div",
-    "profile-span-div-span-div-header-div"
+    "profile-span-div-span-div-header-div",
   );
   const profileCloseDiv = createElement("div", "profile-close");
   const profileCloseDivButton = createElement(
     "div",
     "profile-close-button",
     null,
-    { role: "button", tabindex: "0", ariaLabel: "Kapat" }
+    { role: "button", tabindex: "0", ariaLabel: "Kapat" },
   );
   const profileCloseDivButtonSpan = createElement("span", "", null, {
     "data-icon": "x",
@@ -95,19 +97,19 @@ function createContactInformation(contact, chatData) {
 
   const profileCloseDivButtonSpanSvg = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "svg"
+    "svg",
   );
   profileCloseDivButtonSpanSvg.setAttribute("viewBox", "0 0 24 24");
   profileCloseDivButtonSpanSvg.setAttribute("height", "24");
   profileCloseDivButtonSpanSvg.setAttribute("width", "24");
   profileCloseDivButtonSpanSvg.setAttribute(
     "preserveAspectRatio",
-    "xMidYMid meet"
+    "xMidYMid meet",
   );
   profileCloseDivButtonSpanSvg.setAttribute("class", "");
   profileCloseDivButtonSpanSvg.setAttribute(
     "enable-background",
-    "new 0 0 24 24"
+    "new 0 0 24 24",
   );
 
   const profileCloseDivButtonSpanSvgTitle = createElement(
@@ -115,17 +117,17 @@ function createContactInformation(contact, chatData) {
     "",
     null,
     null,
-    "x"
+    "x",
   );
 
   const profileCloseDivButtonSpanSvgPath = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "path"
+    "path",
   );
   profileCloseDivButtonSpanSvgPath.setAttribute("fill", "currentColor");
   profileCloseDivButtonSpanSvgPath.setAttribute(
     "d",
-    "M 19.6004 17.2 L 14.3004 11.9 L 19.6004 6.60005 L 17.8004 4.80005 L 12.5004 10.2 L 7.20039 4.90005 L 5.40039 6.60005 L 10.7004 11.9 L 5.40039 17.2 L 7.20039 19 L 12.5004 13.7 L 17.8004 19 L 19.6004 17.2 Z"
+    "M 19.6004 17.2 L 14.3004 11.9 L 19.6004 6.60005 L 17.8004 4.80005 L 12.5004 10.2 L 7.20039 4.90005 L 5.40039 6.60005 L 10.7004 11.9 L 5.40039 17.2 L 7.20039 19 L 12.5004 13.7 L 17.8004 19 L 19.6004 17.2 Z",
   );
 
   profileCloseDivButtonSpanSvg.append(profileCloseDivButtonSpanSvgTitle);
@@ -139,17 +141,17 @@ function createContactInformation(contact, chatData) {
     "div",
     "profile-span-div-span-div-header-div-div2",
     null,
-    { title: i18n.t("contactInformation.contactInformation") }
+    { title: i18n.t("contactInformation.contactInformation") },
   );
   const profileSpanDivSpanDivHeaderDivDiv2H1 = createElement(
-    "h1",
+    "span",
     "profile-span-div-span-div-header-div-div2-h1",
     null,
     null,
-    i18n.t("contactInformation.contactInformation")
+    i18n.t("contactInformation.contactInformation"),
   );
   profileSpanDivSpanDivHeaderDivDiv2.append(
-    profileSpanDivSpanDivHeaderDivDiv2H1
+    profileSpanDivSpanDivHeaderDivDiv2H1,
   );
   profileSpanDivSpanDivHeaderDiv.append(profileSpanDivSpanDivHeaderDivDiv2);
   profileSpanDivSpanDivHeader.append(profileSpanDivSpanDivHeaderDiv);
@@ -159,7 +161,7 @@ function createContactInformation(contact, chatData) {
 
   const profileSpanDivSpanDivDiv = createElement(
     "div",
-    "profile-span-div-span-div-div"
+    "profile-span-div-span-div-div",
   );
   const profileSection = createElement("section", "profile-section");
 
@@ -170,26 +172,26 @@ function createContactInformation(contact, chatData) {
     "div",
     "profile-section-photo-button",
     { height: "200px", width: "200px", cursor: "pointer" },
-    { role: "button" }
+    { role: "button" },
   );
   if (contact.image) {
     const profileSectionPhotoButtonImg = createElement(
       "img",
       "profile-section-photo-button-img",
       { visibility: "visible" },
-      { alt: "", draggable: "false", tabindex: "-1" }
+      { alt: "", draggable: "false", tabindex: "-1" },
     );
     profileSectionPhotoButtonImg.src = contact.image;
     profileSectionPhotoButton.append(profileSectionPhotoButtonImg);
     profileSectionPhotoButton.addEventListener("click", () =>
-      viewPhoto(contact.image)
+      viewPhoto(contact.image),
     );
   } else {
     const profileSectionPhotoButtonImg = createElement(
       "img",
       "profile-section-photo-button-img",
       { visibility: "visible" },
-      { alt: "", draggable: "false", tabindex: "-1" }
+      { alt: "", draggable: "false", tabindex: "-1" },
     );
     profileSectionPhotoButton.append(createDefaultImage());
   }
@@ -199,22 +201,22 @@ function createContactInformation(contact, chatData) {
 
   const profileSectionEmailAndContactName = createElement(
     "div",
-    "profile-section-email-and-contact-name"
+    "profile-section-email-and-contact-name",
   );
   const profileSectionContactName = createElement(
     "h2",
-    "profile-section-contact-name"
+    "profile-section-contact-name",
   );
   const profileSectionContactNameDiv = createElement(
     "div",
-    "profile-section-contact-name-div"
+    "profile-section-contact-name-div",
   );
   const profileSectionContactNameDivSpan = createElement(
     "span",
     "profile-section-contact-name-div-span",
     { minHeight: "0px" },
     null,
-    contact.name
+    contact.name,
   );
 
   profileSectionContactNameDiv.append(profileSectionContactNameDivSpan);
@@ -225,14 +227,14 @@ function createContactInformation(contact, chatData) {
     "span",
     "profile-section-email-span",
     null,
-    { dir: "auto" }
+    { dir: "auto" },
   );
   const profileSectionEmailSpanSpan = createElement(
     "span",
     "profile-section-email-span-span",
     null,
     null,
-    contact.email
+    contact.email,
   );
 
   profileSectionEmailSpan.append(profileSectionEmailSpanSpan);
@@ -247,34 +249,34 @@ function createContactInformation(contact, chatData) {
   const profileSectionDivAbout = createElement("div", "section-about");
   const profileSectionDivAboutDiv = createElement(
     "div",
-    "profile-section-about-div"
+    "profile-section-about-div",
   );
   const profileSectionDivAboutDivDiv = createElement(
     "div",
-    "profile-section-about-div-div"
+    "profile-section-about-div-div",
   );
   const profileSectionDivAboutDivDivDiv = createElement(
     "div",
-    "profile-section-about-div-div-div"
+    "profile-section-about-div-div-div",
   );
   const profileSectionDivAboutDivDivDivSpan = createElement(
     "span",
     "profile-section-about-div-div-div-span",
     null,
     null,
-    i18n.t("updateUserProfile.about")
+    i18n.t("updateUserProfile.about"),
   );
 
   const profileSectionDivAboutSpan = createElement(
     "span",
-    "profile-section-about-span"
+    "profile-section-about-span",
   );
   const profileSectionDivAboutSpanSpan = createElement(
     "span",
     "profile-section-about-span-span",
     { minHeight: "0px" },
     { dir: "auto", title: `${contact.about}` },
-    contact.about
+    contact.about,
   );
   profileSectionDivAboutDivDivDiv.append(profileSectionDivAboutDivDivDivSpan);
   profileSectionDivAboutDivDiv.append(profileSectionDivAboutDivDivDiv);
@@ -299,7 +301,7 @@ function createContactInformation(contact, chatData) {
   });
   const blockSvg = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "svg"
+    "svg",
   );
   blockSvg.setAttribute("viewBox", "0 0 24 24");
   blockSvg.setAttribute("height", "24");
@@ -310,13 +312,13 @@ function createContactInformation(contact, chatData) {
 
   const blockPath = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "path"
+    "path",
   );
   blockPath.setAttribute("fill", "currentColor");
   blockPath.style.fillOpacity = "1";
   blockPath.setAttribute(
     "d",
-    "M 12 2.3 C 6.7 2.3 2.3 6.6 2.3 12 C 2.3 17.4 6.6 21.7 12 21.7 C 17.4 21.7 21.7 17.4 21.7 12 C 21.7 6.6 17.3 2.3 12 2.3 Z M 4.7 12 C 4.7 8 8 4.7 12 4.7 C 13.6 4.7 15.1 5.2 16.3 6.1 L 6.1 16.3 C 5.2 15.1 4.7 13.6 4.7 12 Z M 12 19.3 C 10.4 19.3 9 18.8 7.8 17.9 L 17.9 7.8 C 18.8 9 19.3 10.4 19.3 12 C 19.3 16 16 19.3 12 19.3 Z"
+    "M 12 2.3 C 6.7 2.3 2.3 6.6 2.3 12 C 2.3 17.4 6.6 21.7 12 21.7 C 17.4 21.7 21.7 17.4 21.7 12 C 21.7 6.6 17.3 2.3 12 2.3 Z M 4.7 12 C 4.7 8 8 4.7 12 4.7 C 13.6 4.7 15.1 5.2 16.3 6.1 L 6.1 16.3 C 5.2 15.1 4.7 13.6 4.7 12 Z M 12 19.3 C 10.4 19.3 9 18.8 7.8 17.9 L 17.9 7.8 C 18.8 9 19.3 10.4 19.3 12 C 19.3 16 16 19.3 12 19.3 Z",
   );
 
   blockSvg.append(blockTitle);
@@ -333,7 +335,7 @@ function createContactInformation(contact, chatData) {
     "block-text-span",
     { minHeight: "0px" },
     { dir: "auto" },
-    `${contact.name} `
+    `${contact.name} `,
   );
 
   blockTextDiv2.append(blockTextSpan);
@@ -341,7 +343,7 @@ function createContactInformation(contact, chatData) {
     blockTextDiv2,
     chatData.userChatSettingsDTO.isBlocked
       ? i18n.t("contactInformation.unBlock")
-      : i18n.t("contactInformation.block")
+      : i18n.t("contactInformation.block"),
   );
   blockTextDivDiv.append(blockTextDivDivSpan);
   blockTextDiv.append(blockTextDivDiv);
@@ -365,7 +367,7 @@ function createContactInformation(contact, chatData) {
   });
   const deleteChatSvg = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "svg"
+    "svg",
   );
   deleteChatSvg.setAttribute("viewBox", "0 0 24 25");
   deleteChatSvg.setAttribute("height", "25");
@@ -376,12 +378,12 @@ function createContactInformation(contact, chatData) {
 
   const deleteChatPath = document.createElementNS(
     "http://www.w3.org/2000/svg",
-    "path"
+    "path",
   );
   deleteChatPath.setAttribute("fill", "currentColor");
   deleteChatPath.setAttribute(
     "d",
-    "M 7 21.5 C 6.45 21.5 5.97917 21.3042 5.5875 20.9125 C 5.19583 20.5208 5 20.05 5 19.5 V 6.5 C 4.71667 6.5 4.47917 6.40417 4.2875 6.2125 C 4.09583 6.02083 4 5.78333 4 5.5 C 4 5.21667 4.09583 4.97917 4.2875 4.7875 C 4.47917 4.59583 4.71667 4.5 5 4.5 H 9 C 9 4.21667 9.09583 3.97917 9.2875 3.7875 C 9.47917 3.59583 9.71667 3.5 10 3.5 H 14 C 14.2833 3.5 14.5208 3.59583 14.7125 3.7875 C 14.9042 3.97917 15 4.21667 15 4.5 H 19 C 19.2833 4.5 19.5208 4.59583 19.7125 4.7875 C 19.9042 4.97917 20 5.21667 20 5.5 C 20 5.78333 19.9042 6.02083 19.7125 6.2125 C 19.5208 6.40417 19.2833 6.5 19 6.5 V 19.5 C 19 20.05 18.8042 20.5208 18.4125 20.9125 C 18.0208 21.3042 17.55 21.5 17 21.5 H 7 Z M 17 6.5 H 7 V 19.5 H 17 V 6.5 Z M 10 17.5 C 10.2833 17.5 10.5208 17.4042 10.7125 17.2125 C 10.9042 17.0208 11 16.7833 11 16.5 V 9.5 C 11 9.21667 10.9042 8.97917 10.7125 8.7875 C 10.5208 8.59583 10.2833 8.5 10 8.5 C 9.71667 8.5 9.47917 8.59583 9.2875 8.7875 C 9.09583 8.97917 9 9.21667 9 9.5 V 16.5 C 9 16.7833 9.09583 17.0208 9.2875 17.2125 C 9.47917 17.4042 9.71667 17.5 10 17.5 Z M 14 17.5 C 14.2833 17.5 14.5208 17.4042 14.7125 17.2125 C 14.9042 17.0208 15 16.7833 15 16.5 V 9.5 C 15 9.21667 14.9042 8.97917 14.7125 8.7875 C 14.5208 8.59583 14.2833 8.5 14 8.5 C 13.7167 8.5 13.4792 8.59583 13.2875 8.7875 C 13.0958 8.97917 13 9.21667 13 9.5 V 16.5 C 13 16.7833 13.0958 17.0208 13.2875 17.2125 C 13.4792 17.4042 13.7167 17.5 14 17.5 Z"
+    "M 7 21.5 C 6.45 21.5 5.97917 21.3042 5.5875 20.9125 C 5.19583 20.5208 5 20.05 5 19.5 V 6.5 C 4.71667 6.5 4.47917 6.40417 4.2875 6.2125 C 4.09583 6.02083 4 5.78333 4 5.5 C 4 5.21667 4.09583 4.97917 4.2875 4.7875 C 4.47917 4.59583 4.71667 4.5 5 4.5 H 9 C 9 4.21667 9.09583 3.97917 9.2875 3.7875 C 9.47917 3.59583 9.71667 3.5 10 3.5 H 14 C 14.2833 3.5 14.5208 3.59583 14.7125 3.7875 C 14.9042 3.97917 15 4.21667 15 4.5 H 19 C 19.2833 4.5 19.5208 4.59583 19.7125 4.7875 C 19.9042 4.97917 20 5.21667 20 5.5 C 20 5.78333 19.9042 6.02083 19.7125 6.2125 C 19.5208 6.40417 19.2833 6.5 19 6.5 V 19.5 C 19 20.05 18.8042 20.5208 18.4125 20.9125 C 18.0208 21.3042 17.55 21.5 17 21.5 H 7 Z M 17 6.5 H 7 V 19.5 H 17 V 6.5 Z M 10 17.5 C 10.2833 17.5 10.5208 17.4042 10.7125 17.2125 C 10.9042 17.0208 11 16.7833 11 16.5 V 9.5 C 11 9.21667 10.9042 8.97917 10.7125 8.7875 C 10.5208 8.59583 10.2833 8.5 10 8.5 C 9.71667 8.5 9.47917 8.59583 9.2875 8.7875 C 9.09583 8.97917 9 9.21667 9 9.5 V 16.5 C 9 16.7833 9.09583 17.0208 9.2875 17.2125 C 9.47917 17.4042 9.71667 17.5 10 17.5 Z M 14 17.5 C 14.2833 17.5 14.5208 17.4042 14.7125 17.2125 C 14.9042 17.0208 15 16.7833 15 16.5 V 9.5 C 15 9.21667 14.9042 8.97917 14.7125 8.7875 C 14.5208 8.59583 14.2833 8.5 14 8.5 C 13.7167 8.5 13.4792 8.59583 13.2875 8.7875 C 13.0958 8.97917 13 9.21667 13 9.5 V 16.5 C 13 16.7833 13.0958 17.0208 13.2875 17.2125 C 13.4792 17.4042 13.7167 17.5 14 17.5 Z",
   );
 
   deleteChatSvg.append(deleteChatTitle);
@@ -397,7 +399,7 @@ function createContactInformation(contact, chatData) {
     "delete-text-div-div-span",
     null,
     null,
-    i18n.t("chatBox.deleteChat")
+    i18n.t("chatBox.deleteChat"),
   );
 
   deleteTextDivDiv.append(deleteTextDivDivSpan);
@@ -414,7 +416,7 @@ function createContactInformation(contact, chatData) {
   profileSpanDivSpanDiv.append(profileSpanDivSpanDivDiv);
 
   const contactInformationElement = document.querySelector(
-    ".contact-information"
+    ".contact-information",
   );
   contactInformationElement.firstElementChild.append(profileSpanDiv);
 
@@ -423,14 +425,14 @@ function createContactInformation(contact, chatData) {
       style.parentNode.removeChild(style);
     }
     profileSpanDiv.remove();
-    chatStore.setMobileView('message');
+    chatStore.setMobileView("message");
     document.removeEventListener("keydown", keydownHandler);
   });
   function closeProfile() {
     if (style && style.parentNode) style.parentNode.removeChild(style);
     if (profileSpanDiv && profileSpanDiv.parentNode)
       profileSpanDiv.parentNode.removeChild(profileSpanDiv);
-    chatStore.setMobileView('message');
+    chatStore.setMobileView("message");
     document.removeEventListener("keydown", keydownHandler);
   }
   closeProfileFn = closeProfile;

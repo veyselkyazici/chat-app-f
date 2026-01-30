@@ -56,6 +56,7 @@ export default class Chat extends AbstractView {
     this.setTitle("Chat");
     this.chatSearchHandler = null;
     this.currentView = "chats";
+    this._wsSubscribed = false;
   }
 
   updateViewState(viewName) {
@@ -202,13 +203,16 @@ export default class Chat extends AbstractView {
   }
   initializeWebSockets() {
     webSocketService.init();
-
     const ws = webSocketService.ws;
 
     chatStore.setWebSocketManagers(ws);
 
     ws.connect(() => {
-      this.subscribeToWebSocketChannels();
+      console.log("[UI] ws connected -> now subscribe");
+      if (!this._wsSubscribed) {
+        this.subscribeToWebSocketChannels();
+        this._wsSubscribed = true;
+      }
     });
 
     ws.onForceLogout(() => this.logout());
@@ -255,6 +259,7 @@ export default class Chat extends AbstractView {
   }
 
   subscribeToWebSocketChannels() {
+    console.log("[UI] subscribeToWebSocketChannels called");
     const ws = chatStore.ws;
 
     const recipientMessageChannel = `/user/queue/received-message`;
@@ -263,7 +268,7 @@ export default class Chat extends AbstractView {
     const chatBlock = `/user/queue/block`;
     const chatUnBlock = `/user/queue/unblock`;
     const error = `/user/queue/error-message`;
-    const disconnect = `/user/queue/disconnect`;
+    const disconnect = "/user/queue/disconnect";
     const syncRequired = `/user/queue/sync-required`;
 
     ws.subscribe(syncRequired, async (msg) => {
@@ -278,7 +283,9 @@ export default class Chat extends AbstractView {
         }
       }
     });
-    ws.subscribe(disconnect, async () => this.logout());
+    ws.subscribe(disconnect, async (msg) => {
+      await this.logout();
+    });
 
     ws.subscribe(error, (msg) => {
       const err = JSON.parse(msg.body);
@@ -789,6 +796,7 @@ export default class Chat extends AbstractView {
   }
 
   async logout() {
+    
     const overlay = document.querySelector(".overlay-spinner");
     overlay.classList.remove("hidden");
 
@@ -973,7 +981,6 @@ export const applyMessageBoxStatusVisibility = (updatedUserDto) => {
     return;
   }
 
-  // Görünüyorsa backend'den güncel snapshot iste
   chatStore.ws.send("request-status-snapshot", {
     targetUserId: updatedUserDto.id,
   });

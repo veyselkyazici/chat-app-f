@@ -32,7 +32,6 @@ export default class extends AbstractView {
     this.setTitle("Login");
   }
 
-
   async getHtml() {
     return `
       <div class="register-login">
@@ -101,7 +100,7 @@ export default class extends AbstractView {
       });
     }
     const forgotPasswordFormButton = document.getElementById(
-      "forgotPasswordFormButton"
+      "forgotPasswordFormButton",
     );
     if (forgotPasswordFormButton) {
       forgotPasswordFormButton.addEventListener("click", () => {
@@ -125,7 +124,7 @@ export default class extends AbstractView {
       const loginRequestDTO = new LoginRequestDTO(
         formElements.email.value.trim(),
         formElements.password.value.trim(),
-        recaptchaToken
+        recaptchaToken,
       );
       const validationErrors = loginRequestDTO.validate();
       if (validationErrors.length > 0) {
@@ -138,7 +137,7 @@ export default class extends AbstractView {
         });
         return;
       }
-      
+
       const responseData = await authService.login(loginRequestDTO);
 
       if (responseData.success) {
@@ -152,12 +151,12 @@ export default class extends AbstractView {
 
         const aesKey = await deriveAESKey(
           loginRequestDTO.password,
-          new base64ToUint8Array(salt)
+          new base64ToUint8Array(salt),
         );
         const privateKey = await decryptPrivateKey(
           new base64ToUint8Array(encryptedPrivateKey),
           aesKey,
-          new base64ToUint8Array(iv)
+          new base64ToUint8Array(iv),
         );
 
         const newSessionKey = generateSessionKey();
@@ -165,29 +164,30 @@ export default class extends AbstractView {
 
         const { encryptedData: encryptedPrivateKeyWithSession, iv: newIv } =
           await encryptWithSessionKey(
-            await window.crypto.subtle.exportKey("pkcs8", privateKey)
+            await window.crypto.subtle.exportKey("pkcs8", privateKey),
           );
 
         sessionStorage.setItem(
           "encryptedPrivateKey",
-          base64Encode(encryptedPrivateKeyWithSession)
+          base64Encode(encryptedPrivateKeyWithSession),
         );
         sessionStorage.setItem("encryptionIv", base64Encode(newIv));
         const publicKey = await importPublicKey(
-          new base64ToUint8Array(exportedPublicKey)
+          new base64ToUint8Array(exportedPublicKey),
         );
         sessionStorage.setItem("publicKey", exportedPublicKey);
         sessionStorage.setItem("sessionKey", base64Encode(newSessionKey));
         setUserKey({ privateKey, publicKey });
-        toastr.success(i18n.t("login.success"));
         navigateTo("/chat");
+        toastr.success(i18n.t("login.success"));
       } else {
         if (responseData.errors && responseData.errors.length > 0) {
           const code = responseData.errors[0].code;
 
           if (code === 1003) {
-             const generalErrorContainer = document.getElementById("generalError");
-             generalErrorContainer.innerHTML = `
+            const generalErrorContainer =
+              document.getElementById("generalError");
+            generalErrorContainer.innerHTML = `
               ${i18n.t("login.errorCode1003")} <br>
               <button 
                 type="button" 
@@ -207,12 +207,14 @@ export default class extends AbstractView {
                 ${i18n.t("verificationFailed.resendVerificationMessage")}
               </button>
              `;
-             
-             document.getElementById("resendVerificationBtn").addEventListener("click", () => {
+
+            document
+              .getElementById("resendVerificationBtn")
+              .addEventListener("click", () => {
                 this.handleResendVerification(formElements.email.value.trim());
-             });
+              });
           } else {
-             handleErrorCode(code, "#generalError", i18n);
+            handleErrorCode(code, "#generalError", i18n);
           }
         }
       }
@@ -225,35 +227,41 @@ export default class extends AbstractView {
 
   handleResendVerification = async (email) => {
     if (!email) return;
-    
+
     const btn = document.getElementById("resendVerificationBtn");
-    if(btn) {
+    if (btn) {
       btn.textContent = i18n.t("verificationFailed.sending");
       btn.disabled = true;
     }
 
     try {
       const resendConfirmationDTO = new ResendConfirmationRequestDTO(email);
-      
-      const response = await mailService.resendConfirmationMail(resendConfirmationDTO);
-      
+
+      const response = await mailService.resendConfirmationMail(
+        resendConfirmationDTO,
+      );
+
       if (response && response.status === 200) {
         toastr.success(i18n.t("verificationFailed.successMessage"));
-        if(btn) btn.remove();
+        if (btn) btn.remove();
       } else {
         toastr.error(i18n.t("verificationFailed.failedMessage"));
-        if(btn) {
-           btn.textContent = i18n.t("verificationFailed.resendVerificationMessage");
-           btn.disabled = false;
+        if (btn) {
+          btn.textContent = i18n.t(
+            "verificationFailed.resendVerificationMessage",
+          );
+          btn.disabled = false;
         }
       }
     } catch (error) {
       console.error(error);
       toastr.error(i18n.t("verificationFailed.errorMessage"));
-       if(btn) {
-           btn.textContent = i18n.t("verificationFailed.resendVerificationMessage");
-           btn.disabled = false;
-        }
+      if (btn) {
+        btn.textContent = i18n.t(
+          "verificationFailed.resendVerificationMessage",
+        );
+        btn.disabled = false;
+      }
     }
   };
 }

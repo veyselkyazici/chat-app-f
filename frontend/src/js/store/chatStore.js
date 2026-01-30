@@ -1,4 +1,4 @@
-import { updateItems } from "../utils/virtualScroll";
+
 
 class ChatStore {
   constructor() {

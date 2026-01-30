@@ -2099,7 +2099,7 @@ function handleOptionsBtnClick(event) {
         null,
         { role: "button", "aria-label": "contactInformation" },
         i18n.t("contactInformation.contactInformation"),
-        () =>
+        () => {
           createContactInformation(
             new ContactInformationDTO({
               name: chat.contactsDTO.userContactName
@@ -2113,7 +2113,9 @@ function handleOptionsBtnClick(event) {
               about: chat.userProfileResponseDTO.about,
             }),
             chat,
-          ),
+          );
+          chatStore.setMobileView("profile");
+        },
       );
       const chatDTO = {
         userProfileResponseDTO: chat.userProfileResponseDTO,
