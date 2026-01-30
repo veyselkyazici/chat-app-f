@@ -444,6 +444,7 @@ strong {
   }
 }
 
+
 @media not all and (display-mode: standalone) {
   @media screen and (min-width: 1441px) {
     .chat-container {
