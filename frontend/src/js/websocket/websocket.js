@@ -65,7 +65,6 @@ export default class WebSocketManager {
         this.isConnected = true;
         if (this._onConnect) this._onConnect();
 
-        // ✅ sadece null olanları yeniden subscribe et
         for (const [dest, data] of this.subscriptions.entries()) {
           if (!data.stompSubscription) {
             data.stompSubscription = this.client.subscribe(dest, data.callback);
@@ -82,7 +81,6 @@ export default class WebSocketManager {
       onDisconnect: () => {
         this.isConnected = false;
 
-        // ✅ burada da stale reset
         for (const [, data] of this.subscriptions.entries()) {
           data.stompSubscription = null;
         }
@@ -94,8 +92,6 @@ export default class WebSocketManager {
       onWebSocketClose: async (evt) => {
         const wasConnected = this.isConnected;
         this.isConnected = false;
-
-        // ✅ INLINE stale subscription reset
         for (const [, data] of this.subscriptions.entries()) {
           data.stompSubscription = null;
         }
@@ -187,7 +183,7 @@ export default class WebSocketManager {
 
   // sayfa aktif mi (görünür + focus)?
   _updateActiveState() {
-    this.isActive = !document.hidden && document.hasFocus();
+    this.isActive = !document.hidden;
   }
 
   // aktifse ping başlat, pasifse durdur
