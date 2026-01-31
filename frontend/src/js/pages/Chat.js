@@ -141,6 +141,7 @@ export default class Chat extends AbstractView {
 
     await this.getContactList();
     await this.getChatList();
+    console.log("USERID > ", chatStore.user.id);
   }
   async handleMissingUserKey() {
     const storedSessionKey = sessionStorage.getItem("sessionKey");
@@ -374,7 +375,7 @@ export default class Chat extends AbstractView {
     // RECEIVED MESSAGE
     ws.subscribe(recipientMessageChannel, async (msg) => {
       const dto = JSON.parse(msg.body);
-
+      console.log("DTO > ", dto);
       dto.decryptedMessage = await decryptMessage(dto);
 
       let chat = chatStore.chatList.find(
@@ -796,7 +797,6 @@ export default class Chat extends AbstractView {
   }
 
   async logout() {
-    
     const overlay = document.querySelector(".overlay-spinner");
     overlay.classList.remove("hidden");
 

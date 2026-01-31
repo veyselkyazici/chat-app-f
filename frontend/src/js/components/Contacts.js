@@ -614,6 +614,7 @@ async function handleContactClick(event) {
           contactListRenderDiv.firstElementChild
         );
       }
+      chatStore.setMobileView("message");
       return;
     }
     if (chatStore.selectedChatUserId || chatBoxElement) {
@@ -698,6 +699,7 @@ async function handleContactClick(event) {
     if (contactListRenderDiv) {
       contactListRenderDiv.removeChild(contactListRenderDiv.firstElementChild);
     }
+    chatStore.setMobileView("message");
   } else if (!contactData.invitationResponseDTO.isInvited) {
     new Modal({
       contentText: i18n.t("inviteUser.inviteMessage")(

@@ -56,8 +56,8 @@ export default class WebSocketManager {
       reconnectDelay: this.disableReconnect ? 0 : 3000,
 
       // stomp debug logları
-      debug: () => {
-        // console.log("[STOMP DEBUG]" + b);
+      debug: (b) => {
+        console.log("[STOMP DEBUG]" + b);
       },
 
       // bağlanınca: flag set + callback + yeniden subscribe
@@ -65,16 +65,28 @@ export default class WebSocketManager {
         this.isConnected = true;
         if (this._onConnect) this._onConnect();
 
+        // ✅ sadece null olanları yeniden subscribe et
         for (const [dest, data] of this.subscriptions.entries()) {
           if (!data.stompSubscription) {
             data.stompSubscription = this.client.subscribe(dest, data.callback);
           }
         }
+
+        // opsiyonel sync
+        try {
+          this.send("sync", {});
+        } catch {}
       },
 
       // disconnect olunca callback
       onDisconnect: () => {
         this.isConnected = false;
+
+        // ✅ burada da stale reset
+        for (const [, data] of this.subscriptions.entries()) {
+          data.stompSubscription = null;
+        }
+
         if (this._onDisconnect) this._onDisconnect();
       },
 
@@ -82,6 +94,11 @@ export default class WebSocketManager {
       onWebSocketClose: async (evt) => {
         const wasConnected = this.isConnected;
         this.isConnected = false;
+
+        // ✅ INLINE stale subscription reset
+        for (const [, data] of this.subscriptions.entries()) {
+          data.stompSubscription = null;
+        }
 
         if (this.disableReconnect) {
           console.log("[WS] close ignored (disableReconnect=true)", evt?.code);
@@ -233,6 +250,7 @@ export default class WebSocketManager {
     }
 
     const wrappedCallback = (msg) => {
+      debugger;
       let parsed = null;
       try {
         parsed = JSON.parse(msg.body);
@@ -296,7 +314,8 @@ export default class WebSocketManager {
   // server'a mesaj gönderir ("/app/{destination}")
   send(destination, body) {
     if (!this.isConnected) return;
-
+    console.log("DESTINATION > ", destination);
+    console.log("BODY > ", body);
     this.client.publish({
       destination: "/app/" + destination,
       body: JSON.stringify(body),
@@ -372,9 +391,6 @@ export default class WebSocketManager {
 
       try {
         this.send("ping", {});
-      } catch {}
-      try {
-        this.send("sync", {});
       } catch {}
     }, delayMs);
   }
