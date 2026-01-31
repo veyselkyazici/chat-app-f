@@ -6,71 +6,46 @@ export default class WebSocketManager {
   constructor(url) {
     this.url = url;
 
-    // bağlantı ve durum
+    // Bağlantı durumu ve aktivite kontrolü
     this.isConnected = false;
-    this.isActive = true; // sayfa görünür + focus
-    this.disableReconnect = false;
+    this.isActive = true; // Sayfa görünür mü ve odaklanmış mı?
+    this.disableReconnect = false; // Yeniden bağlanmayı durdurur (örn. çıkış yapılırsa)
 
-    // abonelikler
+    // Kanal aboneliklerini (subscriptions) tutan harita
     this.subscriptions = new Map();
 
-    // callback'ler
+    // Callback fonksiyonları
     this._onConnect = null;
     this._onDisconnect = null;
     this._onForceLogout = null;
 
-    // ping timer
+    // Ping zamanlayıcısı (timer ID)
     this._pingIntervalId = null;
 
-    // refresh lock (aynı anda tek refresh)
+    // Yenileme kilidi (Aynı anda sadece tek bir token yenileme işlemi yapılabilsin)
     this._refreshInFlight = null;
 
-    // visibility/focus/blur handler referansları (destroy'da kaldırmak için)
+    // Görünürlük, odaklanma, bulanıklaşma (blur) ve donma olay dinleyicileri referansları
+    // (Bileşen yok edilirken temizlemek için saklanır)
     this._visibilityHandler = null;
     this._focusHandler = null;
     this._blurHandler = null;
     this._freezeHandler = null;
     this._visibilityBound = false;
 
-    // foreground kick spam engeli
+    // Ön plana (foreground) dönüşte sık ping atmayı (spam) engellemek için zaman damgası
     this._lastForegroundKickAt = 0;
-
-    this._t0 = performance.now();
-    this._lastEventAt = this._t0;
-    this._connAttempt = 0;
-
-    this._tlog = (label, extra = {}) => {
-      const now = performance.now();
-      const sinceStart = (now - this._t0).toFixed(0);
-      const sinceLast = (now - this._lastEventAt).toFixed(0);
-      this._lastEventAt = now;
-
-      console.log(
-        `%c[WS-TL] +${sinceStart}ms (Δ${sinceLast}ms) #${this._connAttempt} ${label}`,
-        "color:#9c27b0;font-weight:700",
-        extra,
-      );
-    };
 
     this.client = new Client({
       brokerURL: this.url,
 
-      // connect öncesi Authorization header ekler
+      // Bağlantı kurulmadan önce Authorization başlığını ekler
       beforeConnect: () => {
-        this._connAttempt++;
-        this._tlog("beforeConnect()", {
-          active: this.isActive,
-          clientActive: this.client?.active,
-          disableReconnect: this.disableReconnect,
-          hasToken: !!sessionStorage.getItem("access_token"),
-        });
-
         const token = sessionStorage.getItem("access_token");
 
         if (!token) {
           this.disableReconnect = true;
-          this._tlog("beforeConnect() -> NO TOKEN, cancel");
-          throw new Error("No access token, cancel websocket connect");
+          throw new Error("Erişim token'ı yok, WebSocket bağlantısı iptal edildi.");
         }
 
         this.client.connectHeaders = {
@@ -78,52 +53,40 @@ export default class WebSocketManager {
         };
       },
 
-      // otomatik reconnect gecikmesi
+      // Yeniden bağlanma gecikmesi (otomatik reconnect)
+      // Reconnect devre dışıysa 0, değilse 3 sn
       reconnectDelay: this.disableReconnect ? 0 : 3000,
 
-      // stomp debug logları
+      // STOMP protokolü hata ayıklama logları
       debug: (b) => {
         console.log("[STOMP DEBUG]" + b);
       },
 
-      // bağlanınca: flag set + callback + yeniden subscribe
+      // Bağlantı başarılı olduğunda çalışır
       onConnect: () => {
-        this._tlog("onConnect() ENTER", {
-          subs: this.subscriptions.size,
-          active: this.isActive,
-        });
-
         this.isConnected = true;
+        
+        // Varsa connect callback'ini çalıştır
         if (this._onConnect) this._onConnect();
 
-        let reSubbed = 0;
-
+        // Bekleyen tüm abonelikleri (subscription) sunucuya bildir
         for (const [dest, data] of this.subscriptions.entries()) {
           if (!data.stompSubscription) {
             data.stompSubscription = this.client.subscribe(dest, data.callback);
-            reSubbed++;
           }
         }
 
-        this._tlog("onConnect() resubscribe DONE", { reSubbed });
-
-        // opsiyonel sync
+        // Bağlanınca hemen bir senkronizasyon (sync) isteği gönder
         try {
-          this._tlog("send(sync) -> start");
           this.send("sync", {});
-          this._tlog("send(sync) -> queued");
-        } catch (e) {
-          this._tlog("send(sync) -> FAILED", { err: String(e) });
-        }
+        } catch {}
       },
 
-      // disconnect olunca callback
+      // Bağlantı koptuğunda çalışır
       onDisconnect: () => {
-        this._tlog("onDisconnect()");
-
         this.isConnected = false;
 
-        // stale reset
+        // Aboneliklerin sunucu tarafındaki referanslarını temizle
         for (const [, data] of this.subscriptions.entries()) {
           data.stompSubscription = null;
         }
@@ -131,50 +94,42 @@ export default class WebSocketManager {
         if (this._onDisconnect) this._onDisconnect();
       },
 
-      // socket kapanınca: beklenmeyense refresh+reconnect dene
+      // WebSocket tamamen kapandığında (TCP seviyesinde)
       onWebSocketClose: async (evt) => {
-        this._tlog("onWebSocketClose()", {
-          code: evt?.code,
-          reason: evt?.reason,
-          wasClean: evt?.wasClean,
-          disableReconnect: this.disableReconnect,
-          wasConnected: this.isConnected,
-        });
-
         const wasConnected = this.isConnected;
         this.isConnected = false;
-
-        // stale reset
+        
+        // Abonelik referanslarını temizle
         for (const [, data] of this.subscriptions.entries()) {
           data.stompSubscription = null;
         }
 
+        // Eğer reconnect devre dışıysa işlem yapma
         if (this.disableReconnect) {
-          this._tlog("close ignored (disableReconnect=true)");
+          console.log("[WS] Kapanma yoksayıldı (reconnect kapalı)", evt?.code);
           return;
         }
 
+        // Temiz bir kapanışsa ve önceden bağlıysak, disconnect callback çağır
         if (evt?.wasClean && wasConnected) {
-          this._tlog("close wasClean -> fire onDisconnect()");
           if (this._onDisconnect) this._onDisconnect();
           return;
         }
 
-        this._tlog("tryRefreshAndReconnect() -> start");
+        // Beklenmedik kapanışsa, token yenileyip tekrar bağlanmayı dene
         await this.tryRefreshAndReconnect();
-        this._tlog("tryRefreshAndReconnect() -> done");
       },
 
-      // socket error log
+      // WebSocket hata logu
       onWebSocketError: (evt) => {
-        this._tlog("onWebSocketError()", { evt });
-        console.warn("[WS] socket error", evt);
+        console.warn("[WS] Socket hatası", evt);
       },
 
-      // server STOMP ERROR frame'i gönderirse burada yakalanır
+      // Sunucudan STOMP protokolü seviyesinde ERROR frame gelirse
       onStompError: async (frame) => {
         let code = null;
 
+        // Hata gövdesi JSON ise içindeki 'code' alanını al
         try {
           if (frame.body && frame.body.length > 0) {
             const parsed = JSON.parse(frame.body);
@@ -182,40 +137,31 @@ export default class WebSocketManager {
           }
         } catch {}
 
+        // Gövdede yoksa başlık (header) mesajına bak
         if (!code) code = frame.headers?.message || null;
 
-        this._tlog("onStompError()", {
+        console.warn("[WS] STOMP HATASI", {
           code,
           headerMessage: frame.headers?.message,
           body: frame.body,
         });
 
-        console.warn("[WS] STOMP ERROR", {
-          code,
-          headerMessage: frame.headers?.message,
-          body: frame.body,
-        });
-
-        // token expired ise refresh dene
+        // Token süresi dolduysa yenileyip tekrar bağlan
         if (code === "TOKEN_EXPIRED") {
           this.disableReconnect = true;
-          this._tlog("TOKEN_EXPIRED -> deactivate()");
           await this.client.deactivate();
 
-          this._tlog("TOKEN_EXPIRED -> tryRefreshAndReconnect()");
           await this.tryRefreshAndReconnect();
 
           this.disableReconnect = false;
-          this._tlog("TOKEN_EXPIRED -> done");
           return;
         }
 
-        // session/token invalid ise logout akışına gir
+        // Oturum veya token geçersizse kullanıcıyı çıkış yapmaya zorla
         if (code === "INVALID_SESSION" || code === "INVALID_TOKEN") {
           this.disableReconnect = true;
           this.isConnected = false;
 
-          this._tlog("INVALID_* -> clearSubscriptions + deactivate + forceLogout");
           this._clearSubscriptions();
 
           try {
@@ -229,13 +175,13 @@ export default class WebSocketManager {
     });
   }
 
-  // Authorization header üretir
+  // Authorization başlığını güncel token ile oluşturur
   _authHeaders() {
     const token = sessionStorage.getItem("access_token");
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
-  // tüm subscription'ları iptal eder ve Map'i temizler
+  // Tüm abonelikleri iptal eder ve listeyi temizler
   _clearSubscriptions() {
     for (const [, data] of this.subscriptions.entries()) {
       try {
@@ -246,52 +192,56 @@ export default class WebSocketManager {
     this.subscriptions.clear();
   }
 
-  // sayfa aktif mi? (sadece görünürlük)
+  // Sayfanın aktiflik durumunu günceller (Hem görünür hem odaklanmış olmalı)
+  // Bu, varsayılan sıkı kontrol mekanizmasıdır.
   _updateActiveState() {
-    this.isActive = !document.hidden;
+    this.isActive = !document.hidden && document.hasFocus();
   }
 
-  // aktifse ping başlat, pasifse durdur
+  // Duruma göre ping başlatır veya durdurur
   _applyPingPolicy(pingIntervalMs) {
     if (this.isActive) this.startPing(pingIntervalMs);
     else this.stopPing();
   }
 
+  // Ön plana (foreground) geçişte durumu günceller ve ping/reconnect kontrolü yapar
   _handleForeground(delayMs, pingIntervalMs) {
     this._updateActiveState();
     this._applyPingPolicy(pingIntervalMs);
 
+    // Eğer aktifsek ve reconnect engellenmemişse, tetikleme (kick) yap
     if (this.isActive && !this.disableReconnect) {
       this._foregroundKick(delayMs);
     }
   }
 
+  // Bağlantıyı tamamen kapatıp yeniden açar (refresh sonrası)
   async _restartConnection() {
-    this._tlog("_restartConnection() -> deactivate start");
     try {
       await this.client.deactivate();
     } catch {}
-    this._tlog("_restartConnection() -> activate");
     this.disableReconnect = false;
     this.client.activate();
   }
 
+  // Zorunlu çıkış (logout) gerektiğinde çağrılacak fonksiyonu ayarlar
   onForceLogout(cb) {
     this._onForceLogout = cb;
   }
 
+  // Bağlantıyı başlatır
   connect(onConnectCallback) {
     this._onConnect = onConnectCallback;
-    this._tlog("connect() -> activate()");
     this.client.activate();
   }
 
+  // Bağlantı koptuğunda çağrılacak fonksiyonu ayarlar
   onDisconnect(cb) {
     this._onDisconnect = cb;
   }
 
+  // Manuel bağlantı kesme işlemleri
   disconnect() {
-    this._tlog("disconnect() manual -> disableReconnect + clear + deactivate");
     this.disableReconnect = true;
     this._clearSubscriptions();
     this.isConnected = false;
@@ -299,7 +249,9 @@ export default class WebSocketManager {
     this.client.deactivate();
   }
 
+  // Belirtilen kanala abone olur
   subscribe(channel, callback) {
+    // Zaten abone olunmuşsa yenile
     const existing = this.subscriptions.get(channel);
     if (existing?.stompSubscription) {
       try {
@@ -307,25 +259,32 @@ export default class WebSocketManager {
       } catch {}
     }
 
+    // Gelen mesajı işleyen sarmalayıcı (wrapper) fonksiyon
     const wrappedCallback = (msg) => {
+     // Debugger hata ayıklama için bırakılmış olabilir
+      debugger;
       let parsed = null;
       try {
         parsed = JSON.parse(msg.body);
       } catch {
+        // JSON değilse ham mesajı callback'e ilet
         return callback(msg);
       }
 
+      // Eğer mesaj bir zarf (envelope) yapısındaysa (eventId + data)
       if (
         parsed &&
         parsed.eventId &&
         Object.prototype.hasOwnProperty.call(parsed, "data")
       ) {
+        // Veriyi ayıkla ve callback'e ilet
         const forwarded = Object.assign({}, msg, {
           body: JSON.stringify(parsed.data),
         });
 
         try {
           const res = callback(forwarded);
+          // Callback başarıyla tamamlandığında sunucuya ACK (onay) gönder
           Promise.resolve(res).finally(() => {
             try {
               this.send("ack", { eventId: parsed.eventId });
@@ -337,14 +296,17 @@ export default class WebSocketManager {
         return;
       }
 
+      // Standart mesaj ise direkt ilet
       return callback(msg);
     };
 
+    // Aboneliği haritaya kaydet
     this.subscriptions.set(channel, {
       callback: wrappedCallback,
       stompSubscription: null,
     });
 
+    // Eğer zaten bağlıysak hemen STOMP aboneliğini başlat
     if (this.isConnected) {
       const stompSub = this.client.subscribe(channel, wrappedCallback);
       this.subscriptions.get(channel).stompSubscription = stompSub;
@@ -354,6 +316,7 @@ export default class WebSocketManager {
     return null;
   }
 
+  // Aboneliği iptal eder
   unsubscribe(channel) {
     const data = this.subscriptions.get(channel);
     if (!data) return;
@@ -361,17 +324,17 @@ export default class WebSocketManager {
     try {
       data.stompSubscription?.unsubscribe();
     } catch (e) {
-      console.warn("unsubscribe error:", e);
+      console.warn("Abonelik iptal hatası:", e);
     }
 
     this.subscriptions.delete(channel);
   }
 
+  // Sunucuya mesaj gönderir
   send(destination, body) {
     if (!this.isConnected) return;
-
-    this._tlog(`send(${destination})`, { body });
-
+    console.log("DESTINATION > ", destination);
+    console.log("BODY > ", body);
     this.client.publish({
       destination: "/app/" + destination,
       body: JSON.stringify(body),
@@ -379,10 +342,10 @@ export default class WebSocketManager {
     });
   }
 
+  // Token'ı yeniler ve bağlantıyı sıfırlar (eski yöntem)
   refreshToken() {
     this.disableReconnect = false;
 
-    this._tlog("refreshToken() -> deactivate then activate");
     this.client.deactivate().then(() => {
       this.client.connectHeaders = {
         Authorization: `Bearer ${sessionStorage.getItem("access_token")}`,
@@ -391,31 +354,34 @@ export default class WebSocketManager {
     });
   }
 
+  // Bağlantı sağlığını kontrol eder, gerekirse ping atar veya yeniden bağlanır
   async reconnectCheck() {
     if (this.disableReconnect) return;
 
+    // Client aktif değilse aktifleştir
     if (!this.client.active) {
-      this._tlog("reconnectCheck(): client not active -> activate()");
       this.client.activate();
       return;
     }
 
+    // Bağlı görünmüyorsak işlem yapma (client kendi halleder)
     if (!this.isConnected) return;
 
+    // Bağlıysak ping göndererek hattı test et
     try {
       this.send("ping", {});
     } catch {}
   }
 
+  // Düzenli ping gönderimini başlatır
   startPing(intervalMs) {
     if (this._pingIntervalId) return;
-
-    this._tlog("startPing()", { intervalMs });
 
     this._pingIntervalId = setInterval(() => {
       if (!this.isConnected || !this.isActive) return;
 
       try {
+        // Kullanıcının manuel isteği üzerine publish bloğu kullanılıyor
         this.client.publish({
           destination: "/app/ping",
           body: "{}",
@@ -427,67 +393,71 @@ export default class WebSocketManager {
     }, intervalMs);
   }
 
+  // Ping timer'ı durdurur
   stopPing() {
     if (this._pingIntervalId) {
-      this._tlog("stopPing()");
       clearInterval(this._pingIntervalId);
       this._pingIntervalId = null;
     }
   }
 
+  // Ön plana gelince tetiklenen fonksiyon (gereksiz sık çalışmayı önler)
   _foregroundKick(delayMs) {
     const now = Date.now();
+    // Son tetiklemeden 800ms geçmediyse işlem yapma (spam koruması)
     if (now - this._lastForegroundKickAt < 800) return;
     this._lastForegroundKickAt = now;
-
-    this._tlog("_foregroundKick() scheduled", { delayMs });
 
     setTimeout(() => {
       if (this.disableReconnect) return;
 
-      this._tlog("_foregroundKick() fire -> reconnectCheck + ping");
+      // Bağlantıyı kontrol et, gerekirse ping at
       this.reconnectCheck();
-
-      try {
-        this.send("ping", {});
-      } catch {}
     }, delayMs);
   }
 
+  // Görünürlük (visibility), odak (focus) ve bulanıklaşma (blur) olaylarını dinler
+  // Böylece ping politikası dinamik olarak yönetilir
   bindVisibilityReconnect(pingIntervalMs = 5000) {
     if (this._visibilityBound) return;
     this._visibilityBound = true;
 
-    this._tlog("bindVisibilityReconnect()", { pingIntervalMs });
-
+    // İlk durumu kontrol et ve uygula
     this._updateActiveState();
     this._applyPingPolicy(pingIntervalMs);
 
+    // 1. GÖRÜNÜRLÜK (Visibility Change): Sekmeye dönüldüğünde hemen aktif ol ve ping başlat
     this._visibilityHandler = () => {
-      this._tlog("event: visibilitychange", {
-        hidden: document.hidden,
-        hasFocus: document.hasFocus(),
-      });
-      this._handleForeground(300, pingIntervalMs);
+      if (!document.hidden) {
+        this.isActive = true; // Görünür olunca zorla aktif yap
+        this.startPing(pingIntervalMs);
+        this._foregroundKick(300);
+      } else {
+        // Gizlenince pasife çek ve durdur
+        this.isActive = false;
+        this.stopPing();
+      }
     };
 
+    // 2. ODAKLANMA (Focus): Sayfaya tıklandığında aktif ol
     this._focusHandler = () => {
-      this._tlog("event: focus");
-      this._handleForeground(200, pingIntervalMs);
+      this.isActive = true;
+      this.startPing(pingIntervalMs);
+      this._foregroundKick(200);
     };
 
+    // 3. BULANIKLAŞMA (Blur): Başka pencereye geçildiğinde pasife çek (örn. split screen)
     this._blurHandler = () => {
-      this._tlog("event: blur");
-      this._updateActiveState();
-      this._applyPingPolicy(pingIntervalMs);
+      this.isActive = false;
+      this.stopPing();
     };
 
     document.addEventListener("visibilitychange", this._visibilityHandler);
     window.addEventListener("focus", this._focusHandler);
     window.addEventListener("blur", this._blurHandler);
 
+    // Dondurma (Freeze) olayı (mobil/tarayıcı optimizasyonu için)
     this._freezeHandler = () => {
-      this._tlog("event: freeze");
       this.isActive = false;
       this._applyPingPolicy(pingIntervalMs);
     };
@@ -495,9 +465,8 @@ export default class WebSocketManager {
     document.addEventListener("freeze", this._freezeHandler);
   }
 
+  // Sınıfı ve tüm dinleyicileri yok eder
   destroy() {
-    this._tlog("destroy()");
-
     this.disableReconnect = true;
     this.isConnected = false;
 
@@ -533,25 +502,18 @@ export default class WebSocketManager {
     this._onForceLogout = null;
   }
 
+  // Refresh token kullanarak token yenilemeyi ve yeniden bağlanmayı dener
   async tryRefreshAndReconnect() {
-    if (this._refreshInFlight) {
-      this._tlog("tryRefreshAndReconnect(): already in flight");
-      return this._refreshInFlight;
-    }
+    // Eğer hali hazırda bir yenileme işlemi sürüyorsa onun sonucunu döndür (lock)
+    if (this._refreshInFlight) return this._refreshInFlight;
 
     this._refreshInFlight = (async () => {
       try {
-        this._tlog("tryRefreshAndReconnect(): refresh start");
-
         const refreshToken = sessionStorage.getItem("refresh_token");
-        if (!refreshToken) throw new Error("No refresh token");
+        if (!refreshToken) throw new Error("Yenileme token'ı bulunamadı");
 
         const res = await axios.post(`${BASE_URL}/auth/refresh-token`, {
           refreshToken,
-        });
-
-        this._tlog("tryRefreshAndReconnect(): refresh ok", {
-          status: res.status,
         });
 
         const { accessToken, refreshToken: newRefresh } = res.data.data;
@@ -559,15 +521,12 @@ export default class WebSocketManager {
         sessionStorage.setItem("access_token", accessToken);
         sessionStorage.setItem("refresh_token", newRefresh);
 
-        this._tlog("tryRefreshAndReconnect(): restartConnection start");
         await this._restartConnection();
-        this._tlog("tryRefreshAndReconnect(): restartConnection done");
       } catch (e) {
-        this._tlog("tryRefreshAndReconnect(): FAILED -> forceLogout", {
-          err: String(e),
-        });
+        // Yenileme başarısızsa çıkışa zorla
         if (this._onForceLogout) this._onForceLogout();
       } finally {
+        // Kildi kaldır
         this._refreshInFlight = null;
       }
     })();
