@@ -45,7 +45,9 @@ export default class WebSocketManager {
 
         if (!token) {
           this.disableReconnect = true;
-          throw new Error("Erişim token'ı yok, WebSocket bağlantısı iptal edildi.");
+          throw new Error(
+            "Erişim token'ı yok, WebSocket bağlantısı iptal edildi.",
+          );
         }
 
         this.client.connectHeaders = {
@@ -58,14 +60,14 @@ export default class WebSocketManager {
       reconnectDelay: this.disableReconnect ? 0 : 3000,
 
       // STOMP protokolü hata ayıklama logları
-      debug: (b) => {
-        console.log("[STOMP DEBUG]" + b);
+      debug: () => {
+        // console.log("[STOMP DEBUG]" + b);
       },
 
       // Bağlantı başarılı olduğunda çalışır
       onConnect: () => {
         this.isConnected = true;
-        
+
         // Varsa connect callback'ini çalıştır
         if (this._onConnect) this._onConnect();
 
@@ -98,7 +100,7 @@ export default class WebSocketManager {
       onWebSocketClose: async (evt) => {
         const wasConnected = this.isConnected;
         this.isConnected = false;
-        
+
         // Abonelik referanslarını temizle
         for (const [, data] of this.subscriptions.entries()) {
           data.stompSubscription = null;
@@ -106,7 +108,6 @@ export default class WebSocketManager {
 
         // Eğer reconnect devre dışıysa işlem yapma
         if (this.disableReconnect) {
-          console.log("[WS] Kapanma yoksayıldı (reconnect kapalı)", evt?.code);
           return;
         }
 
@@ -261,8 +262,8 @@ export default class WebSocketManager {
 
     // Gelen mesajı işleyen sarmalayıcı (wrapper) fonksiyon
     const wrappedCallback = (msg) => {
-     // Debugger hata ayıklama için bırakılmış olabilir
-      debugger;
+      // Debugger hata ayıklama için bırakılmış olabilir
+      
       let parsed = null;
       try {
         parsed = JSON.parse(msg.body);
@@ -333,8 +334,6 @@ export default class WebSocketManager {
   // Sunucuya mesaj gönderir
   send(destination, body) {
     if (!this.isConnected) return;
-    console.log("DESTINATION > ", destination);
-    console.log("BODY > ", body);
     this.client.publish({
       destination: "/app/" + destination,
       body: JSON.stringify(body),

@@ -141,7 +141,6 @@ export default class Chat extends AbstractView {
 
     await this.getContactList();
     await this.getChatList();
-    console.log("USERID > ", chatStore.user.id);
   }
   async handleMissingUserKey() {
     const storedSessionKey = sessionStorage.getItem("sessionKey");
@@ -209,7 +208,6 @@ export default class Chat extends AbstractView {
     chatStore.setWebSocketManagers(ws);
 
     ws.connect(() => {
-      console.log("[UI] ws connected -> now subscribe");
       if (!this._wsSubscribed) {
         this.subscribeToWebSocketChannels();
         this._wsSubscribed = true;
@@ -260,7 +258,6 @@ export default class Chat extends AbstractView {
   }
 
   subscribeToWebSocketChannels() {
-    console.log("[UI] subscribeToWebSocketChannels called");
     const ws = chatStore.ws;
 
     const recipientMessageChannel = `/user/queue/received-message`;
@@ -375,7 +372,6 @@ export default class Chat extends AbstractView {
     // RECEIVED MESSAGE
     ws.subscribe(recipientMessageChannel, async (msg) => {
       const dto = JSON.parse(msg.body);
-      console.log("DTO > ", dto);
       dto.decryptedMessage = await decryptMessage(dto);
 
       let chat = chatStore.chatList.find(
