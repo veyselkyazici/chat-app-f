@@ -183,7 +183,7 @@ export default class Chat extends AbstractView {
 
   async getChatList() {
     const summaries = await chatService.getChatSummaries();
-
+    
     const finalList = await Promise.all(
       summaries.map(async (item) => {
         const isSender =
@@ -580,13 +580,10 @@ export default class Chat extends AbstractView {
             newContact.userProfileResponseDTO.image;
 
           if (chat.userProfileResponseDTO.image) {
-            handleProfilePhotoVisibilityChange(
-              {
-                contact: { ...chat.contactsDTO },
-                userProfileResponseDTO: { ...chat.userProfileResponseDTO },
-              },
-              chat.userProfileResponseDTO.image,
-            );
+            handleProfilePhotoVisibilityChange({
+              contact: { ...chat.contactsDTO },
+              userProfileResponseDTO: { ...chat.userProfileResponseDTO },
+            });
           }
         }
         return chat;
@@ -605,15 +602,12 @@ export default class Chat extends AbstractView {
             newContact.userProfileResponseDTO.image;
 
           if (contact.userProfileResponseDTO.image) {
-            handleProfilePhotoVisibilityChange(
-              {
-                contact: { ...contact.contactsDTO },
-                userProfileResponseDTO: {
-                  ...contact.userProfileResponseDTO,
-                },
+            handleProfilePhotoVisibilityChange({
+              contact: { ...contact.contactsDTO },
+              userProfileResponseDTO: {
+                ...contact.userProfileResponseDTO,
               },
-              contact.userProfileResponseDTO.image,
-            );
+            });
           }
         }
         return contact;
@@ -652,16 +646,19 @@ export default class Chat extends AbstractView {
       const chats = chatStore.chatList.map((chat) => {
         if (chat.userProfileResponseDTO.id === dto.id) {
           const old = chat.userProfileResponseDTO.privacySettings;
-          chat.userProfileResponseDTO = dto;
+          chat.userProfileResponseDTO = {
+            ...chat.userProfileResponseDTO,
+            ...dto,
+          };
 
           if (
             old.profilePhotoVisibility !==
             dto.privacySettings.profilePhotoVisibility
           ) {
-            handleProfilePhotoVisibilityChange(
-              { contact: { ...chat.contactsDTO }, userProfileResponseDTO: dto },
-              chat.userProfileResponseDTO.image,
-            );
+            handleProfilePhotoVisibilityChange({
+              contact: { ...chat.contactsDTO },
+              userProfileResponseDTO: chat.userProfileResponseDTO,
+            });
           }
 
           if (old.aboutVisibility !== dto.privacySettings.aboutVisibility) {
@@ -679,7 +676,10 @@ export default class Chat extends AbstractView {
       const contacts = chatStore.contactList.map((c) => {
         if (c.userProfileResponseDTO?.id === dto.id) {
           const old = c.userProfileResponseDTO.privacySettings;
-          c.userProfileResponseDTO = dto;
+          c.userProfileResponseDTO = {
+            ...c.userProfileResponseDTO,
+            ...dto,
+          };
 
           if (old.aboutVisibility !== dto.privacySettings.aboutVisibility) {
             handleAboutVisibilityChange({
@@ -706,13 +706,10 @@ export default class Chat extends AbstractView {
           chat.userProfileResponseDTO.about = dto.about;
           chat.userProfileResponseDTO.firstName = dto.firstName;
 
-          handleProfilePhotoVisibilityChange(
-            {
-              contact: chat.contactsDTO,
-              userProfileResponseDTO: chat.userProfileResponseDTO,
-            },
-            chat.userProfileResponseDTO.image,
-          );
+          handleProfilePhotoVisibilityChange({
+            contact: chat.contactsDTO,
+            userProfileResponseDTO: chat.userProfileResponseDTO,
+          });
         }
         return chat;
       });
@@ -903,7 +900,7 @@ export const handleOnlineStatusVisibilityChange = (newContactPrivacy) => {
   }
 };
 
-export const handleProfilePhotoVisibilityChange = (newValue, image) => {
+export const handleProfilePhotoVisibilityChange = (newValue) => {
   const chatData = chatStore.chatList.find(
     (c) => c.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id,
   );
@@ -913,7 +910,10 @@ export const handleProfilePhotoVisibilityChange = (newValue, image) => {
 
   if (chatElement) {
     const imageElement = chatElement.querySelector(".image");
-    changesVisibilityProfilePhoto(imageElement, image);
+    changesVisibilityProfilePhoto(
+      imageElement,
+      newValue.userProfileResponseDTO.image,
+    );
   }
 
   if (document.querySelector(".a1-1-1-1-1-1-3")) {
@@ -921,7 +921,10 @@ export const handleProfilePhotoVisibilityChange = (newValue, image) => {
       `.contact1[data-contact-id="${newValue.contactsDTO.id}"]`,
     );
     const imageElement = contact?.querySelector(".image");
-    changesVisibilityProfilePhoto(imageElement, image);
+    changesVisibilityProfilePhoto(
+      imageElement,
+      newValue.userProfileResponseDTO.image,
+    );
   }
 
   if (
@@ -932,7 +935,10 @@ export const handleProfilePhotoVisibilityChange = (newValue, image) => {
     const messageBoxElement = document.querySelector(".message-box1");
     if (!messageBoxElement) return;
     const imageElement = messageBoxElement.querySelector(".message-box1-2-1-1");
-    changesVisibilityProfilePhoto(imageElement, image);
+    changesVisibilityProfilePhoto(
+      imageElement,
+      newValue.userProfileResponseDTO.image,
+    );
   }
 };
 

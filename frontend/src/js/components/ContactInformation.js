@@ -1,7 +1,7 @@
 import { chatStore } from "../store/chatStore.js";
 import { createElement, createDefaultImage } from "../utils/util.js";
 import { viewPhoto } from "./UpdateUserProfile.js";
-import { toggleBlockUser } from "./ChatBox.js";
+import { toggleBlockUser, deleteChat } from "./ChatBox.js";
 import { i18n } from "../i18n/i18n.js";
 let closeProfileFn = null;
 function createContactInformation(contact, chatData) {
@@ -406,6 +406,17 @@ function createContactInformation(contact, chatData) {
   deleteTextDiv.append(deleteTextDivDiv);
 
   deleteChatButton.append(deleteTextDiv);
+  deleteChatButton.addEventListener("click", () => {
+    const chatElement = document.querySelector(
+      `.chat1[data-chat-id="${chatData.chatDTO.id}"]`,
+    );
+    deleteChat(chatData, null, chatElement, () => {
+      if (document.querySelector(".profile-span-div")) {
+        closeProfileFunc();
+      }
+      chatStore.setMobileView("chats");
+    });
+  });
   deleteChatDiv.append(deleteChatButton);
 
   profileSection.append(profileSectionDivPhotoAndName);

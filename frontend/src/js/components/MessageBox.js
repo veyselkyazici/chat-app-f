@@ -95,7 +95,8 @@ const handleTextBlur = (chat, typingStatus, textArea) => {
   if (selection.rangeCount > 0) {
     savedRange = selection.getRangeAt(0).cloneRange();
   }
-  const currentText = textArea.textContent.trim();
+  const editor = textArea.querySelector("." + ROOT_CLASS);
+  const currentText = editor ? editor.textContent.trim() : "";
   if (typingStatus.isTyping) {
     webSocketService.ws.send("typing", {
       userId: chat.contactsDTO.userId,
@@ -108,12 +109,10 @@ const handleTextBlur = (chat, typingStatus, textArea) => {
   typingStatus.previousText = currentText;
 };
 const handleTextFocus = (chat, typingStatus, textArea) => {
-  const currentText = textArea.textContent.trim();
+  const editor = textArea.querySelector("." + ROOT_CLASS);
+  const currentText = editor ? editor.textContent.trim() : "";
 
-  if (
-    !currentText ||
-    currentText === i18n.t("messageBox.messageBoxPlaceHolder")
-  ) {
+  if (!currentText) {
     if (typingStatus.isTyping) {
       webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
@@ -171,12 +170,11 @@ function handlePaste(event, textArea, sendButton, typingStatus) {
 }
 
 function handleTextInput(textArea, chat, typingStatus, event) {
-  const currentText = textArea.textContent.trim();
+  validateEditor(textArea);
+  const editor = textArea.querySelector("." + ROOT_CLASS);
+  const currentText = editor ? editor.textContent.trim() : "";
 
-  if (
-    !currentText ||
-    currentText === i18n.t("messageBox.messageBoxPlaceHolder")
-  ) {
+  if (!currentText) {
     if (typingStatus.isTyping) {
       webSocketService.ws.send("typing", {
         userId: chat.contactsDTO.userId,
@@ -204,7 +202,7 @@ function handleTextInput(textArea, chat, typingStatus, event) {
   updateCaretPosition(event);
 }
 
-const ensureMessageBoxStructure = (textAreaWrapper) => {
+const validateEditor = (textAreaWrapper) => {
   let targetContainer = textAreaWrapper.querySelector(`.${ROOT_CLASS}`);
   if (!targetContainer) {
     if (textAreaWrapper.classList.contains(ROOT_CLASS)) {
@@ -511,7 +509,7 @@ const insertEmoji = (emoji) => {
 
   const editor = document.querySelector(`.${ROOT_CLASS}`);
   if (!editor) return;
-  ensureMessageBoxStructure(editor.parentNode);
+  validateEditor(editor.parentNode);
 
   if (!editor.contains(range.commonAncestorContainer)) {
     const p = editor.querySelector("p");
@@ -597,6 +595,15 @@ const insertEmoji = (emoji) => {
 
 function keydown(event, textArea) {
   if (event.key === "Backspace") {
+    const p = textArea.querySelector("p." + TEXT_SPAN_CLASS);
+    if (
+      p &&
+      p.textContent.length === 0 &&
+      !p.querySelector("." + EMOJI_SPAN_CLASS)
+    ) {
+      event.preventDefault();
+      return;
+    }
     const sel = window.getSelection();
     if (sel.rangeCount > 0 && sel.isCollapsed) {
       const range = sel.getRangeAt(0);
@@ -626,27 +633,28 @@ const updatePlaceholder = (textArea, sendButton, typingStatus) => {
   const placeholderClass = "message-box1-7-1-1-1-2-1-1-1-2";
   let placeholder = textArea.querySelector(`.${placeholderClass}`);
   const editor = textArea.querySelector(".message-box1-7-1-1-1-2-1-1-1");
-  const hasText =
-    editor &&
-    (editor.textContent.trim().length > 0 ||
-      editor.querySelector(".message-emoji-span"));
 
-  if (!placeholder && !hasText) {
+  if (!editor) return;
+
+  const textContent = editor.textContent;
+  const hasEmoji = !!editor.querySelector(".message-emoji-span");
+
+  // Determine if we should hide the placeholder (any char including space)
+  const hasVisualContent = textContent.length > 0 || hasEmoji;
+
+  // Determine if we should enable the send button (non-whitespace chars)
+  const hasSendableContent = textContent.trim().length > 0 || hasEmoji;
+
+  if (!placeholder && !hasVisualContent) {
     placeholder = document.createElement("div");
     placeholder.className = placeholderClass;
     placeholder.textContent = i18n.t("messageBox.messageBoxPlaceHolder");
     textArea.append(placeholder);
-    setSendButtonState(sendButton, false, typingStatus);
-  }
-
-  if (placeholder && hasText) {
+  } else if (placeholder && hasVisualContent) {
     placeholder.remove();
-    setSendButtonState(sendButton, true, typingStatus);
   }
 
-  if (placeholder && !hasText) {
-    setSendButtonState(sendButton, false, typingStatus);
-  }
+  setSendButtonState(sendButton, hasSendableContent, typingStatus);
 };
 
 const setSendButtonState = (button, isEnabled, typingStatus) => {
@@ -783,6 +791,11 @@ function generateEmojiHTML() {
 }
 const createMessageBoxHTML = async (chatData, typingStatus) => {
   const messageBoxElement = document.querySelector(".message-box");
+  const existingMain = messageBoxElement.querySelector(".message-box1");
+  if (existingMain) {
+    existingMain.remove();
+  }
+
   const main = createElement("div", "message-box1", null, { id: "main" });
   main.dataset.chatId = chatData.chatDTO.id;
   main.data = chatData;
@@ -806,6 +819,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
   backSvg.append(backPath);
   backBtn.append(backSvg);
   backBtn.addEventListener("click", () => {
+    removeMessageBoxAndUnsubscribe();
     chatStore.setMobileView("chats");
     ariaSelectedRemove(chatStore.selectedChatUserId);
   });
@@ -1234,6 +1248,12 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     "",
     () => sendMessage(chat, sendButton, typingStatus),
   );
+  sendButton.addEventListener("touchend", (event) => {
+    event.preventDefault();
+    if (!sendButton.disabled) {
+      sendMessage(chat, sendButton, typingStatus);
+    }
+  });
   sendButton.disabled = true;
   const sendBtnSVG = createSvgElement("svg", {
     viewBox: "0 0 24 24",
@@ -1571,10 +1591,11 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
 
       divMessage1_1_1_2_1_2_1.append(span1_1_1_2_1_2_1_1);
       divMessage1_1_1_2_1_2_1.append(divMessage1_1_1_2_1_2_1_2);
+
       if (
         message.isSeen &&
         chatStore.user.privacySettings.readReceipts &&
-        privacySettings.readReceipts
+        privacySettings && privacySettings.readReceipts
       ) {
         const messageTickSpan = divMessage1_1_1_2_1_2_1.querySelector(
           ".message-delivered-tick-span",

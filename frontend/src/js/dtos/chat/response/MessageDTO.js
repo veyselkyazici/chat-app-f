@@ -12,7 +12,7 @@ export class MessageDTO {
     this.encryptedKeyForRecipient = data.encryptedKeyForRecipient;
     this.encryptedKeyForSender = data.encryptedKeyForSender;
     this.fullDateTime = data.fullDateTime ? new Date(data.fullDateTime) : null;
-    this.isSeen = data.seen ?? false;
+    this.isSeen = data.isSeen ?? false;
   }
 }
 

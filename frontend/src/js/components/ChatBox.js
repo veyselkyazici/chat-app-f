@@ -533,8 +533,10 @@ const toggleBlockUser = async (chatData) => {
     closeOnEscape: true,
   });
 };
-const deleteChat = async (chat, showChatOptions, chatElement) => {
-  showChatOptions.removeChild(showChatOptions.firstElementChild);
+const deleteChat = async (chat, showChatOptions, chatElement, onSuccess) => {
+  if (showChatOptions) {
+    showChatOptions.removeChild(showChatOptions.firstElementChild);
+  }
   const modalMessage = i18n.t("chatBox.deleteMessage")(
     chat.userProfileResponseDTO.email,
   );
@@ -563,6 +565,7 @@ const deleteChat = async (chat, showChatOptions, chatElement) => {
           messageBoxElement.remove();
         }
         toastr.success(i18n.t("chatBox.deleteSuccess"));
+        if (onSuccess) onSuccess();
         return true;
       } else {
         toastr.error(i18n.t("chatBox.deleteFailed"));
@@ -1048,11 +1051,12 @@ function chatBoxLastMessageDeliveredBlueTick() {
   return messageDeliveredTickDiv;
 }
 
-const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
-  const chatData = chatStore.activeChat;
-  if (!chatData) return;
+const ariaSelected = (chatElementDOM, selectedChat, innerDiv, newUserId) => {
+  const currentUserId = newUserId
+    ? newUserId
+    : chatStore.activeChat.userProfileResponseDTO.id;
 
-  if (selectedChat && selectedChat != chatData.userProfileResponseDTO.id) {
+  if (selectedChat && selectedChat != currentUserId) {
     const parentDiv = document.querySelector(".chat-list-content");
     const selectedDiv = parentDiv.querySelector('[aria-selected="true"]');
     if (selectedDiv) {
@@ -1063,7 +1067,7 @@ const ariaSelected = (chatElementDOM, selectedChat, innerDiv) => {
   }
   chatElementDOM.querySelector(".chat").classList.add("selected-chat");
   innerDiv.setAttribute("aria-selected", "true");
-  chatStore.setSelectedChatUserId(chatData.userProfileResponseDTO.id);
+  chatStore.setSelectedChatUserId(currentUserId);
 };
 
 const ariaSelectedRemove = (selectedChat, newSelectedId) => {

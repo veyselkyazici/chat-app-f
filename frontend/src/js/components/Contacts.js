@@ -619,10 +619,15 @@ async function handleContactClick(event) {
     }
     if (chatStore.selectedChatUserId || chatBoxElement) {
       chatBoxElement != null
-        ? ariaSelected(chatBoxElement, chatStore.selectedChatUserId, innerDiv)
+        ? ariaSelected(
+            chatBoxElement,
+            chatStore.selectedChatUserId,
+            innerDiv,
+            contactData.userProfileResponseDTO.id,
+          )
         : ariaSelectedRemove(
             chatStore.selectedChatUserId,
-            contactData.userProfileResponseDTO.id
+            contactData.userProfileResponseDTO.id,
           );
     }
     let findChat = findChatRoom(
