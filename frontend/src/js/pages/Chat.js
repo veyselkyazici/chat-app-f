@@ -963,30 +963,6 @@ export const changesVisibilityProfilePhoto = (imagelement, image) => {
     imagelement.append(svgDiv);
   }
 };
-
-export const applyMessageBoxStatusVisibility = (updatedUserDto) => {
-  const openChat = chatStore.activeChat;
-  if (!openChat || openChat.userProfileResponseDTO.id !== updatedUserDto.id)
-    return;
-
-  const me = chatStore.user;
-  const rel = openChat.contactsDTO;
-  const contactPrivacy = updatedUserDto.privacySettings;
-
-  const allowOnline = canShowOnline(me, contactPrivacy, rel);
-  const allowLastSeen = canShowLastSeen(me, contactPrivacy, rel);
-
-  const statusEl = document.querySelector(".message-box1 .online-status");
-
-  if (!allowOnline && !allowLastSeen) {
-    statusEl?.remove();
-    return;
-  }
-
-  chatStore.ws.send("request-status-snapshot", {
-    targetUserId: updatedUserDto.id,
-  });
-};
 export const handleAboutVisibilityChange = (newValue) => {
   const privacy =
     newValue.userProfileResponseDTO.privacySettings.aboutVisibility;
