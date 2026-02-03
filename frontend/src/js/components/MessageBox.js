@@ -479,6 +479,10 @@ function showEmojiPicker(
 
   const pickerContainer = showEmojiDOM.querySelector(".emoji-picker-container");
 
+  pickerContainer.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+  });
+
   pickerContainer.addEventListener("click", (event) => {
     const emojiItem = event.target.closest(".emoji-item");
     if (emojiItem) {
@@ -1248,6 +1252,12 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     "",
     () => sendMessage(chat, sendButton, typingStatus),
   );
+  sendButton.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+  });
+  sendButton.addEventListener("touchstart", (event) => {
+    event.preventDefault();
+  });
   sendButton.addEventListener("touchend", (event) => {
     event.preventDefault();
     if (!sendButton.disabled) {

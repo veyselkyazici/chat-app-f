@@ -121,6 +121,13 @@ export default {
     errorCode3001: "Kişi zaten ekli",
     contactAddedSuccessfully: "Kişi başarıyla eklendi",
   },
+  common: {
+    save: "Kaydet",
+    upload: "Yükle",
+    delete: "Sil",
+    cancel: "İptal",
+    ok: "Tamam",
+  },
   modal: {
     yes: "Evet",
     no: "Hayır",

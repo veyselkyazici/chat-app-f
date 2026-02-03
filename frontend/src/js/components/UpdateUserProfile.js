@@ -11,7 +11,7 @@ import { i18n } from "../i18n/i18n.js";
 import { chatStore } from "../store/chatStore.js";
 import { webSocketService } from "../websocket/websocketService.js";
 async function userUpdateModal(user, bool) {
-  const updateProfileForm = createElement("form", "");
+  const updateProfileForm = createElement("div", "");
   updateProfileForm.id = "updateForm";
 
   const profilePhotoUserDiv = createElement("div", "profile-photo-user");
@@ -88,24 +88,22 @@ async function userUpdateModal(user, bool) {
     name: "name",
     value: "",
     placeholder: i18n.t("addContacts.name"),
-    readonly: true,
+    placeholder: i18n.t("addContacts.name"),
     id: "nameInput",
   });
   nameInput.value = user.firstName;
-  const nameEditButton = createElement(
-    "div",
-    "editButton",
-    null,
-    { id: "editButtonName" },
-    "✎",
-    () => toggleEditName(user),
-  );
+  // Edit button removed
   const errorMessageElement = createElement("div", "error-message");
 
+  const nameContainer = createElement("div", "input-container", null, { style: "margin-bottom: 10px;" });
+  
+  const nameLabel = createElement("div", "input-label", null, { style: "margin-bottom: 5px; font-weight: bold;" }, i18n.t("addContacts.name"));
   nameElement.append(nameIElement);
   nameElement.append(nameInput);
-  nameElement.append(nameEditButton);
   nameElement.append(errorMessageElement);
+
+  nameContainer.append(nameLabel);
+  nameContainer.append(nameElement);
 
   const aboutElement = createElement("div", "input-icon");
   const aboutIElement = createElement("i", "fa-solid fa-user");
@@ -113,34 +111,32 @@ async function userUpdateModal(user, bool) {
     name: "about",
     value: "",
     placeholder: i18n.t("updateUserProfile.about"),
-    readonly: true,
+    placeholder: i18n.t("updateUserProfile.about"),
     id: "aboutInput",
   });
   aboutInput.value = user.about;
-  const aboutEditButton = createElement(
-    "div",
-    "editButton",
-    null,
-    { id: "editButtonAbout" },
-    "✎",
-    toggleEditAbout,
-  );
+  // Edit button removed
   const aboutErrorMessageElement = createElement("div", "error-message");
 
+  const aboutContainer = createElement("div", "input-container", null, { style: "margin-bottom: 15px;" });
+
+  const aboutLabel = createElement("div", "input-label", null, { style: "margin-bottom: 5px; font-weight: bold;" }, i18n.t("updateUserProfile.about"));
   aboutElement.append(aboutIElement);
   aboutElement.append(aboutInput);
-  aboutElement.append(aboutEditButton);
   aboutElement.append(aboutErrorMessageElement);
 
+  aboutContainer.append(aboutLabel);
+  aboutContainer.append(aboutElement);
+
   updateProfileForm.append(profilePhotoUserDiv);
-  updateProfileForm.append(nameElement);
-  updateProfileForm.append(aboutElement);
+  updateProfileForm.append(nameContainer);
+  updateProfileForm.append(aboutContainer);
   if (bool) {
     new Modal({
       title: "",
       contentHtml: updateProfileForm,
-      mainCallback: null,
-      buttonText: "",
+      mainCallback: () => saveUserProfile(user),
+      buttonText: i18n.t("common.save") || "Kaydet", // TODO: Add translation if missing
       showBorders: false,
       secondOptionButton: false,
       cancelButton: true,
@@ -153,7 +149,7 @@ async function userUpdateModal(user, bool) {
     new Modal({
       title: "",
       contentHtml: updateProfileForm,
-      mainCallback: goHome,
+      mainCallback: () => saveUserProfile(user, true),
       buttonText: i18n.t("modal.continue"),
       showBorders: false,
       secondOptionButton: false,
@@ -166,91 +162,75 @@ async function userUpdateModal(user, bool) {
     toggleOptions(event, user.image),
   );
   inputFile.addEventListener("change", (event) => uploadPhoto(event, user.id));
+  
+  nameInput.addEventListener("input", () => {
+      nameElement.classList.remove("error");
+  });
+  aboutInput.addEventListener("input", () => {
+      aboutElement.classList.remove("error");
+  });
 }
 
-function goHome() {
-  const name = chatStore.user.firstName;
-  const about = chatStore.user.about;
-  if (!name || !name.trim()) {
-    toastr.error(i18n.t("updateUserProfile.nameError"));
-    return false;
-  }
-  if (!about || !about.trim()) {
-    toastr.error(i18n.t("updateUserProfile.aboutError"));
-    return false;
-  }
-  return true;
-}
-
-async function toggleEditName(user) {
+async function saveUserProfile(user, isRegistration = false) {
   const nameInput = document.getElementById("nameInput");
-  const editButton = document.getElementById("editButtonName");
-  if (nameInput.readOnly) {
-    nameInput.readOnly = false;
-    editButton.textContent = "✔";
-    nameInput.focus();
-  } else {
-    if (nameInput.value && user.firstName !== nameInput.value) {
-      nameInput.readOnly = true;
-      editButton.textContent = "✎";
-      const updateUserDTO = new UpdateUserDTO(nameInput.value);
-      const validationErrors = updateUserDTO.validate();
-      if (validationErrors.length > 0) {
-        validationErrors.forEach((error) => {
-          toastr.error(error.message);
-        });
-      } else {
-        const response = await userService.updateUserName(updateUserDTO);
-        webSocketService.ws.send("updated-user-profile-send-message", {
-          userId: chatStore.user.id,
-          url: chatStore.user.image,
-          about: chatStore.user.about,
-          firstName: response.data.value,
-        });
-        chatStore.user.firstName = response.data.value;
-        toastr.success(i18n.t("updateUserProfile.nameUpdated"));
-      }
-    }
-  }
-}
-
-async function toggleEditAbout() {
   const aboutInput = document.getElementById("aboutInput");
-  const editButton = document.getElementById("editButtonAbout");
-  if (aboutInput.readOnly) {
-    aboutInput.readOnly = false;
-    editButton.textContent = "✔";
-    aboutInput.focus();
-  } else {
-    if (aboutInput.value) {
-      aboutInput.readOnly = true;
-      editButton.textContent = "✎";
-      const updateUserDTO = new UpdateUserDTO(aboutInput.value);
-      const validationErrors = updateUserDTO.validate();
-      if (validationErrors.length > 0) {
-        validationErrors.forEach((error) => {
-          toastr.error(error.message);
-        });
-      } else {
-        const response = await userService.updateUserAbout(updateUserDTO);
-        webSocketService.ws.send("updated-user-profile-send-message", {
+  
+  const firstName = nameInput.value;
+  const about = aboutInput.value;
+
+  try {
+     const nameDTO = new UpdateUserDTO(firstName);
+     const nameErrors = nameDTO.validate();
+     if (nameErrors.length > 0) {
+        nameErrors.forEach(err => toastr.error(err.message));
+        nameInput.parentElement.classList.add("error");
+        return false;
+     }
+  } catch(e) {
+      toastr.error(e.message);
+      nameInput.parentElement.classList.add("error");
+      return false;
+  }
+  
+  if (!about || !about.trim()) {
+      toastr.error(i18n.t("updateUserProfile.aboutError"));
+      aboutInput.parentElement.classList.add("error");
+      return false;
+  }
+
+  if (firstName === user.firstName && about === user.about && !isRegistration) {
+      return true;
+  }
+
+  try {
+      const response = await userService.updateUserProfile({ firstName, about });
+      
+      // Update Store
+      chatStore.user.firstName = firstName;
+      chatStore.user.about = about;
+
+      // WebSocket Notify
+      webSocketService.ws.send("updated-user-profile-send-message", {
           userId: chatStore.user.id,
           url: chatStore.user.image,
-          about: response.data.value,
-          firstName: chatStore.user.firstName,
-        });
-        chatStore.user.about = response.data.value;
-        const settingsAbout = document.querySelector(
+          about: about,
+          firstName: firstName,
+      });
+
+      // Update UI if needed (Settings page might be listening or we manually updateDOM)
+      const settingsAbout = document.querySelector(
           ".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1",
-        );
-        if (settingsAbout) {
-          settingsAbout.textContent = response.data.value;
-        }
-        toastr.success(i18n.t("updateUserProfile.aboutUpdated"));
+      );
+      if (settingsAbout) {
+          settingsAbout.textContent = about;
       }
-    } else {
-      toastr.error(i18n.t("updateUserProfile.aboutError"));
-    }
+
+      toastr.success(i18n.t("updateUserProfile.nameUpdated")); // Or a generic "Profile Updated" message
+      return true;
+  } catch (error) {
+      toastr.error(i18n.t("error.generic") || "An error occurred");
+      console.error(error);
+      return false;
   }
 }
 

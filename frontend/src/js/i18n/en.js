@@ -120,9 +120,15 @@ export default {
     yes: "Yes",
     no: "No",
     continue: "Continue",
-    ok: "Ok",
-    upload: "Upload",
     cancel: "Cancel",
+    ok: "Ok",
+  },
+  common: {
+    save: "Save",
+    upload: "Upload",
+    delete: "Delete",
+    cancel: "Cancel",
+    ok: "Ok",
   },
   messageBox: {
     typing: "typing...",

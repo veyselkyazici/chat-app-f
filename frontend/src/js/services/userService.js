@@ -71,6 +71,19 @@ export const userService = {
     }
   },
 
+  updateUserProfile: async (data) => {
+    try {
+      const response = await axiosInstance.put(
+        `${USER_SERVICE_URL}/update-profile`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error:", error.message);
+      throw error;
+    }
+  },
+
   getUserWithUserKeyByAuthId: async () => {
     try {
       const response = await axiosInstance.post(
