@@ -50,7 +50,6 @@ body {
   flex-direction: column;
 }
 
-/* Reset & Helper Classes */
 *,
 *::before,
 *::after {
@@ -103,7 +102,7 @@ ul {
   align-items: center;
   padding: 2rem;
   width: 100%;
-  max-width: 480px; /* Wider card */
+  max-width: 480px; 
   margin: 0 auto;
 }
 
@@ -149,7 +148,7 @@ ul {
 }
 
 .rules li.ok {
-  color: #3ac77a; /* yeşil */
+  color: #3ac77a; 
   --icon: "✓";
 }
 
@@ -172,8 +171,8 @@ ul {
   font-weight: bold;
   text-decoration: underline;
 }
-/* Footer styles */
 
+/* Footer styles */
 .social-icons {
   display: flex;
   justify-content: center;
@@ -389,24 +388,23 @@ strong {
   flex-basis: 100%;
   flex-grow: 1;
   padding-bottom: 10px;
-  overflow-y: auto; /* Enable vertical scrolling */
-  min-height: 0; /* Important for flex child scrolling */
+  overflow-y: auto;
+  min-height: 0;
+}
+.modal-footer {
+  display: flex;
+  padding: 16px 24px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .modal-footer-1 {
-  min-width: 0;
-  min-height: 0;
-  align-items: flex-end;
-  flex-shrink: 1;
-  flex-wrap: nowrap;
-  flex-basis: auto;
   display: flex;
-  column-gap: 16px;
-  flex-direction: row;
-  align-self: auto;
-  justify-content: flex-start;
-  order: 0;
-  flex-grow: 0;
+  column-gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .editButton {
@@ -467,7 +465,6 @@ body,
   height: 100%;
   padding: 0;
   margin: 0;
-  /* overflow: hidden; */
 }
 
 .chats {
@@ -795,14 +792,12 @@ svg {
   justify-content: center;
   align-items: center;
   text-align: center;
-  /* padding: 20px; */
 }
 
 .default-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  /* min-height: 100vh; */
 }
 
 .content {
@@ -1080,7 +1075,7 @@ button {
   padding-bottom: 20px;
   width: 100%;
   max-width: 500px;
-  max-height: 90vh; /* Limit height to viewport */
+  max-height: 90vh;
   overflow-x: hidden;
   padding-top: 22px;
   overflow-y: hidden;
@@ -1103,12 +1098,12 @@ button {
 }
 
 .modal-body-upload-photo {
-  width: 500px;
+  width: 100%;
+  max-width: 500px;
   padding-top: 0;
-  overflow-x: hidden;
-  height: 500px;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
   padding-bottom: 0;
-  overflow-y: hidden;
   border-top-left-radius: 3px;
   padding-left: 0;
   flex-direction: column;
@@ -1123,9 +1118,46 @@ button {
     0 17px 50px 0 rgba(11, 20, 26, 0.19),
     0 12px 15px 0 rgba(11, 20, 26, 0.24);
   position: relative;
-  flex-grow: 0;
+  flex-grow: 1;
   border-top-right-radius: 3px;
   border-bottom-right-radius: 3px;
+}
+
+@media screen and (max-width: 600px) {
+  .modal-body-upload-photo {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+}
+
+.upload-photo-modal-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-photo-modal-content-1 {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.upload-photo-modal-content-1-1-1-1 {
+  position: relative;
+  top: 0;
+  left: 0;
+}
+
+.canvas-1 {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .modal1-3 {
@@ -1136,7 +1168,13 @@ button {
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  padding: 20px; /* Add some padding for mobile safety */
+  padding: 20px;
+}
+
+@media screen and (max-width: 600px) {
+  .modal1-3 {
+    padding: 0;
+  }
 }
 
 .modal1-2 {
@@ -1460,7 +1498,6 @@ button {
   padding-right: 0.4em;
   background-color: #25d366;
   vertical-align: top;
-  /* UnreadMessageCount tam yuvarlak gelmiyor*/
   width: 22px;
   height: 20px;
   align-items: center;
@@ -1667,7 +1704,7 @@ button.chat-options-btn:focus {
   }
 }
 
-/* Kişiler, Topluluklar tıklanınca gösterilecek divlerin css i*/
+
 .a1 {
   position: absolute;
   top: 0;
@@ -2002,8 +2039,6 @@ button.chat-options-btn:focus {
 }
 
 /* MESSAGE-BOX */
-
-/*Kişiyi engelleyince input alanı kapanacak */
 .block-message-input {
   padding-top: 14px;
   padding-bottom: 14px;
@@ -2444,7 +2479,7 @@ button.chat-options-btn:focus {
   background-color: transparent;
   border-left: 1px solid #e9edef;
   transition: background 0.3s ease-out 0.1s;
-  pointer-events: auto; /* Ensure scrolling works */
+  pointer-events: auto;
 }
 
 .message-box1-5-1-2-1-3 {
@@ -2767,136 +2802,7 @@ button.chat-options-btn:focus {
 .message-emoji-span-1 {
 }
 
-/* EMOJI
-.emoji-box1-1-7-2-1-1-1-1 {
-  overflow: hidden;
-  transform: translateZ(0);
-  transform-origin: bottom;
-  display: flex;
-  flex-direction: column;
-}
-
-.emoji-box1-1-7-2-1-1-1-1-1 {
-  height: calc(100% - 44px);
-}
-
-.emoji-box1-1-7-2-1-1-1-1-1-1 {
-  height: 100%;
-  border-left-width: 1px;
-  border-left-color: #e9edef;
-  border-left-style: solid;
-  position: relative;
-  background-color: #f0f2f5;
-}
-
-.emoji-box1-1-7-2-1-1-1-1-1-1-1 {
-  height: calc(100% - 53px);
-  z-index: 1;
-  position: relative;
-}
-
-.emoji-box1-1-7-2-1-1-1-1-1-1-1-1 {
-  position: relative;
-  box-sizing: border-box;
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: scroll;
-}
-
-.emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1 {
-  overflow-x: hidden;
-  margin-top: -1px;
-  overflow-y: hidden;
-  position: relative;
-}
-
-.emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1-1 {
-  width: 100%;
-  position: absolute;
-}
-
-.emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1-1-1 {
-  margin-right: 12px;
-  margin-left: 12px;
-}
-
-.emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1-1-1-1 {
-  white-space: nowrap;
-}
-
-.emojik.wa {
-  background-size: 160px 160px;
-}
-
-.emojik {
-  width: 32px;
-  height: 32px;
-  image-rendering: -webkit-optimize-contrast;
-}
-
-.emoji,
-.emojik {
-  display: inline-block;
-  vertical-align: top;
-  zoom: 1;
-  border: 0;
-}
-
-.emoji-box1-1-7-2-1-1-1-1-1-1-1-1-1-1-1-1 .emojik {
-  margin: 6px;
-  cursor: pointer;
-  border-radius: 3px;
-}
-
-.emoji-1box1-1-7-2-1-1-1-1-1-1-1-1-1 {
-  width: 100%;
-  position: absolute;
-}
-
-.emoji-1box1-1-7-2-1-1-1-1-1-1-1-1-1-1 {
-  padding: 5px 0 8px 0;
-  margin: 0 12px;
-  font-size: 14px;
-  color: #8696a0;
-}
-
-.emoji.wa.b82,
-.emojik.wa.b82 {
-  background-image: url(https://web.whatsapp.com/emoji/v1/15/1/2/sprite/w/40/82.webp);
-}
-
-.emoji.wa.b107,
-.emojik.wa.b107 {
-  background-image: url(https://web.whatsapp.com/emoji/v1/15/1/2/sprite/w/40/107.webp);
-}
-
-.emoji.wa.b98,
-.emojik.wa.b98 {
-  background-image: url(https://web.whatsapp.com/emoji/v1/15/1/2/sprite/w/40/98.webp);
-}
-
-.emoji.wa.b106,
-.emojik.wa.b106 {
-  background-image: url(https://web.whatsapp.com/emoji/v1/15/1/2/sprite/w/40/106.webp);
-}
-
-.emoji.wa.b3,
-.emojik.wa.b3 {
-  background-image: url(https://web.whatsapp.com/emoji/v1/15/1/2/sprite/w/40/3.webp);
-}
-
-.emoji.wa.b83,
-.emojik.wa.b83 {
-  background-image: url(https://web.whatsapp.com/emoji/v1/15/1/2/sprite/w/40/83.webp);
-}
-
-.emoji.wa.b85,
-.emojik.wa.b85 {
-  background-image: url(https://web.whatsapp.com/emoji/v1/15/1/2/sprite/w/40/85.webp);
-} */
-
 /* MESSAGE ROW */
-
 .message1 {
   margin-bottom: 12px;
   position: relative;
@@ -4570,22 +4476,19 @@ form h1 {
 }
 /* Password toggle */
 .toggle-visibility {
-  /* Konumlandırma */
   position: absolute;
-  right: 14px; /* ikon + aralık */
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
 
-  /* Varsayılan buton görünümünü temizle */
   padding: 0;
   border: none;
   background: none;
   cursor: pointer;
 
-  /* Görsel ayarlar */
   display: flex;
   align-items: center;
-  font-size: 18px; /* ikon boyutu */
+  font-size: 18px;
   color: #888;
 }
 
@@ -4764,14 +4667,11 @@ form h1 {
 .upload-photo-modal-content-1 {
   width: 100%;
   height: 100%;
-  top: 0;
-  align-items: flex-end;
-  justify-content: center;
-  flex-direction: column;
   display: flex;
+  align-items: center;
+  justify-content: center;
   background-color: #e9edef;
-  left: 0;
-  position: absolute;
+  position: relative;
 }
 
 .upload-photo-modal-content-1-1-1 {
@@ -5117,7 +5017,6 @@ form h1 {
   cursor: pointer;
   font-size: 14px;
   transition: all 0.3s ease;
-  /* Buton her zaman görünür */
   display: inline-block !important;
 }
 
@@ -5278,7 +5177,6 @@ form h1 {
 }
 
 /* MOBILE RESPONSIVE */
-
 @media screen and (max-width: 900px) {
   .chat-container {
     display: block !important;
@@ -5407,7 +5305,6 @@ form h1 {
     display: flex !important;
   }
 
-  /* Mobil 100dvh fix */
   .chat-container,
   .message-box,
   .message-box1,
@@ -5482,15 +5379,16 @@ form h1 {
     width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
+    padding: 0 !important;
   }
   .modal1-4,
   .modal-body-upload-photo {
-    width: 90% !important;
-    max-width: 90% !important;
-    height: auto !important;
-    max-height: 90vh;
-    margin: auto;
-    border-radius: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    max-height: 100vh !important;
+    margin: 0;
+    border-radius: 0 !important;
   }
   .modal1-2 {
     display: flex;
@@ -5557,30 +5455,29 @@ form h1 {
   position: absolute;
   top: 50%;
   left: 0;
-  transform: translateY(-65%); /* Texti biraz daha yukari alir */
+  transform: translateY(-65%);
   color: #8696a0;
   pointer-events: none;
   z-index: 1;
-  line-height: 1; /* Satir yuksekligini sifirlar */
+  line-height: 1; 
 }
 
-/* Emoji Picker UI Improvements */
 .emoji-picker-container {
   padding: 1rem;
-  background: var(--card-bg); /* Glassmorphism if supported by var */
-  background-color: #fff; /* Fallback */
+  background: var(--card-bg); 
+  background-color: #fff; 
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   max-height: 220px;
-  overflow-y: hidden; /* Don't scroll container */
+  overflow-y: hidden; 
   display: flex;
   flex-direction: column;
-  pointer-events: auto; /* Ensure clicks are registered */
+  pointer-events: auto; 
 }
 
 .emoji-grid {
   overflow-y: auto;
-  overflow-x: hidden; /* Remove horizontal scrollbar */
+  overflow-x: hidden; 
   flex: 1;
   scrollbar-width: thin;
   scrollbar-color: var(--primary-color) transparent;
@@ -5588,7 +5485,7 @@ form h1 {
   grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
   gap: 8px;
   justify-items: center;
-  padding-right: 4px; /* Prevent scrollbar overlapping content */
+  padding-right: 4px; 
 }
 
 .emoji-grid::-webkit-scrollbar {
@@ -5638,7 +5535,7 @@ form h1 {
 
 .emoji-item:hover {
   transform: scale(1.2);
-  background-color: rgba(99, 102, 241, 0.1); /* Primary color low opacity */
+  background-color: rgba(99, 102, 241, 0.1); 
 }
 
 .emoji-item:active {

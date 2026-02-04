@@ -163,6 +163,7 @@ export default {
       "Seçilen görsel çok küçük. Lütfen en az 192x192 piksel boyutlarında bir görsel seçin.",
     nameUpdated: "İsim başarıyla güncellendi",
     aboutUpdated: "Hakkında başarıyla güncellendi",
+    dragToAdjust: "Ayarlamak için resmi sürükleyin",
   },
   chat: {
     loadingMessage: "Sohbetler yükleniyor...",

@@ -92,7 +92,6 @@ async function userUpdateModal(user, bool) {
     id: "nameInput",
   });
   nameInput.value = user.firstName;
-  // Edit button removed
   const errorMessageElement = createElement("div", "error-message");
 
   const nameContainer = createElement("div", "input-container", null, { style: "margin-bottom: 10px;" });
@@ -115,7 +114,6 @@ async function userUpdateModal(user, bool) {
     id: "aboutInput",
   });
   aboutInput.value = user.about;
-  // Edit button removed
   const aboutErrorMessageElement = createElement("div", "error-message");
 
   const aboutContainer = createElement("div", "input-container", null, { style: "margin-bottom: 15px;" });
@@ -205,11 +203,9 @@ async function saveUserProfile(user, isRegistration = false) {
   try {
       const response = await userService.updateUserProfile({ firstName, about });
       
-      // Update Store
       chatStore.user.firstName = firstName;
       chatStore.user.about = about;
 
-      // WebSocket Notify
       webSocketService.ws.send("updated-user-profile-send-message", {
           userId: chatStore.user.id,
           url: chatStore.user.image,
@@ -217,7 +213,6 @@ async function saveUserProfile(user, isRegistration = false) {
           firstName: firstName,
       });
 
-      // Update UI if needed (Settings page might be listening or we manually updateDOM)
       const settingsAbout = document.querySelector(
           ".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1",
       );
@@ -225,7 +220,7 @@ async function saveUserProfile(user, isRegistration = false) {
           settingsAbout.textContent = about;
       }
 
-      toastr.success(i18n.t("updateUserProfile.nameUpdated")); // Or a generic "Profile Updated" message
+      toastr.success(i18n.t("updateUserProfile.nameUpdated"));
       return true;
   } catch (error) {
       toastr.error(i18n.t("error.generic") || "An error occurred");
@@ -361,6 +356,7 @@ const handleOutsideClick = (event) => {
 };
 
 let canvas, ctx;
+let canvas1;
 let img = new Image();
 let imgX = 0,
   imgY = 0,
@@ -375,8 +371,14 @@ function uploadPhoto(event, userId) {
   reader.onload = function (e) {
     img.src = e.target.result;
     img.onload = function () {
-      const parentWidth = 506.925;
-      const parentHeight = 366;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      const isMobile = viewportWidth <= 600;
+      const maxModalDim = isMobile ? viewportWidth : Math.min(500, viewportWidth * 0.9, viewportHeight * 0.7);
+      const parentWidth = maxModalDim;
+      const parentHeight = isMobile ? Math.min(viewportHeight - 100, viewportWidth) : maxModalDim;
+
       const imageWidth = img.naturalWidth;
       const imageHeight = img.naturalHeight;
 
@@ -419,172 +421,110 @@ function uploadPhoto(event, userId) {
         left = 0;
       }
 
-      const deneme5 = createElement("div", "deneme5");
-      const deneme6 = createElement("div", "deneme6");
-      const deneme7 = createElement("div", "deneme7");
-      const uploadPhotoModalContent = createElement(
+      const deneme5 = createElement("div", "deneme5", { 
+        height: isMobile ? "100%" : `${parentHeight}px`, 
+        position: "relative",
+        width: "100%"
+      });
+      const deneme6 = createElement("div", "deneme6", { height: "100%", position: "relative" });
+      const deneme7 = createElement("div", "deneme7", { height: "100%", position: "relative" });
+      const cropModalContent = createElement(
         "div",
         "upload-photo-modal-content",
       );
-      const uploadPhotoModalContentZoom = createElement(
+      const zoomContainer = createElement(
         "div",
         "upload-photo-modal-content-zoom",
       );
 
-      const uploadPhotoModalContentZoom1 = createElement(
+      const zoomInner = createElement(
         "div",
         "upload-photo-modal-content-zoom1",
       );
-      uploadPhotoModalContentZoom.append(uploadPhotoModalContentZoom1);
+      zoomContainer.append(zoomInner);
 
-      const uploadPhotoModalContentZoom2 = createElement(
+      const zoomPlusBtn = createElement(
         "button",
         "upload-photo-modal-content-zoom2",
         {},
         { tabIndex: "0", type: "button" },
       );
-      uploadPhotoModalContentZoom.append(uploadPhotoModalContentZoom2);
-      const uploadPhotoModalContentZoom2_span = createElement(
-        "span",
-        "",
-        {},
-        { "aria-hidden": "true", "data-icon": "plus" },
-      );
-
-      const uploadPhotoModalContentZoom2_span_svg = createSvgElement("svg", {
+      zoomContainer.append(zoomPlusBtn);
+      const zoomPlusSpan = createElement("span", "", {}, { "aria-hidden": "true", "data-icon": "plus" });
+      const zoomPlusSvg = createSvgElement("svg", {
         class: "svg-element",
         viewBox: "0 0 24 24",
         height: "24",
         width: "24",
         preserveAspectRatio: "xMidYMid meet",
       });
-      const uploadPhotoModalContentZoom2_span_svg_title =
-        document.createElement("title");
-      uploadPhotoModalContentZoom2_span_svg_title.textContent = "plus";
-      const uploadPhotoModalContentZoom2_span_svg_path = createSvgElement(
-        "path",
-        { fill: "currentColor", d: "M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z" },
-      );
-      uploadPhotoModalContentZoom2_span_svg.append(
-        uploadPhotoModalContentZoom2_span_svg_title,
-      );
-      uploadPhotoModalContentZoom2_span_svg.append(
-        uploadPhotoModalContentZoom2_span_svg_path,
-      );
-      uploadPhotoModalContentZoom2_span.append(
-        uploadPhotoModalContentZoom2_span_svg,
-      );
-      uploadPhotoModalContentZoom2.append(uploadPhotoModalContentZoom2_span);
+      zoomPlusSvg.innerHTML = '<title>plus</title><path fill="currentColor" d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>';
+      zoomPlusSpan.append(zoomPlusSvg);
+      zoomPlusBtn.append(zoomPlusSpan);
 
-      const uploadPhotoModalContentZoom3 = createElement(
+      const zoomMinusBtn = createElement(
         "button",
         "upload-photo-modal-content-zoom3",
         { tabIndex: "0", type: "button" },
       );
-      uploadPhotoModalContentZoom.append(uploadPhotoModalContentZoom3);
-      const uploadPhotoModalContentZoom3_span = createElement(
-        "span",
-        "",
-        {},
-        { "aria-hidden": "true", "data-icon": "minus" },
-      );
-
-      const uploadPhotoModalContentZoom3_span_svg = createSvgElement("svg", {
+      zoomContainer.append(zoomMinusBtn);
+      const zoomMinusSpan = createElement("span", "", {}, { "aria-hidden": "true", "data-icon": "minus" });
+      const zoomMinusSvg = createSvgElement("svg", {
         class: "svg-element",
         viewBox: "0 0 28 28",
         height: "28",
         width: "28",
         preserveAspectRatio: "xMidYMid meet",
-        version: "1.1",
-        x: "0px",
-        y: "0px",
-        "enable-background": "new 0 0 28 28",
       });
-      const uploadPhotoModalContentZoom3_span_svg_title =
-        document.createElement("title");
-      uploadPhotoModalContentZoom3_span_svg_title.textContent = "minus";
-      const uploadPhotoModalContentZoom3_span_svg_path = createSvgElement(
-        "path",
-        {
-          fill: "currentColor",
-          d: "M8.381,14.803v-1.605h11.237v1.605C19.618,14.803,8.381,14.803,8.381,14.803z",
-        },
-      );
-      uploadPhotoModalContentZoom3_span_svg.append(
-        uploadPhotoModalContentZoom3_span_svg_title,
-      );
-      uploadPhotoModalContentZoom3_span_svg.append(
-        uploadPhotoModalContentZoom3_span_svg_path,
-      );
-      uploadPhotoModalContentZoom3_span.append(
-        uploadPhotoModalContentZoom3_span_svg,
-      );
-      uploadPhotoModalContentZoom3.append(uploadPhotoModalContentZoom3_span);
-      uploadPhotoModalContent.append(uploadPhotoModalContentZoom);
+      zoomMinusSvg.innerHTML = '<title>minus</title><path fill="currentColor" d="M8.381,14.803v-1.605h11.237v1.605C19.618,14.803,8.381,14.803,8.381,14.803z"></path>';
+      zoomMinusSpan.append(zoomMinusSvg);
+      zoomMinusBtn.append(zoomMinusSpan);
 
-      const uploadPhotoModalContent_1 = createElement(
+      const imageAreaContainer = createElement(
         "div",
         "upload-photo-modal-content-1",
       );
-      const uploadPhotoModalContent_1_1 = createElement("span", "");
-      const uploadPhotoModalContent_1_1_1 = createElement(
+      const cropContainer = createElement(
         "div",
-        "upload-photo-modal-content-1-1-1",
-      );
-      const uploadPhotoModalContent_1_1_1_1 = createElement(
-        "div",
-        "upload-photo-modal-content-1-1-1-1",
+        "crop-container",
         {
-          position: "absolute",
+          position: "relative",
           width: `${parentWidth}px`,
           height: `${parentHeight}px`,
-          top: "0px",
-          left: "-3.4626px",
-        },
+          overflow: "hidden",
+          backgroundColor: "#e9edef"
+        }
       );
-      const uploadPhotoModalContent_1_1_1_1_1 = createElement(
+      const canvasWrapper = createElement(
         "div",
-        "upload-photo-modal-content-1-1-1-1-1",
-      );
-      const uploadPhotoModalContent_1_1_1_1_1_1 = createElement(
-        "div",
-        "upload-photo-modal-content-1-1-1-1-1-1",
-      );
-      const uploadPhotoModalContent_1_1_1_1_1_1_1 = createElement(
-        "div",
-        "upload-photo-modal-content-1-1-1-1-1-1-1",
+        "canvas-wrapper",
         {
           position: "absolute",
           width: `${width}px`,
           height: `${height}px`,
           top: `${top}px`,
           left: `${left}px`,
-        },
+        }
       );
-      const canvas1 = createElement("canvas", "canvas-1", { display: "block" });
+
+      canvas1 = createElement("canvas", "canvas-1", { display: "block" });
       const canvas2 = createElement("canvas", "canvas-2");
-      uploadPhotoModalContent_1_1_1_1_1_1_1.append(canvas1);
-      uploadPhotoModalContent_1_1_1_1_1_1_1.append(canvas2);
-      uploadPhotoModalContent_1_1_1_1_1_1.append(
-        uploadPhotoModalContent_1_1_1_1_1_1_1,
-      );
-      uploadPhotoModalContent_1_1_1_1_1.append(
-        uploadPhotoModalContent_1_1_1_1_1_1,
-      );
-      uploadPhotoModalContent_1_1_1_1.append(uploadPhotoModalContent_1_1_1_1_1);
-      uploadPhotoModalContent_1_1_1.append(uploadPhotoModalContent_1_1_1_1);
-      uploadPhotoModalContent_1_1.append(uploadPhotoModalContent_1_1_1);
-      uploadPhotoModalContent_1.append(uploadPhotoModalContent_1_1);
-      uploadPhotoModalContent.append(uploadPhotoModalContent_1);
-      deneme7.append(uploadPhotoModalContent);
+      canvasWrapper.append(canvas1);
+      canvasWrapper.append(canvas2);
+      cropContainer.append(canvasWrapper);
+      imageAreaContainer.append(cropContainer);
+
+      cropModalContent.append(zoomContainer);
+      cropModalContent.append(imageAreaContainer);
+      deneme7.append(cropModalContent);
       deneme6.append(deneme7);
       deneme5.append(deneme6);
 
-      uploadPhotoModalContentZoom2.addEventListener("click", () => {
+      zoomPlusBtn.addEventListener("click", () => {
         zoomImage(1.1, canvas1);
       });
 
-      uploadPhotoModalContentZoom3.addEventListener("click", () => {
+      zoomMinusBtn.addEventListener("click", () => {
         zoomImage(0.9, canvas1);
       });
 
@@ -599,7 +539,7 @@ function uploadPhoto(event, userId) {
         "div",
         "close-button-1",
         null,
-        { ariaLabel: "Kapat", tabIndex: "0", role: "button" },
+        { ariaLabel: i18n.t("modal.cancel"), tabIndex: "0", role: "button" },
       );
       const uploadPhotoSpan = createElement("span", "", null, {
         "data-icon": "x",
@@ -625,44 +565,43 @@ function uploadPhoto(event, userId) {
         "d",
         "M19.6004 17.2L14.3004 11.9L19.6004 6.60005L17.8004 4.80005L12.5004 10.2L7.20039 4.90005L5.40039 6.60005L10.7004 11.9L5.40039 17.2L7.20039 19L12.5004 13.7L17.8004 19L19.6004 17.2Z",
       );
-
-      const uploadPhotoTitle = createElement(
-        "div",
-        "upload-photo-title",
-        null,
-        { title: "Ayarlamak için resmi sürükleyin" },
-      );
-      const uploadPhotoH1 = createElement(
-        "div",
-        "upload-photo-h1",
-        null,
-        null,
-        "Ayarlamak için resmi sürükleyin",
-      );
-
-      uploadPhotoTitle.append(uploadPhotoH1);
       uploadPhotoCloseSvg.append(uploadPhotoCloseTitle);
       uploadPhotoCloseSvg.append(uploadPhotoClosePath);
       uploadPhotoSpan.append(uploadPhotoCloseSvg);
       uploadPhotoCloseButton_1.append(uploadPhotoSpan);
       uploadPhotoCloseButton.append(uploadPhotoCloseButton_1);
       uploadPhotoHeader.append(uploadPhotoCloseButton);
+
+      const uploadPhotoTitle = createElement(
+        "div",
+        "upload-photo-title",
+        null,
+        { title: i18n.t("updateUserProfile.dragToAdjust") },
+      );
+      const uploadPhotoH1 = createElement(
+        "div",
+        "upload-photo-h1",
+        null,
+        null,
+        i18n.t("updateUserProfile.dragToAdjust"),
+      );
+      uploadPhotoTitle.append(uploadPhotoH1);
       uploadPhotoHeader.append(uploadPhotoTitle);
+
       new Modal({
-        title: "",
         contentHtml: deneme5,
         mainCallback: async () => {
           cropImage(canvas1, userId, file);
           return true;
         },
-        buttonText: i18n.t("modal.upload"),
+        buttonText: i18n.t("common.upload"),
         showBorders: false,
         secondOptionButton: false,
         cancelButton: false,
-        cancelButtonId: "uploadPhoto",
+        cancelButtonId: "uploadPhotoCancel",
         modalBodyCSS: "modal-body-upload-photo",
         headerHtml: uploadPhotoHeader,
-        modalOkButtonId: "uploadPhoto",
+        modalOkButtonId: "uploadPhotoOk",
         closeOnBackdrop: true,
         closeOnEscape: true,
       });
@@ -681,13 +620,25 @@ function uploadPhoto(event, userId) {
       const scaleY = parentHeight / imageHeight;
       const scale = Math.max(scaleX, scaleY);
 
-      circleRadius = 329.4 / 2 / scale;
+      circleRadius = (parentWidth * 0.65) / 2 / scale;
 
       drawImage(canvas1);
 
-      canvas1.addEventListener("mousedown", startDrag);
+      canvas1.addEventListener("mousedown", (event) => startDrag(event));
       canvas1.addEventListener("mousemove", (event) => onDrag(event, canvas1));
       canvas1.addEventListener("mouseup", stopDrag);
+      
+      // Add touch events for mobile responsiveness
+      canvas1.addEventListener("touchstart", (e) => {
+        const touch = e.touches[0];
+        startDrag({ clientX: touch.clientX, clientY: touch.clientY });
+      });
+      canvas1.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        onDrag({ clientX: touch.clientX, clientY: touch.clientY }, canvas1);
+      }, { passive: false });
+      canvas1.addEventListener("touchend", stopDrag);
     };
   };
   reader.readAsDataURL(file);
@@ -716,14 +667,20 @@ function drawImage(canvas1) {
 
 function startDrag(e) {
   isDragging = true;
-  startX = e.clientX - imgX;
-  startY = e.clientY - imgY;
+  const rect = canvas1.getBoundingClientRect();
+  const scaleX = canvas1.width / rect.width;
+  const scaleY = canvas1.height / rect.height;
+  startX = (e.clientX - rect.left) * scaleX - imgX;
+  startY = (e.clientY - rect.top) * scaleY - imgY;
 }
 
 function onDrag(e, canvas1) {
   if (!isDragging) return;
-  imgX = e.clientX - startX;
-  imgY = e.clientY - startY;
+  const rect = canvas1.getBoundingClientRect();
+  const scaleX = canvas1.width / rect.width;
+  const scaleY = canvas1.height / rect.height;
+  imgX = (e.clientX - rect.left) * scaleX - startX;
+  imgY = (e.clientY - rect.top) * scaleY - startY;
   constrainImagePosition(canvas1);
   drawImage(canvas1);
 }

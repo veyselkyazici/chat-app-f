@@ -122,6 +122,7 @@ export default {
     continue: "Continue",
     cancel: "Cancel",
     ok: "Ok",
+    upload: "Upload",
   },
   common: {
     save: "Save",
@@ -157,6 +158,7 @@ export default {
       "The selected image is too small. Please choose an image with minimum dimensions of 192x192 pixels.",
     nameUpdated: "Name updated successfully",
     aboutUpdated: "About updated successfully",
+    dragToAdjust: "Drag the image to adjust",
   },
   chat: {
     loadingMessage: "Loading chats...",
