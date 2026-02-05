@@ -5378,16 +5378,26 @@ form h1 {
     min-width: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    border-radius: 0 !important;
     padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
   }
-  .modal1-4,
+  .modal1-4 {
+    width: 90% !important;
+    max-width: 450px !important;
+    height: auto !important;
+    max-height: 85vh !important;
+    margin: auto !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+  }
   .modal-body-upload-photo {
     width: 100% !important;
     max-width: 100% !important;
     height: 100% !important;
     max-height: 100vh !important;
-    margin: 0;
+    margin: 0 !important;
     border-radius: 0 !important;
   }
   .modal1-2 {
