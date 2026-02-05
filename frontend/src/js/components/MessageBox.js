@@ -1476,7 +1476,8 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
             message,
             message.senderId === chatStore.user.id,
           );
-          return { ...message, decryptedMessage: decryptedMessage };
+          message.decryptedMessage = decryptedMessage;
+          return message;
         } else {
           return message;
         }

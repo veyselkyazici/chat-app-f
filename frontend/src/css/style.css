@@ -3981,6 +3981,28 @@ button.chat-options-btn:focus {
   vertical-align: top;
 }
 
+.settings-back-btn {
+  width: 54px;
+  flex: none;
+}
+
+.settings-back-btn-1 {
+  width: fit-content;
+  color: #54656f;
+  cursor: pointer;
+  vertical-align: top;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.settings-back-btn-1:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
 .settings-background-mouseleave {
   border-bottom-color: #e9edef;
 }

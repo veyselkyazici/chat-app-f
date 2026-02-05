@@ -141,19 +141,19 @@ function chatsVirtualScroll(item, listItem, newIndex) {
     }
   }
   item.dataset.chatId = listItem.chatDTO.id;
-  if (chatStore.selectedChatUserId !== null) {
-    const isSelected =
-      chatStore.selectedChatUserId === listItem.userProfileResponseDTO.id;
-    if (isSelected) {
-      item.setAttribute("aria-selected", "true");
-      item.querySelector(".chat").classList.add("selected-chat");
-    } else {
-      item.setAttribute("aria-selected", "false");
-      item.querySelector(".chat").classList.remove("selected-chat");
-    }
+  const innerDiv = item.querySelector(".chat-box > div");
+  const isSelected = chatStore.selectedChatUserId === listItem.userProfileResponseDTO.id;
+
+  if (isSelected) {
+    innerDiv.setAttribute("aria-selected", "true");
+    item.querySelector(".chat").classList.add("selected-chat");
+  } else {
+    innerDiv.setAttribute("aria-selected", "false");
+    item.querySelector(".chat").classList.remove("selected-chat");
   }
+  const lastMessage = chatStore.getLastMessage(listItem);
   const time = chatBoxLastMessageFormatDateTime(
-    listItem.chatDTO.messages[0].fullDateTime
+    lastMessage.fullDateTime
   );
   const nameSpan = item.querySelector(".name-span");
   const timeSpan = item.querySelector(".time");
@@ -165,7 +165,7 @@ function chatsVirtualScroll(item, listItem, newIndex) {
     ? listItem.contactsDTO.userContactName
     : listItem.userProfileResponseDTO.email;
   timeSpan.textContent = time;
-  messageSpan.textContent = listItem.chatDTO.messages[0].decryptedMessage;
+  messageSpan.textContent = lastMessage.decryptedMessage;
   item.dataset.user = nameSpan.textContent = listItem.contactsDTO
     .userContactName
     ? listItem.contactsDTO.userContactName

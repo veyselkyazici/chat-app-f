@@ -141,6 +141,7 @@ export default class Chat extends AbstractView {
 
     await this.getContactList();
     await this.getChatList();
+    console.log(chatStore.user.id);
   }
   async handleMissingUserKey() {
     const storedSessionKey = sessionStorage.getItem("sessionKey");
@@ -183,7 +184,7 @@ export default class Chat extends AbstractView {
 
   async getChatList() {
     const summaries = await chatService.getChatSummaries();
-    
+
     const finalList = await Promise.all(
       summaries.map(async (item) => {
         const isSender =
@@ -341,6 +342,8 @@ export default class Chat extends AbstractView {
     ws.subscribe(readMessagesChannel, (msg) => {
       const json = JSON.parse(msg.body);
 
+      // if (!json || json.length === 0) return;
+
       const first = json[0];
 
       const updated = chatStore.chatList.map((chat) => {
@@ -385,8 +388,19 @@ export default class Chat extends AbstractView {
 
       const incoming = new MessageDTO({ ...dto });
 
-      chat.chatDTO.messages[0] = incoming;
-      chat.userChatSettingsDTO.unreadMessageCount = dto.unreadMessageCount;
+      if (chat.chatDTO.messages.length === 1 && chat.chatDTO.messages[0].id === undefined) {
+          chat.chatDTO.messages[0] = incoming;
+      } else {
+          chat.chatDTO.messages.push(incoming);
+      }
+      // unread badge update
+      const messageBoxOpen = isMessageBoxDomExists(dto.chatRoomId);
+
+      if (messageBoxOpen) {
+        chat.userChatSettingsDTO.unreadMessageCount = 0;
+      } else {
+        chat.userChatSettingsDTO.unreadMessageCount = dto.unreadMessageCount;
+      }
 
       updateChatBox(chat);
 
@@ -394,34 +408,41 @@ export default class Chat extends AbstractView {
         `.chat1[data-chat-id="${dto.chatRoomId}"]`,
       );
 
-      // unread badge update
       if (chatElement) {
         const options = chatElement.querySelector(".chat-options");
         const span = chatElement.querySelector(".unread-message-count-span");
 
-        if (span) {
-          span.textContent = dto.unreadMessageCount;
-        } else {
-          const div = createElement("div", "unread-message-count-div");
-          const spanNew = createElement(
-            "span",
-            "unread-message-count-span",
-            {},
-            { "aria-label": `${dto.unreadMessageCount} unread messages` },
-            dto.unreadMessageCount,
-          );
-          div.append(spanNew);
-          options.firstElementChild.append(div);
+        if (chat.userChatSettingsDTO.unreadMessageCount > 0) {
+          if (span) {
+            span.textContent = chat.userChatSettingsDTO.unreadMessageCount;
+          } else {
+            const div = createElement("div", "unread-message-count-div");
+            const spanNew = createElement(
+              "span",
+              "unread-message-count-span",
+              {},
+              {
+                "aria-label": `${chat.userChatSettingsDTO.unreadMessageCount} unread messages`,
+              },
+              chat.userChatSettingsDTO.unreadMessageCount,
+            );
+            div.append(spanNew);
+            options.firstElementChild.append(div);
+          }
+        } else if (span) {
+          span.parentElement.remove();
         }
       }
 
       // message box açıkken read-message gönder
-      if (isMessageBoxDomExists(dto.chatRoomId)) {
+      if (messageBoxOpen) {
         const msgDto = {
           recipientId: dto.recipientId,
           userChatSettingsId: chat.userChatSettingsDTO.id,
           chatRoomId: dto.chatRoomId,
+          chatId: dto.chatRoomId,
           senderId: dto.senderId,
+          unreadMessageCount: dto.unreadMessageCount,
         };
 
         renderMessage(

@@ -364,6 +364,9 @@ let imgX = 0,
 let isDragging = false;
 let startX, startY;
 let circleRadius = 0;
+let needsRedraw = false;
+let canvasRect = null;
+
 function uploadPhoto(event, userId) {
   const file = event.target.files[0];
   if (!file) return;
@@ -627,6 +630,7 @@ function uploadPhoto(event, userId) {
       canvas1.addEventListener("mousedown", (event) => startDrag(event));
       canvas1.addEventListener("mousemove", (event) => onDrag(event, canvas1));
       canvas1.addEventListener("mouseup", stopDrag);
+      window.addEventListener("mouseup", stopDrag); // Handle mouse up outside canvas
       
       // Add touch events for mobile responsiveness
       canvas1.addEventListener("touchstart", (e) => {
@@ -639,6 +643,8 @@ function uploadPhoto(event, userId) {
         onDrag({ clientX: touch.clientX, clientY: touch.clientY }, canvas1);
       }, { passive: false });
       canvas1.addEventListener("touchend", stopDrag);
+      window.addEventListener("touchend", stopDrag);
+
     };
   };
   reader.readAsDataURL(file);
@@ -667,27 +673,38 @@ function drawImage(canvas1) {
 
 function startDrag(e) {
   isDragging = true;
-  const rect = canvas1.getBoundingClientRect();
-  const scaleX = canvas1.width / rect.width;
-  const scaleY = canvas1.height / rect.height;
-  startX = (e.clientX - rect.left) * scaleX - imgX;
-  startY = (e.clientY - rect.top) * scaleY - imgY;
+  canvasRect = canvas1.getBoundingClientRect();
+  const scaleX = canvas1.width / canvasRect.width;
+  const scaleY = canvas1.height / canvasRect.height;
+  startX = (e.clientX - canvasRect.left) * scaleX - imgX;
+  startY = (e.clientY - canvasRect.top) * scaleY - imgY;
+  
+  const rafLoop = () => {
+    if (!isDragging) return;
+    if (needsRedraw) {
+      drawImage(canvas1);
+      needsRedraw = false;
+    }
+    requestAnimationFrame(rafLoop);
+  };
+  requestAnimationFrame(rafLoop);
 }
 
 function onDrag(e, canvas1) {
-  if (!isDragging) return;
-  const rect = canvas1.getBoundingClientRect();
-  const scaleX = canvas1.width / rect.width;
-  const scaleY = canvas1.height / rect.height;
-  imgX = (e.clientX - rect.left) * scaleX - startX;
-  imgY = (e.clientY - rect.top) * scaleY - startY;
+  if (!isDragging || !canvasRect) return;
+  const scaleX = canvas1.width / canvasRect.width;
+  const scaleY = canvas1.height / canvasRect.height;
+  imgX = (e.clientX - canvasRect.left) * scaleX - startX;
+  imgY = (e.clientY - canvasRect.top) * scaleY - startY;
   constrainImagePosition(canvas1);
-  drawImage(canvas1);
+  needsRedraw = true;
 }
 
 function stopDrag() {
   isDragging = false;
+  canvasRect = null;
 }
+
 
 function constrainImagePosition(canvas1) {
   const minX = canvas1.width / 2 - circleRadius;

@@ -102,6 +102,13 @@ class ChatStore {
     return this.state.chatList;
   }
 
+  getLastMessage(chat) {
+    if (!chat || !chat.chatDTO || !chat.chatDTO.messages || chat.chatDTO.messages.length === 0) {
+      return null;
+    }
+    return chat.chatDTO.messages[chat.chatDTO.messages.length - 1];
+  }
+
   get selectedChatUserId() {
     return this.state.selectedChatUserId;
   }

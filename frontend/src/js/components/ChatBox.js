@@ -52,8 +52,9 @@ const calculateVisibleItemCount = () => {
   return Math.ceil(boxHeight / 72) + 7;
 };
 async function createChatBox(chat, index) {
+  const lastMessage = chatStore.getLastMessage(chat);
   const formattedTime = chatBoxLastMessageFormatDateTime(
-    chat.chatDTO.messages[0].fullDateTime,
+    lastMessage.fullDateTime,
   );
   const chatElementDOM = document.createElement("div");
   chatElementDOM.classList.add("chat1");
@@ -141,10 +142,10 @@ async function createChatBox(chat, index) {
   lastMessageDiv.append(messageDiv);
   const messageSpan = createElement("span", "message-span", {}, { title: "" });
   messageDiv.append(messageSpan);
-  const bool = chat.chatDTO.messages[0].senderId === chatStore.user.id;
+  const bool = lastMessage.senderId === chatStore.user.id;
   if (bool) {
     if (
-      chat.chatDTO.messages[0].isSeen &&
+      lastMessage.isSeen &&
       chatStore.user.privacySettings.readReceipts &&
       chat.userProfileResponseDTO.privacySettings.readReceipts
     ) {
@@ -161,7 +162,7 @@ async function createChatBox(chat, index) {
     "message-span-span",
     { "min-height": "0px" },
     { dir: "ltr", "aria-label": "" },
-    chat.chatDTO.messages[0].decryptedMessage,
+    lastMessage.decryptedMessage,
   );
   messageSpan.append(innerMessageSpan);
 
@@ -712,11 +713,12 @@ function updateChatBoxElement(chatElement, newChatData, newIndex) {
     ? newChatData.contactsDTO.userContactName
     : newChatData.userProfileResponseDTO.email;
 
+  const lastMessage = chatStore.getLastMessage(newChatData);
   timeDiv.textContent = chatBoxLastMessageFormatDateTime(
-    newChatData.chatDTO.messages[0].fullDateTime,
+    lastMessage.fullDateTime,
   );
 
-  messageSpan.textContent = newChatData.chatDTO.messages[0].decryptedMessage;
+  messageSpan.textContent = lastMessage.decryptedMessage;
   chatElement.style.transform = `translateY(${newIndex * 72}px)`;
   chatElement.style.zIndex = chatStore.chatList.length - newIndex;
 }
@@ -726,8 +728,9 @@ function updateUnreadMessageCountAndSeenTick(chatElement, chatData) {
   );
   tickElements.forEach((el) => el.remove());
 
-  const isSender = chatData.chatDTO.messages[0].senderId === chatStore.user.id;
-  const isSeen = chatData.chatDTO.messages[0].isSeen;
+  const lastMessage = chatStore.getLastMessage(chatData);
+  const isSender = lastMessage.senderId === chatStore.user.id;
+  const isSeen = lastMessage.isSeen;
 
   if (chatData.userChatSettingsDTO.unreadMessageCount !== 0) {
     const unreadMessageCountElement = chatElement.querySelector(
@@ -837,7 +840,6 @@ async function handleChatClick(event) {
         await fetchMessages(chatData);
     },
   );
-
   if (chatData.userChatSettingsDTO.unreadMessageCount > 0) {
     if (
       chatData.userProfileResponseDTO.privacySettings.readReceipts &&
@@ -869,7 +871,9 @@ const removeUnreadMessageCountElement = (chatElement) => {
   const unreadMessageCountDiv = chatElement.querySelector(
     ".unread-message-count-div",
   );
-  unreadMessageCountDiv.remove();
+  if (unreadMessageCountDiv) {
+    unreadMessageCountDiv.remove();
+  }
 };
 async function fetchMessages(chatSummaryData) {
   const chatRoomLast30Messages = new ChatDTO(
