@@ -136,8 +136,7 @@ function chatsVirtualScroll(item, listItem, newIndex) {
       profileImage.firstElementChild.remove();
       profileImage.append(profileimagelement);
     } else {
-      profileimagelement.src =
-        listItem.userProfileResponseDTO.image;
+      profileImage.firstElementChild.src = listItem.userProfileResponseDTO.image;
     }
   }
   item.dataset.chatId = listItem.chatDTO.id;
@@ -191,8 +190,7 @@ function contactsVirtualScroll(item, listItem) {
       profileImage.firstElementChild.remove();
       profileImage.append(profileimagelement);
     } else {
-      profileimagelement.firstElementChild.src =
-        listItem.userProfileResponseDTO.image;
+      profileImage.firstElementChild.src = listItem.userProfileResponseDTO.image;
     }
   }
   item.dataset.contactId = listItem.contactsDTO.id;

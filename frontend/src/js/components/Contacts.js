@@ -26,6 +26,7 @@ import { UpdateItemsDTO, virtualScroll } from "../utils/virtualScroll.js";
 import { i18n } from "../i18n/i18n.js";
 import { chatStore } from "../store/chatStore.js";
 import { decryptMessage } from "../utils/e2ee.js";
+import { webSocketService } from "../websocket/websocketService.js";
 async function createContactOrInvitation(user, index) {
   const contactListElement = document.querySelector(".a1-1-1-1-1-1-3-2-1-1");
 
@@ -634,6 +635,33 @@ async function handleContactClick(event) {
       chatStore.user.id,
       contactData.contactsDTO.userContactId
     );
+
+    if (findChat && findChat.userChatSettingsDTO.unreadMessageCount > 0) {
+      if (
+        findChat.userProfileResponseDTO.privacySettings.readReceipts &&
+        chatStore.user.privacySettings.readReceipts
+      ) {
+        const dto = {
+          recipientId: chatStore.user.id,
+          userChatSettingsId: findChat.userChatSettingsDTO.id,
+          chatRoomId: findChat.chatDTO.id,
+          chatId: findChat.chatDTO.id,
+          senderId: findChat.userProfileResponseDTO.id,
+          unreadMessageCount: findChat.userChatSettingsDTO.unreadMessageCount,
+        };
+
+        webSocketService.ws.send("read-message", dto);
+      }
+      findChat.userChatSettingsDTO.unreadMessageCount = 0;
+      if (chatBoxElement) {
+        const unreadMessageCountDiv = chatBoxElement.querySelector(
+          ".unread-message-count-div"
+        );
+        if (unreadMessageCountDiv) {
+          unreadMessageCountDiv.remove();
+        }
+      }
+    }
     let chatSummaryDTO;
 
     if (!findChat) {
@@ -954,7 +982,7 @@ function removeContact(contactElement, contactData) {
       if (findChat) {
         const chatElements = [...document.querySelectorAll(".chat1")];
         const chatElement = chatElements.find(
-          (el) => el.dataset.chatId === findChat.chatDTO.id
+          (el) => el.dataset.chatId == findChat.chatDTO.id
         );
         findChat.contactsDTO.userHasAddedRelatedUser = false;
         findChat.contactsDTO.userContactName = null;
