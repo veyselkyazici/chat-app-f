@@ -72,6 +72,7 @@ export default class Chat extends AbstractView {
         "view-settings",
       );
       container.classList.add(`view-${viewName}`);
+      if (viewName === "chats") handleChats();
     }
   }
 
@@ -345,18 +346,21 @@ export default class Chat extends AbstractView {
       // if (!json || json.length === 0) return;
 
       const first = json[0];
-
       const updated = chatStore.chatList.map((chat) => {
         if (chat.chatDTO.id === first.chatRoomId) {
           chat.chatDTO.messages[0].isSeen = true;
           const chatEl = document.querySelector(
             `.chat1[data-chat-id="${first.chatRoomId}"]`,
           );
-          const deliveredTick = chatEl.querySelector(
-            ".message-delivered-tick-span",
-          );
-          deliveredTick.className = "message-seen-tick-span";
-          deliveredTick.ariaLabel = i18n.t("chat.read");
+          if (chatEl) {
+            const deliveredTick = chatEl.querySelector(
+              ".message-delivered-tick-span",
+            );
+            if (deliveredTick) {
+              deliveredTick.className = "message-seen-tick-span";
+              deliveredTick.ariaLabel = i18n.t("chat.read");
+            }
+          }
         }
         return chat;
       });
@@ -388,10 +392,13 @@ export default class Chat extends AbstractView {
 
       const incoming = new MessageDTO({ ...dto });
 
-      if (chat.chatDTO.messages.length === 1 && chat.chatDTO.messages[0].id === undefined) {
-          chat.chatDTO.messages[0] = incoming;
+      if (
+        chat.chatDTO.messages.length === 1 &&
+        chat.chatDTO.messages[0].id === undefined
+      ) {
+        chat.chatDTO.messages[0] = incoming;
       } else {
-          chat.chatDTO.messages.push(incoming);
+        chat.chatDTO.messages.push(incoming);
       }
       // unread badge update
       const messageBoxOpen = isMessageBoxDomExists(dto.chatRoomId);
@@ -443,6 +450,9 @@ export default class Chat extends AbstractView {
           chatId: dto.chatRoomId,
           senderId: dto.senderId,
           unreadMessageCount: dto.unreadMessageCount,
+          isReadReceiptEnabled:
+            chatStore.user.privacySettings.readReceipts &&
+            chat.userProfileResponseDTO.privacySettings.readReceipts,
         };
 
         renderMessage(

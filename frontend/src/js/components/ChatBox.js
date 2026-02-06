@@ -863,6 +863,9 @@ async function markMessagesAsReadAndFetchMessages() {
     chatId: chatData.chatDTO.id,
     senderId: chatData.userProfileResponseDTO.id,
     unreadMessageCount: chatData.userChatSettingsDTO.unreadMessageCount,
+    isReadReceiptEnabled:
+      chatStore.user.privacySettings.readReceipts &&
+      chatData.userProfileResponseDTO.privacySettings.readReceipts,
   };
 
   webSocketService.ws.send("read-message", dto);

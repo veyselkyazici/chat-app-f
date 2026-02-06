@@ -59,7 +59,7 @@ const createContactsHTML = (user) => {
     "div",
     "",
     {},
-    { tabindex: "-1", "aria-selected": "false", role: "row" }
+    { tabindex: "-1", "aria-selected": "false", role: "row" },
   );
   chatBox.append(chatRow);
 
@@ -79,7 +79,7 @@ const createContactsHTML = (user) => {
 
   const photo = createVisibilityProfilePhoto(
     user.userProfileResponseDTO,
-    user.contactsDTO
+    user.contactsDTO,
   );
 
   imageContainer.append(photo);
@@ -89,7 +89,7 @@ const createContactsHTML = (user) => {
 
   const chatNameAndTime = createElement(
     "div",
-    "chat-name-and-last-message-time"
+    "chat-name-and-last-message-time",
   );
   chatInfo.append(chatNameAndTime);
 
@@ -104,7 +104,7 @@ const createContactsHTML = (user) => {
     "name-span",
     {},
     { dir: "auto", title: user.contactsDTO.userContactName, "aria-label": "" },
-    user.contactsDTO.userContactName
+    user.contactsDTO.userContactName,
   );
   nameContainer.append(nameSpan);
 
@@ -125,7 +125,7 @@ const createContactsHTML = (user) => {
       "span",
       "message-span",
       {},
-      { title: "" }
+      { title: "" },
     );
     messageContainer.append(messageSpan);
     const innerSpan = createElement(
@@ -133,7 +133,7 @@ const createContactsHTML = (user) => {
       "message-span-span",
       {},
       { dir: "ltr", "aria-label": "" },
-      user.userProfileResponseDTO.about
+      user.userProfileResponseDTO.about,
     );
     messageSpan.append(innerSpan);
   }
@@ -155,7 +155,7 @@ const createInvitationsHTML = (user) => {
     "div",
     "",
     {},
-    { tabindex: "-1", "aria-selected": "false", role: "row" }
+    { tabindex: "-1", "aria-selected": "false", role: "row" },
   );
   chatBox.append(chatRow);
 
@@ -179,7 +179,7 @@ const createInvitationsHTML = (user) => {
     "span",
     "",
     {},
-    { "aria-hidden": "true", "data-icon": "default-user" }
+    { "aria-hidden": "true", "data-icon": "default-user" },
   );
   const svgElement = createSvgElement("svg", {
     class: "svg-element",
@@ -225,7 +225,7 @@ const createInvitationsHTML = (user) => {
 
   const chatNameAndTime = createElement(
     "div",
-    "chat-name-and-last-message-time"
+    "chat-name-and-last-message-time",
   );
   chatInfo.append(chatNameAndTime);
 
@@ -240,7 +240,7 @@ const createInvitationsHTML = (user) => {
     "chat-about-span",
     null,
     { title: user.userProfileResponseDTO?.about, dir: "auto" },
-    user.userProfileResponseDTO?.about
+    user.userProfileResponseDTO?.about,
   );
 
   chatAbout.append(chatAboutSpan);
@@ -268,7 +268,7 @@ const createInvitationsHTML = (user) => {
         title: user.invitationResponseDTO.contactName,
         "aria-label": "",
       },
-      user.invitationResponseDTO.contactName
+      user.invitationResponseDTO.contactName,
     );
     nameContainer.append(nameSpan);
     const invitationBtnContainer = createElement("div", "invitation-btn");
@@ -286,7 +286,7 @@ const createInvitationsHTML = (user) => {
       "invitation-button-1-1",
       { flexGrow: "1" },
       {},
-      i18n.t("inviteUser.invite")
+      i18n.t("inviteUser.invite"),
     );
     buttonDiv1.append(buttonDiv2);
     invitationButton.append(buttonDiv1);
@@ -301,7 +301,7 @@ const createInvitationsHTML = (user) => {
         title: user.contactsDTO.userContactName,
         "aria-label": "",
       },
-      user.contactsDTO.userContactName
+      user.contactsDTO.userContactName,
     );
     nameContainer.append(nameSpan);
   }
@@ -336,7 +336,7 @@ function initContactList(contactList) {
       itemsToUpdate: Array.from(document.querySelectorAll(".contact1")),
       removeEventListeners: removeEventListeners,
       addEventListeners: addEventListeners,
-    })
+    }),
   );
 
   virtualScroll(chatStore.updateItemsDTO, paneSideElement, visibleItemCount);
@@ -346,7 +346,7 @@ const isTouchDevice = () => window.matchMedia("(pointer: coarse)").matches;
 
 function createChatOptionsButton(contactElementDOM) {
   const chatOptionsSpan = contactElementDOM.querySelectorAll(
-    ".chat-options-contact span"
+    ".chat-options-contact span",
   )[2];
   if (chatOptionsSpan && !chatOptionsSpan.querySelector(".chat-options-btn")) {
     const chatOptionsButton = document.createElement("button");
@@ -374,7 +374,7 @@ function createChatOptionsButton(contactElementDOM) {
 
 function addEventListeners(contactElement) {
   contactElement.addEventListener("click", handleContactClick);
-  
+
   if (isTouchDevice()) {
     createChatOptionsButton(contactElement);
   } else {
@@ -412,8 +412,8 @@ async function renderContactListViewHTML(contactList) {
   const div2 = createElement("div", "a1-1-1-1-1-1-1-1-1");
   div1.append(div2);
   const backButtonn = backButton(contactsSideDiv, (element) => {
-      handleBackBtnClick(element);
-      chatStore.setMobileView('chats');
+    handleBackBtnClick(element);
+    chatStore.setMobileView("chats");
   });
   div2.append(backButtonn);
 
@@ -427,7 +427,7 @@ async function renderContactListViewHTML(contactList) {
     "a1-1-1-1-1-1-1-1-2-1",
     {},
     { "aria-label": "" },
-    "Kişilerim"
+    "Kişilerim",
   );
   newChatDiv.append(h1);
 
@@ -437,7 +437,7 @@ async function renderContactListViewHTML(contactList) {
     "div",
     "contacts-search-bar search-bar",
     {},
-    { id: "contacts-search-bar" }
+    { id: "contacts-search-bar" },
   );
 
   const emptyDiv1 = createElement("div", "");
@@ -488,7 +488,7 @@ async function renderContactListViewHTML(contactList) {
       title: i18n.t("search.searchPlaceHolder"),
       tabindex: "3",
       "aria-placeholder": i18n.t("search.searchPlaceHolder"),
-    }
+    },
   );
   const contactSearchHandler = new SearchHandler({
     getDataFunction: () => chatStore.contactList,
@@ -525,7 +525,7 @@ async function renderContactListViewHTML(contactList) {
     "css122",
     {},
     {},
-    i18n.t("search.searchPlaceHolder")
+    i18n.t("search.searchPlaceHolder"),
   );
 
   const finalSpan = createElement("span", "css13");
@@ -559,7 +559,7 @@ async function renderContactListViewHTML(contactList) {
     "div",
     "a1-1-1-1-1-1-3-2",
     {},
-    { tabindex: "0", "data-tab": "4" }
+    { tabindex: "0", "data-tab": "4" },
   );
   a1_1_1_1_1_1_3.append(a1_1_1_1_1_1_3_2);
 
@@ -591,7 +591,7 @@ async function handleContactClick(event) {
     contactData = chatStore.contactList.find(
       (c) =>
         (c.contactsDTO && c.contactsDTO.id == contactId) ||
-        (c.invitationResponseDTO && c.invitationResponseDTO.id == contactId)
+        (c.invitationResponseDTO && c.invitationResponseDTO.id == contactId),
     );
   }
 
@@ -605,14 +605,14 @@ async function handleContactClick(event) {
   if (contactData.contactsDTO) {
     const chatBoxElement = findChatRoomElement(
       chatStore.user.id,
-      contactData.contactsDTO.userContactId
+      contactData.contactsDTO.userContactId,
     );
     const innerDiv = chatBoxElement?.querySelector(".chat-box > div");
     if (chatBoxElement && innerDiv?.getAttribute("aria-selected") === "true") {
       const contactListRenderDiv = document.querySelector(".a1-1-1");
       if (contactListRenderDiv) {
         contactListRenderDiv.removeChild(
-          contactListRenderDiv.firstElementChild
+          contactListRenderDiv.firstElementChild,
         );
       }
       chatStore.setMobileView("message");
@@ -633,14 +633,10 @@ async function handleContactClick(event) {
     }
     let findChat = findChatRoom(
       chatStore.user.id,
-      contactData.contactsDTO.userContactId
+      contactData.contactsDTO.userContactId,
     );
 
     if (findChat && findChat.userChatSettingsDTO.unreadMessageCount > 0) {
-      if (
-        findChat.userProfileResponseDTO.privacySettings.readReceipts &&
-        chatStore.user.privacySettings.readReceipts
-      ) {
         const dto = {
           recipientId: chatStore.user.id,
           userChatSettingsId: findChat.userChatSettingsDTO.id,
@@ -648,14 +644,16 @@ async function handleContactClick(event) {
           chatId: findChat.chatDTO.id,
           senderId: findChat.userProfileResponseDTO.id,
           unreadMessageCount: findChat.userChatSettingsDTO.unreadMessageCount,
+          isReadReceiptEnabled:
+            chatStore.user.privacySettings.readReceipts &&
+            findChat.userProfileResponseDTO.privacySettings.readReceipts,
         };
 
         webSocketService.ws.send("read-message", dto);
-      }
       findChat.userChatSettingsDTO.unreadMessageCount = 0;
       if (chatBoxElement) {
         const unreadMessageCountDiv = chatBoxElement.querySelector(
-          ".unread-message-count-div"
+          ".unread-message-count-div",
         );
         if (unreadMessageCountDiv) {
           unreadMessageCountDiv.remove();
@@ -667,7 +665,7 @@ async function handleContactClick(event) {
     if (!findChat) {
       const createChatRoomAndUserChatSettings =
         await chatService.createChatRoomIfNotExists(
-          contactData.contactsDTO.userContactId
+          contactData.contactsDTO.userContactId,
         );
 
       chatSummaryDTO = new ChatSummaryDTO({
@@ -682,25 +680,25 @@ async function handleContactClick(event) {
         }),
         contactsDTO: new ContactsDTO(contactData.contactsDTO),
         userProfileResponseDTO: new UserProfileResponseDTO(
-          contactData.userProfileResponseDTO
+          contactData.userProfileResponseDTO,
         ),
         userChatSettingsDTO: new UserChatSettingsDTO(
-          createChatRoomAndUserChatSettings.userChatSettingsDTO
+          createChatRoomAndUserChatSettings.userChatSettingsDTO,
         ),
       });
     } else {
       const messagesResponse = await chatService.getLast30Messages(
-        findChat.chatDTO.id
+        findChat.chatDTO.id,
       );
 
       const messages = (messagesResponse.messages || []).map(
-        (msg) => new MessageDTO(msg)
+        (msg) => new MessageDTO(msg),
       );
       if (messages.length > 0) {
         const isSender = messages[0].senderId === chatStore.user.id;
         messages[0].decryptedMessage = await decryptMessage(
           messages[0],
-          isSender
+          isSender,
         );
       }
       findChat.chatDTO.messages = messages;
@@ -712,7 +710,6 @@ async function handleContactClick(event) {
     const messageBoxElement = document.querySelector(".message-box1");
     let isDifferentChat = false;
     if (messageBoxElement) {
-      
       const currentChat = chatStore.activeChat;
       if (
         currentChat &&
@@ -736,25 +733,25 @@ async function handleContactClick(event) {
   } else if (!contactData.invitationResponseDTO.isInvited) {
     new Modal({
       contentText: i18n.t("inviteUser.inviteMessage")(
-        contactData.invitationResponseDTO.contactName
+        contactData.invitationResponseDTO.contactName,
       ),
       buttonText: i18n.t("inviteUser.invite"),
       showBorders: false,
       mainCallback: async () => {
         const sendInvitationDTO = new SendInvitationDTO(
           contactData.invitationResponseDTO,
-          chatStore.user.email
+          chatStore.user.email,
         );
         const response = await contactService.sendInvitation(sendInvitationDTO);
         if (response.status === 200) {
           contactData.invitationResponseDTO.isInvited = true;
           const invitationButton = contactElementDOM.querySelector(
             "button",
-            "invitation-button"
+            "invitation-button",
           );
           invitationButton.setAttribute("disabled", "disabled");
           const buttonDiv2 = invitationButton.querySelector(
-            ".invitation-button-1-1"
+            ".invitation-button-1-1",
           );
           buttonDiv2.textContent = i18n.t("inviteUser.invited");
           return true;
@@ -770,7 +767,7 @@ async function handleContactClick(event) {
   } else {
     new Modal({
       contentText: i18n.t("inviteUser.inviteMessage")(
-        contactData.invitationResponseDTO.contactName
+        contactData.invitationResponseDTO.contactName,
       ),
       buttonText: i18n.t("inviteUser.invite"),
       mainCallback: () => {
@@ -817,7 +814,7 @@ function handleMouseover(event) {
 function handleMouseout(event) {
   const chatElementDOM = event.currentTarget;
   const chatOptionsSpan = chatElementDOM.querySelectorAll(
-    ".chat-options-contact span"
+    ".chat-options-contact span",
   )[2];
   const chatOptionsBtn = document.querySelector(".chat-options-btn");
 
@@ -831,7 +828,6 @@ function handleOptionsBtnClick(event) {
   const contactId = contactElement
     ? contactElement.dataset.contactId
     : target.dataset.contactId;
-
 
   const spans = document.querySelectorAll(".app span");
   const showChatOptions = spans[1];
@@ -850,12 +846,12 @@ function handleOptionsBtnClick(event) {
       chatOptionsDiv.style.transformOrigin = "left top";
       chatOptionsDiv.style.top = rect.top + window.scrollY + "px";
       chatOptionsDiv.style.top = rect.top + window.scrollY + "px";
-      
+
       if (rect.left > window.innerWidth / 2) {
-         chatOptionsDiv.style.left = "auto";
-         chatOptionsDiv.style.right = (window.innerWidth - rect.right) + "px";
+        chatOptionsDiv.style.left = "auto";
+        chatOptionsDiv.style.right = window.innerWidth - rect.right + "px";
       } else {
-         chatOptionsDiv.style.left = rect.left + window.scrollX + "px";
+        chatOptionsDiv.style.left = rect.left + window.scrollX + "px";
       }
       chatOptionsDiv.style.transform = "scale(1)";
       chatOptionsDiv.style.opacity = "1";
@@ -865,7 +861,7 @@ function handleOptionsBtnClick(event) {
                     <div>
                         <li tabindex="0" class="contact-list-item1" data-animate-dropdown-item="true" style="opacity: 1;">
                             <div class="contact-list-item1-div" role="button" aria-label="Delete user">${i18n.t(
-                              "contacts.deleteUser"
+                              "contacts.deleteUser",
                             )}</div>
                         </li>
                     </div>
@@ -887,15 +883,16 @@ function handleOptionsBtnClick(event) {
         const contactData = chatStore.contactList.find(
           (c) =>
             (c.contactsDTO && c.contactsDTO.id == contactId) ||
-            (c.invitationResponseDTO && c.invitationResponseDTO.id == contactId)
+            (c.invitationResponseDTO &&
+              c.invitationResponseDTO.id == contactId),
         );
         new Modal({
           contentText: contactData.contactsDTO
             ? i18n.t("contacts.deleteUserModalMessage")(
-                contactData.contactsDTO.userContactName
+                contactData.contactsDTO.userContactName,
               )
             : i18n.t("contacts.deleteUserModalMessage")(
-                contactData.invitationResponseDTO.contactName
+                contactData.invitationResponseDTO.contactName,
               ),
           buttonText: i18n.t("modal.yes"),
           showBorders: false,
@@ -905,13 +902,13 @@ function handleOptionsBtnClick(event) {
               idType = "contact";
               response = await contactService.deleteContactOrInvitation(
                 contactData.contactsDTO.id,
-                idType
+                idType,
               );
             } else {
               idType = "invitation";
               response = await contactService.deleteContactOrInvitation(
                 contactData.invitationResponseDTO.id,
-                idType
+                idType,
               );
             }
             if (response && response.status === 200) {
@@ -934,7 +931,9 @@ function handleOptionsBtnClick(event) {
 }
 function removeContact(contactElement, contactData) {
   const deletedContactTranslateY = parseInt(
-    contactElement.style.transform.replace("translateY(", "").replace("px)", "")
+    contactElement.style.transform
+      .replace("translateY(", "")
+      .replace("px)", ""),
   );
   removeEventListeners(contactElement);
   let removeIndex;
@@ -942,7 +941,8 @@ function removeContact(contactElement, contactData) {
     removeIndex = chatStore.contactList.findIndex(
       (item) =>
         item.contactsDTO &&
-        item.userProfileResponseDTO.id === contactData.userProfileResponseDTO.id
+        item.userProfileResponseDTO.id ===
+          contactData.userProfileResponseDTO.id,
     );
   } else {
     removeIndex = chatStore.contactList.findIndex(
@@ -950,7 +950,7 @@ function removeContact(contactElement, contactData) {
         item.contactsDTO === null &&
         item.invitationResponseDTO &&
         contactData.invitationResponseDTO &&
-        item.invitationResponseDTO.id === contactData.invitationResponseDTO.id
+        item.invitationResponseDTO.id === contactData.invitationResponseDTO.id,
     );
   }
 
@@ -960,7 +960,7 @@ function removeContact(contactElement, contactData) {
     const newHeight = chatStore.contactList.length * 72;
     contactListElement.style.height = `${newHeight}px`;
     const { maxIndex, minIndex } = updateTranslateYAfterDelete(
-      deletedContactTranslateY
+      deletedContactTranslateY,
     );
 
     const contactElements = document.querySelectorAll(".contact1");
@@ -976,13 +976,20 @@ function removeContact(contactElement, contactData) {
       contactElement.remove();
     }
     if (contactData.userProfileResponseDTO) {
-      const findChat = chatStore.chatList.find(
-        (chat) => chat.contactsDTO?.id === contactData.contactsDTO?.id
-      );
+      const findChat = chatStore.chatList.find((chat) => {
+        debugger;
+        const participants = chat.chatDTO.participantIds;
+        return (
+          participants.includes(chatStore.user.id) &&
+          participants.includes(contactData.userProfileResponseDTO.id) &&
+          participants.length === 2
+        );
+      });
+
       if (findChat) {
         const chatElements = [...document.querySelectorAll(".chat1")];
         const chatElement = chatElements.find(
-          (el) => el.dataset.chatId == findChat.chatDTO.id
+          (el) => el.dataset.chatId == findChat.chatDTO.id,
         );
         findChat.contactsDTO.userHasAddedRelatedUser = false;
         findChat.contactsDTO.userContactName = null;
@@ -990,6 +997,7 @@ function removeContact(contactElement, contactData) {
         if (chatElement) {
           const nameSpan = chatElement.querySelector(".name-span");
           nameSpan.textContent = findChat.userProfileResponseDTO.email;
+          chatElement.dataset.user = findChat.userProfileResponseDTO.email;
         }
       }
 
@@ -1002,7 +1010,7 @@ function removeContact(contactElement, contactData) {
         activeChat.contactsDTO.userHasAddedRelatedUser = false;
         activeChat.contactsDTO.userContactName = null;
         const messageBoxNameSpan = document.querySelector(
-          ".message-box1-2-2-1-1-1-1"
+          ".message-box1-2-2-1-1-1-1",
         );
         if (messageBoxNameSpan) {
           messageBoxNameSpan.textContent =
@@ -1021,7 +1029,7 @@ function updateTranslateYAfterDelete(deletedContactTranslateY) {
   contactElements.forEach((contact) => {
     const zIndex = parseInt(contact.style.zIndex);
     const currentTranslateY = parseInt(
-      contact.style.transform.replace("translateY(", "").replace("px)", "")
+      contact.style.transform.replace("translateY(", "").replace("px)", ""),
     );
     if (deletedContactTranslateY < currentTranslateY) {
       contact.style.transform = `translateY(${currentTranslateY - 72}px)`;
@@ -1039,11 +1047,10 @@ function updateTranslateYAfterDelete(deletedContactTranslateY) {
   };
 }
 function updateContact(contactElement, newContactData, nameSpan, messageSpan) {
-
   const invetBtn = contactElement.querySelector(".invitation-btn");
   if (invetBtn) {
     const invetBtnParent = contactElement.querySelector(
-      ".chat-name-and-last-message-time"
+      ".chat-name-and-last-message-time",
     );
     invetBtnParent.removeChild(invetBtn);
   }
@@ -1055,7 +1062,7 @@ function updateInvitation(
   contactElement,
   newContactData,
   nameSpan,
-  messageSpan
+  messageSpan,
 ) {
   nameSpan.textContent = newContactData.invitationResponseDTO.contactName;
   messageSpan.textContent = "";
@@ -1070,7 +1077,7 @@ function updateInvitation(
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        i18n.t("inviteUser.invite")
+        i18n.t("inviteUser.invite"),
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -1083,7 +1090,7 @@ function updateInvitation(
         "invitation-button-1-1",
         { flexGrow: "1" },
         {},
-        i18n.t("inviteUser.invited")
+        i18n.t("inviteUser.invited"),
       );
       buttonDiv1.append(buttonDiv2);
       invitationButton.append(buttonDiv1);
@@ -1093,7 +1100,7 @@ function updateInvitation(
   } else {
     const invitationButton = contactElement.querySelector(
       "button",
-      "invitation-button"
+      "invitation-button",
     );
     const buttonDiv2 = invitationButton.querySelector(".invitation-button-1-1");
     if (!isInvite) {
