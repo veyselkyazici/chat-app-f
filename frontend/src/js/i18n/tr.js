@@ -4,16 +4,51 @@ export default {
     signUp: "Kayıt Ol",
     signIn: "Giriş Yap",
     home: "Ana sayfa",
+    projectInfo: "Proje Hakkında",
     infoMessage: `
-      ⚠️ Bu uygulama <strong>ticari amaçlı değildir</strong>.<br>
-      Lütfen <strong>kişisel bilgi</strong> (telefon numarası, adres, şifre vb.) paylaşmayınız.<br><br>
-      🔒 Uygulama <strong>uçtan uca şifreleme (E2EE)</strong> destekler.<br>
-      💬 Gerçek zamanlı <strong>1v1 sohbet</strong> imkânı sunar.<br>
-      🛡️ <strong>Gizlilik ayarları</strong> mevcuttur.<br><br>
-      📧 Uygulama içerisinde benimle 
-      <a href="mailto:veyselkaraniyazici@gmail.com">veyselkaraniyazici@gmail.com</a> 
+      ⚠️ <strong>Yasal Sorumluluk Reddi:</strong> Bu uygulama, tamamen <strong>öğrenim ve kişisel gelişim amacıyla</strong> geliştirilmiş açık kaynaklı bir <strong>portfolyo projesidir</strong>. Hiçbir ticari amaç gütmemektedir ve bir hizmet taahhüdü bulunmamaktadır.<br><br>
+      Geliştirici, uygulamanın kullanımı sonucunda oluşabilecek veri kayıpları, güvenlik açıkları veya diğer olumsuz durumlardan dolayı <strong>hiçbir yasal sorumluluk kabul etmez.</strong><br><br>
+      Lütfen <strong>gerçek kişisel bilgilerinizi</strong> (T.C. kimlik no, telefon numarası, gerçek şifreler, adres vb.) <strong>kesinlikle paylaşmayınız.</strong><br><br>
+      📧 Uygulama ile ilgili sorularınız için benimle 
+      <a href="mailto:veyselkaraniyazici@gmail.com" class="text-primary fw-bold text-decoration-none">veyselkaraniyazici@gmail.com</a> 
       adresi üzerinden iletişime geçebilirsiniz.
     `,
+  },
+  projectInfo: {
+    title: "Proje Hakkında",
+    description: "Bu proje, modern web teknolojileri ve mikroservis mimarisi kullanılarak geliştirilmiş, ölçeklenebilir ve güvenli bir gerçek zamanlı sohbet uygulamasıdır.",
+    architecture: {
+      title: "Mimari Yapı",
+      description: "Sistem, bağımsız ölçeklenebilirlik ve bakım kolaylığı sağlayan mikroservis mimarisi üzerine inşa edilmiştir."
+    },
+    techStack: {
+      title: "Teknoloji Yığını",
+      backend: "Backend Teknolojileri",
+      frontend: "Frontend Teknolojileri",
+      database: "Veritabanı & Cache",
+      infrastructure: "Altyapı & DevOps"
+    },
+    features: {
+      title: "Temel Özellikler",
+      auth: "Güvenli Kimlik Doğrulama (JWT)",
+      realtime: "WebSocket ile Gerçek Zamanlı Mesajlaşma",
+      e2ee: "Uçtan Uca Şifreleme (E2EE)",
+      responsive: "Mobil Uyumlu Responsive Tasarım",
+      notifications: "Anlık Bildirimler ve Durum Takibi",
+      blocking: "Kullanıcı Engelleme ve Yönetimi",
+      privacy: "Gelişmiş Gizlilik (Profil Fotoğrafı, Çevrimiçi Durum, Son Görülme)",
+      emailAuth: "E-posta Doğrulama Sistemi",
+      profile: "Profil Fotoğrafı Yükleme ve Özelleştirme",
+      invite: "Kullanıcı Davet Sistemi",
+      token: "Refresh Token ile Güvenli Oturum",
+      logout: "Güvenli Çıkış (Kara Liste / Blacklist)",
+      ratelimit: "API İstek Sınırlama (Rate Limiter)"
+    },
+    flows: {
+      title: "İşleyiş Şemaları",
+      authFlow: "Kimlik Doğrulama Akışı",
+      messageFlow: "Mesajlaşma Akışı"
+    }
   },
   login: {
     password: "Şifre",

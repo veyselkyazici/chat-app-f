@@ -4,15 +4,50 @@ export default {
     signUp: "Sign up",
     signIn: "Sign in",
     home: "Home",
+    projectInfo: "Project Info",
     infoMessage: `
-      ⚠️ This application is <strong>not for commercial purposes</strong>.<br>
-      Please do not share <strong>personal information</strong> (phone number, address, password, etc.).<br><br>
-      🔒 The app supports <strong>end-to-end encryption (E2EE)</strong>.<br>
-      💬 Provides <strong>real-time 1v1 chat</strong>.<br>
-      🛡️ Includes <strong>privacy settings</strong>.<br><br>
-      📧 Within the application, you can contact me via 
-      <a href="mailto:veyselkaraniyazici@gmail.com">veyselkaraniyazici@gmail.com</a>.
+      ⚠️ <strong>Legal Disclaimer:</strong> This application is an open-source <strong>portfolio project</strong> developed solely for <strong>learning and personal development purposes</strong>. It has no commercial intent and offers no service guarantees.<br><br>
+      The developer <strong>accepts no legal responsibility</strong> for any data loss, security vulnerabilities, or other adverse outcomes. <br><br>
+      Please <strong>do not share actual personal information</strong> (ID numbers, phone numbers, real passwords, addresses, etc.).<br><br>
+      📧 For any inquiries, you can contact me via 
+      <a href="mailto:veyselkaraniyazici@gmail.com" class="text-primary fw-bold text-decoration-none">veyselkaraniyazici@gmail.com</a>.
     `,
+  },
+  projectInfo: {
+    title: "About the Project",
+    description: "This project is a scalable and secure real-time chat application developed using modern web technologies and microservices architecture.",
+    architecture: {
+      title: "Architecture",
+      description: "The system is built on a microservices architecture that ensures independent scalability and ease of maintenance."
+    },
+    techStack: {
+      title: "Tech Stack",
+      backend: "Backend Technologies",
+      frontend: "Frontend Technologies",
+      database: "Database & Cache",
+      infrastructure: "Infrastructure & DevOps"
+    },
+    features: {
+      title: "Key Features",
+      auth: "Secure Authentication (JWT)",
+      realtime: "Real-time Messaging with WebSocket",
+      e2ee: "End-to-End Encryption (E2EE)",
+      responsive: "Mobile-Compatible Responsive Design",
+      notifications: "Instant Notifications and Status Tracking",
+      blocking: "User Blocking and Management",
+      privacy: "Advanced Privacy (Profile Photo, Online Status, Last Seen)",
+      emailAuth: "Email Verification System",
+      profile: "Profile Photo Upload & Customization",
+      invite: "User Invitation System",
+      token: "Secure Session with Refresh Token",
+      logout: "Secure Logout (Blacklist)",
+      ratelimit: "API Rate Limiting"
+    },
+    flows: {
+      title: "Flow Diagrams",
+      authFlow: "Authentication Flow",
+      messageFlow: "Messaging Flow"
+    }
   },
   login: {
     password: "Password",

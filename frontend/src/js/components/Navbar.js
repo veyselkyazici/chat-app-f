@@ -16,6 +16,7 @@ export const Navbar = () => {
                           "home.home"
                         )}</a>
                     </li>
+
                     <li class="nav-item">
                         <a class="nav-link" href="/login" data-link>${i18n.t(
                           "home.signIn"

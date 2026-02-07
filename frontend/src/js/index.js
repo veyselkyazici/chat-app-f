@@ -10,9 +10,12 @@ import VerificationFailed from "./pages/VerificationFailed.js";
 import { ChatLayout } from "./layouts/ChatLayout.js";
 import { DefaultLayout } from "./layouts/DefaultLayout.js";
 import Verify from "./pages/Verify.js";
+
+
 let currentView = null;
 const routes = [
   { path: "/", view: Home, layout: DefaultLayout },
+
   { path: "/register", view: Register, layout: DefaultLayout },
   { path: "/login", view: Login, layout: DefaultLayout },
   { path: "/forgot-password", view: ForgotPassord, layout: DefaultLayout },
