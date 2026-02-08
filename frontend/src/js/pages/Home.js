@@ -7,6 +7,16 @@ export default class extends AbstractView {
     this.setTitle("Home");
   }
 
+  async init() {
+     if(window.location.hash == "#project-info"){
+        const element = document.getElementById("project-info");
+        if(element){
+            element.scrollIntoView({behavior: "smooth"});
+            history.replaceState(null, null, window.location.pathname);
+        }
+     }
+  }
+
   async getHtml() {
     return `
       <div class="home-page">
@@ -40,7 +50,7 @@ export default class extends AbstractView {
         </section>
 
         <!-- Project Info Content (Reverted to v1 Styls but polished) -->
-        <div class="container pb-5">
+        <div class="container pb-5" id="project-info">
             
             <!-- Architecture Section (Basic Style) -->
             <div class="row mb-5">

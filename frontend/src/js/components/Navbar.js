@@ -16,6 +16,11 @@ export const Navbar = () => {
                           "home.home"
                         )}</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/#project-info" data-link>${i18n.t(
+                          "home.projectInfo"
+                        )}</a>
+                    </li>
 
                     <li class="nav-item">
                         <a class="nav-link" href="/login" data-link>${i18n.t(
