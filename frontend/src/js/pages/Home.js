@@ -20,7 +20,6 @@ export default class extends AbstractView {
   async getHtml() {
     return `
       <div class="home-page">
-        <!-- Hero Section (Kept from v2) -->
         <section class="hero-section">
             <div class="hero-bg-accent" style="top: -10%; left: -10%; width: 500px; height: 500px; background: var(--primary-color);"></div>
             <div class="hero-bg-accent" style="bottom: -10%; right: -10%; width: 500px; height: 500px; background: var(--secondary-color);"></div>
@@ -49,10 +48,8 @@ export default class extends AbstractView {
             </div>
         </section>
 
-        <!-- Project Info Content (Reverted to v1 Styls but polished) -->
         <div class="container pb-5" id="project-info">
             
-            <!-- Architecture Section (Basic Style) -->
             <div class="row mb-5">
                <div class="col-12">
                   <div class="card shadow-sm border-0">
@@ -63,19 +60,15 @@ export default class extends AbstractView {
                           </h2>
                           <p class="text-muted mb-4">${i18n.t("projectInfo.architecture.description")}</p>
                           
-                          <!-- Basic Architecture Diagram (v1) -->
                           <div class="architecture-diagram d-flex flex-column align-items-center gap-4 p-4 rounded bg-light" style="border: 1px dashed #cbd5e1;">
                               
-                              <!-- 1. Client -->
                               <div class="diagram-node client px-5 py-3 bg-white shadow-sm rounded">
                                   <i class="fas fa-laptop mb-2 fa-2x"></i>
                                   <div>Frontend (SPA)</div>
                               </div>
 
-                              <!-- Simple Arrow -->
                               <div class="text-muted"><i class="fas fa-arrow-down fa-lg"></i></div>
 
-                              <!-- 2. Entry Points -->
                               <div class="d-flex justify-content-center gap-5">
                                   <div class="diagram-node gateway px-4 py-3 bg-white shadow-sm rounded">
                                       <i class="fas fa-network-wired mb-2"></i>
@@ -89,7 +82,6 @@ export default class extends AbstractView {
 
                               <div class="diagram-arrow vertical"><i class="fas fa-arrow-down fa-lg text-muted"></i></div>
 
-                              <!-- 3. Microservices Layer -->
                               <div class="p-4 border rounded bg-white shadow-sm position-relative w-100 text-center">
                                   <span class="badge bg-primary px-3 py-2 rounded-pill mb-3">Microservices</span>
                                   <div class="d-flex flex-wrap justify-content-center gap-3">
@@ -103,7 +95,6 @@ export default class extends AbstractView {
 
                               <div class="diagram-arrow vertical"><i class="fas fa-arrow-down fa-lg text-muted"></i></div>
 
-                              <!-- 4. Infrastructure -->
                               <div class="d-flex flex-wrap justify-content-center gap-4">
                                   <div class="diagram-node broker bg-white shadow-sm rounded"><i class="fas fa-envelope-open-text mb-1"></i> RabbitMQ</div>
                                   <div class="diagram-node cache bg-white shadow-sm rounded"><i class="fas fa-bolt mb-1"></i> Redis</div>
@@ -117,7 +108,6 @@ export default class extends AbstractView {
                </div>
             </div>
 
-            <!-- Tech Stack Section (Restored Colored Cards) -->
             <div class="row mb-5">
               <div class="col-12">
                 <h2 class="h3 mb-4 text-center border-bottom pb-2">
@@ -195,12 +185,10 @@ export default class extends AbstractView {
               </div>
             </div>
             
-            <!-- Features Section (Restored Blue Categorized Card) -->
             <div class="row mb-5">
                 <div class="col-12">
                     <div class="card bg-primary text-white shadow-lg border-0 overflow-hidden rounded-4">
                         <div class="card-body p-5 position-relative">
-                            <!-- Decorative Background Icon -->
                             <div class="position-absolute top-0 end-0 opacity-10" style="transform: translate(30%, -30%);">
                                 <i class="fas fa-star fa-10x"></i>
                             </div>
