@@ -66,10 +66,15 @@ function createContactInformation(contact, chatData) {
     `;
   document.head.append(style);
 
-  const profileSpanDiv = createElement("div", "profile-span-div", {
-    height: "100%",
-    transform: "translateX(0%)",
-  });
+  const profileSpanDiv = createElement(
+    "div",
+    "profile-span-div",
+    {
+      height: "100%",
+      transform: "translateX(0%)",
+    },
+    { "data-contact-id": contact.contactId },
+  );
   const profileSpanDivSpan = createElement("span", "profile-span-div-span");
   const profileSpanDivSpanDiv = createElement(
     "div",
@@ -458,4 +463,72 @@ function closeProfileFunc() {
   if (closeProfileFn) closeProfileFn();
 }
 
-export { createContactInformation, closeProfileFunc };
+function updateContactProfilePhoto(contactId, image) {
+  const profileDiv = document.querySelector(
+    `.profile-span-div[data-contact-id="${contactId}"]`,
+  );
+  if (!profileDiv) return;
+
+  const photoButton = profileDiv.querySelector(".profile-section-photo-button");
+  if (!photoButton) return;
+
+  photoButton.innerHTML = "";
+
+  if (image) {
+    const img = createElement(
+      "img",
+      "profile-section-photo-button-img",
+      { visibility: "visible" },
+      { alt: "", draggable: "false", tabindex: "-1" },
+    );
+    img.src = image;
+    photoButton.append(img);
+
+    const newButton = photoButton.cloneNode(true);
+    newButton.addEventListener("click", () => viewPhoto(image));
+    photoButton.parentNode.replaceChild(newButton, photoButton);
+  } else {
+    photoButton.append(createDefaultImage());
+    const newButton = photoButton.cloneNode(true);
+    photoButton.parentNode.replaceChild(newButton, photoButton);
+  }
+}
+
+function updateContactAbout(contactId, about, isVisible) {
+  const profileDiv = document.querySelector(
+    `.profile-span-div[data-contact-id="${contactId}"]`
+  );
+  if (!profileDiv) return;
+
+  const aboutSection = profileDiv.querySelector(".section-about");
+  if (!aboutSection) return;
+
+  const aboutSpan = aboutSection.querySelector(".profile-section-about-span-span");
+  
+  if (isVisible && about) {
+      if (aboutSpan) {
+          aboutSpan.textContent = about;
+          aboutSpan.title = about;
+      } else {
+        const parent = aboutSection.querySelector(".profile-section-about-span");
+        if(parent) {
+             const newSpan = createElement(
+                "span",
+                "profile-section-about-span-span",
+                { minHeight: "0px" },
+                { dir: "auto", title: `${about}` },
+                about
+              );
+              parent.append(newSpan);
+        }
+      }
+      aboutSection.style.display = "block";
+  } else {
+      if (aboutSpan) {
+          aboutSpan.remove();
+      }
+       aboutSection.style.display = "none";
+  }
+}
+
+export { createContactInformation, closeProfileFunc, updateContactProfilePhoto, updateContactAbout };

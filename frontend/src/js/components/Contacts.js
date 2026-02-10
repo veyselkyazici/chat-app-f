@@ -258,7 +258,7 @@ const createInvitationsHTML = (user) => {
   chatOptions.append(span1);
   chatOptions.append(span2);
   chatOptions.append(span3);
-  if (user.invitationResponseDTO && !user.invitationResponseDTO.isInvited) {
+  if (user.invitationResponseDTO) {
     const nameSpan = createElement(
       "span",
       "name-span",
@@ -292,6 +292,7 @@ const createInvitationsHTML = (user) => {
     invitationButton.append(buttonDiv1);
     invitationBtnContainer.append(invitationButton);
   } else {
+    
     const nameSpan = createElement(
       "span",
       "name-span",
@@ -637,19 +638,19 @@ async function handleContactClick(event) {
     );
 
     if (findChat && findChat.userChatSettingsDTO.unreadMessageCount > 0) {
-        const dto = {
-          recipientId: chatStore.user.id,
-          userChatSettingsId: findChat.userChatSettingsDTO.id,
-          chatRoomId: findChat.chatDTO.id,
-          chatId: findChat.chatDTO.id,
-          senderId: findChat.userProfileResponseDTO.id,
-          unreadMessageCount: findChat.userChatSettingsDTO.unreadMessageCount,
-          isReadReceiptEnabled:
-            chatStore.user.privacySettings.readReceipts &&
-            findChat.userProfileResponseDTO.privacySettings.readReceipts,
-        };
+      const dto = {
+        recipientId: chatStore.user.id,
+        userChatSettingsId: findChat.userChatSettingsDTO.id,
+        chatRoomId: findChat.chatDTO.id,
+        chatId: findChat.chatDTO.id,
+        senderId: findChat.userProfileResponseDTO.id,
+        unreadMessageCount: findChat.userChatSettingsDTO.unreadMessageCount,
+        isReadReceiptEnabled:
+          chatStore.user.privacySettings.readReceipts &&
+          findChat.userProfileResponseDTO.privacySettings.readReceipts,
+      };
 
-        webSocketService.ws.send("read-message", dto);
+      webSocketService.ws.send("read-message", dto);
       findChat.userChatSettingsDTO.unreadMessageCount = 0;
       if (chatBoxElement) {
         const unreadMessageCountDiv = chatBoxElement.querySelector(
@@ -744,11 +745,10 @@ async function handleContactClick(event) {
         );
         const response = await contactService.sendInvitation(sendInvitationDTO);
         if (response.status === 200) {
+          toastr.success(i18n.t("inviteUser.inviteSuccess"));
           contactData.invitationResponseDTO.isInvited = true;
-          const invitationButton = contactElementDOM.querySelector(
-            "button",
-            "invitation-button",
-          );
+          const invitationButton =
+            contactElementDOM.querySelector(".invitation-button");
           invitationButton.setAttribute("disabled", "disabled");
           const buttonDiv2 = invitationButton.querySelector(
             ".invitation-button-1-1",
@@ -977,7 +977,7 @@ function removeContact(contactElement, contactData) {
     }
     if (contactData.userProfileResponseDTO) {
       const findChat = chatStore.chatList.find((chat) => {
-        debugger;
+        
         const participants = chat.chatDTO.participantIds;
         return (
           participants.includes(chatStore.user.id) &&
@@ -1098,10 +1098,7 @@ function updateInvitation(
     }
     chatInfo.append(invitationBtnContainer);
   } else {
-    const invitationButton = contactElement.querySelector(
-      "button",
-      "invitation-button",
-    );
+    const invitationButton = contactElement.querySelector(".invitation-button");
     const buttonDiv2 = invitationButton.querySelector(".invitation-button-1-1");
     if (!isInvite) {
       invitationButton.removeAttribute("disabled");

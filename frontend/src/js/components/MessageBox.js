@@ -463,9 +463,6 @@ const createEmojiSpan = (emoji) => {
   return s;
 };
 
-function handleTextKeyDown(event) {
-  keydown(event, event.target);
-}
 
 function showEmojiPicker(
   panel,
@@ -473,6 +470,7 @@ function showEmojiPicker(
   textArea,
   sendButton,
   typingStatus,
+  chat,
 ) {
   panel.style.height = "220px";
   showEmojiDOM.innerHTML = generateEmojiHTML();
@@ -488,6 +486,7 @@ function showEmojiPicker(
     if (emojiItem) {
       insertEmoji(emojiItem.textContent);
       updatePlaceholder(textArea, sendButton, typingStatus);
+      handleTextInput(textArea, chat, typingStatus, event);
     }
   });
 }
@@ -597,7 +596,7 @@ const insertEmoji = (emoji) => {
   updateCaretPosition();
 };
 
-function keydown(event, textArea) {
+function keydown(event, textArea, chat, typingStatus, sendButton) {
   if (event.key === "Backspace") {
     const p = textArea.querySelector("p." + TEXT_SPAN_CLASS);
     if (
@@ -628,6 +627,8 @@ function keydown(event, textArea) {
         event.preventDefault();
         toDelete.remove();
         normalizeMessageBox(textArea);
+        updatePlaceholder(textArea.parentElement, sendButton, typingStatus);
+        handleTextInput(textArea.parentElement, chat, typingStatus, event);
       }
     }
   }
@@ -643,10 +644,8 @@ const updatePlaceholder = (textArea, sendButton, typingStatus) => {
   const textContent = editor.textContent;
   const hasEmoji = !!editor.querySelector(".message-emoji-span");
 
-  // Determine if we should hide the placeholder (any char including space)
   const hasVisualContent = textContent.length > 0 || hasEmoji;
 
-  // Determine if we should enable the send button (non-whitespace chars)
   const hasSendableContent = textContent.trim().length > 0 || hasEmoji;
 
   if (!placeholder && !hasVisualContent) {
@@ -1185,6 +1184,9 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
   smileyIcon.append(smileySVG);
   nullDiv.append(smileyIcon);
   button2.append(nullDiv);
+  button2.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+  });
   div1_7_1_1_1_1_1.append(button2);
 
   const div1_1_2 = createElement("div", "message-box1-7-1-1-1-2");
@@ -1327,7 +1329,9 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     updatePlaceholder(textArea, sendButton, typingStatus);
     handleTextInput(textArea, chat, typingStatus, event);
   });
-  divContenteditable.addEventListener("keydown", handleTextKeyDown);
+  divContenteditable.addEventListener("keydown", (event) =>
+    keydown(event, divContenteditable, chat, typingStatus, sendButton),
+  );
   divContenteditable.addEventListener("mouseup", updateCaretPosition);
   divContenteditable.addEventListener("paste", (event) =>
     handlePaste(event, textArea, sendButton, typingStatus),
@@ -1368,7 +1372,14 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     event.stopPropagation();
     const pane = main.querySelector(".message-box1-6");
     if (pane.innerHTML === "") {
-      showEmojiPicker(pane, pane, textArea, sendButton, typingStatus);
+      showEmojiPicker(
+        pane,
+        pane,
+        textArea,
+        sendButton,
+        typingStatus,
+        chat,
+      );
       document.addEventListener("click", documentClickListener);
     } else {
       closePanel();
@@ -2064,7 +2075,7 @@ const renderHeaderStatus = () => {
   statusDiv.append(span);
   container.append(statusDiv);
 };
-const unbindMessageBoxRealtime = () => {
+export const unbindMessageBoxRealtime = () => {
   if (!msgBoxBound) return;
   msgBoxBound = false;
 

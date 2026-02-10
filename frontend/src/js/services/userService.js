@@ -138,24 +138,4 @@ export const userService = {
       throw error;
     }
   },
-
-  updateLastSeenOnExit: async () => {
-    const token = sessionStorage.getItem("access_token");
-    if (!token) return;
-    try {
-      fetch(`${BASE_URL_MAIN_USER}/update-user-last-seen`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        keepalive: true,
-      }).catch(() => {
-        console.warn("Keepalive request failed");
-      });
-      return;
-    } catch (error) {
-      console.warn("Fetch with keepalive failed:", error);
-    }
-  },
 };

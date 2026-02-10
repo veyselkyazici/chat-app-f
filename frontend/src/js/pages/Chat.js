@@ -1,54 +1,57 @@
 // Chat.js
-import AbstractView from "./AbstractView.js";
-import renderContactList from "../components/Contacts.js";
-import { createSettingsHtml } from "../components/Settings.js";
 import { addContactModal } from "../components/AddContact.js";
-import { SearchHandler } from "../utils/searchHandler.js";
 import {
-  createElement,
-  createSvgElement,
-  createProfileImage,
-  handleErrorCode,
-  createDefaultImage,
-} from "../utils/util.js";
-import {
-  handleChats,
+  ariaSelectedRemove,
   createChatBoxWithFirstMessage,
+  handleChats,
   lastMessageChange,
   updateChatBox,
-  ariaSelectedRemove,
 } from "../components/ChatBox.js";
 import {
-  isOnlineStatus,
-  isMessageBoxDomExists,
-  renderMessage,
-  messageBoxElementMessagesReadTick,
-  createMessageDeliveredTickElement,
-  onlineInfo,
-  syncActiveChat,
-} from "../components/MessageBox.js";
-import { navigateTo } from "../index.js";
-import { userService } from "../services/userService.js";
-import { contactService } from "../services/contactsService.js";
-import { chatService } from "../services/chatService.js";
-import { authService } from "../services/authService.js";
-import { userUpdateModal } from "../components/UpdateUserProfile.js";
+  updateContactAbout,
+  updateContactProfilePhoto,
+} from "../components/ContactInformation.js";
+import renderContactList from "../components/Contacts.js";
 import {
-  importPublicKey,
-  base64ToUint8Array,
-  getUserKey,
-  setUserKey,
-  decryptMessage,
-  setSessionKey,
-  decryptWithSessionKey,
-} from "../utils/e2ee.js";
-import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
+  createMessageDeliveredTickElement,
+  isMessageBoxDomExists,
+  isOnlineStatus,
+  messageBoxElementMessagesReadTick,
+  onlineInfo,
+  renderMessage,
+  syncActiveChat,
+  unbindMessageBoxRealtime,
+} from "../components/MessageBox.js";
+import { createSettingsHtml } from "../components/Settings.js";
+import { userUpdateModal } from "../components/UpdateUserProfile.js";
 import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
+import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
 import { ContactResponseDTO } from "../dtos/contact/response/ContactResponseDTO.js";
 import { i18n } from "../i18n/i18n.js";
-import { webSocketService } from "../websocket/websocketService.js";
+import { navigateTo } from "../index.js";
+import { authService } from "../services/authService.js";
+import { chatService } from "../services/chatService.js";
+import { contactService } from "../services/contactsService.js";
+import { userService } from "../services/userService.js";
 import { chatStore } from "../store/chatStore.js";
-import { canShowOnline, canShowLastSeen } from "../utils/privacyVisibility.js";
+import {
+  base64ToUint8Array,
+  decryptMessage,
+  decryptWithSessionKey,
+  getUserKey,
+  importPublicKey,
+  setSessionKey,
+  setUserKey,
+} from "../utils/e2ee.js";
+import { SearchHandler } from "../utils/searchHandler.js";
+import {
+  createDefaultImage,
+  createElement,
+  createProfileImage,
+  handleErrorCode,
+} from "../utils/util.js";
+import { webSocketService } from "../websocket/websocketService.js";
+import AbstractView from "./AbstractView.js";
 
 export default class Chat extends AbstractView {
   constructor(params) {
@@ -142,7 +145,6 @@ export default class Chat extends AbstractView {
 
     await this.getContactList();
     await this.getChatList();
-    console.log(chatStore.user.id);
   }
   async handleMissingUserKey() {
     const storedSessionKey = sessionStorage.getItem("sessionKey");
@@ -271,6 +273,7 @@ export default class Chat extends AbstractView {
     const disconnect = "/user/queue/disconnect";
     const syncRequired = `/user/queue/sync-required`;
 
+    // Sunucudan veri senkronizasyonu gerektiğinde tetiklenir (örn. bağlantı koptuğunda).
     ws.subscribe(syncRequired, async (msg) => {
       if (msg.body === "SNAPSHOT_REQUIRED") {
         try {
@@ -283,16 +286,18 @@ export default class Chat extends AbstractView {
         }
       }
     });
+    // Sunucu bağlantıyı kestiğinde (logout vb.).
     ws.subscribe(disconnect, async (msg) => {
       await this.logout();
     });
 
+    // Sunucudan hata mesajı geldiğinde.
     ws.subscribe(error, (msg) => {
       const err = JSON.parse(msg.body);
       handleErrorCode(err.code, null, i18n);
     });
 
-    // BLOCK
+    // BLOCK: Kullanıcı engellendiğinde.
     ws.subscribe(chatBlock, async (msg) => {
       const dto = JSON.parse(msg.body);
 
@@ -310,12 +315,11 @@ export default class Chat extends AbstractView {
         const statusSpan = box.querySelector(".online-status");
         if (statusSpan) statusSpan.remove();
 
-        chatStore.ws.unsubscribe(`/user/queue/online-status`);
-        chatStore.ws.unsubscribe(`/user/queue/message-box-typing`);
+        unbindMessageBoxRealtime();
       }
     });
 
-    // UNBLOCK
+    // UNBLOCK: Kullanıcı engeli kaldırıldığında.
     ws.subscribe(chatUnBlock, async (msg) => {
       const dto = JSON.parse(msg.body);
 
@@ -339,7 +343,7 @@ export default class Chat extends AbstractView {
       }
     });
 
-    // READ MESSAGES
+    // READ MESSAGES: Mesajlarınız karşı tarafça okunduğunda (mavi tık).
     ws.subscribe(readMessagesChannel, (msg) => {
       const json = JSON.parse(msg.body);
 
@@ -376,7 +380,7 @@ export default class Chat extends AbstractView {
       }
     });
 
-    // RECEIVED MESSAGE
+    // RECEIVED MESSAGE: Yeni bir mesaj alındığında.
     ws.subscribe(recipientMessageChannel, async (msg) => {
       const dto = JSON.parse(msg.body);
       dto.decryptedMessage = await decryptMessage(dto);
@@ -461,6 +465,7 @@ export default class Chat extends AbstractView {
           true,
         );
 
+        // Mesajı okuduğumuzu sunucuya bildir.
         chatStore.ws.send("read-message", msgDto);
       }
 
@@ -472,7 +477,7 @@ export default class Chat extends AbstractView {
       );
     });
 
-    // TYPING
+    // TYPING: Karşı taraf yazıyor durumunu güncellediğinde.
     ws.subscribe(typingChannel, async (msg) => {
       const status = JSON.parse(msg.body);
       const chatElement = document.querySelector(
@@ -525,8 +530,15 @@ export default class Chat extends AbstractView {
     const updatePrivacy = `/user/queue/updated-privacy-response`;
     const updatedUserProfile = `/user/queue/updated-user-profile-message`;
     const invitedUserJoined = `/user/queue/invited-user-joined`;
+    const contactDeleted = `/user/queue/contact-deleted`;
 
-    // invited-user-joined
+    // CONTACT DELETED: Biri bizi rehberinden sildiğinde (Gizlilikler için önemli).
+    ws.subscribe(contactDeleted, (msg) => {
+      const deleterUserId = JSON.parse(msg.body);
+      this.handleContactDeleted(deleterUserId);
+    });
+
+    // INVITED USER JOINED: Davet ettiğimiz kişi uygulamaya katıldığında.
     ws.subscribe(invitedUserJoined, async (msg) => {
       const dto = new ContactResponseDTO(JSON.parse(msg.body));
 
@@ -557,7 +569,7 @@ export default class Chat extends AbstractView {
       chatStore.setContactList(updatedList);
     });
 
-    // add-contact
+    // ADD CONTACT: Rehbere yeni bir kişi eklediğimizde.
     ws.subscribe(addContact, async (msg) => {
       const newContact = JSON.parse(msg.body);
 
@@ -599,11 +611,12 @@ export default class Chat extends AbstractView {
       chatStore.setContactList([...filteredContacts, ...invitations]);
     });
 
+    // ADD CONTACT USER: Birisi bizi rehberine eklediğinde (ilişki durumu değiştiğinde).
     ws.subscribe(addContactUser, async (msg) => {
       const newContact = JSON.parse(msg.body);
 
       const updatedChats = chatStore.chatList.map((chat) => {
-        if (chat.userProfileResponseDTO.id === newContact.contactsDTO.userId) {
+        if (chat.userProfileResponseDTO?.id === newContact.contactsDTO.userId) {
           chat.contactsDTO.relatedUserHasAddedUser =
             newContact.contactsDTO.userHasAddedRelatedUser;
 
@@ -621,10 +634,9 @@ export default class Chat extends AbstractView {
       });
 
       chatStore.setChatList(updatedChats);
-
       const updatedContacts = chatStore.contactList.map((contact) => {
         if (
-          contact.userProfileResponseDTO.id === newContact.contactsDTO.userId
+          contact.userProfileResponseDTO?.id === newContact.contactsDTO.userId
         ) {
           contact.contactsDTO.relatedUserHasAddedUser =
             newContact.contactsDTO.userHasAddedRelatedUser;
@@ -647,6 +659,7 @@ export default class Chat extends AbstractView {
       chatStore.setContactList(updatedContacts);
     });
 
+    // ADD INVITATION: Yeni bir davet aldığımızda.
     ws.subscribe(addInvitation, async (msg) => {
       const newInvitation = JSON.parse(msg.body);
 
@@ -671,6 +684,7 @@ export default class Chat extends AbstractView {
       chatStore.setContactList([...contacts, ...invitations]);
     });
 
+    // UPDATE PRIVACY: Bir kişinin gizlilik ayarları değiştiğinde.
     ws.subscribe(updatePrivacy, async (msg) => {
       const dto = JSON.parse(msg.body);
 
@@ -687,7 +701,7 @@ export default class Chat extends AbstractView {
             dto.privacySettings.profilePhotoVisibility
           ) {
             handleProfilePhotoVisibilityChange({
-              contact: { ...chat.contactsDTO },
+              contact: chat.contactsDTO,
               userProfileResponseDTO: chat.userProfileResponseDTO,
             });
           }
@@ -695,7 +709,7 @@ export default class Chat extends AbstractView {
           if (old.aboutVisibility !== dto.privacySettings.aboutVisibility) {
             handleAboutVisibilityChange({
               contact: chat.contactsDTO,
-              userProfileResponseDTO: dto,
+              userProfileResponseDTO: chat.userProfileResponseDTO,
             });
           }
         }
@@ -715,7 +729,7 @@ export default class Chat extends AbstractView {
           if (old.aboutVisibility !== dto.privacySettings.aboutVisibility) {
             handleAboutVisibilityChange({
               contact: c.contactsDTO,
-              userProfileResponseDTO: dto,
+              userProfileResponseDTO: c.userProfileResponseDTO,
             });
           }
         }
@@ -723,11 +737,12 @@ export default class Chat extends AbstractView {
       });
       chatStore.setContactList(contacts);
       if (chatStore.state.activeFriendId === dto.id) {
+        // Kişinin anlık online durumunu sor.
         chatStore.ws.send("request-status-snapshot", { targetUserId: dto.id });
       }
     });
 
-    // updated-user-profile
+    // UPDATED USER PROFILE: Bir kişinin profil bilgileri (foto, isim, hakkında) güncellendiğinde.
     ws.subscribe(updatedUserProfile, async (msg) => {
       const dto = JSON.parse(msg.body);
 
@@ -818,6 +833,27 @@ export default class Chat extends AbstractView {
         }
       }
     });
+  }
+
+  handleContactDeleted(deleterUserId) {
+    const contact = chatStore.contactList.find(
+      (c) => c.contactsDTO && c.contactsDTO.userContactId === deleterUserId,
+    );
+    if (contact) {
+      contact.contactsDTO.relatedUserHasAddedUser = false;
+    }
+
+    const chat = chatStore.chatList.find(
+      (c) => c.contactsDTO && c.contactsDTO.userContactId === deleterUserId,
+    );
+
+    if (chat) {
+      chat.contactsDTO.relatedUserHasAddedUser = false;
+
+      handleProfilePhotoVisibilityChange(chat);
+      handleOnlineStatusVisibilityChange(chat);
+      handleLastSeenVisibilityChange(chat);
+    }
   }
 
   async logout() {
@@ -932,30 +968,44 @@ export const handleOnlineStatusVisibilityChange = (newContactPrivacy) => {
 };
 
 export const handleProfilePhotoVisibilityChange = (newValue) => {
+  const privacy =
+    newValue.userProfileResponseDTO.privacySettings.profilePhotoVisibility;
+
+  const contactData = newValue.contactsDTO || newValue.contact;
+
+  const userHasAddedRelatedUser = contactData?.relatedUserHasAddedUser ?? false;
+
+  const show =
+    privacy === "EVERYONE" ||
+    (privacy === "MY_CONTACTS" && userHasAddedRelatedUser);
+
+  const finalImage = show ? newValue.userProfileResponseDTO.image : null;
+
   const chatData = chatStore.chatList.find(
     (c) => c.userProfileResponseDTO.id === newValue.userProfileResponseDTO.id,
   );
+
+  if (chatData) {
+    chatData.userProfileResponseDTO.image = finalImage;
+  }
+
   const chatElement = chatData
     ? document.querySelector(`.chat1[data-chat-id="${chatData.chatDTO.id}"]`)
     : null;
 
   if (chatElement) {
     const imageElement = chatElement.querySelector(".image");
-    changesVisibilityProfilePhoto(
-      imageElement,
-      newValue.userProfileResponseDTO.image,
-    );
+    changesVisibilityProfilePhoto(imageElement, finalImage);
   }
 
   if (document.querySelector(".a1-1-1-1-1-1-3")) {
-    const contact = document.querySelector(
-      `.contact1[data-contact-id="${newValue.contactsDTO.id}"]`,
-    );
-    const imageElement = contact?.querySelector(".image");
-    changesVisibilityProfilePhoto(
-      imageElement,
-      newValue.userProfileResponseDTO.image,
-    );
+    if (contactData?.id) {
+      const contact = document.querySelector(
+        `.contact1[data-contact-id="${contactData.id}"]`,
+      );
+      const imageElement = contact?.querySelector(".image");
+      changesVisibilityProfilePhoto(imageElement, finalImage);
+    }
   }
 
   if (
@@ -966,11 +1016,11 @@ export const handleProfilePhotoVisibilityChange = (newValue) => {
     const messageBoxElement = document.querySelector(".message-box1");
     if (!messageBoxElement) return;
     const imageElement = messageBoxElement.querySelector(".message-box1-2-1-1");
-    changesVisibilityProfilePhoto(
-      imageElement,
-      newValue.userProfileResponseDTO.image,
-    );
+    changesVisibilityProfilePhoto(imageElement, finalImage);
   }
+
+  // Also update contact info panel if open
+  updateContactProfilePhoto(newValue.userProfileResponseDTO.id, finalImage);
 };
 
 export const changesVisibilityProfilePhoto = (imagelement, image) => {
@@ -983,11 +1033,17 @@ export const changesVisibilityProfilePhoto = (imagelement, image) => {
       const img = createProfileImage(image);
       imagelement.append(img);
     } else {
-      imagelement.firstElementChild.src = image;
+      if (imagelement.firstElementChild) {
+        imagelement.firstElementChild.src = image; // img etiketi varsa src'yi güncelle
+      } else {
+        const img = createProfileImage(image); // Boşsa oluştur
+        imagelement.append(img);
+      }
     }
     return;
   }
 
+  // Resim yoksa (gizli veya null), varsayılanı göster
   if (imagelement.firstElementChild?.className === "user-image") {
     imagelement.removeChild(imagelement.firstElementChild);
     const svgDiv = createDefaultImage();
@@ -998,18 +1054,29 @@ export const handleAboutVisibilityChange = (newValue) => {
   const privacy =
     newValue.userProfileResponseDTO.privacySettings.aboutVisibility;
 
+  const contactData = newValue.contactsDTO || newValue.contact;
+
   const bool =
     privacy === "EVERYONE" ||
-    (privacy === "MY_CONTACTS" && newValue.contact.userHasAddedRelatedUser);
+    (privacy === "MY_CONTACTS" && contactData?.relatedUserHasAddedUser);
+
+  if (!contactData?.id) return;
 
   const contact = document.querySelector(
-    `.contact1[data-contact-id="${newValue.contactsDTO.id}"]`,
+    `.contact1[data-contact-id="${contactData.id}"]`,
   );
   const aboutElement = contact?.querySelector(".message");
   changesVisibilityAbout(
     bool,
     aboutElement,
     newValue.userProfileResponseDTO.about,
+  );
+
+  // Also update contact info panel if open
+  updateContactAbout(
+    newValue.userProfileResponseDTO.id,
+    newValue.userProfileResponseDTO.about,
+    bool,
   );
 };
 

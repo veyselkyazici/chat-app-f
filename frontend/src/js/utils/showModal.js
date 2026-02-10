@@ -114,11 +114,18 @@ class Modal {
       footer1.append(okButton);
 
       okButton.addEventListener("click", async () => {
-        if (this.options?.mainCallback) {
-          const result = await this.options.mainCallback();
-          if (result) this.close();
-        } else {
-          this.close();
+        try {
+          if (this.options?.mainCallback) {
+            const result = await this.options.mainCallback();
+            if (result) this.close();
+          } else {
+            this.close();
+          }
+        } catch (error) {
+          console.error("Modal callback failed:", error);
+          // Optional: Show error in modal or toastr if needed,
+          // but handleErrorCode should have already triggered a toastr from the axios interceptor.
+          this.close(); 
         }
       });
     }

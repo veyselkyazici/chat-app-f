@@ -110,7 +110,7 @@ export default {
     specialChar: "En az 1 özel karakter (@ # $ % ^ & + = . ? ! - _)",
   },
   addContacts: {
-    contactNameLength: "En az 2 karakter olabilir",
+    contactNameMinLength: "En az 2 karakter olabilir",
     contactNameMaxLength: "En fazla 32 karakter olabilir",
     name: "İsim",
     addContact: "Kişi ekle",
@@ -145,6 +145,9 @@ export default {
       `${contactName} kullanıcısı zaten davet edilmiş.`,
     inviteMessage: (contactName) =>
       `${contactName} kullanıcısını davet etmek istiyor musunuz?`,
+    alreadyBeenInvitedError: "Kullanıcı zaten davet edilmiş.",
+    inviteSuccess: "Davet başarıyla gönderildi.",
+    invited: "Davet Edildi",
   },
   search: {
     searchPlaceHolder: "İsim veya email ile arayınız",

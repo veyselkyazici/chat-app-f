@@ -94,9 +94,17 @@ async function userUpdateModal(user, bool) {
   nameInput.value = user.firstName;
   const errorMessageElement = createElement("div", "error-message");
 
-  const nameContainer = createElement("div", "input-container", null, { style: "margin-bottom: 10px;" });
-  
-  const nameLabel = createElement("div", "input-label", null, { style: "margin-bottom: 5px; font-weight: bold;" }, i18n.t("addContacts.name"));
+  const nameContainer = createElement("div", "input-container", null, {
+    style: "margin-bottom: 10px;",
+  });
+
+  const nameLabel = createElement(
+    "div",
+    "input-label",
+    null,
+    { style: "margin-bottom: 5px; font-weight: bold;" },
+    i18n.t("addContacts.name"),
+  );
   nameElement.append(nameIElement);
   nameElement.append(nameInput);
   nameElement.append(errorMessageElement);
@@ -116,9 +124,17 @@ async function userUpdateModal(user, bool) {
   aboutInput.value = user.about;
   const aboutErrorMessageElement = createElement("div", "error-message");
 
-  const aboutContainer = createElement("div", "input-container", null, { style: "margin-bottom: 15px;" });
+  const aboutContainer = createElement("div", "input-container", null, {
+    style: "margin-bottom: 15px;",
+  });
 
-  const aboutLabel = createElement("div", "input-label", null, { style: "margin-bottom: 5px; font-weight: bold;" }, i18n.t("updateUserProfile.about"));
+  const aboutLabel = createElement(
+    "div",
+    "input-label",
+    null,
+    { style: "margin-bottom: 5px; font-weight: bold;" },
+    i18n.t("updateUserProfile.about"),
+  );
   aboutElement.append(aboutIElement);
   aboutElement.append(aboutInput);
   aboutElement.append(aboutErrorMessageElement);
@@ -134,7 +150,7 @@ async function userUpdateModal(user, bool) {
       title: "",
       contentHtml: updateProfileForm,
       mainCallback: () => saveUserProfile(user),
-      buttonText: i18n.t("common.save") || "Kaydet", // TODO: Add translation if missing
+      buttonText: i18n.t("common.save") || "Kaydet",
       showBorders: false,
       secondOptionButton: false,
       cancelButton: true,
@@ -160,72 +176,78 @@ async function userUpdateModal(user, bool) {
     toggleOptions(event, user.image),
   );
   inputFile.addEventListener("change", (event) => uploadPhoto(event, user.id));
-  
+
   nameInput.addEventListener("input", () => {
-      nameElement.classList.remove("error");
+    nameElement.classList.remove("error");
   });
   aboutInput.addEventListener("input", () => {
-      aboutElement.classList.remove("error");
+    aboutElement.classList.remove("error");
   });
 }
 
+// isRegistration: Kayıt işlemi sırasında olup olmadığını belirtir. Eğer true ise, bilgiler değişmese bile güncellemeyi zorlar.
 async function saveUserProfile(user, isRegistration = false) {
   const nameInput = document.getElementById("nameInput");
   const aboutInput = document.getElementById("aboutInput");
-  
+
   const firstName = nameInput.value;
   const about = aboutInput.value;
 
   try {
-     const nameDTO = new UpdateUserDTO(firstName);
-     const nameErrors = nameDTO.validate();
-     if (nameErrors.length > 0) {
-        nameErrors.forEach(err => toastr.error(err.message));
-        nameInput.parentElement.classList.add("error");
-        return false;
-     }
-  } catch(e) {
-      toastr.error(e.message);
+    const nameDTO = new UpdateUserDTO(firstName);
+    const nameErrors = nameDTO.validate();
+    if (nameErrors.length > 0) {
+      nameErrors.forEach((err) => toastr.error(err.message));
       nameInput.parentElement.classList.add("error");
       return false;
+    }
+  } catch (e) {
+    toastr.error(e.message);
+    nameInput.parentElement.classList.add("error");
+    return false;
   }
-  
+
   if (!about || !about.trim()) {
-      toastr.error(i18n.t("updateUserProfile.aboutError"));
-      aboutInput.parentElement.classList.add("error");
-      return false;
+    toastr.error(i18n.t("updateUserProfile.aboutError"));
+    aboutInput.parentElement.classList.add("error");
+    return false;
   }
 
   if (firstName === user.firstName && about === user.about && !isRegistration) {
-      return true;
+    return true;
   }
 
   try {
-      const response = await userService.updateUserProfile({ firstName, about });
-      
-      chatStore.user.firstName = firstName;
-      chatStore.user.about = about;
+    await userService.updateUserProfile({ firstName, about });
 
-      webSocketService.ws.send("updated-user-profile-send-message", {
-          userId: chatStore.user.id,
-          url: chatStore.user.image,
-          about: about,
-          firstName: firstName,
-      });
+    chatStore.user.firstName = firstName;
+    chatStore.user.about = about;
 
-      const settingsAbout = document.querySelector(
-          ".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1",
-      );
-      if (settingsAbout) {
-          settingsAbout.textContent = about;
-      }
+    webSocketService.ws.send("updated-user-profile-send-message", {
+      userId: chatStore.user.id,
+      url: chatStore.user.image,
+      about: about,
+      firstName: firstName,
+    });
+    const settingsName = document.querySelector(
+      ".settings-1-1-2-1-1-1-1-1-1-1-1-2-1-1-1-1",
+    );
+    if (settingsName) {
+      settingsName.textContent = chatStore.user.firstName;
+    }
+    const settingsAbout = document.querySelector(
+      ".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1",
+    );
+    if (settingsAbout) {
+      settingsAbout.textContent = chatStore.user.about;
+    }
 
-      toastr.success(i18n.t("updateUserProfile.nameUpdated"));
-      return true;
+    toastr.success(i18n.t("updateUserProfile.nameUpdated"));
+    return true;
   } catch (error) {
-      toastr.error(i18n.t("error.generic") || "An error occurred");
-      console.error(error);
-      return false;
+    toastr.error(i18n.t("error.generic") || "An error occurred");
+    console.error(error);
+    return false;
   }
 }
 
@@ -376,11 +398,15 @@ function uploadPhoto(event, userId) {
     img.onload = function () {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      
+
       const isMobile = viewportWidth <= 600;
-      const maxModalDim = isMobile ? viewportWidth : Math.min(500, viewportWidth * 0.9, viewportHeight * 0.7);
+      const maxModalDim = isMobile
+        ? viewportWidth
+        : Math.min(500, viewportWidth * 0.9, viewportHeight * 0.7);
       const parentWidth = maxModalDim;
-      const parentHeight = isMobile ? Math.min(viewportHeight - 100, viewportWidth) : maxModalDim;
+      const parentHeight = isMobile
+        ? Math.min(viewportHeight - 100, viewportWidth)
+        : maxModalDim;
 
       const imageWidth = img.naturalWidth;
       const imageHeight = img.naturalHeight;
@@ -424,13 +450,19 @@ function uploadPhoto(event, userId) {
         left = 0;
       }
 
-      const deneme5 = createElement("div", "deneme5", { 
-        height: isMobile ? "100%" : `${parentHeight}px`, 
+      const deneme5 = createElement("div", "deneme5", {
+        height: isMobile ? "100%" : `${parentHeight}px`,
         position: "relative",
-        width: "100%"
+        width: "100%",
       });
-      const deneme6 = createElement("div", "deneme6", { height: "100%", position: "relative" });
-      const deneme7 = createElement("div", "deneme7", { height: "100%", position: "relative" });
+      const deneme6 = createElement("div", "deneme6", {
+        height: "100%",
+        position: "relative",
+      });
+      const deneme7 = createElement("div", "deneme7", {
+        height: "100%",
+        position: "relative",
+      });
       const cropModalContent = createElement(
         "div",
         "upload-photo-modal-content",
@@ -453,7 +485,12 @@ function uploadPhoto(event, userId) {
         { tabIndex: "0", type: "button" },
       );
       zoomContainer.append(zoomPlusBtn);
-      const zoomPlusSpan = createElement("span", "", {}, { "aria-hidden": "true", "data-icon": "plus" });
+      const zoomPlusSpan = createElement(
+        "span",
+        "",
+        {},
+        { "aria-hidden": "true", "data-icon": "plus" },
+      );
       const zoomPlusSvg = createSvgElement("svg", {
         class: "svg-element",
         viewBox: "0 0 24 24",
@@ -461,7 +498,8 @@ function uploadPhoto(event, userId) {
         width: "24",
         preserveAspectRatio: "xMidYMid meet",
       });
-      zoomPlusSvg.innerHTML = '<title>plus</title><path fill="currentColor" d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>';
+      zoomPlusSvg.innerHTML =
+        '<title>plus</title><path fill="currentColor" d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>';
       zoomPlusSpan.append(zoomPlusSvg);
       zoomPlusBtn.append(zoomPlusSpan);
 
@@ -471,7 +509,12 @@ function uploadPhoto(event, userId) {
         { tabIndex: "0", type: "button" },
       );
       zoomContainer.append(zoomMinusBtn);
-      const zoomMinusSpan = createElement("span", "", {}, { "aria-hidden": "true", "data-icon": "minus" });
+      const zoomMinusSpan = createElement(
+        "span",
+        "",
+        {},
+        { "aria-hidden": "true", "data-icon": "minus" },
+      );
       const zoomMinusSvg = createSvgElement("svg", {
         class: "svg-element",
         viewBox: "0 0 28 28",
@@ -479,7 +522,8 @@ function uploadPhoto(event, userId) {
         width: "28",
         preserveAspectRatio: "xMidYMid meet",
       });
-      zoomMinusSvg.innerHTML = '<title>minus</title><path fill="currentColor" d="M8.381,14.803v-1.605h11.237v1.605C19.618,14.803,8.381,14.803,8.381,14.803z"></path>';
+      zoomMinusSvg.innerHTML =
+        '<title>minus</title><path fill="currentColor" d="M8.381,14.803v-1.605h11.237v1.605C19.618,14.803,8.381,14.803,8.381,14.803z"></path>';
       zoomMinusSpan.append(zoomMinusSvg);
       zoomMinusBtn.append(zoomMinusSpan);
 
@@ -487,28 +531,20 @@ function uploadPhoto(event, userId) {
         "div",
         "upload-photo-modal-content-1",
       );
-      const cropContainer = createElement(
-        "div",
-        "crop-container",
-        {
-          position: "relative",
-          width: `${parentWidth}px`,
-          height: `${parentHeight}px`,
-          overflow: "hidden",
-          backgroundColor: "#e9edef"
-        }
-      );
-      const canvasWrapper = createElement(
-        "div",
-        "canvas-wrapper",
-        {
-          position: "absolute",
-          width: `${width}px`,
-          height: `${height}px`,
-          top: `${top}px`,
-          left: `${left}px`,
-        }
-      );
+      const cropContainer = createElement("div", "crop-container", {
+        position: "relative",
+        width: `${parentWidth}px`,
+        height: `${parentHeight}px`,
+        overflow: "hidden",
+        backgroundColor: "#e9edef",
+      });
+      const canvasWrapper = createElement("div", "canvas-wrapper", {
+        position: "absolute",
+        width: `${width}px`,
+        height: `${height}px`,
+        top: `${top}px`,
+        left: `${left}px`,
+      });
 
       canvas1 = createElement("canvas", "canvas-1", { display: "block" });
       const canvas2 = createElement("canvas", "canvas-2");
@@ -631,20 +667,23 @@ function uploadPhoto(event, userId) {
       canvas1.addEventListener("mousemove", (event) => onDrag(event, canvas1));
       canvas1.addEventListener("mouseup", stopDrag);
       window.addEventListener("mouseup", stopDrag); // Handle mouse up outside canvas
-      
+
       // Add touch events for mobile responsiveness
       canvas1.addEventListener("touchstart", (e) => {
         const touch = e.touches[0];
         startDrag({ clientX: touch.clientX, clientY: touch.clientY });
       });
-      canvas1.addEventListener("touchmove", (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        onDrag({ clientX: touch.clientX, clientY: touch.clientY }, canvas1);
-      }, { passive: false });
+      canvas1.addEventListener(
+        "touchmove",
+        (e) => {
+          e.preventDefault();
+          const touch = e.touches[0];
+          onDrag({ clientX: touch.clientX, clientY: touch.clientY }, canvas1);
+        },
+        { passive: false },
+      );
       canvas1.addEventListener("touchend", stopDrag);
       window.addEventListener("touchend", stopDrag);
-
     };
   };
   reader.readAsDataURL(file);
@@ -678,7 +717,7 @@ function startDrag(e) {
   const scaleY = canvas1.height / canvasRect.height;
   startX = (e.clientX - canvasRect.left) * scaleX - imgX;
   startY = (e.clientY - canvasRect.top) * scaleY - imgY;
-  
+
   const rafLoop = () => {
     if (!isDragging) return;
     if (needsRedraw) {
@@ -704,7 +743,6 @@ function stopDrag() {
   isDragging = false;
   canvasRect = null;
 }
-
 
 function constrainImagePosition(canvas1) {
   const minX = canvas1.width / 2 - circleRadius;

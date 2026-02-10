@@ -44,6 +44,7 @@ function handleErrorCode(code, targetSelector = null, i18n) {
     504: i18n.t("errors.status504"),
 
     3008: i18n.t("errors.status3008"),
+    3007: i18n.t("inviteUser.alreadyBeenInvitedError"),
     9999: i18n.t("errors.unexpectedError"),
   };
 

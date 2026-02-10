@@ -39,9 +39,6 @@ export function virtualScroll(
   paneSideElement.addEventListener("scroll", scrollHandler);
 }
 
-// Todo PrivacySettings islemleri yapilacak
-// ToDo profilePhoto halledilecek
-// ToDo invitationlar yapilacak
 export function updateItems(updateItemsDTO, newStart, newEnd) {
   const itemsToUpdate = updateItemsDTO.itemsToUpdate.filter((item) => {
     const translateY = parseInt(
@@ -132,13 +129,19 @@ function chatsVirtualScroll(item, listItem, newIndex) {
       profileImage.append(profileimagelement);
     }
   } else {
-    if (profileimagelement.className === "svg-div") {
+  if (profileimagelement.className === "svg-div") {
       profileImage.firstElementChild.remove();
       profileImage.append(profileimagelement);
     } else {
       profileImage.firstElementChild.src = listItem.userProfileResponseDTO.image;
     }
   }
+
+  const oldOptionsBtn = item.querySelector(".chat-options-btn");
+  if (oldOptionsBtn) {
+    oldOptionsBtn.remove();
+  }
+
   item.dataset.chatId = listItem.chatDTO.id;
   const innerDiv = item.querySelector(".chat-box > div");
   const isSelected = chatStore.selectedChatUserId === listItem.userProfileResponseDTO.id;

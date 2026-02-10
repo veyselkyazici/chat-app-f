@@ -18,7 +18,7 @@ export class AddContactRequestDTO {
     } else if (!isValidEmail(this.userContactEmail)) {
       errors.push({
         field: "contactEmail",
-        message: i18n.t("login.passwordError"),
+        message: i18n.t("login.emailError"),
       });
     } else if (
       this.userContactEmail.length < 6 ||

@@ -140,6 +140,9 @@ export default {
       `${contactName} has already been invited.`,
     inviteMessage: (contactName) =>
       `Do you want to invite the user ${contactName}?`,
+    alreadyBeenInvitedError: "User has already been invited.",
+    inviteSuccess: "Invitation sent successfully.",
+    invited: "Invited",
   },
   search: {
     searchPlaceHolder: "Search by name or email",

@@ -21,6 +21,7 @@ import {
   onlineInfo,
   removeMessageBoxAndUnsubscribe,
   unBlockInput,
+  unbindMessageBoxRealtime,
 } from "./MessageBox.js";
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
 import { i18n } from "../i18n/i18n.js";
@@ -480,8 +481,7 @@ const toggleBlockUser = async (chatData) => {
 
           if (statusSpan) statusSpan.remove();
 
-          webSocketService.ws.unsubscribe(`/user/queue/online-status`);
-          webSocketService.ws.unsubscribe(`/user/queue/message-box-typing`);
+          unbindMessageBoxRealtime();
         }
 
         toastr.success(
