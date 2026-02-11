@@ -242,10 +242,8 @@ function moveChatToTop(chatRoomId) {
   ) {
     handleChats();
   } else {
-    const scrollTop = paneSideElement.scrollTop;
-    const start = Math.max(Math.floor(scrollTop / 72) - 2, 0);
-
-    refreshVisibleItems(chatStore.updateItemsDTO);
+    if (chatStore.updateItemsDTO.list == chatStore.chatList)
+      refreshVisibleItems(chatStore.updateItemsDTO);
   }
 }
 

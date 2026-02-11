@@ -463,7 +463,6 @@ const createEmojiSpan = (emoji) => {
   return s;
 };
 
-
 function showEmojiPicker(
   panel,
   showEmojiDOM,
@@ -1062,9 +1061,28 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
     unBlockInput(chatData, main, footer, typingStatus);
   }
 
+  buttonDiv.addEventListener("click", () => {
+    messageBox1_2.scrollTo({
+      top: messageBox1_2.scrollHeight,
+      behavior: "smooth",
+    });
+  });
+
   messageBox1_2.addEventListener("scroll", async () => {
+    const isAtBottom =
+      messageBox1_2.scrollHeight - messageBox1_2.scrollTop <=
+      messageBox1_2.clientHeight + 1;
+
+    if (isAtBottom) {
+      buttonDiv.style.transform = "scaleX(0) scaleY(0)";
+      buttonDiv.style.opacity = "0";
+    } else {
+      buttonDiv.style.transform = "scaleX(1) scaleY(1)";
+      buttonDiv.style.opacity = "1";
+    }
+
     if (messageBox1_2.scrollTop === 0) {
-      // Yapılacak: Eski 30 mesajı getir
+      if (chatData.chatDTO.isLastPage) return;
       const visibleFirstMessageData = getFirstMessageDate();
       const older30Messages = new ChatDTO(
         await chatService.getOlder30Messages(
@@ -1075,6 +1093,7 @@ const createMessageBoxHTML = async (chatData, typingStatus) => {
       );
 
       if (older30Messages) {
+        chatData.chatDTO.isLastPage = older30Messages.isLastPage;
         renderMessage(
           older30Messages,
           chatData.userProfileResponseDTO.privacySettings,
@@ -1372,14 +1391,7 @@ const unBlockInput = (chat, main, footer, typingStatus) => {
     event.stopPropagation();
     const pane = main.querySelector(".message-box1-6");
     if (pane.innerHTML === "") {
-      showEmojiPicker(
-        pane,
-        pane,
-        textArea,
-        sendButton,
-        typingStatus,
-        chat,
-      );
+      showEmojiPicker(pane, pane, textArea, sendButton, typingStatus, chat);
       document.addEventListener("click", documentClickListener);
     } else {
       closePanel();
@@ -1617,7 +1629,8 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
       if (
         message.isSeen &&
         chatStore.user.privacySettings.readReceipts &&
-        privacySettings && privacySettings.readReceipts
+        privacySettings &&
+        privacySettings.readReceipts
       ) {
         const messageTickSpan = divMessage1_1_1_2_1_2_1.querySelector(
           ".message-delivered-tick-span",

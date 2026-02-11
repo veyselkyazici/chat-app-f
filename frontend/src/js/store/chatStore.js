@@ -25,6 +25,23 @@ class ChatStore {
       },
     };
     this.logoutHandler = null;
+    this.subscribers = [];
+  }
+
+  subscribe(callback) {
+    this.subscribers.push(callback);
+    return () => {
+      this.subscribers = this.subscribers.filter((cb) => cb !== callback);
+    };
+  }
+
+  notify() {
+    this.subscribers.forEach((callback) => callback(this.state));
+  }
+
+  updateUser(userData) {
+    this.state.user = { ...this.state.user, ...userData };
+    this.notify();
   }
 
   setLogoutHandler(cb) {
@@ -56,6 +73,7 @@ class ChatStore {
   }
   setUser(user) {
     this.state.user = user;
+    this.notify();
   }
 
   get user() {

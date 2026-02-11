@@ -144,6 +144,49 @@ function createSettingsHtml() {
   settingsDiv.append(spanElem);
 
   span.append(settingsDiv);
+
+  const unsubscribe = chatStore.subscribe((state) => {
+    const user = state.user;
+    if (user) {
+      const nameElement = span.querySelector(".settings-1-1-2-1-1-1-1-1-1-1-1-2-1-1-1-1");
+      if (nameElement) nameElement.textContent = user.firstName;
+      
+      const aboutElement = span.querySelector(".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1");
+      if (aboutElement) aboutElement.textContent = user.about;
+
+      const photoContainer = span.querySelector(".settings-1-1-2-1-1-1-1-1-1-1-1-1-1");
+      if (photoContainer) {
+         if (user.image) {
+             const existingImg = photoContainer.querySelector("img");
+             if (existingImg) {
+                 existingImg.src = user.image;
+             } else {
+                 photoContainer.innerHTML = "";
+                 const newImg = createElement(
+                    "img",
+                    "settings-1-1-2-1-1-1-1-1-1-1-1-1-1-1",
+                    { visibility: "visible" },
+                    { alt: "", draggable: false, src: user.image, tabIndex: "-1" }
+                 );
+                 photoContainer.append(newImg);
+             }
+         } else {
+             const existingImg = photoContainer.querySelector("img");
+             if (existingImg) {
+                 photoContainer.innerHTML = "";
+                 photoContainer.append(createDefaultImage());
+             }
+         }
+      }
+    }
+  });
+
+  const backBtn = divBackBtnn.querySelector(".settings-back-btn-1");
+  if(backBtn) {
+      backBtn.addEventListener("click", () => {
+          unsubscribe();
+      });
+  }
 }
 
 function createButton(

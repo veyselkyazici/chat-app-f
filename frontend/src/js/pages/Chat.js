@@ -139,12 +139,31 @@ export default class Chat extends AbstractView {
     if (chatStore.user.image) {
       const image = createProfileImage(chatStore.user.image);
       const userProfile = document.querySelector(".user-profile-photo");
-      userProfile.firstChild.remove();
-      userProfile.append(image);
+      if (userProfile && userProfile.firstChild) {
+        userProfile.firstChild.remove();
+        userProfile.append(image);
+      }
     }
+
+    // Subscribe to store updates for Sidebar Profile Photo
+    chatStore.subscribe((state) => {
+      const user = state.user;
+      if (user && user.image) {
+        const userProfile = document.querySelector(".user-profile-photo");
+        if (userProfile) {
+          // Check if image source is different to avoid unnecessary re-renders if possible,
+          // but createProfileImage might return complex DOM.
+          // For now, consistent re-append is safe.
+          const image = createProfileImage(user.image);
+          if (userProfile.firstChild) userProfile.firstChild.remove();
+          userProfile.append(image);
+        }
+      }
+    });
 
     await this.getContactList();
     await this.getChatList();
+    console.log(chatStore.chatList);
   }
   async handleMissingUserKey() {
     const storedSessionKey = sessionStorage.getItem("sessionKey");

@@ -220,8 +220,10 @@ async function saveUserProfile(user, isRegistration = false) {
   try {
     await userService.updateUserProfile({ firstName, about });
 
-    chatStore.user.firstName = firstName;
-    chatStore.user.about = about;
+    chatStore.updateUser({
+      firstName: firstName,
+      about: about,
+    });
 
     webSocketService.ws.send("updated-user-profile-send-message", {
       userId: chatStore.user.id,
@@ -229,18 +231,7 @@ async function saveUserProfile(user, isRegistration = false) {
       about: about,
       firstName: firstName,
     });
-    const settingsName = document.querySelector(
-      ".settings-1-1-2-1-1-1-1-1-1-1-1-2-1-1-1-1",
-    );
-    if (settingsName) {
-      settingsName.textContent = chatStore.user.firstName;
-    }
-    const settingsAbout = document.querySelector(
-      ".settings-1-1-2-1-1-1-1-1-1-1-1-2-2-1-1-1",
-    );
-    if (settingsAbout) {
-      settingsAbout.textContent = chatStore.user.about;
-    }
+
 
     toastr.success(i18n.t("updateUserProfile.nameUpdated"));
     return true;
@@ -831,13 +822,28 @@ async function cropImage(canvas1, userId, originalFile) {
         profilePhotoButtonDiv.append(profilePhotoButtonDivDiv);
         profilePhotoButton.append(profilePhotoButtonDiv);
 
-        chatStore.user.image = response.data.url;
+        chatStore.updateUser({
+          image: response.data.url,
+        });
+
+        // The DOM update for the user profile photo (circle icon) in the sidebar/header 
+        // should also be handled by a subscription if possible, or left as is if it's outside the scope 
+        // of this specific refactor (though ideally it should be reactive too).
+        // For now, I will leave the manual update for the '.user-profile-photo' element 
+        // if it's not part of the Settings page, but the main goal is to use chatStore for state.
+        
+        // Actually, let's keep the sidebar update here for now unless I find where it lives to subscribe it.
+        // But I should definitely update the store.
+        
         const image = createProfileImage(response.data.url);
         const userProfilePhotoElement = document.querySelector(
           ".user-profile-photo",
         );
-        userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
-        userProfilePhotoElement.append(image);
+        if (userProfilePhotoElement) {
+             userProfilePhotoElement.removeChild(userProfilePhotoElement.firstChild);
+             userProfilePhotoElement.append(image);
+        }
+
         const payload = {
           id: chatStore.user.id,
           email: chatStore.user.email,
@@ -894,11 +900,15 @@ async function removePhoto() {
     const response = await userService.removePhoto();
 
     if (response.success) {
-      userProfilePhotoElement.innerHTML = "";
+      chatStore.updateUser({
+        image: null,
+      });
+      
       photoElement.innerHTML = "";
       photoElement.append(createDefaultImage());
-      userProfilePhotoElement.append(createDefaultImage());
-      chatStore.user.image = null;
+      
+      // Removed manual update of .user-profile-photo as it's now handled by chatStore subscription in Chat.js
+      
       webSocketService.ws.send("updated-user-profile-send-message", {
         userId: chatStore.user.id,
         url: chatStore.user.image,

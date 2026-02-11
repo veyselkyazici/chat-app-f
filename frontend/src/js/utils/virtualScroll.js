@@ -37,6 +37,7 @@ export function virtualScroll(
 
   paneSideElement._scrollHandler = scrollHandler;
   paneSideElement.addEventListener("scroll", scrollHandler);
+  scrollHandler();
 }
 
 export function updateItems(updateItemsDTO, newStart, newEnd) {
@@ -83,7 +84,7 @@ export function refreshVisibleItems(updateItemsDTO) {
       item.style.transform.replace("translateY(", "").replace("px)", "")
     );
     const index = Math.floor(translateY / 72);
-
+    
     const listItem = updateItemsDTO.list[index];
     if (listItem) {
       if (!("invitationResponseDTO" in listItem)) {

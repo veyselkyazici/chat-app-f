@@ -1,5 +1,5 @@
 // Contacts.js
-import { ariaSelected, ariaSelectedRemove } from "./ChatBox.js";
+import { ariaSelected, ariaSelectedRemove, handleChatClick, handleChats } from "./ChatBox.js";
 import { ChatDTO } from "../dtos/chat/response/ChatDTO.js";
 import { ChatSummaryDTO } from "../dtos/chat/response/ChatSummaryDTO.js";
 import { MessageDTO } from "../dtos/chat/response/MessageDTO.js";
@@ -618,7 +618,8 @@ async function handleContactClick(event) {
       }
       chatStore.setMobileView("message");
       return;
-    }
+    } 
+    
     if (chatStore.selectedChatUserId || chatBoxElement) {
       chatBoxElement != null
         ? ariaSelected(
@@ -632,6 +633,7 @@ async function handleContactClick(event) {
             contactData.userProfileResponseDTO.id,
           );
     }
+    handleChats()
     let findChat = findChatRoom(
       chatStore.user.id,
       contactData.contactsDTO.userContactId,
