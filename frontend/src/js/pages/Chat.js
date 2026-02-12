@@ -163,7 +163,6 @@ export default class Chat extends AbstractView {
 
     await this.getContactList();
     await this.getChatList();
-    console.log(chatStore.chatList);
   }
   async handleMissingUserKey() {
     const storedSessionKey = sessionStorage.getItem("sessionKey");

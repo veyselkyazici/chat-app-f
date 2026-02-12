@@ -10,13 +10,13 @@ class ChatStore {
       visibleItemCount: 0,
       lastUserStatus: null,
       ws: null,
-      updateItemsDTO: null,
+      chatUpdateItemsDTO: null,
+      contactUpdateItemsDTO: null,
 
       activeChatRoomId: null,
       activeFriendId: null,
       activeChat: null,
       activeContact: null,
-
       messageBoxStatus: {
         typing: false,
         online: false,
@@ -64,13 +64,22 @@ class ChatStore {
     }
   }
 
-  setUpdateItemsDTO(updateItemsDTO) {
-    this.state.updateItemsDTO = updateItemsDTO;
+  setChatUpdateItemsDTO(chatUpdateItemsDTO) {
+    this.state.chatUpdateItemsDTO = chatUpdateItemsDTO;
   }
 
-  get updateItemsDTO() {
-    return this.state.updateItemsDTO;
+  get chatUpdateItemsDTO() {
+    return this.state.chatUpdateItemsDTO;
   }
+
+  setContactUpdateItemsDTO(contactUpdateItemsDTO) {
+    this.state.contactUpdateItemsDTO = contactUpdateItemsDTO;
+  }
+
+  get contactUpdateItemsDTO() {
+    return this.state.contactUpdateItemsDTO;
+  }
+
   setUser(user) {
     this.state.user = user;
     this.notify();
@@ -84,10 +93,10 @@ class ChatStore {
     const oldList = this.state.contactList;
     this.state.contactList = list || [];
     if (
-      this.state.updateItemsDTO &&
-      this.state.updateItemsDTO.list === oldList
+      this.state.contactUpdateItemsDTO &&
+      this.state.contactUpdateItemsDTO.list === oldList
     ) {
-      this.state.updateItemsDTO.list = this.state.contactList;
+      this.state.contactUpdateItemsDTO.list = this.state.contactList;
     }
   }
 
@@ -99,10 +108,10 @@ class ChatStore {
     const oldList = this.state.chatList;
     this.state.chatList = list || [];
     if (
-      this.state.updateItemsDTO &&
-      this.state.updateItemsDTO.list === oldList
+      this.state.chatUpdateItemsDTO &&
+      this.state.chatUpdateItemsDTO.list === oldList
     ) {
-      this.state.updateItemsDTO.list = this.state.chatList;
+      this.state.chatUpdateItemsDTO.list = this.state.chatList;
     }
   }
 

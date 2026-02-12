@@ -37,7 +37,7 @@ async function handleChats(chatList = chatStore.chatList) {
   for (let i = 0; i < visibleItemCount && i < chatList.length; i++) {
     createChatBox(chatList[i], i);
   }
-  chatStore.setUpdateItemsDTO(
+  chatStore.setChatUpdateItemsDTO(
     new UpdateItemsDTO({
       list: chatList,
       itemsToUpdate: Array.from(document.querySelectorAll(".chat1")),
@@ -45,7 +45,7 @@ async function handleChats(chatList = chatStore.chatList) {
       addEventListeners,
     }),
   );
-  virtualScroll(chatStore.updateItemsDTO, paneSideElement, visibleItemCount);
+  virtualScroll(chatStore.chatUpdateItemsDTO, paneSideElement, visibleItemCount);
 }
 const calculateVisibleItemCount = () => {
   const boxElement = document.querySelector(".chats");
@@ -72,15 +72,23 @@ async function createChatBox(chat, index) {
 
   const chatBox = createElement("div", "chat-box");
 
+  const isSelected = chatStore.activeChatRoomId === chat.chatDTO.id;
   const rowDiv = createElement(
     "div",
     "",
     {},
-    { tabindex: "-1", "aria-selected": "false", role: "row" },
+    {
+      tabindex: "-1",
+      "aria-selected": isSelected ? "true" : "false",
+      role: "row",
+    },
   );
   chatBox.append(rowDiv);
 
-  const chatDiv = createElement("div", "chat cursor");
+  const chatDiv = createElement(
+    "div",
+    isSelected ? "chat cursor selected-chat" : "chat cursor",
+  );
   rowDiv.append(chatDiv);
 
   const chatImageDiv = createElement("div", "chat-image");
@@ -242,8 +250,7 @@ function moveChatToTop(chatRoomId) {
   ) {
     handleChats();
   } else {
-    if (chatStore.updateItemsDTO.list == chatStore.chatList)
-      refreshVisibleItems(chatStore.updateItemsDTO);
+    refreshVisibleItems(chatStore.chatUpdateItemsDTO);
   }
 }
 

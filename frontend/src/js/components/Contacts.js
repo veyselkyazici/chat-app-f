@@ -331,7 +331,7 @@ function initContactList(contactList) {
     createContactOrInvitation(contactList[i], i);
   }
 
-  chatStore.setUpdateItemsDTO(
+  chatStore.setContactUpdateItemsDTO(
     new UpdateItemsDTO({
       list: contactList,
       itemsToUpdate: Array.from(document.querySelectorAll(".contact1")),
@@ -340,7 +340,7 @@ function initContactList(contactList) {
     }),
   );
 
-  virtualScroll(chatStore.updateItemsDTO, paneSideElement, visibleItemCount);
+  virtualScroll(chatStore.contactUpdateItemsDTO, paneSideElement, visibleItemCount);
 }
 
 const isTouchDevice = () => window.matchMedia("(pointer: coarse)").matches;
@@ -633,7 +633,6 @@ async function handleContactClick(event) {
             contactData.userProfileResponseDTO.id,
           );
     }
-    handleChats()
     let findChat = findChatRoom(
       chatStore.user.id,
       contactData.contactsDTO.userContactId,
