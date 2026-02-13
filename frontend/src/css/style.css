@@ -5189,13 +5189,19 @@ form h1 {
 .clear-button {
   position: absolute;
   z-index: 100;
-  top: 10px;
-  right: 14px;
-  top: 10px;
-  right: 14px;
+  top: 50%;
+  right: 4px;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: rgba(0, 0, 0, 0.6);
-  top: 10px;
-  right: 14px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 /* MOBILE RESPONSIVE */

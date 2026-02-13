@@ -92,7 +92,7 @@ export async function reencryptPrivateKey(
     };
   } catch (err) {
     console.error("Re-encryption failed", err);
-    throw new Error("Old password is incorrect or encrypted key is corrupted.");
+    throw new Error("Current password is incorrect or encrypted key is corrupted.");
   }
 }
 

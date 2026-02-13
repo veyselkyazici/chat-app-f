@@ -2054,6 +2054,7 @@ const bindMessageBoxRealtime = () => {
   });
 
   chatStore.ws.subscribe("/user/queue/message-box-typing", (msg) => {
+    
     const status = JSON.parse(msg.body);
     chatStore.applyTyping(status);
     renderHeaderStatus();

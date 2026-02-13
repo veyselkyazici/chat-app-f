@@ -215,9 +215,7 @@ function invitationVirtualScroll(item, listItem) {
   item.dataset.contactId = listItem.invitationResponseDTO.id;
   const messageSpan = item.querySelector(".message-span-span");
   nameSpan.textContent = listItem.invitationResponseDTO.contactName;
-  if (messageSpan) {
     messageSpan.textContent = "";
-  }
   item.dataset.user = listItem.invitationResponseDTO.contactName;
   const isInvite = listItem.invitationResponseDTO.isInvited;
   const chatInfo = item.querySelector(".chat-name-and-last-message-time");
