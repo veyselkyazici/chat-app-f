@@ -1514,19 +1514,7 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
     }),
   );
 
-  decryptedMessages.forEach((message) => {
-    const messageDate = new Date(message.fullDateTime).toDateString();
-
-    if (lastRenderedDate) {
-      if (lastRenderedDate !== messageDate) {
-        addDateHeader(message.fullDateTime);
-        lastRenderedDate = messageDate;
-      }
-    } else {
-      addDateHeader(message.fullDateTime);
-      lastRenderedDate = messageDate;
-    }
-
+  const createMessageRow = (message) => {
     const rowDOM = createElement("div", "", null, { role: "row" });
     rowDOM.messageData = {
       messageDTO: message,
@@ -1666,12 +1654,61 @@ const renderMessage = async (messageDTO, privacySettings, scroll) => {
     divMessage.append(divMessage12);
     rowDOM.append(divMessage);
 
-    if (scroll) {
-      messageRenderDOM.append(rowDOM);
-    } else {
+    return rowDOM;
+  };
+
+  if (!scroll) {
+    let currentTopDate = null;
+    const firstRow = messageRenderDOM.querySelector('div[role="row"]');
+    if (firstRow && firstRow.messageData && firstRow.messageData.messageDTO) {
+      currentTopDate = new Date(
+        firstRow.messageData.messageDTO.fullDateTime,
+      ).toDateString();
+    }
+
+    for (let i = decryptedMessages.length - 1; i >= 0; i--) {
+      const message = decryptedMessages[i];
+      const messageDate = new Date(message.fullDateTime).toDateString();
+
+      if (currentTopDate && messageDate === currentTopDate) {
+         const firstChild = messageRenderDOM.firstElementChild;
+         if (firstChild && firstChild.classList.contains("message-box1-5-1-2-2-1")) {
+            firstChild.remove();
+         }
+      }
+
+      if (currentTopDate && messageDate !== currentTopDate) {
+         const prevMsg = decryptedMessages[i + 1];
+         addDateHeader(prevMsg ? prevMsg.fullDateTime : (firstRow ? firstRow.messageData.messageDTO.fullDateTime : new Date().toString()));
+      }
+      
+      currentTopDate = messageDate;
+
+      const rowDOM = createMessageRow(message);
       messageRenderDOM.prepend(rowDOM);
     }
-  });
+
+    if (currentTopDate) {
+        addDateHeader(decryptedMessages[0].fullDateTime);
+    }
+  } else {
+    decryptedMessages.forEach((message) => {
+      const messageDate = new Date(message.fullDateTime).toDateString();
+
+      if (lastRenderedDate) {
+        if (lastRenderedDate !== messageDate) {
+          addDateHeader(message.fullDateTime);
+          lastRenderedDate = messageDate;
+        }
+      } else {
+        addDateHeader(message.fullDateTime);
+        lastRenderedDate = messageDate;
+      }
+
+      const rowDOM = createMessageRow(message);
+      messageRenderDOM.append(rowDOM);
+    });
+  }
   const newHeight = messageRenderDOM.clientHeight;
   if (scroll) {
     scrollToBottom();

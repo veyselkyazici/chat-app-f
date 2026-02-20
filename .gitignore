@@ -8,5 +8,5 @@ docker.yml
 .env.development
 #nginx.conf
 .dockerignore
-a.html
+vkychatapp.html
 ss/

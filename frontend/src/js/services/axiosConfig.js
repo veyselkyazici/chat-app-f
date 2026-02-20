@@ -20,7 +20,7 @@ axiosInstance.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 axiosInstance.interceptors.response.use(
@@ -39,7 +39,7 @@ axiosInstance.interceptors.response.use(
           },
           {
             validateStatus: (status) => status < 500,
-          }
+          },
         );
 
         const { accessToken, refreshToken } = response.data.data;
@@ -54,7 +54,13 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+    const validationErrors = error.response?.data?.errors?.[0]?.fields;
+
+    if (validationErrors?.length) {
+      toastr.error(validationErrors[0]);
+      return Promise.reject(error);
+    }
+
     const backendErrorCode = error.response?.data?.data?.errorCode;
 
     if (backendErrorCode) {
@@ -83,7 +89,7 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

@@ -236,7 +236,6 @@ async function saveUserProfile(user, isRegistration = false) {
     toastr.success(i18n.t("updateUserProfile.nameUpdated"));
     return true;
   } catch (error) {
-    toastr.error(i18n.t("error.generic") || "An error occurred");
     console.error(error);
     return false;
   }
