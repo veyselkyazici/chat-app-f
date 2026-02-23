@@ -5,8 +5,8 @@ docker.yml
 #Dockerfile
 .gitignore
 .env.production
-.env.development
 #nginx.conf
 .dockerignore
 vkychatapp.html
-ss/
+vkychatapp-frontend.html
+vkychatapp-backend.html
