@@ -1,6 +1,6 @@
 # vkychatapp: Frontend Mimari ve Geliştirme Detayları
 
-**Canlı Demo:** [vkychatapp.com](https://vkychatapp.com) | **Backend:** [chat-app-b](https://github.com/veyselkyazici/chat-app-b)
+🚀 **Canlı Demo:** <a href="https://vkychatapp.com" target="_blank">vkychatapp.com</a> | **Backend Repo:** <a href="https://github.com/veyselkyazici/chat-app-b" target="_blank">chat-app-b</a>
 
 Bu dokümanda, güvenli ve gerçek zamanlı sohbet uygulamasının kullanıcı dostu ön yüzünde (Frontend) kullanılan **Vanilla JavaScript (Ecosystem-less SPA)** mimarisi, Özel Router yapısı, Optimizasyon stratejileri, Güvenlik kalkanları ve arayüz detayları derinlemesine incelenmektedir.
 
