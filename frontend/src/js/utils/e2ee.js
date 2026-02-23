@@ -6,7 +6,7 @@ export async function generateKeyPair() {
   return await window.crypto.subtle.generateKey(
     {
       name: "RSA-OAEP", // RSA-OAEP şifreleme standardı (Optimal Asymmetric Encryption Padding)
-      modulusLength: 4096, // Anahtar uzunluğu: 4096 bit
+      modulusLength: 2048, // Anahtar uzunluğu: 4096 bit
       publicExponent: new Uint8Array([1, 0, 1]), // şifreleme formulunde kullanılır
       hash: "SHA-256", // Şifrelemede kullanılacak hash algoritması
     },
@@ -28,7 +28,7 @@ export async function deriveAESKey(password, salt) {
     {
       name: "PBKDF2",
       salt: salt, // Rastgele tuz değeri
-      iterations: 150_000, // Zorluk faktörü 150_000
+      iterations: 100, // Zorluk faktörü 150_000
       hash: "SHA-256", // Hash algoritması
     },
     

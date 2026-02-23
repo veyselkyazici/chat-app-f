@@ -1,5 +1,7 @@
 # vkychatapp: Frontend Mimari ve Geliştirme Detayları
 
+**Canlı Demo:** [vkychatapp.com](https://vkychatapp.com) | **Backend:** [chat-app-b](https://github.com/veyselkyazici/chat-app-b)
+
 Bu dokümanda, güvenli ve gerçek zamanlı sohbet uygulamasının kullanıcı dostu ön yüzünde (Frontend) kullanılan **Vanilla JavaScript (Ecosystem-less SPA)** mimarisi, Özel Router yapısı, Optimizasyon stratejileri, Güvenlik kalkanları ve arayüz detayları derinlemesine incelenmektedir.
 
 **Teknoloji Özeti:** Projenin arayüz katmanı herhangi bir ağır kütüphane veya framework (React, Vue, Angular) kullanılmadan, %100 saf JavaScript ve CSS ile inşa edilmiştir. Build mekanizması olarak **Vite** kullanılarak ışık hızında bir geliştirme ve paketleme altyapısı tercih edilmiştir.
