@@ -939,10 +939,16 @@ function addEventListeners(chatElementDOM) {
 }
 
 async function createChatBoxWithFirstMessage(recipientJSON) {
+  // Aynı chat zaten listeye eklenmişse tekrar ekleme (duplicate guard)
+  if (isChatExists(recipientJSON)) return;
+
   const result = await chatService.getChatSummary(
     recipientJSON.senderId,
     recipientJSON.chatRoomId,
   );
+
+  // Async bekleme sırasında başka bir çağrı eklemiş olabilir — tekrar kontrol et
+  if (isChatExists(recipientJSON)) return;
 
   result.chatDTO.messages[0].decryptedMessage = recipientJSON.decryptedMessage;
   chatStore.chatList.unshift(result);

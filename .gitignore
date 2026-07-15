@@ -10,3 +10,4 @@ docker.yml
 vkychatapp.html
 vkychatapp-frontend.html
 vkychatapp-backend.html
+nginxvps.conf
