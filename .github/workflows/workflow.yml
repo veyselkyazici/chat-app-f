@@ -63,6 +63,7 @@ jobs:
             docker stop vkychatapp-frontend || true
             docker rm vkychatapp-frontend || true
             docker run -d \
+              --restart always \
               --network frontend-network \
               -p 127.0.0.1:3000:80 \
               --name vkychatapp-frontend \

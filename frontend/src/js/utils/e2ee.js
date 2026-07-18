@@ -2,6 +2,7 @@
 let userKey = null;
 let sessionKey = null;
 
+
 export async function generateKeyPair() {
   return await window.crypto.subtle.generateKey(
     {
